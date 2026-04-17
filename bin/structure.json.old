@@ -1,0 +1,1391 @@
+{
+  "planes": {
+    "control": {
+      "uid": "control",
+      "name": "The Control Plane",
+      "aka": "The Ingress & Routing Hub",
+      "profile": "High network I/O, low CPU, low RAM.",
+      "services": [
+        "proxy-reverse",
+        "iam",
+        "proxy",
+        "gateway",
+        "secret",
+        "event",
+        "cache",
+        "queue"
+      ],
+      "justification": "This is the high-speed nervous system. It dictates traffic flow and maintains ephemeral state, operating flawlessly on low-power devices."
+    },
+    "compute": {
+      "uid": "compute",
+      "name": "The Compute Plane",
+      "aka": "The Intelligence Engine",
+      "profile": "Extreme GPU VRAM, maximum memory bandwidth, high power draw.",
+      "services": [
+        "runner"
+      ],
+      "justification": "LLM inference requires dedicated PCIe acceleration. It must be isolated to prevent VRAM starvation from impacting other critical services."
+    },
+    "context": {
+      "uid": "context",
+      "name": "The Context & Telemetry Plane",
+      "aka": "The Archive",
+      "profile": "Massive RAM capacity, extreme disk IOPS (NVMe), heavy storage.",
+      "services": [
+        "memory",
+        "vcs",
+        "logger",
+        "tracer"
+      ],
+      "justification": "This plane manages all \"Trusted Data.\" Vector databases ingest massive streams of data and require enormous RAM. Keeping these safe from untrusted execution workloads is a strict SRE requirement."
+    },
+    "execution": {
+      "uid": "execution",
+      "name": "The Execution Plane",
+      "aka": "The Blast Zone",
+      "profile": "Heavy multi-core CPU, highly dynamic and unpredictable RAM usage.",
+      "services": [
+        "browser",
+        "fetcher",
+        "searcher",
+        "sandbox",
+        "ci"
+      ],
+      "justification": "This plane executes volatile, untrusted code. It is an operational hazard physically isolated to ensure that a rogue task cannot crash the Control Plane or corrupt the Context Archive."
+    }
+  },
+  "phases": {
+    "phase-0": {
+      "uid": "phase-0",
+      "name": "Phase 0: The Day 1 Minilith",
+      "setup": "RAM is strictly budgeted (6GB-8GB). The framework uses lightweight alternatives (SQLite instead of Postgres, LiteLLM routing to Cloud APIs for heavy reasoning, Ollama strictly for local text embeddings).",
+      "benefit": "Zero financial cost to validate the framework's utility.",
+      "resources": {
+        "min": {
+          "ram": "",
+          "cpu": "",
+          "gpu": "",
+          "storage": "",
+          "network": ""
+        },
+        "median": {
+          "ram": "",
+          "cpu": "",
+          "gpu": "",
+          "storage": "",
+          "network": ""
+        },
+        "max": {
+          "ram": "",
+          "cpu": "",
+          "gpu": "",
+          "storage": "",
+          "network": ""
+        }
+      }
+    },
+    "phase-1": {
+      "uid": "phase-1",
+      "name": "Phase 1: The Month 2 Monolith",
+      "setup": "All four Tiers run on one machine. Heavy services are rate-limited via Docker to prevent crashes. Tier 2 (Compute) remains outsourced to Cloud APIs.",
+      "benefit": "True 24/7 autonomous operation with robust relational memory and background web scraping.",
+      "resources": {
+        "min": {
+          "ram": "32GB (DDR4 or DDR5). This is non-negotiable. PostgreSQL with `pgvector` requires substantial memory for associative recall, and running headless Chromium instances via gVisor sandboxes will rapidly consume 6–8GB during active execution.",
+          "cpu": "6-Core / 12-Thread (e.g., AMD Ryzen 5 or Intel Core i5). Sufficient to handle the background orchestration of LiteLLM, VictoriaLogs ingestion, and occasional execution tasks.",
+          "gpu": "Integrated Graphics (iGPU) with 0GB dedicated VRAM. Because heavy reasoning is outsourced to the cloud, local models via Ollama are restricted to lightweight tasks like text embeddings, which can comfortably execute on CPU or shared iGPU memory.",
+          "storage": "1TB NVMe SSD. Essential to handle the continuous write operations of VictoriaLogs and the high-dimensional vector storage of PostgreSQL. Mechanical hard drives or SATA SSDs will cause severe I/O bottlenecks.",
+          "network": "1Gbps Ethernet. Sufficient for local LAN access and Tailscale overlay traffic."
+        },
+        "median": {
+          "ram": "64GB DDR5. Provides a massive buffer for PostgreSQL `shared_buffers` to keep the entire vector index in memory, guaranteeing sub-millisecond semantic search latency.",
+          "cpu": "8-Core / 16-Thread (e.g., AMD Ryzen 7 7840HS, Intel Core i7, or Apple M-Pro). The Execution plane benefits directly from multi-core architecture when spawning concurrent sub-agents or processing heavy continuous integration (CI) tests.",
+          "gpu": "8GB Dedicated VRAM (e.g., mobile RTX 4060) or 32GB+ Unified Memory (Apple Silicon). This allows the local Ollama runner to host 8B-parameter models (e.g., Llama 3 8B) for fast, private, offline tasks (like journaling or log summarization) without paying cloud API costs.",
+          "storage": "2TB NVMe SSD (PCIe Gen 4). Provides ample overhead for logging, Docker image bloat, and expanding memory databases without risking OS disk exhaustion.",
+          "network": "2.5Gbps Ethernet. Ensures that when the cluster expands to Phase 2 (adding a remote GPU node), the network bandwidth does not become an artificial bottleneck for transferring large context windows."
+        },
+        "max": {
+          "ram": "96GB DDR5 (or 64GB Unified Memory on Apple Silicon). Maximizes the caching capabilities of Redis and PostgreSQL, ensuring the agent has near-instantaneous recall of years of transcript data.",
+          "cpu": "14 to 16-Core Mobile/Efficient Desktop Processor (e.g., Intel Core i9 or AMD Ryzen 9). Provides total immunity to CPU starvation, allowing the Sandbox and Browser automation components (Tier 4) to run highly volatile workloads without impacting the Gateway's routing latency.",
+          "gpu": "16GB Dedicated VRAM (e.g., mobile RTX 4080) or 64GB+ Unified Memory (Apple Silicon Max). This is the thermal and physical limit of the Mini-PC form factor. It permits running high-quality local reasoning models, pushing the boundaries of Phase 1 into pseudo-Phase 2 territory, though thermal throttling will eventually limit sustained 24/7 inference compared to a dedicated desktop tower.",
+          "storage": "4TB NVMe SSD (PCIe Gen 4/5) or a dedicated high-IOPS external Thunderbolt enclosure. Guarantees zero disk contention between the observability stack, version control systems, and active memory databases.",
+          "network": "10Gbps Ethernet. Provides datacenter-grade local bridging for future cluster expansion."
+        }
+      }
+    },
+    "phase-2": {
+      "uid": "phase-2",
+      "name": "Phase 2: Data Sovereignty",
+      "setup": "Tier 2 (LLM Runner) is migrated to the GPU tower. The Proxy routes requests locally.",
+      "benefit": "Absolute data privacy and zero recurring API costs. Infinite agent loops can run overnight without accumulating massive bills.",
+      "resources": {
+        "min": {
+          "ram": "16GB to 32GB DDR4. System RAM primarily acts as a safety buffer. While Ollama can \"spill\" model layers to system RAM if VRAM is exhausted, doing so heavily bottlenecks the PCIe bus and reduces generation speeds from ~40 tokens/sec down to 10-15 tokens/sec.",
+          "cpu": "4-Core / 8-Thread (e.g., AMD Ryzen 5 or Intel Core i5). The CPU is largely idle during inference, so entry-level silicon is sufficient.",
+          "gpu": "8GB to 12GB NVIDIA GPU (e.g., RTX 3060 or 4060). An 8B model quantized at Q4_K_M requires roughly 4.7GB to 5.4GB of VRAM, leaving 2–6GB available for the KV cache to handle standard conversational context windows.",
+          "storage": "500GB NVMe SSD. GGUF model weights for 8B models average 4–6GB each, making 500GB more than enough for the OS and a curated local library.",
+          "network": "1Gbps Ethernet. Standard gigabit speeds are sufficient for linking back to the Phase 1 Control Plane via Tailscale."
+        },
+        "median": {
+          "ram": "64GB DDR5. High-speed DDR5 prevents bottlenecks when the CPU needs to shuttle large unquantized model weights from disk to the GPU during cold starts.",
+          "cpu": "8-Core / 16-Thread (e.g., AMD Ryzen 7 or Intel Core i7). A mid-tier CPU provides enough PCIe Gen 4 lanes to maximize bandwidth to the GPU.",
+          "gpu": "24GB NVIDIA GPU (e.g., RTX 3090 or RTX 4090). 24GB comfortably fits 32B-class models (like Qwen 2.5 32B) at 4-bit quantization, or it allows you to run smaller 8B models with massive 100k+ context windows during multi-agent swarm tasks.",
+          "storage": "1TB to 2TB NVMe SSD. `vllm` often utilizes unquantized safetensors or heavier FP8/FP16 models, which consume significantly more disk space than standard GGUF files.",
+          "network": "2.5Gbps Ethernet. Prevents network-induced latency when the Phase 1 Gateway transmits massive context histories to the Compute node for evaluation."
+        },
+        "max": {
+          "ram": "128GB+ DDR5. Necessary for caching massive datasets and preventing out-of-memory crashes when building or manipulating 140GB+ FP16 model files in the host OS.",
+          "cpu": "High PCIe-lane processor (e.g., AMD Threadripper or Intel Xeon). Standard consumer CPUs lack the PCIe lanes to run dual GPUs at full x16/x16 speeds. A workstation CPU prevents internal bandwidth bottlenecks.",
+          "gpu": "Dual 24GB NVIDIA GPUs (48GB total) or a single workstation GPU (e.g., RTX A6000 48GB). A 70B model quantized at Q4 requires roughly 40-45GB of VRAM. 48GB is the absolute floor to load the weights and retain enough room for a functional KV cache, requiring Tensor Parallelism (TP) across multiple cards.",
+          "storage": "4TB+ PCIe Gen 4/5 NVMe. 70B models require up to 140GB of disk space at FP16 precision before quantization. A library of specialized 70B models will rapidly consume terabytes of disk space.",
+          "network": "10Gbps Ethernet. Essential for achieving sub-millisecond transfer speeds when sending 100,000-token prompt payloads across the LAN from the Context Plane."
+        }
+      }
+    },
+    "phase-3": {
+      "uid": "phase-3",
+      "name": "Phase 3: The Sandbox Extraction",
+      "setup": "Tier 4 (Execution Plane) is migrated.",
+      "benefit": "Safe execution of highly volatile workloads. Hallucinated code or memory-leaking browsers will not crash the core Gateway.",
+      "resources": {
+        "min": {
+          "ram": "32GB DDR4. While 16GB is technically possible, it is highly unsafe for the Execution Plane. Modern web pages loaded via Playwright can consume 500MB to 1GB of RAM per tab. Furthermore, CI pipelines running build steps (like `npm install` or compiling binaries) experience massive RAM spikes. 32GB provides the necessary buffer for unpredictable spikes.",
+          "cpu": "6-Core / 12-Thread (e.g., AMD Ryzen 5 or Intel Core i5). Sandboxing and browser automation are inherently multi-processed. A 6-core processor allows the host OS, the CI runner daemon, and the active agent sandboxes to operate without severe thread contention.",
+          "gpu": "Integrated Graphics (iGPU) with 0GB dedicated VRAM. The Execution Plane handles code compilation and DOM parsing, neither of which strictly require dedicated PCIe acceleration.",
+          "storage": "500GB NVMe SSD. CI runners generate massive amounts of ephemeral data (Docker image caches, `node_modules`, build artifacts). 500GB ensures the disk won't silently fill up and halt agent execution during a long-running software development task.",
+          "network": "1Gbps Ethernet. Standard gigabit speeds are sufficient to pull Docker images and push scraped DOM structures back to the Gateway."
+        },
+        "median": {
+          "ram": "64GB DDR5. High-speed DDR5 significantly accelerates code compilation in CI pipelines. 64GB allows the user to safely configure Docker memory limits (e.g., capping each sandbox to 4GB) and run up to a dozen concurrent, heavily isolated execution tasks without invoking the Linux Out-Of-Memory (OOM) killer.",
+          "cpu": "12-Core to 16-Core (e.g., AMD Ryzen 9 7900X/7950X or Intel Core i9). When OpenClaw spawns a swarm of sub-agents that simultaneously execute code tests in isolated gVisor containers while other agents scrape documentation via Playwright, high core counts mathematically prevent latency bottlenecks.",
+          "gpu": "iGPU or Entry-Level Discrete GPU (e.g., RTX 3050 8GB). While not used for LLM inference, an entry-level GPU is highly beneficial for the Browser Automation component. Headless browsers rendering complex, modern WebGL applications or executing visual regression tests will perform significantly faster with hardware acceleration.",
+          "storage": "1TB to 2TB NVMe SSD (PCIe Gen 4). Provides deep overhead for caching massive CI/CD testing environments and retaining historical build artifacts for debugging.",
+          "network": "2.5Gbps Ethernet. Ensures fast traversal of large execution logs and scraped datasets back to the Control Plane."
+        },
+        "max": {
+          "ram": "128GB to 256GB ECC DDR5. Error-Correcting Code (ECC) memory is recommended at this scale to prevent bit-flips during multi-hour, memory-intensive code compilations. This capacity allows for the deployment of in-memory ramdisks (`tmpfs`) for CI runners, resulting in near-instantaneous read/write speeds for ephemeral build artifacts.",
+          "cpu": "24+ Cores (e.g., AMD Ryzen Threadripper or EPYC). A High-End Desktop (HEDT) processor provides the massive PCIe lane allocation and parallel threading required to treat the node as a micro-datacenter for continuous integration and concurrent sandboxing.",
+          "gpu": "Mid-Tier Discrete GPU (e.g., RTX 4070). In advanced workflows, the Execution Plane may be tasked by the Gateway to execute localized machine learning tests (e.g., validating a PyTorch script generated by the agent). Having a capable discrete GPU ensures these sandbox tests do not fail due to a lack of CUDA cores.",
+          "storage": "4TB NVMe SSD (PCIe Gen 4/5) arranged in RAID 0 or RAID 10. The primary bottleneck for continuous integration and Docker container provisioning is storage I/O. A RAID array ensures the disk can keep up with a 32-core CPU tearing through dozens of concurrent file-system operations.",
+          "network": "10Gbps Ethernet. Required to rapidly shuttle heavy Docker images and compiled binaries across the LAN."
+        }
+      }
+    },
+    "phase-4": {
+      "uid": "phase-4",
+      "name": "Phase 4: The Archive Expansion",
+      "setup": "Tier 3 (Context & Telemetry) is migrated. The original Month 2 Monolith is stripped of heavy workloads, running strictly as the Tier 1 Control Plane.",
+      "benefit": "SRE-grade stability with near-infinite, lightning-fast semantic recall. No hardware is wasted; earlier machines are perfectly repurposed.",
+      "resources": {
+        "min": {
+          "ram": "128GB DDR5. This is the absolute floor for Phase 4. Relational/Vector databases like PostgreSQL require massive `shared_buffers` allocations (typically 40GB to 60GB on a 128GB system) to keep the active Hierarchical Navigable Small World (HNSW) index graph entirely in memory.",
+          "cpu": "12-Core / 24-Thread (e.g., AMD Ryzen 9 or Intel Core i9). Log ingestion and vector similarity calculations are highly parallelized. Quickwit, for example, requires roughly 1 CPU core and 4GB of RAM for every 7.5MB/s of log indexing throughput.",
+          "gpu": "0GB (Integrated Graphics). The Context Plane does not perform LLM inference or DOM rendering. Dedicated PCIe accelerators are unnecessary at this scale.",
+          "storage": "2TB to 4TB NVMe SSD (PCIe Gen 4). A single 1536-dimensional vector consumes roughly 6KB. 10 million vectors require 60GB for raw storage alone, before accounting for the HNSW index overhead, continuous SigNoz distributed tracing, and Gitea repository histories.",
+          "network": "2.5Gbps Ethernet. Required to prevent bottlenecks when the Control Plane retrieves massive contextual payloads (like entire codebase histories) during an agent's RAG execution loop."
+        },
+        "median": {
+          "ram": "256GB ECC DDR5. Error-Correcting Code (ECC) memory becomes highly recommended at this tier. When maintaining hundreds of gigabytes of semantic memory in RAM, cosmic rays or random bit-flips can silently corrupt the vector index, leading to poisoned recall. 256GB prevents the Linux kernel from utilizing swap space under heavy indexing loads.",
+          "cpu": "24-Core to 32-Core (e.g., AMD Threadripper or Intel Xeon W). High-cardinality analytics (such as querying traces in SigNoz backed by ClickHouse) demand massive CPU bandwidth to scan compressed columnar data quickly without timing out.",
+          "gpu": "0GB.",
+          "storage": "8TB NVMe SSD (e.g., 2x 4TB in RAID 1 or 0). At this scale, disk IOPS is the primary failure point. A RAID array ensures that heavy sequential writes from Fluent Bit log streams do not block the random read requests generated by an agent's semantic memory search.",
+          "network": "10Gbps Ethernet. Essential for moving gigabytes of telemetry data from the Compute and Execution planes into the Archive seamlessly."
+        },
+        "max": {
+          "ram": "512GB to 1TB+ ECC Memory. Indexing 1 billion 1536-dimensional vectors translates to over 6TB of raw data. While quantization techniques (like scalar or product quantization) can compress this footprint by 4x to 8x, the system still requires half a terabyte of RAM to hold the quantized index and cache active shards.",
+          "cpu": "64-Core+ Server CPU (e.g., AMD EPYC). Required to sustain thousands of queries per second (QPS) against the vector database while concurrently parsing and indexing massive streams of distributed traces.",
+          "gpu": "Optional Compute GPU (e.g., RTX 4090 24GB or NVIDIA L40). While normally CPU-bound, at the billion-vector scale, utilizing GPU-accelerated vector databases (like Milvus with NVIDIA RAPIDS) provides a 10x speedup for massive batch-indexing operations and graph clustering.",
+          "storage": "16TB+ PCIe Gen 5 NVMe (RAID 10) combined with Object Storage. Deep historical logs and traces are tiered. Active memory remains on the NVMe arrays, while older logs (managed by Quickwit) are pushed to cheap, high-capacity S3-compatible HDDs (the Context Lake) where they remain searchable at a slight latency penalty.",
+          "network": "Dual 10Gbps or 25Gbps Fiber. Guarantees zero packet loss when ingesting raw telemetry and memory dumps from a sprawling, multi-node AI cluster."
+        }
+      }
+    }
+  },
+  "services": {
+    "gateway": {
+      "uid": "gateway",
+      "uids": "gateways",
+      "name": "AI Gateway",
+      "names": "AI Gateways",
+      "category": "Orchestration & Routing",
+      "purpose": "The core intelligence layer. This is the user-facing agent framework that handles tool definitions, semantic memory retrieval, workflow execution, and multi-agent routing.",
+      "providers": {
+        "openclaw": {
+          "uid": "openclaw",
+          "name": "OpenClaw",
+          "overview": "The gold standard for power users. It is a fully local, multi-agent, highly customizable terminal-first framework that prioritizes deep integration, privacy, and full control over agent workflows.",
+          "details": []
+        },
+        "nanoclaw": {
+          "uid": "nanoclaw",
+          "name": "NanoClaw",
+          "overview": "Excellent for surgical deployments. These micro-gateways are ideal for developers looking to embed basic agentic capabilities into a specific Python script or single-purpose container, but they lack the broader ecosystem of OpenClaw.",
+          "details": [
+            "NanoClaw is a radically minimalist successor to the OpenClaw framework, distilling the concept of an autonomous AI agent into a single process managed by just five core files. Rather than relying on a sprawling microservice architecture, it is designed for users who want maximum simplicity and auditability. The entire codebase is small enough for a single developer to read and understand in an afternoon, making it highly customizable.",
+            "Security in NanoClaw is handled at the operating system level rather than the application level. It isolates agents inside Apple Containers (on macOS) or Docker containers (on Linux), meaning the agent can only interact with explicitly mounted directories. This provides a robust defense against rogue AI actions, ensuring that bash commands executed by the agent never touch the host system.",
+            "Despite its minimalist footprint, NanoClaw retains powerful core capabilities, including a built-in task scheduler, multi-agent swarms, and a native WhatsApp interface for mobile control. It is the ideal gateway for privacy-conscious tinkerers who want to run a capable, secure AI assistant on a Raspberry Pi without the overhead of enterprise-grade orchestration tools."
+          ]
+        },
+        "moltis": {
+          "uid": "moltis",
+          "name": "Moltis",
+          "overview": "Highly recommended for Rust-native enthusiasts prioritizing security. Its single-binary deployment and extreme sandboxing (forcing every tool execution into an isolated container) make it a paranoid, secure alternative for critical local tasks.",
+          "details": [
+            "Moltis is a personal AI assistant built entirely in Rust, focusing on providing a secure, local-first environment with zero runtime dependencies. It compiles the entire assistant stack—including the web UI, model routing, memory, and tool execution—into a single 60MB executable. This architecture eliminates the overhead of Node.js or Python environments, resulting in an exceptionally fast and resource-efficient gateway.",
+            "The platform excels at secure automation and execution. Every command and browsing task initiated by Moltis runs within a sandboxed container (Docker, Podman, or Apple Container) and requires explicit human-in-the-loop approval for sensitive actions. It includes robust defenses against Server-Side Request Forgery (SSRF) and supports modern authentication methods like passkeys, ensuring that the assistant remains strictly under the user's control.",
+            "Moltis offers deep integration with both local and cloud models, featuring built-in Hugging Face downloads and MLX support for accelerated Apple Silicon inference. With hybrid vector and full-text long-term memory, parallel tool execution, and multi-channel access via Telegram and a Web UI, it serves as a powerful, low-level automation hub for developers who prioritize security and performance."
+          ]
+        },
+        "trustclaw": {
+          "uid": "trustclaw",
+          "name": "TrustClaw",
+          "overview": "Best suited for cloud-first users who need their agent to securely connect to thousands of SaaS applications via OAuth without managing local infrastructure or worrying about leaking raw API keys.",
+          "details": [
+            "TrustClaw is a cloud-native adaptation of the OpenClaw philosophy, fundamentally rebuilt around OAuth authentication and enterprise-grade sandboxed execution. While OpenClaw prioritizes local-first, bare-metal deployment, TrustClaw embraces the cloud to offer seamless, secure integrations with over a thousand external SaaS applications and tools out of the box.",
+            "The gateway is designed to solve the security nightmare of granting AI agents access to sensitive corporate or personal data. By utilizing strict OAuth scopes and isolated execution environments, TrustClaw ensures that agents can interact with external services without ever exposing raw API keys or credentials. This makes it highly suitable for business environments where data governance and compliance are critical.",
+            "Recently, TrustClaw has expanded its user experience capabilities by implementing pseudo-streaming for platforms like Telegram, allowing users to see progressive \"typing\" feedback as the AI generates its response. For teams and individuals who want the autonomy of OpenClaw but require the robust integration ecosystem and managed security of a cloud platform, TrustClaw bridges the gap."
+          ]
+        },
+        "zeroclaw": {
+          "uid": "zeroclaw",
+          "name": "ZeroClaw",
+          "overview": "These are exceptional alternatives for users deploying on constrained hardware (like a Raspberry Pi or a cheap VPS). They deliver the core OpenClaw experience with a fraction of the overhead, boasting sub-second boot times and minimal RAM usage.",
+          "details": [
+            "ZeroClaw is a zero-overhead, fully autonomous AI assistant runtime engineered in Rust. Distributed as a single static binary, it is designed to operate on hardware with extremely limited resources, consuming only a few megabytes of RAM while delivering near-instant cold starts. This makes it an exceptionally portable gateway, capable of running on everything from tiny VPS instances to embedded RISC-V boards.",
+            "The framework is built on a highly modular, trait-driven architecture. Providers, memory backends, tools, and communication channels are completely abstracted, allowing developers to swap providers (like changing from OpenAI to a local Ollama provider) via configuration without altering a single line of code. It natively supports over 70 integrations, including Discord, Slack, and Matrix, right out of the box.",
+            "Security and isolation are core to ZeroClaw's design. It features mandatory pairing authentication, strict workspace scoping, and encrypted secrets. For edge computing scenarios or hybrid cloud deployments where efficiency, speed, and cross-architecture compatibility are paramount, ZeroClaw provides a lightweight, industrial-strength foundation."
+          ]
+        },
+        "nanobot": {
+          "uid": "nanobot",
+          "name": "Nanobot",
+          "overview": "Excellent for surgical deployments. These micro-gateways are ideal for developers looking to embed basic agentic capabilities into a specific Python script or single-purpose container, but they lack the broader ecosystem of OpenClaw.",
+          "details": [
+            "Nanobot is an ultra-lightweight, Python-based AI agent framework designed as an extreme alternative to OpenClaw. Clocking in at just under 4,000 lines of code, it strips away 99% of the bulk associated with larger orchestration platforms. It focuses purely on the essential execution loop: receiving a prompt, routing it to an LLM, and triggering a predefined Python function.",
+            "The gateway sacrifices complex features like native vector databases, multi-channel gateways, and web-based GUIs in favor of absolute transparency and ease of modification. Developers can easily read the entire routing logic and modify the core behavior without navigating a sprawling directory structure. It relies on standard library tools wherever possible to minimize external dependencies.",
+            "Nanobot is best suited for developers who need to embed a simple, autonomous agent into an existing Python application or script. It is not designed to be a standalone, persistent personal assistant, but rather a surgical tool for adding targeted agentic capabilities to lightweight projects where OpenClaw would be massive overkill."
+          ]
+        },
+        "picoclaw": {
+          "uid": "picoclaw",
+          "name": "PicoClaw",
+          "overview": "These are exceptional alternatives for users deploying on constrained hardware (like a Raspberry Pi or a cheap VPS). They deliver the core OpenClaw experience with a fraction of the overhead, boasting sub-second boot times and minimal RAM usage.",
+          "details": [
+            "PicoClaw is an open-source, ultra-lightweight personal AI assistant tailored specifically for embedded Linux boards and resource-constrained environments. Written in Go, the gateway boasts a memory footprint of under 10MB and boots in less than a second. It is distributed as a portable binary across ARM, x86_64, and RISC-V architectures, making it incredibly easy to deploy on low-cost edge devices.",
+            "Despite its minuscule size, PicoClaw acts as a capable bridge between external LLM providers (like Anthropic, DeepSeek, or vLLM) and popular messaging platforms like Telegram and Discord. It supports persistent memory across sessions and can execute scheduled background tasks via cron jobs, allowing it to function as a proactive, always-on assistant. While its autonomy is deliberately limited compared to the full OpenClaw framework, PicoClaw excels at basic personal automation and monitoring tasks. It is the perfect solution for users who want to run a reliable, responsive AI chat agent on a cheap Raspberry Pi tucked away in a closet."
+          ]
+        },
+        "nullclaw": {
+          "uid": "nullclaw",
+          "name": "NullClaw",
+          "overview": "These are exceptional alternatives for users deploying on constrained hardware (like a Raspberry Pi or a cheap VPS). They deliver the core OpenClaw experience with a fraction of the overhead, boasting sub-second boot times and minimal RAM usage.",
+          "details": [
+            "NullClaw pushes the limits of minimalist AI infrastructure, built entirely in the low-level systems programming language Zig. The result is a staggering 678-kilobyte static binary that boots in under 2 milliseconds and uses approximately 1MB of peak RAM. It is the smallest and fastest runtime in the extended OpenClaw ecosystem, targeting cheap hardware and tiny cloud instances.",
+            "Despite its microscopic footprint, NullClaw is a fully autonomous assistant infrastructure. It supports daemon mode for continuous operation and includes over 18 built-in tools for file manipulation, shell command execution, and browser interaction. It integrates smoothly with local models like Ollama, offering a fast, SQLite-backed memory system out of the box.",
+            "NullClaw is designed for users who demand absolute efficiency and minimal overhead. Onboarding is handled via a rapid CLI process, and connecting it to platforms like Telegram is as simple as dropping a bot token into a configuration file. It represents the pinnacle of lean, performant agent deployment."
+          ]
+        },
+        "manisai": {
+          "uid": "manisai",
+          "name": "Manis AI",
+          "overview": "These platforms are designed for large-scale enterprise orchestration and product design workflows. For an individual running personal local agents, their heavy compliance structures and corporate architectures introduce unnecessary friction.",
+          "details": [
+            "Manis AI is a no-code portal and workflow automation tool focused primarily on accelerating app development and strategic planning. While it incorporates AI elements to assist with presentation structuring, design, and logic flows, it functions more as an intelligent builder than a traditional autonomous agent gateway.",
+            "The platform allows users to leverage AI to quickly generate internal tools, automate operational tasks, and design software architectures without writing code. It integrates directly into the software development lifecycle, helping teams move from a prompt to a deployed application or structured business plan in a fraction of the customary time.",
+            "For individuals looking to build autonomous software agents that execute background tasks in a terminal, Manis AI is not the right tool. It is highly optimized for project planning, visual workflow creation, and rapid prototyping, making it a valuable asset for product managers and designers rather than backend engineers."
+          ]
+        },
+        "knolliai": {
+          "uid": "knolliai",
+          "name": "Knolli AI",
+          "overview": "These platforms are designed for large-scale enterprise orchestration and product design workflows. For an individual running personal local agents, their heavy compliance structures and corporate architectures introduce unnecessary friction.",
+          "details": [
+            "Knolli AI is an enterprise-grade AI orchestration platform designed to coordinate complex workflows across LLMs, autonomous agents, SaaS applications, and human decision points. It acts as the intelligent connective tissue for organizations, routing tasks, applying business logic, and embedding strict governance into automated processes.",
+            "Unlike basic integration tools that simply move data between apps, Knolli handles the decision logic. It can activate specialized agents, synthesize outputs, and pause workflows to require human-in-the-loop approval before proceeding. It features robust enterprise controls, including role-based access, full audit logs, and real-time observability across all AI actions.",
+            "While incredibly powerful, Knolli is designed for large-scale corporate environments. It integrates with tools like Workato and n8n to provide a unified automation stack. For an individual developer seeking to run a personal AI assistant on their laptop, Knolli's enterprise architecture and compliance features introduce unnecessary complexity and operational overhead."
+          ]
+        },
+        "claudecode": {
+          "uid": "claudecode",
+          "name": "Claude Code",
+          "overview": "Phenomenal for pure software engineering and repository refactoring. However, its strict limitation to developer workflows makes it unsuitable as a general-purpose, multi-channel personal assistant.",
+          "details": [
+            "Claude Code is Anthropic's official, agentic coding system designed to operate directly within a developer's terminal. Rather than functioning as a general-purpose chat gateway, it is a surgical tool that reads codebases, traces dependencies, executes multi-file refactors, and runs tests autonomously. It interfaces natively with CLI tools like Git to deliver committed, working code.",
+            "The system is built with a strong emphasis on agent safety and human control. Developers can scale Claude Code's autonomy from requiring explicit approval for every action to allowing it to automatically distinguish safe commands from risky ones. It features a sophisticated memory model that only stores successful actions, preventing the agent from getting confused during long, complex sessions.",
+            "For software engineers, Claude Code is a transformative productivity multiplier. It drastically reduces the time required for migrations, bug fixing, and onboarding. However, because it is specifically tailored for software development tasks within a local repository, it does not serve as a multi-channel personal assistant or a hub for general-purpose automation."
+          ]
+        },
+        "n8n": {
+          "uid": "n8n",
+          "name": "n8n + AI",
+          "overview": "The absolute best choice for visual thinkers and non-developers. By offering a drag-and-drop node interface with built-in guardrails and human-in-the-loop approvals, it makes deploying robust AI agents accessible to anyone without requiring deep terminal expertise.",
+          "details": [
+            "n8n is a highly popular workflow automation platform that has deeply integrated AI agent capabilities into its node-based visual builder. It allows users to blend deterministic, rule-based automation with the dynamic decision-making of AI agents. By connecting to over 500 pre-built integrations, n8n empowers agents to interact with databases, CRMs, and APIs out of the box.",
+            "The platform prioritizes control and observability. Users can explicitly define logic paths, enforce human-in-the-loop approvals, and set precise boundaries to prevent AI agents from going rogue. The visual canvas makes it easy to trace exactly what prompt was sent, what the model returned, and how the workflow executed, offering unparalleled transparency.",
+            "For individuals who prefer a visual, low-code approach to building autonomous agents, n8n is exceptional. It is much easier to deploy and manage than code-heavy frameworks like OpenClaw, making it accessible to non-developers. While it lacks the bare-metal, terminal-first ethos of OpenClaw, its vast integration ecosystem and robust control mechanisms make it a premier choice for practical business automation."
+          ]
+        }
+      }
+    },
+    "proxy": {
+      "uid": "proxy",
+      "uids": "proxies",
+      "name": "AI Proxy",
+      "names": "AI Proxies",
+      "category": "Orchestration & Routing",
+      "purpose": "The middleware sitting between the Gateway and external LLM providers. It acts as a central control plane for cost management, enforcing guardrails, load balancing requests, and masking raw API keys from the agent.",
+      "providers": {
+        "litellm": {
+          "uid": "litellm",
+          "name": "LiteLLM",
+          "overview": "LiteLLM is the gold standard for general-purpose, open-source proxying. It is incredibly easy to spin up locally (e.g., via Docker) alongside OpenClaw, and its strict adherence to OpenAI compatibility ensures that OpenClaw's tool-calling formats never break when translated to models like Claude or Gemini. It handles 99% of what OpenClaw needs flawlessly.",
+          "details": [
+            "LiteLLM is a highly popular, open-source AI proxy and gateway provider that provides a unified, OpenAI-compatible API for over 100 different Large Language Model (LLM) providers. By standardizing the input and output formats across providers like Anthropic, Google, Mistral, and Azure, it eliminates the need for developers to write provider-specific API integrations. This allows applications to seamlessly interact with virtually any model on the market using standard OpenAI SDKs and connection protocols.",
+            "Beyond simple translation, LiteLLM functions as a robust operational gateway designed for production environments. It offers essential features such as load balancing across multiple API keys, automatic fallbacks to ensure reliability during provider outages, and semantic caching to reduce costs on repeated queries. Additionally, it provides built-in rate limiting, cost tracking, and spend controls, making it an effective tool for managing organizational LLM usage.",
+            "Within an OpenClaw environment, LiteLLM serves as an incredibly versatile middle layer. By pointing OpenClaw's primary endpoint to a self-hosted LiteLLM proxy, users can instantly grant the agent access to a vast array of local and cloud-based models without altering OpenClaw's internal configuration. Its seamless OpenAI compatibility ensures that OpenClaw's system prompts, complex tool-calling structures, and message histories are accurately and reliably passed to whichever backend provider is currently selected."
+          ],
+          "diagnostics": "1. **Web Server Health:** You should see `200`\n2. **Model Inventory:** You should see `simple-model`, `medium-model`, and others"
+        },
+        "openrouter": {
+          "uid": "openrouter",
+          "name": "OpenRouter",
+          "overview": "OpenRouter ranks highly simply for its zero-friction utility. If you do not want to manage proxy infrastructure, OpenRouter is the best choice. With a single API key plugged into OpenClaw, you instantly gain access to top-tier proprietary models and cutting-edge open-source models, making it the best option for developers who want to experiment with different models rapidly.",
+          "details": [
+            "OpenRouter is a unified AI proxy and model marketplace that allows users to access hundreds of different LLMs through a single API endpoint. Unlike self-hosted gateways, OpenRouter is a fully managed cloud service that aggregates models from major providers alongside an extensive collection of open-source models hosted on various cloud platforms. It standardizes the interface so that all interactions use the familiar OpenAI Chat Completions format.",
+            "One of the primary advantages of OpenRouter is its streamlined billing and access model. Instead of maintaining separate accounts, API keys, and payment methods for dozens of different AI companies, developers only need a single OpenRouter account to pay for exactly what they use. The platform also offers smart routing capabilities, allowing users to automatically direct requests to the cheapest or fastest provider hosting a specific open-source model at any given moment.",
+            "For OpenClaw users, OpenRouter represents the absolute lowest-friction way to experiment with different models. By simply setting OpenClaw's base URL to OpenRouter and providing a single API key, the agent immediately gains the ability to seamlessly swap between models like Claude 3.5 Sonnet, Llama 3, or Gemini just by changing the model string name. It is highly practical for users who want maximum model diversity for their OpenClaw agent without the operational overhead of running their own local proxy infrastructure."
+          ]
+        },
+        "manifest": {
+          "uid": "manifest",
+          "name": "Manifest",
+          "overview": "Manifest takes the top spot because it was specifically engineered with AI agents like OpenClaw in mind. Its session-aware routing prevents \"tier oscillation\" (where a multi-turn task bounces between a smart model and a dumb model mid-thought), which is crucial for OpenClaw's chain-of-thought tool calling. It is the most native-feeling routing solution for agentic workflows.",
+          "details": [
+            "Manifest is an open-source LLM router and AI proxy built specifically with AI agents and complex orchestration workflows in mind. It acts as an intermediary layer that not only translates API requests but actively scores and routes them based on a sophisticated multi-dimensional algorithm. Manifest is designed to optimize interactions by determining the most cost-effective and capable model for any given prompt in real-time, aiming to drastically reduce API costs.",
+            "A distinguishing feature of Manifest is its focus on agentic behavior, specifically addressing issues like \"tier oscillation\" during multi-turn conversations. It uses intelligent session management to group related requests, ensuring that an agent maintains contextual continuity and doesn't bounce between vastly different model tiers mid-task. Furthermore, it records deep telemetry and observability metrics natively formatted as agent messages, making it easier to track autonomous systems.",
+            "Within the OpenClaw ecosystem, Manifest acts as a highly specialized, native-feeling gateway. Because it was explicitly built with agentic frameworks in mind, it excels at managing the heavy, multi-turn, tool-calling workloads that OpenClaw generates. By utilizing Manifest, an OpenClaw deployment can intelligently route simple file-reading tasks to a cheap, fast model, while automatically escalating complex coding or reasoning tasks to a premium model, all while keeping the session stable and costs minimized."
+          ]
+        },
+        "bifrost": {
+          "uid": "bifrost",
+          "name": "Bifrost",
+          "overview": "",
+          "details": [
+            "Bifrost is a high-performance, open-source LLM gateway written in Go, specifically engineered for extreme speed and low latency. It provides the standard unified API layer—normalizing various AI providers into a single OpenAI-compatible endpoint—but distinguishes itself through its underlying system architecture. By utilizing Go rather than Python, Bifrost aims to drastically minimize the internal processing overhead that the proxy layer adds to each API call.",
+            "The platform is designed for high-throughput production systems, reportedly operating up to 40 times faster than competing Python-based gateways with internal latencies measured in microseconds. Alongside raw speed, Bifrost includes essential orchestration features like adaptive load balancing, automatic failover mechanisms, and semantic caching. It also provides native Prometheus metrics for deep, real-time observability of latency and token usage.",
+            "For OpenClaw deployments, Bifrost is best utilized in scenarios where the agent is subjected to extremely high volumes of concurrent requests or where proxy latency is a strict bottleneck. While the generative time of the LLM itself usually dominates OpenClaw's response times, instances running complex, parallelized sub-agents or executing rapid, chained tool calls can benefit from Bifrost's microsecond overhead. It ensures the proxy layer never becomes a choke point during intensive automated tasks."
+          ]
+        },
+        "helicone": {
+          "uid": "helicone",
+          "name": "Helicone",
+          "overview": "Helicone is the ultimate choice for developers who are building custom skills for OpenClaw and need to debug them. Because... (truncated)",
+          "details": [
+            "Helicone is an open-source AI proxy and comprehensive LLM observability platform. While it provides the standard gateway capability of routing requests to various providers via a unified API, its core strength lies in tracking, analyzing, and debugging those requests. It sits transparently between the application and the LLM provider, capturing rich metadata about every single interaction without requiring complex SDK integrations in the codebase.",
+            "The platform offers a powerful dashboard for monitoring critical metrics such as cost, latency, token usage, and error rates. Developers can attach custom properties to requests, enabling them to segment data by user, session, or specific features. Helicone also includes advanced features like prompt management (allowing teams to version and test prompts directly in the platform), automated caching, and rate limiting to control costs and prevent abuse.",
+            "When paired with OpenClaw, Helicone shines as an invaluable debugging and analytics tool. Because OpenClaw agents construct complex, dynamic prompts involving dense workspace context and deep tool descriptions, tracking exactly what was sent to the model can be difficult. Routing OpenClaw's traffic through Helicone allows developers to visually inspect the exact payloads, measure how much context window is being consumed by injected files, and optimize the agent's behavior for better reliability."
+          ]
+        },
+        "portkey": {
+          "uid": "portkey",
+          "name": "Portkey",
+          "overview": "",
+          "details": [
+            "Portkey is an enterprise-grade AI gateway designed to serve as a comprehensive production control plane for Generative AI applications. It abstracts the complexities of connecting to over 1,600 different models, providing a unified API interface. However, its primary focus extends far beyond basic routing, aiming to provide the security, governance, and reliability required by large organizations deploying AI systems at scale.",
+            "The platform emphasizes strict guardrails and policy enforcement over API traffic. Portkey allows administrators to implement content moderation, enforce strict organizational budgets and quotas, and apply rigorous access controls before any request ever reaches an LLM. It also features robust orchestration capabilities, including smart routing, automatic retries, and fallbacks, coupled with deep observability tools to trace errors across the enterprise stack.",
+            "In the context of OpenClaw, Portkey is the ideal gateway for enterprise deployments where the agent's actions must be strictly governed. If OpenClaw is deployed in a corporate environment with access to sensitive internal data or customer-facing channels, Portkey acts as a critical security layer. It ensures that OpenClaw's generated prompts and the model's responses adhere to corporate compliance policies while safely load-balancing the agent's requests across approved endpoints."
+          ]
+        },
+        "truefoundry": {
+          "uid": "truefoundry",
+          "name": "TrueFoundry",
+          "overview": "",
+          "details": [
+            "TrueFoundry is a comprehensive Machine Learning Operations (MLOps) platform that includes a robust, enterprise-focused LLM Gateway as one of its core services. While it functions as an AI proxy to standardize access to public models like OpenAI and Anthropic, its broader purpose is to unify an organization's entire AI infrastructure. It provides a centralized access and governance layer for managing both external APIs and internal, self-hosted models.",
+            "The TrueFoundry gateway emphasizes strict access control, security rules, and detailed cost monitoring across disparate teams and projects. Because it is part of a larger MLOps suite, it seamlessly integrates with tools for fine-tuning models, evaluating model performance, and deploying custom AI solutions on proprietary infrastructure. It is tailored for organizations that treat AI not just as an API dependency, but as a core internal engineering discipline.",
+            "For OpenClaw, TrueFoundry is highly relevant when the agent needs to operate within a mature, enterprise MLOps environment. If an organization uses TrueFoundry to host custom, fine-tuned models alongside cloud APIs, routing OpenClaw through the TrueFoundry gateway allows the agent to securely access these proprietary models. It ensures OpenClaw's usage is properly metered, governed, and authenticated according to complex corporate IT standards."
+          ]
+        }
+      }
+    },
+    "proxy-reverse": {
+      "uid": "proxy-reverse",
+      "uids": "proxies-reverse",
+      "name": "Reverse Proxy",
+      "names": "Reverse Proxies",
+      "category": "Orchestration & Routing",
+      "purpose": "The network front door. It handles SSL termination, load balancing incoming external requests, rate limiting, and securely exposing your local AI ecosystem to the internet for remote access.",
+      "providers": {
+        "traefik": {
+          "uid": "traefik",
+          "name": "Traefik",
+          "overview": "",
+          "details": []
+        },
+        "haproxy": {
+          "uid": "haproxy",
+          "name": "HAProxy",
+          "overview": "",
+          "details": []
+        },
+        "caddy": {
+          "uid": "caddy",
+          "name": "Caddy",
+          "overview": "",
+          "details": []
+        },
+        "nginx": {
+          "uid": "nginx",
+          "name": "Nginx",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "runner": {
+      "uid": "runner",
+      "uids": "runners",
+      "name": "LLM Runner",
+      "names": "LLM Runners",
+      "category": "Intelligence Execution",
+      "purpose": "Manages and executes local Large Language Models (LLMs) and Multimodal models directly on your bare-metal hardware. It provides an OpenAI-compatible API endpoint for the AI Proxy or Gateway to consume, enabling offline intelligence.",
+      "providers": {
+        "ollama": {
+          "uid": "ollama",
+          "name": "Ollama",
+          "overview": "Highest Utility. Ollama perfectly mirrors OpenClaw's daemon-based architectural philosophy. It runs headlessly, manages hardware gracefully, and is natively supported by OpenClaw's LiteLLM backend (`ollama/model`). It is the undisputed default for local OpenClaw deployments.",
+          "details": [
+            "Ollama is a lightweight, Go-based provider built as a wrapper around llama.cpp, designed to make running local models as easy as running Docker containers. It abstracts away the complex command-line arguments of llama.cpp, allowing users to download and execute models with simple commands like `ollama run gemma`. It operates as a background system daemon, automatically managing model weights, detecting available hardware acceleration (Metal, CUDA, ROCm), and dynamically loading or unloading models from memory as requests come in. It features a highly stable REST API that conforms closely to community standards.",
+            "For OpenClaw, Ollama represents the absolute gold standard for local execution. OpenClaw natively supports Ollama via its LiteLLM integration, allowing users to configure models using simple aliases like `ollama/gemma4:e4b`. Because Ollama runs as a headless background service, it perfectly matches OpenClaw's own background gateway architecture, creating a frictionless local AI environment."
+          ],
+          "diagnostics": "1. **API Responsiveness:**\n   * *Expectation:* You should see `Models Loaded: X` (where X is a number representing the currently pulled models)."
+        },
+        "vllm": {
+          "uid": "vllm",
+          "name": "vLLM",
+          "overview": "High Utility (Niche). If you are running OpenClaw on a dedicated VPS with A100s and relying heavily on sub-agent swarms (`sessions_spawn`), vLLM is unmatched. Its PagedAttention algorithm will handle the concurrent agent tasks faster than anything else on the market.",
+          "details": [
+            "vLLM is a high-throughput, memory-efficient serving engine designed specifically for large language models. Its core innovation is PagedAttention, an algorithm that manages attention keys and values like an operating system manages virtual memory. This prevents memory fragmentation and allows the engine to batch significantly more requests concurrently than standard inference engines.",
+            "Because it is engineered primarily for datacenter environments and production deployments, vLLM relies heavily on powerful, dedicated GPUs (typically Nvidia). It is not designed to run efficiently on consumer laptops with unified memory or pure CPUs, but rather to maximize the tokens-per-second throughput of enterprise hardware.",
+            "For OpenClaw, vLLM is the premier choice when deploying an OpenClaw node on a dedicated cloud VPS or a high-end local workstation. Since vLLM natively exposes an OpenAI-compatible API server, OpenClaw can connect to it seamlessly. Its massive throughput is particularly useful when OpenClaw spawns multiple concurrent sub-agents, as vLLM can handle the simultaneous prompt evaluations without bottlenecking."
+          ]
+        },
+        "llamacpp": {
+          "uid": "llamacpp",
+          "name": "llama.cpp",
+          "overview": "High Utility. The raw foundation. For OpenClaw nodes deployed on Raspberry Pis or edge servers, running the bare llama.cpp server provides the lowest-overhead, most memory-efficient API endpoint possible.",
+          "details": [
+            "llama.cpp is a pure C/C++ inference engine that fundamentally revolutionized the local AI scene by enabling large language models to run on consumer hardware without massive dependencies. It pioneered the GGUF file format, which stores heavily quantized (compressed) model weights that can fit into standard system RAM or VRAM.",
+            "The technology is highly optimized for a wide variety of hardware architectures, featuring advanced Apple Silicon (Metal) support, AVX instructions for CPUs, and CUDA for Nvidia GPUs. It operates close to the metal with minimal overhead, functioning primarily as a command-line tool but including a lightweight HTTP server.",
+            "Within OpenClaw, llama.cpp serves as the foundational bedrock for edge computing. If an OpenClaw node is deployed on a Raspberry Pi, an older Mac, or an embedded device, running the native llama.cpp server provides the most resource-efficient way to host a local model. OpenClaw can target its built-in server directly, ensuring that even low-powered hardware can provide an active intelligence layer."
+          ]
+        },
+        "lmstudio": {
+          "uid": "lmstudio",
+          "name": "LM Studio",
+          "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
+          "details": [
+            "LM Studio is a highly polished, Electron-based desktop graphical user interface (GUI) application designed to make local AI accessible to non-technical users. It features a built-in model browser directly connected to Hugging Face, allowing users to search for, filter, and download GGUF models with a single click. Beyond model management, it provides a ChatGPT-like chat interface and visual resource monitoring tools that show exactly how much RAM and VRAM a model is consuming.",
+            "Importantly, it includes a one-click \"Local Server\" feature that spins up an inference engine mimicking the OpenAI API structure. While OpenClaw is fundamentally a headless, daemon-driven framework, LM Studio is incredibly useful for OpenClaw users during the testing and discovery phase.",
+            "A user can use LM Studio's GUI to find and test the perfect model for their OpenClaw agent, start the local server on port 1234, and then point OpenClaw's configuration to that local endpoint for seamless integration."
+          ]
+        },
+        "localai": {
+          "uid": "localai",
+          "name": "LocalAI",
+          "overview": "High Utility. OpenClaw uses tools heavily (Voice TTS, Vision, Image Generation). Because LocalAI serves as a drop-in OpenAI replacement for *all* these modalities, it allows a user to run a completely offline, full-featured OpenClaw deployment without configuring separate providers for every tool.",
+          "details": [
+            "LocalAI is an open-source, Golang-based drop-in replacement for the OpenAI REST API. Instead of just wrapping a single text generation engine, it acts as a unified hub that supports multiple backends—including llama.cpp for text, Whisper for audio transcription, and Stable Diffusion for image generation.",
+            "By replicating the entire OpenAI API spec, LocalAI allows applications written to use cloud APIs to instantly switch to local hardware without changing a single line of code. It handles the routing, model loading, and hardware acceleration behind the scenes, effectively turning a local machine into a private OpenAI server.",
+            "For OpenClaw, LocalAI is exceptionally powerful because it addresses OpenClaw's multimodal tooling needs. OpenClaw relies on tools like `tts` (text-to-speech), `image_generate`, and vision analysis. By pointing OpenClaw's base URL to a LocalAI instance, the agent can access local text, voice, and image models through a single, unified pipeline, eliminating the need to configure separate providers for each capability."
+          ]
+        },
+        "koboldcpp": {
+          "uid": "koboldcpp",
+          "name": "KoboldCPP",
+          "overview": "Moderate Utility. OpenClaw's heavy reliance on reading `MEMORY.md` and transcript history means context sizes get large quickly. KoboldCPP's ContextShift feature saves massive amounts of compute by not reprocessing the prompt on every turn, making OpenClaw noticeably more responsive on consumer hardware.",
+          "details": [
+            "KoboldCPP is a self-contained, C++-based executable originally forked from llama.cpp. It was historically developed to cater to the AI roleplay and storytelling communities, which require large context windows and rapid back-and-forth conversational capabilities. Its standout technical feature is \"ContextShift\" (or SmartContext). When a conversation grows long, standard inference engines often re-evaluate the entire prompt upon every new message.",
+            "KoboldCPP intelligently caches the unchanged portions of the context window, drastically reducing the time to first token on subsequent turns, especially on consumer GPUs. This makes KoboldCPP highly valuable for OpenClaw's memory architecture. Because OpenClaw agents frequently load large transcripts and the extensive `MEMORY.md` file into their context on every turn, KoboldCPP's ContextShift prevents massive processing delays. OpenClaw connects via its API, resulting in a much snappier, responsive real-time agent."
+          ]
+        },
+        "textgenwebui": {
+          "uid": "textgenwebui",
+          "name": "Text-Gen-WebUI",
+          "overview": "Moderate Utility. While the UI is irrelevant to OpenClaw, its support for the ExLlamaV2 loader is crucial. For users with high-end Nvidia GPUs who want the absolute fastest tokens-per-second on local hardware, pointing OpenClaw at the WebUI API running an EXL2 model is the power-user optimal path.",
+          "details": [
+            "Text-Gen-WebUI, affectionately known in the community as \"Oobabooga\", is a Gradio-based web interface that serves as the Swiss Army knife of local LLMs. It is designed for power users, researchers, and enthusiasts who want granular control over every aspect of model inference.",
+            "Unlike tools that rely solely on GGUF/llama.cpp, Text-Gen-WebUI supports bleeding-edge loaders like ExLlamaV2, AutoGPTQ, and AWQ. ExLlamaV2, in particular, allows for incredibly fast inference of GPTQ/EXL2 models on modern Nvidia GPUs, often vastly outperforming llama.cpp in tokens-per-second.",
+            "For OpenClaw users with high-end gaming PCs or multi-GPU rigs, Text-Gen-WebUI is the ultimate backend. By loading an EXL2 model and enabling the WebUI's OpenAI API extension, OpenClaw gains access to blistering fast generation speeds. This makes complex agent tasks, such as recursive web searching and heavy summarization, complete in a fraction of the time."
+          ]
+        },
+        "jan": {
+          "uid": "jan",
+          "name": "Jan.ai",
+          "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
+          "details": [
+            "Jan.ai is a privacy-first, open-source desktop application positioned as a direct, transparent alternative to closed-source GUIs like LM Studio. Built with Electron and React, it provides a clean, modern interface for downloading and interacting with local models entirely offline.",
+            "Under the hood, Jan uses the \"Nitro\" engine, which is a highly optimized C++ wrapper around llama.cpp. Nitro manages the hardware orchestration, ensuring models run smoothly on Mac, Windows, and Linux, while exposing a robust API server that runs alongside the application.",
+            "For OpenClaw, Jan provides a highly stable and open-source endpoint. A user who prefers a desktop GUI to manage their model library can keep Jan running in the background. OpenClaw can simply be pointed to Jan's default `localhost:1337` server port, providing the agent with reliable access to the user's curated GGUF library."
+          ]
+        },
+        "msty": {
+          "uid": "msty",
+          "name": "Msty",
+          "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
+          "details": [
+            "Msty is a relatively new, highly polished desktop application designed to bridge the gap between local models and cloud providers. It features a sleek, modern interface with a strong focus on prompt management, knowledge bases, and multi-model comparison. It allows users to download local models with ease while also plugging in API keys for models like Claude or GPT-4.",
+            "Like other desktop clients, Msty abstracts the complexities of the underlying inference engine (usually llama.cpp based) and provides a local server functionality.",
+            "Within the OpenClaw ecosystem, Msty operates similarly to LM Studio and Jan.ai. Its primary utility is for users who want an aesthetically pleasing, GUI-driven way to manage their models and system resources before minimizing the app and allowing OpenClaw to connect to its locally exposed API for background agent tasks."
+          ]
+        },
+        "gpt4all": {
+          "uid": "gpt4all",
+          "name": "GPT4All",
+          "overview": "Lowest Utility. While excellent for CPU-only privacy enthusiasts, its ecosystem is highly curated and restrictive compared to the open Wild West of Hugging Face. Its API is functional for OpenClaw, but Ollama or native llama.cpp generally handle CPU fallbacks better with vastly superior model selection.",
+          "details": [
+            "GPT4All is an ecosystem developed by Nomic AI, focused intensely on making AI accessible to everyday users without expensive hardware. It emphasizes privacy and the ability to run highly compressed models specifically tailored for standard consumer CPUs (though it supports GPUs as well). It provides desktop applications, Python SDKs, and a curated hub of models that have been heavily quantized and vetted to ensure they can run on basic laptops with 8GB of RAM.",
+            "The underlying engine relies on llama.cpp, optimized for maximum compatibility across varying low-end architectures. For OpenClaw, GPT4All is useful when deploying the agent framework on severely hardware-constrained laptops. While the models might be smaller and the CPU inference slower, GPT4All’s API server allows an OpenClaw node to maintain local intelligence on devices that would instantly crash attempting to run vLLM or ExLlamaV2, ensuring the framework remains truly platform-agnostic."
+          ]
+        }
+      }
+    },
+    "browser": {
+      "uid": "browser",
+      "uids": "browsers",
+      "name": "Browser Automation",
+      "names": "Browser Automations",
+      "category": "Intelligence Execution",
+      "purpose": "Provides advanced, AI-driven DOM interaction, visual interpretation, and self-healing autonomous navigation capabilities.",
+      "providers": {
+        "browseruse": {
+          "uid": "browseruse",
+          "name": "Browser Use",
+          "overview": "Browser Use is an open-source library that empowers AI agents to autonomously control web browsers, seamlessly navigating, clicking, and extracting data using natural language.",
+          "details": [
+            "At its core, Browser Use creates a dynamic feedback loop. It looks at the website's code, formulates a step-by-step plan, executes an action (like clicking a button), and then re-evaluates the page to see if it worked. If a popup appears, the AI recognizes the failure and recalculates its approach to close the popup, mimicking human resilience.",
+            "For OpenClaw, this replaces the need for brittle, hardcoded web-scraping scripts. Instead of telling OpenClaw exactly which hidden HTML div to click (which breaks the moment the website updates its design), you simply tell OpenClaw your end goal.",
+            "By utilizing Playwright under the hood, it seamlessly integrates with OpenClaw's Python-based orchestration, granting your local agent the ability to execute complex, multi-step workflows like logging into a portal, navigating to a billing page, and downloading a PDF."
+          ]
+        },
+        "stagehand": {
+          "uid": "stagehand",
+          "name": "Stagehand",
+          "overview": "Stagehand is a hybrid browser automation framework that allows developers to mix traditional, rigid code with flexible, AI-driven natural language commands to create highly reliable web agents.",
+          "details": [
+            "The fundamental problem with pure AI web browsing is that it can be unpredictable and expensive, consuming thousands of tokens to figure out how to click a simple 'Next' button. Stagehand solves this by allowing OpenClaw to use rigid, instantaneous code for the parts of a website that never change, while selectively calling on an AI model to navigate confusing or dynamic sections.",
+            "Specifically for OpenClaw, Stagehand introduces the ability to 'cache' actions. Once the AI successfully figures out how to navigate a complex login screen, Stagehand remembers the exact steps.",
+            "The next time OpenClaw runs that task, it bypasses the expensive AI evaluation step and executes the cached code instantly, resulting in massive API cost savings and vastly improved reliability for your daily background tasks."
+          ]
+        },
+        "agentbrowser": {
+          "uid": "agentbrowser",
+          "name": "Agent Browser",
+          "overview": "Developed by Vercel, Agent Browser is a blazing-fast, Rust-based command-line tool designed specifically to make web pages easily readable for Large Language Models.",
+          "details": [
+            "Standard web pages contain massive amounts of hidden code, styling, and tracking scripts that overwhelm an AI's context window, leading to high API costs and hallucinated mistakes. Agent Browser strips away all this noise, generating a highly compressed 'accessibility tree' that only shows the AI the elements it can actually interact with, assigning each a simple ID tag like `@e1`.",
+            "For OpenClaw, this means the agent doesn't need to write complex programming logic to interact with a page. It simply looks at the clean snapshot and issues a basic command like `click @e1`.",
+            "Because it runs as a native application rather than a heavy Node.js environment, it boasts sub-millisecond execution times. This allows OpenClaw to maintain lightning-fast browsing speeds even on severely hardware-constrained laptops or Raspberry Pis."
+          ]
+        },
+        "skyvern": {
+          "uid": "skyvern",
+          "name": "Skyvern",
+          "overview": "Skyvern is a powerful open-source platform that uses computer vision to automate browser workflows, allowing AI to literally 'see' a website just like a human does.",
+          "details": [
+            "Traditional automation tools read the hidden HTML code of a website to find buttons, which completely fails on modern, highly-secured websites that intentionally scramble their code to block bots. Skyvern bypasses the code entirely. It takes a screenshot of the page, passes it to a Vision LLM, and calculates the exact pixel coordinates to click based on visual appearance.",
+            "Integrating Skyvern grants OpenClaw the ultimate anti-fragility. If a website completely overhauls its design, renames all its code, but keeps the 'Submit' button visually looking like a button, Skyvern will still succeed.",
+            "This capability is computationally heavy, making it ideal for OpenClaw clusters with dedicated hardware, enabling the agent to autonomously purchase items, fill out complex government forms, and navigate highly obfuscated enterprise portals."
+          ]
+        },
+        "hyperbrowser": {
+          "uid": "hyperbrowser",
+          "name": "Hyperbrowser",
+          "overview": "Hyperbrowser is a scalable infrastructure platform that provides AI agents with managed, anti-bot resistant browser sessions running in the cloud.",
+          "details": [
+            "When a local AI agent attempts to scrape data from popular websites, it is almost immediately blocked by security systems like Cloudflare, CAPTCHAs, or IP bans. Hyperbrowser acts as a heavy-duty shield, automatically solving CAPTCHAs, rotating proxy IP addresses, and mimicking legitimate human browsing patterns to bypass these defenses.",
+            "For OpenClaw, Hyperbrowser shifts the burden of web execution off your local machine. Instead of spinning up RAM-hungry Chrome instances on your laptop, OpenClaw pings the Hyperbrowser API.",
+            "This allows your single OpenClaw agent to instantly launch hundreds of parallel web-scraping tasks in the cloud, gathering massive amounts of data in seconds without risking your home IP address getting blacklisted by your favorite websites."
+          ]
+        },
+        "steel": {
+          "uid": "steel",
+          "name": "Steel Browser",
+          "overview": "Steel is an open-source browser API that specializes in long-running, persistent cloud browser sessions for AI applications.",
+          "details": [
+            "Many automated web tasks fail because websites log the user out or require complex two-factor authentication (2FA) that an AI cannot easily bypass on its own. Steel solves this by allowing users to maintain persistent browser states, saving authentication cookies and session data so the AI can pick up exactly where it left off yesterday.",
+            "When connected to OpenClaw, Steel acts as the agent's dedicated remote workstation. An OpenClaw agent can launch a session, have the human user manually solve a 2FA prompt via a live viewer URL, and then let the AI take over to run tasks for the next 24 hours.",
+            "This persistent session management is critical for OpenClaw deployments that manage corporate social media accounts, interact with bank portals, or handle any continuous workflow where losing the logged-in state would break the automation."
+          ]
+        },
+        "lavague": {
+          "uid": "lavague",
+          "name": "LaVague",
+          "overview": "LaVague is a Large Action Model (LAM) framework that translates your natural language goals directly into executable web automation code.",
+          "details": [
+            "Instead of just acting as a simple browser, LaVague utilizes a 'World Model' to understand the visual state of a webpage and an 'Action Engine' to compile that understanding into standard automation scripts (like Selenium or Playwright). It effectively acts as an autonomous QA engineer that writes its own code on the fly to achieve an objective.",
+            "For OpenClaw, LaVague serves as an advanced cognitive translation layer. If you ask OpenClaw to 'Download the latest invoice from AWS', LaVague handles the complex reasoning of mapping the AWS interface into a series of actionable code steps.",
+            "Furthermore, because LaVague outputs standard automation code, OpenClaw can save that generated script locally. This allows the framework to execute the exact same task later with zero AI overhead, permanently expanding OpenClaw's library of rigid, reliable skills."
+          ]
+        }
+      }
+    },
+    "fetcher": {
+      "uid": "fetcher",
+      "uids": "fetchers",
+      "name": "Web Fetcher",
+      "names": "Web Fetchers",
+      "category": "Intelligence Execution",
+      "purpose": "Bypasses anti-bot measures to fetch, render, and extract clean, LLM-ready markdown or JSON from specific URLs.",
+      "providers": {
+        "firecrawl": {
+          "uid": "firecrawl",
+          "name": "Firecrawl",
+          "overview": "Firecrawl is an API service and open-source tool designed to search, scrape, and interact with the web, turning any URL into clean Markdown or structured JSON for LLMs.",
+          "details": [
+            "Firecrawl simplifies the complex pipeline of moving data from a raw website into an AI agent's context window. It handles all the heavy lifting behind the scenes, including rotating proxies, managing rate limits, rendering JavaScript-heavy pages, and bypassing aggressive anti-bot protections.",
+            "For OpenClaw, Firecrawl acts as a massive upgrade to the default `web_fetch` tool. Instead of just grabbing raw HTML, it returns perfectly formatted Markdown that maximizes token efficiency. Furthermore, it supports interactive scraping—meaning OpenClaw can instruct Firecrawl to scroll, wait, or click a button before extracting the data.",
+            "This provider is highly versatile because it can be consumed as a managed cloud API (for low-resource machines) or fully self-hosted via Docker for users with the hardware to support its concurrent worker queues."
+          ]
+        },
+        "crawl4ai": {
+          "uid": "crawl4ai",
+          "name": "Crawl4AI",
+          "overview": "Crawl4AI is a lightning-fast, open-source asynchronous web scraping tool written in Python, specifically optimized for feeding Large Language Models.",
+          "details": [
+            "Built on top of Playwright, Crawl4AI excels at high-performance concurrent scraping. It extracts clean Markdown, structured JSON, and comprehensive media tags (images, audio, video) while offering advanced chunking and extraction strategies (including cosine clustering and CSS selectors).",
+            "Within the OpenClaw ecosystem, Crawl4AI provides a completely free, self-hosted alternative to paid scraping APIs. Because it runs asynchronously, an OpenClaw agent can dispatch multiple URLs to be fetched simultaneously without blocking the main event loop.",
+            "It is incredibly valuable for users who want to build massive local knowledge bases (like RAG pipelines) rapidly, offering the speed and LLM-friendly formatting of enterprise tools without the recurring API costs."
+          ]
+        },
+        "scrapegraphai": {
+          "uid": "scrapegraphai",
+          "name": "ScrapeGraphAI",
+          "overview": "ScrapeGraphAI is a Python library and API that utilizes LLMs and direct graph logic to dynamically construct scraping pipelines from natural language prompts.",
+          "details": [
+            "Traditional web scrapers require developers to hardcode specific XPath or CSS selectors. If the target website changes its layout, the scraper immediately breaks. ScrapeGraphAI solves this by using AI to analyze the DOM and intelligently locate the requested information, regardless of the underlying HTML structure.",
+            "For OpenClaw, this introduces a highly resilient, 'self-healing' fetching mechanism. When OpenClaw needs to extract specific data (like 'Find all product prices on this page'), it passes the natural language request to ScrapeGraphAI.",
+            "Because it integrates seamlessly with local models via LiteLLM or Ollama, OpenClaw can execute these adaptive scrapes entirely offline, guaranteeing that long-running background tasks won't fail just because a website updated its stylesheet."
+          ]
+        },
+        "jinareader": {
+          "uid": "jinareader",
+          "name": "Jina AI Reader",
+          "overview": "Jina AI Reader is an ultra-lightweight API tool that instantly converts any URL into LLM-friendly Markdown by simply prepending a specific prefix to the target address.",
+          "details": [
+            "Jina Reader requires absolutely no complex SDKs, local dependencies, or heavy browser installations. By simply prepending `https://r.jina.ai/` to a URL, the service's cloud infrastructure uses headless browsers to render the page, execute JavaScript, and apply readability algorithms to strip away ads and navigation menus.",
+            "For OpenClaw, this is the lowest-friction fetcher available. It is a drop-in replacement for the default fetching logic. The agent simply modifies the URL string it requests, and it receives perfectly clean text in return.",
+            "Because the processing happens entirely on Jina's servers, it is the ultimate solution for OpenClaw nodes running on severely constrained hardware (like a Raspberry Pi or an older MacBook) where running a local Chromium instance would cause the system to crash."
+          ]
+        },
+        "zyte": {
+          "uid": "zyte",
+          "name": "Zyte",
+          "overview": "Zyte is an enterprise-grade, all-in-one Web Scraping API that specializes in bypassing the most aggressive anti-bot protections on the internet.",
+          "details": [
+            "Many valuable data sources (like major e-commerce platforms or real estate listings) employ sophisticated defense systems like Cloudflare, Datadome, or behavioral CAPTCHAs to block automated scrapers. Zyte automatically manages a massive pool of residential proxies and mimics human browsing patterns to ensure requests succeed.",
+            "For OpenClaw, Zyte is the nuclear option for data retrieval. If the agent repeatedly encounters '403 Forbidden' errors or CAPTCHA walls when using standard fetching tools, routing the request through the Zyte API guarantees the data will be successfully retrieved.",
+            "While it relies on a commercial API subscription, it eliminates the immense engineering overhead of manually managing proxy pools and reverse-engineering anti-bot algorithms, allowing the agent to focus purely on data analysis."
+          ]
+        },
+        "octoparse": {
+          "uid": "octoparse",
+          "name": "Octoparse",
+          "overview": "Octoparse is a powerful no-code web scraping platform that excels at large-scale, structured data extraction across paginated and highly dynamic websites.",
+          "details": [
+            "Originally built as a visual desktop tool for human researchers, Octoparse allows users to 'point and click' to create scraping templates. Its cloud platform can then execute these templates programmatically, handling complex tasks like infinite scrolling, dropdown menus, and batch URL processing.",
+            "Within the OpenClaw framework, Octoparse is best utilized for massive, structured data harvesting rather than ad-hoc, single-page reads. An OpenClaw agent can trigger a predefined Octoparse task via API to scrape an entire catalog of products.",
+            "Octoparse handles the cloud execution, IP rotation, and parsing, eventually returning a clean CSV or JSON dataset to the agent. This cleanly separates the heavy lifting of batch scraping from the agent's real-time reasoning loop."
+          ]
+        },
+        "browseai": {
+          "uid": "browseai",
+          "name": "Browse AI",
+          "overview": "Browse AI is a no-code web scraping and monitoring platform that allows users to train a cloud robot to extract data or monitor site changes in minutes.",
+          "details": [
+            "Browse AI relies on a visual recording interface. A human user performs the scraping steps once (clicking, selecting data), and the platform generates a persistent, automated API endpoint for that specific task. It excels at scheduled execution and detecting changes on a page.",
+            "For OpenClaw, Browse AI is exceptionally useful for recurrent monitoring workflows. Instead of OpenClaw constantly polling a website (which wastes API tokens and compute power), Browse AI handles the continuous monitoring in the cloud.",
+            "When a specific event occurs—like a price dropping below a threshold or a new job being posted—Browse AI can trigger a webhook back to the OpenClaw Event Gateway, waking the agent up only when there is actionable data to process."
+          ]
+        }
+      }
+    },
+    "searcher": {
+      "uid": "searcher",
+      "uids": "searchers",
+      "name": "Web Search API",
+      "names": "Web Search APIs",
+      "category": "Intelligence Execution",
+      "purpose": "Executes high-speed, lightweight HTTP searches to return structured snippets, URLs, and real-time knowledge.",
+      "providers": {
+        "searxng": {
+          "uid": "searxng",
+          "name": "SearXNG",
+          "overview": "SearXNG is a free, open-source, privacy-respecting metasearch engine that aggregates results from dozens of search providers without tracking user data.",
+          "details": [
+            "Unlike standard search APIs that rely on a single corporate index (like Google or Bing), SearXNG acts as a proxy. When an agent queries it, SearXNG simultaneously forwards that query to over 70 different search engines, aggregates the results, removes duplicates, and strips out all tracking and advertising links.",
+            "For OpenClaw, SearXNG is the ultimate self-hosted privacy shield. Because it runs locally as a lightweight Docker container, your agent's queries never expose your personal IP address or search history to Big Tech companies. It provides unlimited, free search capabilities without the need for API subscriptions.",
+            "Additionally, by pooling multiple search engines, it naturally bypasses the restrictive rate limits often imposed on free-tier APIs, ensuring your agent always has access to real-time information during long-running research loops."
+          ]
+        },
+        "tavily": {
+          "uid": "tavily",
+          "name": "Tavily",
+          "overview": "Tavily is a search engine built from the ground up specifically for Large Language Models (LLMs) and RAG workflows, returning synthesized answers rather than just a list of blue links.",
+          "details": [
+            "Traditional search APIs return raw HTML pages or brief meta-descriptions, forcing the AI agent to waste thousands of tokens reading irrelevant boilerplate to find a single fact. Tavily solves this by performing the extraction and synthesis on its own servers, returning clean, LLM-ready context.",
+            "When integrated into OpenClaw, Tavily acts as an extreme optimization layer. If the agent needs to know 'Who won the election yesterday?', Tavily doesn't just hand the agent five news URLs to read; it hands the agent the exact answer synthesized from those five URLs.",
+            "This drastically reduces context bloat, lowers API costs, and minimizes the risk of hallucinations, making it an exceptional choice for users running OpenClaw on constrained hardware where local compute is precious."
+          ]
+        },
+        "brave": {
+          "uid": "brave",
+          "name": "Brave Search API",
+          "overview": "The Brave Search API provides access to a completely independent, global web index that does not rely on Big Tech monopolies, ensuring unbiased and private results.",
+          "details": [
+            "The vast majority of alternative search engines simply lease their search results from Google or Bing. Brave has built its own independent index of the web from scratch. It is designed to prioritize high-quality, human-created content while aggressively filtering out SEO spam and affiliate marketing farms.",
+            "For OpenClaw, the Brave API offers a massive, high-quality data stream that is free from algorithmic bias or corporate filtering. It provides a clean, well-structured JSON response that agents can parse instantly without needing secondary extraction tools.",
+            "Because it emphasizes privacy and data independence, it aligns perfectly with the MetaClaw ethos. It is highly recommended for users who want enterprise-grade search speed but refuse to feed their AI's queries into the data-harvesting ecosystems of major tech conglomerates."
+          ]
+        },
+        "exa": {
+          "uid": "exa",
+          "name": "Exa",
+          "overview": "Exa (formerly Metaphor) is a neural search engine that finds web pages based on semantic meaning and context rather than relying on exact keyword matches.",
+          "details": [
+            "Standard search engines match the literal words in your query to words on a webpage. Exa uses advanced embedding models to understand the *intent* behind the query. If an agent searches for 'best practices for scaling postgres', Exa finds articles that discuss the concept, even if they never use those exact words, resulting in vastly higher-quality results.",
+            "Within OpenClaw, Exa's most powerful feature is 'Highlights'. Instead of returning the full text of a massive webpage, Exa intelligently extracts only the few sentences that directly answer the agent's prompt. This cuts token usage by over 50% per search.",
+            "Exa also maintains dedicated, specialized indexes for specific domains like coding documentation, company data, and people. This allows a specialized OpenClaw sub-agent (like a coding assistant) to restrict its search purely to verified GitHub repos and API docs, completely eliminating hallucinated code."
+          ]
+        },
+        "linkup": {
+          "uid": "linkup",
+          "name": "Linkup",
+          "overview": "Linkup is an enterprise-grade AI search platform focused on connecting agents to premium, factual, and up-to-date business intelligence sources.",
+          "details": [
+            "Linkup is designed to ground Large Language Models in hard facts. It prioritizes premium, verified content sources over general web chatter, making it highly reliable for professional, financial, or strategic queries. It features a dual-tier system: a 'Standard' mode for blazing-fast RAG grounding, and a 'Deep' mode for complex, chain-of-thought information retrieval.",
+            "For OpenClaw, Linkup acts as the ultimate business intelligence integration. When an agent is tasked with generating a macro-risk analysis on a competitor, Linkup's Deep mode will autonomously execute multiple sub-searches and synthesize the findings before returning the payload to OpenClaw.",
+            "It also features robust built-in security, including managed authentication and strict access controls. This means you don't have to hardcode sensitive API keys directly into your OpenClaw agent logic, making it ideal for corporate or multi-user environments."
+          ]
+        },
+        "parallelai": {
+          "uid": "parallelai",
+          "name": "Parallel AI Search",
+          "overview": "Parallel AI is an advanced search and deep research API engineered specifically to handle complex, multi-hop queries by synthesizing information across scattered sources in a single pass.",
+          "details": [
+            "When a human uses a search engine, they look for links to click. When an AI uses a search engine, it needs information-dense tokens. Parallel AI is built exclusively for the latter. It excels at answering complex questions that require synthesizing data from five different websites, a process known as multi-hop reasoning.",
+            "In a standard OpenClaw setup, answering a complex question causes the agent to enter a loop: search, read a page, realize it's missing context, search again, read another page. This compounds latency and explodes token costs. Parallel AI solves this by resolving the entire multi-faceted query on its own backend.",
+            "By delivering a single, comprehensive payload to the OpenClaw Gateway, Parallel AI drastically reduces the number of sequential calls the agent has to make. It provides state-of-the-art accuracy for deep enterprise research while effectively halving the operational cost of the agent."
+          ]
+        }
+      }
+    },
+    "memory": {
+      "uid": "memory",
+      "uids": "memories",
+      "name": "Long-Term Memory",
+      "names": "Long-Term Memories",
+      "category": "Data & State Management",
+      "purpose": "The permanent, space-efficient archive for the agent. This database must support high-dimensional vector embeddings for semantic search (associative recall) alongside standard relational data (configs, logs).",
+      "providers": {
+        "postgres": {
+          "uid": "postgres",
+          "name": "PostgreSQL + pgvector",
+          "overview": "Highest Utility. Acts as the optimal default. It allows OpenClaw to store structured agent configurations alongside high-dimensional embedding vectors in a single, battle-tested engine. This eliminates the need to run separate databases for relational data and semantic recall, drastically simplifying edge deployments.",
+          "details": [
+            "PostgreSQL is a highly stable, open-source relational database provider for the Memory service. By adding the `pgvector` extension, it gains the ability to store high-dimensional embeddings and perform exact and approximate nearest neighbor searches.",
+            "For OpenClaw, this provides a unified storage layer where both standard relational state (like agent configs or parsed data) and semantic memory vectors can live side-by-side. This eliminates the need to maintain two separate database systems, simplifying the local deployment architecture for edge nodes. Its robust querying capabilities allow agents to perform complex hybrid searches, filtering memories by structured metadata (like dates or source types) before executing the vector similarity comparison."
+          ],
+          "diagnostics": "1. **Roles:** You should see `litellm_app` and `openclaw_app`\n2. **Databases:** You should see `litellm_db` and `openclaw_db`\n3. **Extensions:** You should see `vector` version 0.6.0 (or higher)"
+        },
+        "qdrant": {
+          "uid": "qdrant",
+          "name": "Qdrant",
+          "overview": "High Utility. An excellent choice for pure semantic engines. Its Rust-based architecture makes it incredibly lightweight and fast. If an OpenClaw deployment focuses heavily on vector retrieval without needing complex relational joins, Qdrant offers superior pure-search latency.",
+          "details": [
+            "Qdrant is a modern, open-source vector database written entirely in Rust, designed specifically for high-performance similarity search. It uses a custom HNSW (Hierarchical Navigable Small World) algorithm implementation that makes semantic recall exceptionally fast, even on consumer-grade hardware.",
+            "For OpenClaw agents operating strictly as pure semantic engines (without heavy relational data needs), Qdrant serves as an ultra-low-latency cognitive recall layer. Its lightweight footprint makes it ideal for local edge deployments while maintaining the capability to scale to massive cloud clusters if needed. Qdrant's payload filtering capabilities are particularly strong, allowing OpenClaw agents to attach extensive JSON metadata to their memories and execute highly precise, hybrid filter-and-search queries during execution loops."
+          ]
+        },
+        "milvus": {
+          "uid": "milvus",
+          "name": "Milvus",
+          "overview": "Specialized Utility. Milvus is designed for enterprise-scale deployments managing billions of vectors. For a standard personal OpenClaw setup, its microservices-oriented architecture introduces unnecessary overhead and complexity, making it architectural overkill for edge or laptop deployments.",
+          "details": [
+            "Milvus is an industrial-grade, highly scalable vector database engineered to manage billions of embeddings. It offers advanced indexing algorithms and hardware acceleration to maintain microsecond latency under massive load. While incredibly powerful, its microservices-oriented architecture is quite heavy. For a standard personal OpenClaw instance, Milvus is architectural overkill, but it becomes necessary if the agent is deployed in an enterprise environment tasked with indexing entire corporate knowledge bases or massive context lakes.",
+            "By offloading semantic search to a distributed Milvus cluster, enterprise OpenClaw agents can perform instantaneous associative recall across petabytes of historical interactions, ensuring that scale never degrades conversational responsiveness."
+          ]
+        },
+        "weaviate": {
+          "uid": "weaviate",
+          "name": "Weaviate",
+          "overview": "Moderate Utility. Weaviate's strength lies in its built-in ML modules and automatic vectorization. However, because OpenClaw typically routes embedding generation through the LiteLLM proxy pipeline, Weaviate's native vectorization features can introduce redundancy into the framework's architecture.",
+          "details": [
+            "Weaviate is an open-source, Go-based vector database that stands out by offering built-in machine learning modules and a flexible GraphQL API. It can automatically vectorize text on ingestion if configured to do so, bridging the gap between raw data storage and embedding generation.",
+            "For OpenClaw, Weaviate offers a developer-friendly query interface and rich filtering capabilities. It allows agents to structure their memories using an intuitive graph-like syntax, making complex semantic traversals easier to encode.",
+            "However, since OpenClaw typically relies on LiteLLM for routing and unified embedding generation, some of Weaviate's native vectorization features may be redundant in this specific framework. Despite this, its robust community and integration ecosystem make it a highly capable memory backend."
+          ]
+        },
+        "sqlite": {
+          "uid": "sqlite",
+          "name": "SQLite",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "cache": {
+      "uid": "cache",
+      "uids": "caches",
+      "name": "Real-Time Cache",
+      "names": "Real-Time Caches",
+      "category": "Data & State Management",
+      "purpose": "Ultra-low latency, ephemeral storage. It is used for semantic caching (to save money on repeated API queries), maintaining short-term session states, facilitating multi-agent pub/sub communication, and distributed locking.",
+      "providers": {
+        "redis": {
+          "uid": "redis",
+          "name": "Redis",
+          "overview": "High Utility. Redis is the Swiss Army knife for real-time agent operations. It provides microsecond latency for session state management, pub/sub for sub-agent communication, and vector search via Redis Stack. It is easily containerized alongside an OpenClaw deployment, making it a robust, low-latency engine for immediate conversational memory.",
+          "details": [
+            "Redis is an advanced, in-memory data structure provider that supports complex data types such as strings, hashes, lists, sets, and sorted sets. Unlike Memcached, Redis offers configurable persistence (saving to disk) and has a rich ecosystem of modules. Notably, Redis Stack introduces RedisVL (Vector Library), which allows it to store embeddings and perform semantic similarity searches.",
+            "Within OpenClaw, Redis is highly versatile for managing real-time agent state. The lists and hashes are ideal for maintaining a rolling window of recent conversational context, allowing the agent to instantly read the last few turns of dialogue without parsing local disk files. Furthermore, its pub/sub messaging capabilities can be used to coordinate multiple sub-agents operating concurrently within the OpenClaw environment.",
+            "By utilizing Redis as a vector store provider, OpenClaw can index its local `MEMORY.md` and transcript files in real-time. When a user asks a question requiring historical context, the agent can perform a sub-millisecond semantic search against the Redis cache to retrieve the exact relevant memories, providing a highly responsive and persistent cognitive loop."
+          ],
+          "diagnostics": "1. **Connectivity:** You should see `PONG`\n2. **Max Memory:** You should see `512.00M`\n3. **Eviction Policy:** You should see `allkeys-lru`"
+        },
+        "turso": {
+          "uid": "turso",
+          "name": "Turso",
+          "overview": "Highest Utility. Turso perfectly bridges OpenClaw's local-first philosophy with distributed needs. Its libSQL foundation means agents interact with it like a local file (zero network latency for immediate recall), but it automatically syncs across all of a user's OpenClaw nodes. The built-in vector support handles semantic search effortlessly within a highly portable architecture.",
+          "details": [
+            "Turso is a distributed, edge-hosted database built on libSQL, which is an open-source fork of SQLite. It is designed to push data as close to the compute layer as possible, allowing for microsecond read latencies. Turso supports embedded replicas, meaning an application can read from a local SQLite file while Turso seamlessly syncs changes to and from a global edge network. It also natively supports vector embeddings.",
+            "For OpenClaw, Turso perfectly aligns with the framework's local-first, node-based architecture. OpenClaw agents often run on laptops, Raspberry Pis, or VPS instances. Turso allows an agent to treat its memory as a local SQLite database, resulting in zero-latency reads and writes for real-time memory processing. When the agent moves to a different device or spins up a new node, Turso automatically syncs the agent's memory states, vectors, and operational data. This gives OpenClaw a unified, geographically distributed memory layer that maintains the simplicity and speed of a local file system while offering enterprise-grade semantic search and replication."
+          ]
+        },
+        "memcached": {
+          "uid": "memcached",
+          "name": "Memcached",
+          "overview": "Lowest Utility. While incredibly fast, Memcached's complete lack of persistence and zero support for vector/semantic search makes it practically useless for LLM memory. It can only cache API responses; it cannot help an OpenClaw agent recall past conversations, facts, or concepts.",
+          "details": [
+            "Memcached is a high-performance, distributed memory object caching system originally intended to speed up dynamic web applications by alleviating database load. It operates entirely in memory as a simple key-value store, meaning it lacks any out-of-the-box persistence. If the server reboots or the process crashes, all stored data is instantly lost.",
+            "For OpenClaw agents, Memcached can serve as a highly volatile, ultra-low-latency scratchpad. An agent might use it to temporarily cache API responses from external tools (like weather data or fetched web pages) or to store intermediate step calculations during a complex chain of thought. This prevents the agent from needlessly re-fetching data during a short-lived execution loop.",
+            "However, its utility for true \"agent memory\" is heavily restricted. Because it lacks vector search capabilities and data persistence, it cannot handle semantic recall or retain conversational history across session restarts. It is strictly a tactical tool for transient execution state rather than a cognitive memory layer."
+          ]
+        },
+        "convex": {
+          "uid": "convex",
+          "name": "Convex",
+          "overview": "Moderate/Low Utility. The reactive, TypeScript-native nature of Convex is excellent, but it fundamentally shifts the architecture to a Cloud-backend model. OpenClaw agents are typically designed to run close to the metal (or in local containers). Relying on Convex moves the memory core to a centralized cloud, which may violate privacy or local-execution preferences.",
+          "details": [
+            "Convex is a reactive backend-as-a-service designed for modern full-stack TypeScript applications. It unifies a database, serverless functions, and real-time state synchronization via WebSockets into a single platform. When data changes in the Convex database, those changes are immediately and reactively pushed to connected clients without the need for polling.",
+            "For an OpenClaw agent, Convex provides a uniquely reactive memory layer. Instead of the agent needing to constantly poll for changes or rely entirely on cron jobs, external events (like a user updating a preference in a UI, or another sub-agent completing a task) can be instantly pushed into the agent's active context window. Convex also includes managed vector search functionality. This means OpenClaw can offload the heavy lifting of embedding management and similarity search to the Convex backend.",
+            "The agent simply subscribes to its memory stream, ensuring its context is always perfectly synchronized with external state changes in real-time."
+          ]
+        },
+        "memori": {
+          "uid": "memori",
+          "name": "Memori Labs",
+          "overview": "Moderate/High Utility. This technology solves the hardest part of agent memory: cognitive synthesis. It abstracts entity extraction and memory decay, making the OpenClaw agent vastly more intelligent out of the box. However, it ranks lower than Turso and Redis because OpenClaw's current design philosophy leans toward transparent, file-based (`MEMORY.md`) local control rather than opaque, API-driven external synthesis.",
+          "details": [
+            "Memory-as-a-Service platforms (like Mem0, often associated with Memori concepts) provide an intelligent, API-driven memory layer specifically built for Large Language Models. Instead of just storing raw text or vectors, these platforms actively extract entities, facts, and user preferences from conversations. They handle the synthesis, deduplication, and decay of information automatically.",
+            "In the context of OpenClaw, this technology shifts the burden of memory curation away from the agent's raw compute. Instead of the agent manually reading and writing to `MEMORY.md`, it passes the conversational transcript to the memory API. The service automatically extracts insights (e.g., \"Wade is living in Costa Rica in 2024\") and structures them into a queryable graph.",
+            "This provides OpenClaw agents with highly synthesized real-time memory. When generating a response, the agent queries the API and receives a curated, highly relevant set of facts tailored to the exact prompt, drastically reducing token usage and eliminating the need for the agent to manually sift through years of disorganized markdown files."
+          ]
+        },
+        "context-lakes": {
+          "uid": "context-lakes",
+          "name": "Context Lakes",
+          "overview": "Low Utility (for real-time). Context Lakes are powerful for deep, historical RAG pipelines, but they are batch-oriented storage architectures rather than real-time memory caches. They feed the agent's long-term knowledge but do not provide the fast, transient execution memory required for fluid, real-time agent interactions.",
+          "details": [
+            "A Context Lake is an architectural pattern and emerging class of data infrastructure designed to ingest massive volumes of unstructured, semi-structured, and structured data specifically for AI retrieval. Like a traditional data lake, it stores everything—chat logs, raw documents, telemetry, and biometrics—but is optimized to feed generative AI contexts via continuous embedding pipelines.",
+            "For an OpenClaw agent managing extensive personal data (such as your Quantified Self telemetry, Git histories, and extensive D&D world-building), a Context Lake acts as the ultimate backend repository. It swallows massive archives that would overwhelm a local filesystem or a simple vector database.",
+            "While not purely \"real-time\" in terms of microsecond caching, the Context Lake enables real-time memory by continuously processing background data and serving materialized views or specialized embedding indexes to the agent. When the OpenClaw agent needs to recall a complex intersection of past code and conversation, the Context Lake provides the deep-storage search backbone to surface that memory instantly."
+          ]
+        }
+      }
+    },
+    "sandbox": {
+      "uid": "sandbox",
+      "uids": "sandboxes",
+      "name": "Execution Sandbox",
+      "names": "Execution Sandboxes",
+      "category": "Security & Containment",
+      "purpose": "Hardened execution environments designed to contain the blast radius of agent actions. If an agent hallucinates a dangerous Python or Bash script, this layer prevents that code from escaping and destroying the host machine. (Standard Docker is insufficient here).",
+      "providers": {
+        "docker": {
+          "uid": "docker",
+          "name": "Docker",
+          "overview": "Unsafe for Code Execution. Perfect for packaging the OpenClaw framework itself, but fatally flawed for agent code execution due to shared host kernel vulnerabilities.",
+          "details": [
+            "Docker is the industry-standard platform for developing, shipping, and running applications in lightweight containers. It isolates processes using Linux kernel features like namespaces and cgroups, ensuring that applications run consistently regardless of the host environment. Its ubiquitous adoption and massive ecosystem make it the default deployment mechanism for almost all modern microservices.",
+            "However, standard Docker is fundamentally flawed as a security sandbox for executing untrusted, LLM-generated code. Because Docker containers share the host operating system's kernel, a sophisticated exploit or a hallucinated command (such as attempting to modify kernel modules or escaping the container privileges) can directly compromise the host machine.",
+            "In the context of OpenClaw, Docker is exceptional for packaging the framework's core services (like the Gateway, Proxy, and Database). But when the OpenClaw agent utilizes a code interpreter tool to run arbitrary Python or Bash scripts, standard Docker boundaries are insufficient. Relying solely on Docker for agent sandboxing exposes the user's host machine to unacceptable risk from both malicious prompt injections and erratic AI behavior."
+          ]
+        },
+        "docker-dood": {
+          "uid": "docker-dood",
+          "name": "Hardened Docker DooD",
+          "overview": "Provides a hardened, sterile execution environment for the Sandbox service. If your OpenClaw agent hallucinates a dangerous Python or Bash script, or is tricked via prompt injection into running malicious code, this environment ensures the code cannot escape and compromise your host machine.",
+          "details": [
+            "This provider creates a hardened, sterile execution environment for the Sandbox service. If your OpenClaw agent hallucinates a dangerous Python or Bash script, or is tricked via prompt injection into running malicious code, this environment ensures the code cannot escape and compromise your host machine. By utilizing Docker-out-of-Docker (DooD) principles, the main gateway routes all code execution requests into this isolated container rather than executing them internally.",
+            "Security Posture:\n* Network Isolation: The sandbox has no access to the internet or your internal openclaw-net Docker network. It cannot exfiltrate data or scan internal ports.\n* Capability Dropping: All Linux kernel capabilities are explicitly dropped (cap_drop: ALL).\n* No New Privileges: The container is forbidden from gaining new privileges via setuid binaries."
+          ]
+        },
+        "e2b": {
+          "uid": "e2b",
+          "name": "E2B",
+          "overview": "The Cloud-Offload Solution. The easiest way to achieve hardware-level microVM security. Highly recommended if the user is willing to pay for cloud execution and sacrifice offline capability.",
+          "details": [
+            "E2B is a cloud-hosted infrastructure platform purpose-built for executing AI agent workloads. It provides on-demand, ephemeral Linux sandboxes backed by Firecracker microVMs, ensuring hardware-level kernel isolation for untrusted code. Developers interact with E2B entirely through a streamlined Python or TypeScript SDK, allowing an AI agent to provision a secure environment, execute multi-step code sequences, and retrieve the outputs in less than 150 milliseconds.",
+            "The platform abstracts away all the complexity of virtualization orchestration. It utilizes pre-configured, versioned templates that allow agents to spawn environments with specific dependencies already installed. E2B sandboxes are session-scoped and designed to be spun up, used for a specific task (like data analysis or building an app), and then immediately destroyed, ensuring a perfectly clean state for every execution.",
+            "For OpenClaw, E2B is a phenomenal tool if the user is willing to offload execution to the cloud. It provides the ultimate security guarantee by running the agent's code on remote, heavily isolated infrastructure rather than the user's local machine. However, because it requires an active internet connection and relies on a proprietary cloud service (with usage-based billing), it fundamentally conflicts with OpenClaw's ethos of maintaining a fully local, free, and offline-capable AI ecosystem."
+          ]
+        },
+        "firecracker": {
+          "uid": "firecracker",
+          "name": "Firecracker",
+          "overview": "The Enterprise Standard. Offers unmatched KVM hardware isolation and millisecond boot times. However, the extreme orchestration complexity makes it unviable for standard personal deployments.",
+          "details": [
+            "Firecracker is an open-source virtualization technology developed by AWS, written in Rust, and designed specifically for creating and managing secure microVMs. It provides hardware-enforced isolation via KVM (Kernel-based Virtual Machine), meaning each workload runs within its own dedicated kernel boundary. Despite this heavy isolation, Firecracker is stripped of unnecessary legacy device drivers, allowing it to boot a microVM in roughly 125 milliseconds with less than 5MB of memory overhead.",
+            "While its performance and security guarantees are unparalleled, Firecracker is notoriously difficult to operate directly. It acts as a low-level Virtual Machine Monitor (VMM) rather than a complete orchestration platform. Deploying it requires engineers to manually construct and manage kernel images, root filesystems, and complex networking bridges. Consequently, it is typically utilized as the hidden backend engine powering massive serverless platforms rather than as a standalone developer tool.",
+            "In the OpenClaw ecosystem, utilizing Firecracker directly is generally considered architectural overkill for a standard local deployment. While it offers the absolute strongest defense-in-depth against rogue AI agents, the operational complexity of managing microVM kernels on a consumer laptop makes it impractical. However, if OpenClaw is being scaled into an enterprise, multi-tenant environment, utilizing a framework like Kata Containers (which abstracts Firecracker's complexity) becomes the gold standard for securely executing agent workloads."
+          ]
+        },
+        "gvisor": {
+          "uid": "gvisor",
+          "name": "gVisor",
+          "overview": "gVisor is a user-space application kernel developed by Google that provides a strong layer of hardware-agnostic isolation for containers. By intercepting application system calls and acting as the guest kernel, it provides boundary defenses that standard Docker lacks, preventing malicious or hallucinated code from compromising the host OS.",
+          "details": [
+            "Within the OpenClaw ecosystem, gVisor serves as an essential defense-in-depth mechanism for the execution sandbox. Because OpenClaw agents frequently utilize tools that write files or execute bash scripts (often automatically derived from LLM outputs), the risk of executing hallucinated, destructive code or falling victim to indirect prompt injections is significant. While standard Docker containers prevent basic filesystem tampering, they still share the host's underlying Linux kernel, leaving them vulnerable to privilege escalation and kernel-level exploits.",
+            "gVisor mitigates this risk by providing a completely separate, user-space kernel (the \"Sentry\") that intercepts and handles all system calls made by the sandboxed OpenClaw agent. This means that even if a malicious payload attempts to exploit a kernel vulnerability, it is trapped within gVisor's memory-safe Go implementation rather than reaching the actual host operating system. This makes it an exceptional local sandbox, as it delivers near-VM levels of security without the massive resource overhead or startup latency associated with traditional hardware virtualization like Firecracker.",
+            "Integrating gVisor into OpenClaw's Linux deployments is remarkably frictionless because it complies with the Open Container Initiative (OCI) runtime specification. Once the `runsc` binary is installed and registered with the host's Docker daemon, OpenClaw's gateway can seamlessly spawn sandboxes using the standard Docker API simply by passing the `--runtime=runsc` flag. This allows developers to maintain their existing Docker-based workflows and orchestration scripts while fundamentally hardening the blast radius of their autonomous agents."
+          ],
+          "diagnostics": "1. **Runtime Availability:** Verify that `runsc` is in the system PATH.\n2. **Docker Integration:** Ensure `docker info | grep runsc` shows it as an available runtime."
+        }
+      }
+    },
+    "secret": {
+      "uid": "secret",
+      "uids": "secrets",
+      "name": "Secrets Manager",
+      "names": "Secrets Managers",
+      "category": "Security & Containment",
+      "purpose": "A centralized, encrypted vault. It securely stores and injects third-party API keys (e.g., AWS, GitHub, Stripe) directly into the agent's runtime memory, ensuring secrets never leak into plaintext logs or configuration files.",
+      "providers": {
+        "infisical": {
+          "uid": "infisical",
+          "name": "Infisical",
+          "overview": "",
+          "details": []
+        },
+        "vault": {
+          "uid": "vault",
+          "name": "HashiCorp Vault",
+          "overview": "",
+          "details": []
+        },
+        "doppler": {
+          "uid": "doppler",
+          "name": "Doppler",
+          "overview": "",
+          "details": []
+        },
+        "bitwarden": {
+          "uid": "bitwarden",
+          "name": "Bitwarden Secrets Manager",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "iam": {
+      "uid": "iam",
+      "uids": "iam",
+      "name": "Identity & Access Management",
+      "names": "Identity & Access Management",
+      "category": "Security & Containment",
+      "purpose": "The authentication gatekeeper. Enforces Multi-Factor Authentication (MFA) and Single Sign-On (SSO) at the reverse proxy layer, ensuring unauthorized users cannot access the OpenClaw dashboard from the internet.",
+      "providers": {
+        "authelia": {
+          "uid": "authelia",
+          "name": "Authelia",
+          "overview": "",
+          "details": []
+        },
+        "authentik": {
+          "uid": "authentik",
+          "name": "Authentik",
+          "overview": "",
+          "details": []
+        },
+        "keycloak": {
+          "uid": "keycloak",
+          "name": "Keycloak",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "network": {
+      "uid": "network",
+      "uids": "networks",
+      "name": "Overlay Network",
+      "names": "Overlay Networks",
+      "category": "Security & Containment",
+      "purpose": "Provides zero-trust mesh networking and secure inbound routing. It allows you to access your AI cluster remotely without exposing router ports, and allows external services (like Google Chat webhooks) to securely POST data to your local gateway through CGNAT firewalls.",
+      "providers": {
+        "tailscale": {
+          "uid": "tailscale",
+          "name": "Tailscale",
+          "overview": "Highest Utility. Tailscale is the optimal default for OpenClaw. It seamlessly handles both full-mesh cluster routing (giving every node a static `100.x.y.z` IP for internal communication) and public webhook ingress (via Tailscale Funnel). It requires almost zero configuration and provides end-to-end encrypted remote access to the OpenClaw dashboard and SSH terminals.",
+          "details": [
+            "Tailscale is a modern, zero-configuration Virtual Private Network (VPN) built on top of the open-source WireGuard protocol. Unlike traditional hub-and-spoke VPNs that route all traffic through a centralized server bottleneck, Tailscale creates a peer-to-peer mesh network. Devices authenticate via a centralized coordination server, but the actual data traffic flows directly and securely between the devices using shortest-path routing, resulting in exceptionally high throughput and low latency.",
+            "For the MetaClaw ecosystem, Tailscale solves the critical \"Digital Nomad\" remote access problem. If an OpenClaw cluster is deployed on a residential internet connection (which often lacks a static IP and blocks inbound traffic via CGNAT), remote access is impossible via standard port forwarding. Tailscale places the host machine on the overlay network, assigning it a static `100.x.y.z` IP. The user can access the OpenClaw Web GUI or SSH into the cluster nodes from any location in the world, completely bypassing the public internet.",
+            "Furthermore, Tailscale solves the webhook ingress challenge via its \"Tailscale Funnel\" feature. If the OpenClaw agent relies on communication channels like Google Chat or Telegram, those corporate servers must be able to send HTTP POST requests to the local OpenClaw gateway. Funnel allows the gateway to securely expose only its webhook listening port to the public internet, generating a stable `https://[name].ts.net` URL for external services to ping, all without altering the physical router's security posture."
+          ],
+          "diagnostics": "1. **Connection Status:** You should see a tabular list of nodes on your Tailnet\n   (including your current machine's `100.x.y.z` IP). The diagnostic suite will\n   also explicitly confirm `SUCCESS: Tailscale is connected and authenticated.`\n   If it says `Logged out`, the authentication key failed or expired.\n\n### Expected Warnings (Safe to Ignore)\nDuring the boot process, you may notice the following terminal output:\n* **`WARNING: Docker 'host' networking is fundamentally unsupported on macOS.`**\n  Docker on macOS runs inside a lightweight Virtual Machine. Setting Docker to\n  use \"host\" networking binds the container to the *VM's* network, not your\n  actual Mac. The container will successfully provide webhook ingress (Funnel)\n  and route traffic to your Gateway, but you cannot use its `100.x.y.z` IP to\n  SSH directly into your macOS host.\n* **`No LOG_READY_SIGNAL defined. Skipping scan.`**\n  This is optimal behavior. MetaClaw uses Docker's native `healthcheck`\n  directives (defined in `docker-compose.yml`) to rigorously verify readiness.\n  Because the native healthcheck is active, the orchestrator does not need to\n  inefficiently parse raw text logs looking for a \"ready\" string."
+        },
+        "zerotier": {
+          "uid": "zerotier",
+          "name": "ZeroTier",
+          "overview": "High Utility. ZeroTier is a highly performant, open-source-friendly alternative to Tailscale for building the internal cluster mesh. It operates at Layer 2/3 and is exceptional for linking multi-cloud or hybrid environments. However, it ranks below Tailscale because it lacks an integrated \"Funnel\" equivalent, making it difficult to receive external webhooks (like Telegram messages) without setting up a separate public VPS to bridge the traffic.",
+          "details": [
+            "ZeroTier is an advanced Software-Defined Wide Area Network (SD-WAN) platform that creates secure, programmable network overlays. It effectively functions as a smart virtual Ethernet switch for the internet, operating at both Layer 2 (Data Link) and Layer 3 (Network) of the OSI model. By combining the capabilities of VPNs and SD-WANs, it allows devices anywhere in the world to connect as if they were physically on the same local network, using cryptographic identities for authentication.",
+            "Within the context of a distributed MetaClaw cluster, ZeroTier offers a robust, highly flexible alternative to Tailscale. It excels at joining disparate physical machines—such as a GPU compute node in a datacenter and a Raspberry Pi control plane in a home closet—into a single, unified subnet. All traffic between nodes is end-to-end encrypted and routed peer-to-peer whenever possible, minimizing latency for critical inter-service communication like vector database queries.",
+            "While it requires slightly more manual configuration than Tailscale (particularly regarding routing tables and network bridging), ZeroTier is heavily favored by users who prefer a more open-source-centric control plane and need complex Layer 2 bridging. However, because it lacks an out-of-the-box feature equivalent to Tailscale Funnel for exposing local ports to the public web, relying exclusively on ZeroTier makes receiving external webhooks from platforms like Google Chat more difficult without additional reverse proxy infrastructure."
+          ]
+        },
+        "cloudflare-tunnels": {
+          "uid": "cloudflare-tunnels",
+          "name": "Cloudflare Tunnels",
+          "overview": "Moderate Utility. This is an enterprise-grade solution for exposing internal services to the public internet via a standard URL. It is phenomenal for webhook ingress and provides industry-leading DDoS protection. However, it is not a true mesh VPN. It cannot be used to easily SSH between your cluster nodes or securely hide your OpenClaw dashboard behind a private, un-routable IP space. Furthermore, Cloudflare terminates TLS at their edge, meaning they technically have access to your decrypted webhook traffic.",
+          "details": [
+            "Cloudflare Tunnels (powered by the `cloudflared` daemon) provides a secure way to expose local web servers and applications to the internet without opening any incoming ports on a router or firewall. Instead of listening for connections, the daemon creates an outbound, encrypted connection to the Cloudflare global network. External users hit a standard Cloudflare URL, and the traffic is routed securely back down the tunnel to the local machine.",
+            "In the MetaClaw ecosystem, Cloudflare Tunnels are the premier solution for public ingress, specifically for webhooks. If an OpenClaw agent integrates with external SaaS applications (like receiving a GitHub issue creation event or a Slack message), those services must reach the agent. The tunnel provides a stable HTTPS endpoint that bypasses Carrier-Grade NAT (CGNAT) and residential firewalls completely.",
+            "While highly effective for webhooks, Cloudflare Tunnels introduce a specific security trade-off: Cloudflare terminates the TLS encryption at their edge nodes. This means Cloudflare has the technical ability to inspect the decrypted traffic before forwarding it to your local node. For teams requiring strict end-to-end encryption without third-party decryption, or for establishing a full peer-to-peer mesh between multiple cluster nodes, alternative tools like Tailscale or ZeroTier are more appropriate."
+          ]
+        }
+      }
+    },
+    "logger": {
+      "uid": "logger",
+      "uids": "loggers",
+      "name": "Log Aggregator",
+      "names": "Log Aggregators",
+      "category": "Observability & Provenance",
+      "purpose": "The central repository for system logs. It provides the visibility required to monitor agent behavior in real-time, troubleshoot tool execution errors, and audit actions when the agent is granted deep system access.",
+      "providers": {
+        "elk": {
+          "uid": "elk",
+          "name": "ELK Stack",
+          "overview": "Architectural Overkill. While powerful, the JVM RAM requirements will instantly starve local LLM runners of necessary resources on edge hardware.",
+          "details": [
+            "The ELK Stack is a heavyweight, enterprise-grade data observability platform consisting of Elasticsearch (the storage and search engine), Logstash (the processing pipeline), and Kibana (the visualization dashboard). In modern containerized environments, Filebeat is typically deployed as a lightweight shipper to forward Docker logs directly into the ingest nodes.",
+            "It provides unparalleled full-text search capabilities utilizing a distributed reverse index, allowing users to query massive, petabyte-scale datasets with sub-second latency. It remains the industry standard for complex analytics, anomaly detection, and deep forensic investigations where every single word in a log file might need to be queried, parsed, or graphed instantly.",
+            "While incredibly powerful, ELK is generally architectural overkill for OpenClaw. Running a JVM-based Elasticsearch node requires gigabytes of dedicated RAM, which directly competes with the local LLM runners for system resources. However, if OpenClaw is deployed in an enterprise environment where LLM inputs and outputs must be heavily audited for strict legal compliance, ELK provides the necessary industrial strength."
+          ]
+        },
+        "fluentbit": {
+          "uid": "fluentbit",
+          "name": "Fluent Bit",
+          "overview": "The Universal Router. The best lightweight sidecar for routing logs to multiple destinations without acting as a storage backend itself.",
+          "details": [
+            "Fluent Bit is a super-fast, lightweight, and highly scalable logging and metrics processor and forwarder. Written entirely in C, it boasts an incredibly small memory footprint (often around a few megabytes), making it the preferred sidecar or edge agent for Kubernetes clusters and embedded Linux devices.",
+            "Unlike full-stack storage solutions, Fluent Bit is fundamentally a router and processor. It captures logs from the host, applies regular expressions to parse multiline strings (like Python stack traces), and routes them to dozens of different backends simultaneously, serving as the ultimate universal translator for system telemetry.",
+            "For OpenClaw, Fluent Bit is a phenomenal upgrade over standard Promtail or Filebeat if you need to route logs to multiple destinations at once. If you want to send standard Docker logs to a local VictoriaLogs instance for debugging, but route specific LiteLLM token-usage logs to a cloud-based billing dashboard, Fluent Bit handles that complex routing matrix with zero noticeable impact on the host's CPU."
+          ]
+        },
+        "graylog": {
+          "uid": "graylog",
+          "name": "Graylog",
+          "overview": "The Security Backstop. Valuable only if the agent is given root access and requires immediate, automated kill-switches via SIEM alerting.",
+          "details": [
+            "Graylog is a centralized log management platform that focuses heavily on security information and event management (SIEM) and compliance alerting. It relies on Elasticsearch or OpenSearch under the hood for raw data storage but replaces Logstash and Kibana with its own highly tuned processing pipelines and a distinctly user-friendly, security-focused interface.",
+            "It is renowned for its intuitive GUI, making complex log parsing, routing, and threat detection accessible without requiring users to master arcane query languages. Graylog excels at standardizing messy logs from disparate systems, applying real-time data transformations, and triggering immediate alerts before the logs are even written to disk.",
+            "In an OpenClaw context, Graylog is highly useful if the autonomous agent is granted sensitive system permissions (e.g., executing arbitrary bash scripts or modifying host files). Graylog's built-in threat detection could be configured to immediately flag or sever the OpenClaw container's network access if it hallucinates a destructive shell command, providing a robust, automated security backstop."
+          ]
+        },
+        "loki": {
+          "uid": "loki",
+          "name": "Grafana Loki",
+          "overview": "The Standard Default. Excellent label-based log compression. Ideal if the user is already running Prometheus/Grafana on their local network.",
+          "details": [
+            "Grafana Loki is a highly scalable, multi-tenant log aggregation system heavily inspired by Prometheus. Instead of indexing the full text of every single log line, it indexes only the metadata (labels), compressing the raw log data into discrete chunks. Promtail acts as the dedicated agent, tailing log files, attaching the relevant labels, and forwarding them directly to Loki.",
+            "This metadata-only indexing approach makes Loki incredibly lightweight and cost-effective compared to traditional full-text search engines. It excels in environments where users are already utilizing Grafana and Prometheus, allowing them to seamlessly correlate system metrics with application logs using the same label-driven querying language (LogQL).",
+            "For OpenClaw, Loki remains a phenomenal standard default. OpenClaw agents run on hardware where preserving RAM and SSD I/O is critical. By indexing only labels (like `container_name=openclaw-gateway`), Loki allows developers to monitor agent thought processes and tool-execution errors securely without the massive memory overhead required to index every generated word of an LLM's output."
+          ]
+        },
+        "opensearch": {
+          "uid": "opensearch",
+          "name": "OpenSearch",
+          "overview": "The Enterprise Standard. Provides massive analytical depth but requires dedicated infrastructure. An open-source alternative to ELK.",
+          "details": [
+            "OpenSearch is a community-driven, open-source fork of Elasticsearch and Kibana, maintained primarily by AWS. It offers the same distributed, full-text search engine capabilities, powerful aggregations, and rich visualization dashboards as the ELK stack, but guarantees a permissive open-source licensing model.",
+            "The platform provides an ecosystem of plugins for security, anomaly detection, and k-NN (vector) search, making it a highly versatile enterprise data hub. It processes ingested logs through its own pipelines and allows for deep, granular querying of massive text corpora using the Lucene search library beneath the hood.",
+            "Within the OpenClaw framework, OpenSearch occupies the exact same architectural niche as the ELK stack: it is incredibly powerful but heavily resource-dependent. While it provides unmatched analytical depth for searching millions of structured log events, its high baseline RAM requirements directly conflict with the needs of local LLM inference engines. It is best reserved for enterprise OpenClaw deployments where a dedicated logging server exists independently from the agent execution nodes."
+          ]
+        },
+        "quickwit": {
+          "uid": "quickwit",
+          "name": "Quickwit",
+          "overview": "The Context Lake Engine. Best for dumping petabytes of long-term agent telemetry to cheap S3/external storage while maintaining sub-second search.",
+          "details": [
+            "Quickwit is an open-source, cloud-native search engine written in Rust, specifically optimized for massive, append-only observability datasets like logs and distributed traces. Its defining architectural trait is the complete decoupling of compute and storage; it indexes data directly into highly compressed columnar formats and stores them on cheap object storage (like AWS S3 or local equivalents), while remaining capable of executing sub-second full-text searches.",
+            "The system achieves massive scalability by running stateless searchers and indexers that operate directly against immutable files in object storage. This eliminates the nightmare of shard rebalancing found in traditional search engines and results in a 90% storage cost reduction compared to heavy Java-based alternatives.",
+            "In an OpenClaw ecosystem, Quickwit shines as the ultimate backend for long-term \"Context Lakes\" or massive audit trails. If an agent is running continuously for months—scraping the web, generating code, and executing thousands of API calls per day—the volume of logging data will quickly overwhelm standard local SSDs. Quickwit allows OpenClaw to dump terabytes of historical agent telemetry directly onto a cheap external drive or a remote S3 bucket, while keeping that data instantly searchable for debugging without requiring an expensive, always-on cluster."
+          ]
+        },
+        "signoz": {
+          "uid": "signoz",
+          "name": "SigNoz",
+          "overview": "The Observability Suite. Unmatched for Phase 4 roadmap goals. Correlating traces to logs is essential for debugging multi-agent orchestration loops.",
+          "details": [
+            "SigNoz is a comprehensive, open-source observability platform built natively on OpenTelemetry standards and backed by ClickHouse, a lightning-fast columnar database. Unlike tools that focus purely on logging, SigNoz provides a unified interface for distributed tracing, metrics, and logs in a single pane of glass. It acts as a direct, self-hosted alternative to expensive proprietary SaaS platforms.",
+            "The platform excels at high-cardinality analytics and utilizes specialized data codecs (like wrapping Delta compression in ZSTD) to shrink storage footprints by 50%. By storing traces and logs in the same underlying ClickHouse engine, developers can seamlessly correlate a latency spike in an API endpoint directly to the exact log lines generated during that millisecond.",
+            "For OpenClaw, SigNoz perfectly addresses the complex observability requirements outlined in Phase 4 of the framework's architecture roadmap. Because OpenClaw utilizes a predictive LLM-as-a-judge router and often spawns concurrent sub-agents, simple text logs are insufficient to understand *why* a specific task failed or took too long. SigNoz allows developers to visualize the entire distributed trace—from the initial API request to the LiteLLM proxy, down to the exact duration of the LLM inference step—making it an invaluable tool for debugging complex multi-agent workflows."
+          ]
+        },
+        "vector": {
+          "uid": "vector",
+          "name": "Vector",
+          "overview": "The Privacy Sanitizer. The VRL language makes it the top choice for mathematically ensuring PII is stripped from agent logs before storage.",
+          "details": [
+            "Vector is a high-performance, end-to-end observability data pipeline built entirely in Rust. It functions similarly to Fluent Bit but is designed to take absolute control of collecting, transforming, and routing logs, metrics, and traces with an extreme focus on throughput and memory safety.",
+            "Its standout feature is Vector Remap Language (VRL), a custom, safe programming language designed specifically for transforming observability data in transit. VRL allows users to parse nested JSON, drop sensitive fields, and aggregate metrics in real-time before the data ever reaches a storage backend, drastically reducing remote storage costs and network bandwidth.",
+            "For an OpenClaw ecosystem, Vector is highly suited for privacy-focused deployments. Because OpenClaw agents interact with personal journals, private codebases, and unencrypted thought loops, Vector can be used to mathematically guarantee that all API keys or sensitive prompt data are completely stripped from the logs before they are sent to any dashboard or remote debugging server."
+          ]
+        },
+        "victorialogs": {
+          "uid": "victorialogs",
+          "name": "VictoriaLogs",
+          "overview": "The Ultimate Edge Database. Replaces Loki as the top choice due to its ability to perform full-text search while consuming 30x less RAM. Practically invisible to the host OS.",
+          "details": [
+            "VictoriaLogs is an ultra-lightweight, high-performance log management provider from the VictoriaMetrics team. Engineered for extreme efficiency, it operates as a single zero-configuration executable that consumes up to 30x less RAM and 15x less disk space compared to traditional systems like Elasticsearch or even Grafana Loki. It utilizes its own intuitive querying language (LogsQL) for full-text search and easily integrates with existing collectors like Promtail or Fluent Bit.",
+            "This provider achieves a staggering 50:1 compression ratio by avoiding complex indexing overhead and optimizing how data is laid out on disk. It handles high-cardinality fields gracefully and scales linearly with available CPU and RAM, making it highly performant on everything from a Raspberry Pi to a massive multi-core server cluster.",
+            "For OpenClaw, VictoriaLogs is an absolute powerhouse for edge deployments and hardware-constrained environments. Because local LLM runners like Ollama require massive amounts of RAM and VRAM to generate tokens, the observability stack must be practically invisible to the host OS. VictoriaLogs allows a user running OpenClaw to retain rich, searchable logs of agent behavior without starving the AI models of the memory they need to function."
+          ],
+          "diagnostics": "1. **HTTP API Health:** You should see `OK`\n2. **Ingestion:** Fluent Bit status confirms logs are being streamed"
+        }
+      }
+    },
+    "tracer": {
+      "uid": "tracer",
+      "uids": "tracers",
+      "name": "Distributed Tracer",
+      "names": "Distributed Tracers",
+      "category": "Observability & Provenance",
+      "purpose": "While logging tells you what happened, tracing tells you how long it took. It measures execution duration across services (Gateway -> Proxy -> LLM Runner) to debug latency bottlenecks in complex multi-step trajectories.",
+      "providers": {
+        "opentelemetry": {
+          "uid": "opentelemetry",
+          "name": "OpenTelemetry Collector + Jaeger",
+          "overview": "",
+          "details": []
+        },
+        "langfuse": {
+          "uid": "langfuse",
+          "name": "Langfuse",
+          "overview": "",
+          "details": []
+        },
+        "phoenix": {
+          "uid": "phoenix",
+          "name": "Phoenix",
+          "overview": "",
+          "details": []
+        },
+        "signoz": {
+          "uid": "signoz",
+          "name": "SigNoz",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "vcs": {
+      "uid": "vcs",
+      "uids": "vcs",
+      "name": "Version Control System",
+      "names": "Version Control Systems",
+      "category": "Observability & Provenance",
+      "purpose": "The source of truth for workspace files. It tracks every code change efficiently and provides strict agent attribution (via Git signatures), answering the question: \"What exactly did the AI alter while I was asleep?\"",
+      "providers": {
+        "gitea": {
+          "uid": "gitea",
+          "name": "Gitea",
+          "overview": "",
+          "details": []
+        },
+        "forgejo": {
+          "uid": "forgejo",
+          "name": "Forgejo",
+          "overview": "",
+          "details": []
+        },
+        "git": {
+          "uid": "git",
+          "name": "Git (CLI native)",
+          "overview": "",
+          "details": []
+        },
+        "github": {
+          "uid": "github",
+          "name": "GitHub",
+          "overview": "",
+          "details": []
+        },
+        "gitlab": {
+          "uid": "gitlab",
+          "name": "GitLab",
+          "overview": "",
+          "details": []
+        },
+        "bitbucket": {
+          "uid": "bitbucket",
+          "name": "Bitbucket",
+          "overview": "",
+          "details": []
+        },
+        "codeberg": {
+          "uid": "codeberg",
+          "name": "Codeberg",
+          "overview": "",
+          "details": []
+        },
+        "gogs": {
+          "uid": "gogs",
+          "name": "Gogs",
+          "overview": "",
+          "details": []
+        },
+        "sourcehut": {
+          "uid": "sourcehut",
+          "name": "SourceHut",
+          "overview": "",
+          "details": []
+        },
+        "onedev": {
+          "uid": "onedev",
+          "name": "OneDev",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "queue": {
+      "uid": "queue",
+      "uids": "queues",
+      "name": "Message Queue",
+      "names": "Message Queues",
+      "category": "Decoupling & Workflow",
+      "purpose": "The asynchronous task broker. It decouples the Gateway from the execution nodes. Instead of waiting synchronously (which causes HTTP timeouts if a local model takes 60 seconds to reply), the Gateway pushes tasks to a queue for worker nodes to consume at their own pace.",
+      "providers": {
+        "rabbitmq": {
+          "uid": "rabbitmq",
+          "name": "RabbitMQ",
+          "overview": "",
+          "details": []
+        },
+        "nats": {
+          "uid": "nats",
+          "name": "NATS",
+          "overview": "",
+          "details": []
+        },
+        "kafka": {
+          "uid": "kafka",
+          "name": "Apache Kafka",
+          "overview": "",
+          "details": []
+        },
+        "redis-streams": {
+          "uid": "redis-streams",
+          "name": "Redis Streams",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "ci": {
+      "uid": "ci",
+      "uids": "ci",
+      "name": "Continuous Integration",
+      "names": "Continuous Integration",
+      "category": "Decoupling & Workflow",
+      "purpose": "The automated testing pipeline. It triggers automated builds and test suites on any code generated by the autonomous agent, mathematically proving the code works before it is deployed to production.",
+      "providers": {
+        "drone": {
+          "uid": "drone",
+          "name": "Gitea/Drone",
+          "overview": "",
+          "details": []
+        },
+        "woodpecker": {
+          "uid": "woodpecker",
+          "name": "Woodpecker CI",
+          "overview": "",
+          "details": []
+        },
+        "github-actions": {
+          "uid": "github-actions",
+          "name": "GitHub Actions",
+          "overview": "",
+          "details": []
+        },
+        "gitlab-ci": {
+          "uid": "gitlab-ci",
+          "name": "GitLab CI/CD",
+          "overview": "",
+          "details": []
+        },
+        "bitbucket-pipelines": {
+          "uid": "bitbucket-pipelines",
+          "name": "BitBucket Pipelines",
+          "overview": "",
+          "details": []
+        },
+        "buildkite": {
+          "uid": "buildkite",
+          "name": "Buildkite",
+          "overview": "",
+          "details": []
+        },
+        "jenkins": {
+          "uid": "jenkins",
+          "name": "Jenkins",
+          "overview": "",
+          "details": []
+        }
+      }
+    },
+    "event": {
+      "uid": "event",
+      "uids": "events",
+      "name": "Event Gateway",
+      "names": "Event Gateways",
+      "category": "Decoupling & Workflow",
+      "purpose": "The external signal receiver. It securely ingests, queues, and standardizes incoming webhooks from the outside world (like emails, calendar alerts, or smart home triggers) to wake up the agent and trigger workflows asynchronously.",
+      "providers": {
+        "hookdeck": {
+          "uid": "hookdeck",
+          "name": "Hookdeck",
+          "overview": "",
+          "details": []
+        },
+        "svix": {
+          "uid": "svix",
+          "name": "Svix",
+          "overview": "",
+          "details": []
+        },
+        "ngrok": {
+          "uid": "ngrok",
+          "name": "Custom ngrok endpoints",
+          "overview": "",
+          "details": []
+        }
+      }
+    }
+  }
+}

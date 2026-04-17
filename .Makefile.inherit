@@ -1,0 +1,212 @@
+# ==============================================================================
+# SHARED INFRASTRUCTURE INHERITANCE LAYER
+# ==============================================================================
+
+# OS-Agnostic Open Command
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	OPEN_CMD := open
+else
+	OPEN_CMD := xdg-open
+endif
+export OPEN_CMD
+
+# SERVICE_NAME: Explicitly defines the target Docker container name.
+SERVICE_NAME ?= $(notdir $(patsubst %/,%,$(CURDIR)))
+DOCKER_SHELL_CMD ?= sh
+
+# Enforce consistent Docker Compose project naming to prevent symlink conflicts.
+export COMPOSE_PROJECT_NAME := $(SERVICE_NAME)
+
+FRAMEWORK_ROOT ?= ..
+PYTHON_BIN ?= $(abspath $(FRAMEWORK_ROOT)/bin/.venv/bin/python)
+
+RECREATE_DEPS ?= docker-compose.yml .env $(FRAMEWORK_ROOT)/.env
+RESTART_DEPS ?=
+
+.PHONY: up down logs pre-up post-up pre-down post-down verify_service status shell clean-state wait-healthy clean-data check-logs check-status post-check-status apply restart docs
+
+# Standardized .env instantiation.
+.env: .env.template $(wildcard .env.json)
+	@echo "[$(SERVICE_NAME)] Validating environment configuration..."
+	$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/env_instantiate.py $(if $(filter down clean-state clean-data,$(MAKECMDGOALS)),--teardown)
+
+ifeq ($(strip $(EXTERNAL_DRIVE_PATH)),)
+EXTERNAL_DRIVE_PATH := $(FRAMEWORK_ROOT)/external/metaclaw
+endif
+export EXTERNAL_DRIVE_PATH
+
+docs: | $(PYTHON_BIN)
+	@if [ -f index.md ]; then \
+		echo "[$(SERVICE_NAME)] Compiling markdown documentation..."; \
+		$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html; \
+	fi
+
+verify_service:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping verification."; \
+		exit 0; \
+	fi
+	@if [ ! -f .metal ]; then \
+		if ! docker compose config --services 2>/dev/null | grep -qx "$(SERVICE_NAME)"; then \
+			echo "FATAL: Service name in docker-compose.yml does not match SERVICE_NAME ($(SERVICE_NAME))"; \
+			exit 1; \
+		fi; \
+	fi
+
+up: .env verify_service pre-up docs
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping 'up'."; \
+	else \
+		echo "[$(SERVICE_NAME)] Deploying containers..."; \
+		if [ -f .metal ]; then \
+			echo "[$(SERVICE_NAME)] Bare-metal mode specified. Skipping Docker Compose..."; \
+		else \
+			docker compose up -d; \
+		fi; \
+		$(MAKE) --no-print-directory post-up; \
+	fi
+
+down: pre-down
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping 'down'."; \
+	else \
+		echo "[$(SERVICE_NAME)] Terminating services..."; \
+		if [ -f .metal ]; then \
+			echo "[$(SERVICE_NAME)] Bare-metal mode. Skipping Docker Compose down..."; \
+		else \
+			docker compose down 2>/dev/null || true; \
+		fi; \
+		$(MAKE) --no-print-directory post-down; \
+	fi
+
+logs:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
+	else \
+		docker logs -f $(SERVICE_NAME); \
+	fi
+
+status:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
+	else \
+		docker ps -f name=^/$(SERVICE_NAME)$$; \
+	fi
+
+shell:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
+	else \
+		docker exec -it $(SERVICE_NAME) $(DOCKER_SHELL_CMD); \
+	fi
+
+apply: .state_recreate .state_restart
+
+restart:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping restart."; \
+	else \
+		echo "[$(SERVICE_NAME)] Executing unconditional restart of process..."; \
+		if [ -f .metal ]; then \
+			echo "[$(SERVICE_NAME)] Bare-metal deployment active. Skipping docker compose restart."; \
+		else \
+			docker compose restart $(SERVICE_NAME); \
+		fi; \
+	fi
+
+.state_recreate: $(RECREATE_DEPS)
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping recreate."; \
+	else \
+		echo "[$(SERVICE_NAME)] Detected infrastructure changes. Executing binary swap..."; \
+		if [ -f .metal ]; then \
+			echo "[$(SERVICE_NAME)] Bare-metal deployment active. Skipping docker compose up --force-recreate."; \
+		else \
+			docker compose up -d --force-recreate; \
+		fi; \
+	fi
+	@touch .state_recreate
+	@touch .state_restart
+
+.state_restart: $(RESTART_DEPS)
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping restart."; \
+	else \
+		$(if $(RESTART_DEPS),@echo "[$(SERVICE_NAME)] Configuration changes detected. Restarting process..."; if [ ! -f .metal ]; then docker compose restart $(SERVICE_NAME); fi,) \
+	fi
+	@touch .state_restart
+
+check-logs:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping log scan."; \
+	else \
+		echo "[$(SERVICE_NAME)] Scanning logs for readiness signal..."; \
+		if [ -z "$(LOG_READY_SIGNAL)" ]; then \
+			echo "[$(SERVICE_NAME)] No LOG_READY_SIGNAL defined. Skipping scan."; \
+		else \
+			docker logs --tail 200 $(SERVICE_NAME) 2>&1 | grep -q "$(LOG_READY_SIGNAL)" && \
+			echo "[$(SERVICE_NAME)] Readiness signal detected." || \
+			(echo "Readiness signal not found."; exit 1); \
+		fi; \
+	fi
+
+check-status:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping status check."; \
+	else \
+		echo "================================================================================"; \
+		echo "= $(SERVICE_NAME) INTEGRITY VERIFICATION"; \
+		echo "================================================================================"; \
+		if [ ! -f .metal ]; then \
+			STATUS=$$(docker inspect --format="{{.State.Status}}" $(SERVICE_NAME) 2>/dev/null || echo "MISSING"); \
+			echo "Container State: $$STATUS"; \
+			if [ "$$STATUS" != "running" ]; then exit 1; fi; \
+		fi; \
+		$(MAKE) --no-print-directory post-check-status; \
+	fi
+
+clean-state::
+	@echo "[$(SERVICE_NAME)] Scrubbing ephemeral runtime state..."
+	@rm -f .env .up_stamp .state_* router.json verification.log index.html .metal
+
+wait-healthy:
+	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
+		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping health wait."; \
+	else \
+		echo "[$(SERVICE_NAME)] Awaiting healthy state..."; \
+		if [ ! -f .metal ]; then \
+			attempt=1; \
+			while [ $$attempt -le 30 ]; do \
+				STATUS=$$(docker inspect --format="{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}" $(SERVICE_NAME) 2>/dev/null || echo "missing"); \
+				RUNNING=$$(docker inspect --format="{{.State.Status}}" $(SERVICE_NAME) 2>/dev/null || echo "missing"); \
+				if [ "$$STATUS" = "healthy" ]; then \
+					echo "[$(SERVICE_NAME)] Status: HEALTHY."; \
+					exit 0; \
+				elif [ "$$RUNNING" != "running" ]; then \
+					echo "FATAL: [$(SERVICE_NAME)] Container crashed or is missing (State: $$RUNNING)."; \
+					docker logs --tail=20 $(SERVICE_NAME); \
+					exit 1; \
+				elif [ "$$STATUS" = "unknown" ]; then \
+					echo "[$(SERVICE_NAME)] No healthcheck defined. Falling back to log scan..."; \
+					if $(MAKE) --no-print-directory check-logs > /dev/null 2>&1; then \
+						echo "[$(SERVICE_NAME)] Status: READY (Log Verified)."; \
+						exit 0; \
+					fi; \
+				fi; \
+				echo "[$(SERVICE_NAME)] Status: $$STATUS. Retrying in 2s ($$attempt/30)..."; \
+				sleep 2; \
+				attempt=$$((attempt + 1)); \
+			done; \
+			echo "FATAL: [$(SERVICE_NAME)] Failed to reach healthy state."; \
+			docker logs --tail=20 $(SERVICE_NAME); \
+			exit 1; \
+		fi; \
+	fi
+
+pre-up:
+post-up:
+pre-down:
+post-down:
+clean-data:
+post-check-status:

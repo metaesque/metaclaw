@@ -1,0 +1,9 @@
+{
+  "uid": "qdrant",
+  "name": "Qdrant",
+  "overview": "High Utility. An excellent choice for pure semantic engines. Its Rust-based architecture makes it incredibly lightweight and fast. If an OpenClaw deployment focuses heavily on vector retrieval without needing complex relational joins, Qdrant offers superior pure-search latency.",
+  "details": [
+    "Qdrant is a modern, open-source vector database written entirely in Rust, designed specifically for high-performance similarity search. It uses a custom HNSW (Hierarchical Navigable Small World) algorithm implementation that makes semantic recall exceptionally fast, even on consumer-grade hardware.",
+    "For OpenClaw agents operating strictly as pure semantic engines (without heavy relational data needs), Qdrant serves as an ultra-low-latency cognitive recall layer. Its lightweight footprint makes it ideal for local edge deployments while maintaining the capability to scale to massive cloud clusters if needed. Qdrant's payload filtering capabilities are particularly strong, allowing OpenClaw agents to attach extensive JSON metadata to their memories and execute highly precise, hybrid filter-and-search queries during execution loops."
+  ]
+}

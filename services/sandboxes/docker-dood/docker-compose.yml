@@ -1,0 +1,20 @@
+services:
+  docker-dood:
+    # Provides a sterile Python environment for arbitrary code execution
+    image: python:3.11-slim
+    container_name: docker-dood
+    restart: unless-stopped
+    # Keeps the container running indefinitely to accept exec commands from the gateway
+    command: ["tail", "-f", "/dev/null"]
+    # Network isolation prevents the sandbox from scanning the local LAN or exfiltrating data
+    network_mode: "none"
+    # Security hardening: Prevent host escapes by dropping kernel capabilities
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "--version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

@@ -1,0 +1,8 @@
+{
+  "uid": "runner",
+  "uids": "runners",
+  "name": "LLM Runner",
+  "names": "LLM Runners",
+  "category": "Intelligence Execution",
+  "purpose": "Manages and executes local Large Language Models (LLMs) and Multimodal models directly on your bare-metal hardware. It provides an OpenAI-compatible API endpoint for the AI Proxy or Gateway to consume, enabling offline intelligence."
+}

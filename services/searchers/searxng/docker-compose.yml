@@ -1,0 +1,39 @@
+services:
+  searxng:
+    # WHAT THIS IS: A privacy-respecting, hackable metasearch engine.
+    # WHY THIS VERSION: Pinned to ensure immutable infrastructure.
+    image: searxng/searxng:${SEARXNG_VERSION}
+    container_name: searxng
+    # WHY UNLESS-STOPPED: Automatically restarts the background searcher on unexpected crashes,
+    # ensuring the agent's real-time knowledge retrieval pipeline remains highly available.
+    restart: unless-stopped
+    ports:
+      # WHAT THIS DOES: Exposes the searcher's REST API internally for OpenClaw agents.
+      - "${SEARXNG_PORT}:8080"
+    environment:
+      - SEARXNG_BASE_URL=http://${ACTIVE_SEARCHER_HOST:-localhost}:${SEARXNG_PORT}/
+      - SEARXNG_SECRET=${SEARXNG_SECRET_KEY}
+    volumes:
+      # WHAT THIS DOES: Mounts persistent configuration and caching data to the external drive.
+      # WHY IT MATTERS: Prevents configuration loss on container recreation and limits disk footprint.
+      - ${EXTERNAL_DRIVE_PATH}/searxng-data:/etc/searxng
+    networks:
+      openclaw-network:
+        # WHAT THIS DOES: Associates the container with a generic internal routing alias.
+        # WHY IT MATTERS: OpenClaw connects blindly to 'active-searcher', allowing seamless
+        # swapping between SearXNG, Tavily, etc. based on Priority Matrix changes.
+        aliases:
+          - active-searcher
+    # WHAT THIS DOES: Probes the API health endpoint to verify readiness.
+    # WHY IT MATTERS: Ensures the proxy layer does not route search queries to an initializing engine.
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  openclaw-network:
+    name: ${NETWORK_NAME}
+    external: true

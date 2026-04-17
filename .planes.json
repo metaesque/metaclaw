@@ -1,0 +1,56 @@
+{
+  "control": {
+    "uid": "control",
+    "name": "The Control Plane",
+    "aka": "The Ingress & Routing Hub",
+    "profile": "High network I/O, low CPU, low RAM.",
+    "services": [
+      "proxy-reverse",
+      "iam",
+      "proxy",
+      "gateway",
+      "secret",
+      "event",
+      "cache",
+      "queue"
+    ],
+    "justification": "This is the high-speed nervous system. It dictates traffic flow and maintains ephemeral state, operating flawlessly on low-power devices."
+  },
+  "compute": {
+    "uid": "compute",
+    "name": "The Compute Plane",
+    "aka": "The Intelligence Engine",
+    "profile": "Extreme GPU VRAM, maximum memory bandwidth, high power draw.",
+    "services": [
+      "runner"
+    ],
+    "justification": "LLM inference requires dedicated PCIe acceleration. It must be isolated to prevent VRAM starvation from impacting other critical services."
+  },
+  "archive": {
+    "uid": "archive",
+    "name": "The Archive Plane",
+    "aka": "Context & Telemetry",
+    "profile": "Massive RAM capacity, extreme disk IOPS (NVMe), heavy storage.",
+    "services": [
+      "memory",
+      "vcs",
+      "logger",
+      "tracer"
+    ],
+    "justification": "This plane manages all \"Trusted Data.\" Vector databases ingest massive streams of data and require enormous RAM. Keeping these safe from untrusted execution workloads is a strict SRE requirement."
+  },
+  "execution": {
+    "uid": "execution",
+    "name": "The Execution Plane",
+    "aka": "The Blast Zone",
+    "profile": "Heavy multi-core CPU, highly dynamic and unpredictable RAM usage.",
+    "services": [
+      "browser",
+      "fetcher",
+      "searcher",
+      "sandbox",
+      "ci"
+    ],
+    "justification": "This plane executes volatile, untrusted code. It is an operational hazard physically isolated to ensure that a rogue task cannot crash the Control Plane or corrupt the Data Plane."
+  }
+}

@@ -1,0 +1,1744 @@
+* TODO
+** 2026-04-12
+- next new chat
+   - ...
+
+- improve OpenClaw internet tools: browser, web_search, web_fetch
+   - research:
+      - [[https://gemini.google.com/u/1/app/d6dfc77e23602fd4][AI/OC: Augmenting tools web_fetch, web_search, browser]]
+      - [[https://gemini.google.com/u/1/app/2a37c4d1b63b1f2a][AI/OC: Meta<Claw> (V22) [Services,Providers]]
+   - browsers
+      - BrowserUse, Stagehand, AgentBrowser, (Skyvern, Firecrawl Browser Sandbox, Hyperbrowser, Steel browser, LaVague, ZeroStep, Passmark, Playwright Mind)
+      - exclude any that can be entirely installed within OpenClaw via tools, plugins, or skills
+   - fetchers
+      - Firecrawl, Crawl4AI, ScrapeGraphAI, (Jina AI reader, skrape.ai, lightfeed extractor, masa, LLM Scraper)
+   - searchers
+      - Brave Search API, Tavily, searxng, (Exa, Linkup, Parallel AI Search, Firecrawl??)
+
+- add support for github
+   - per-agent attribution for each file change
+   - create an entire gemini chat for addressing this
+   - is this a "component" like everything else, or something different?
+   - see https://share.google/aimode/xmFg7e7H17kvVl4Ov
+      - use Gitea or GitLab instead of github??
+      - GitHub, GitLab, Bitbucket, Gitea, Codeberg, GitLab CI/CD, GitHub Actions, Gitea/Drone
+
+- logging of all prompts   <-- NOT done in log aggregator
+- fix prompt-to-model
+- make a better Meta<Claw> inception prompt that has a better file-concat system (delete/rename files, subsections, append semantics, etc)
+
+- need to add a "linuxify" step to Meta<Claw>
+   - for MacOS:
+      - install OrbStack for Docker
+      - enable xcode command tools (need 'make' etc)
+   - for Windows:
+      - install WSL2?
+
+- make a ./docs/DASHBOARD.md that contains a list of all the urls we need to
+  know about
+   - the openclaw GUI dashboard UI
+   - log aggregator url: http://localhost:9428/select/vmui (Victoria Logs)
+   - what other urls are available that I'm oblivious to?
+
+** Expanding architecture
+** Misc
+
+- Learn Gemini API (explore free quota)
+   - % cd /Users/wmh/src/wmh/src/thirdparty/openclaw
+   - improve genai.py
+   - use genai.py to get better handle on Gemini API and meta-info on Gemini models
+     especially how much free use is available for how long
+
+- Research SotA for Cryonics
+   - [[https://en.wikipedia.org/wiki/Cryonics][Wikipedia]]
+   - [[https://share.google/aimode/CisR3aShrEDWqFZH5][Google Search]]
+
+* TO BUY
+** Hardware
+*** For OC (no local models)
+*** For OC (small local models, 8B-14B)
+- Research
+   - [[https://gemini.google.com/u/1/app/20decb47533d557b][AI/OC: Low-tier Hardware builds (GMKtec K8 Plus, Beelink SER9 Pro+, Minisforum UM890)]]
+
+- Options
+   - [[https://www.amazon.com/gp/product/B0DHNTW3H6/ref=ox_sc_act_title_1?smid=AEA8YYUCQ3SQM&th=1][GMKtec K8 Plus]] (in amazon order to Marica)
+
+*** For OC (large local models, 70B-120B)
+- Research
+   - [[https://gemini.google.com/u/1/app/20decb47533d557b][AI/OC: Low-tier Hardware builds (GMKtec K8 Plus, Beelink SER9 Pro+, Minisforum UM890)]]
+
+*** For OC (largest local models, 200B+)
+
+** Self-Reliance
+*** Energy Generation: Solar Cells
+- Research
+   - [[https://gemini.google.com/u/1/app/d22cb30d43013494][Me/DN: Off-Grid Power Budget]] (need 5kWh/day)
+   - [[https://gemini.google.com/u/1/app/3dd27ffd029a97e0][Me/DN: [R] Solar Power Analysis (2026-03)]]
+   - [[https://docs.google.com/document/d/1zKF1iQycqN2sN3x7A5ZheKENJuga35TLoAW6Pr_PD4Q/edit?tab=t.0#heading=h.jyaynct2df3m][Energy/Solar Architectures (2026-03)]]
+   - [[https://gemini.google.com/u/1/app/cad787174e11bf73][Me/DN: [R] [Old] Mobile Solar Power Analysis (2026-03)]]
+
+*** Energy Storage: Batteries
+- Research
+   - [[https://gemini.google.com/u/1/app/d22cb30d43013494][Me/DN: Off-Grid Power Budget]] (need 5kWh/day)
+   - [[https://docs.google.com/document/d/1N8OmV4jkf20m--R9gUvfPtp3vjBfsGHsAbTv1pGuaP4/edit?tab=t.0#heading=h.rkjdpdy6i4kq][Energy/Mobile Storage Systems]]
+   - [[https://gemini.google.com/u/1/app/092d8d44eeb22493][Me/DN: [R] Mobile Battery Storage Analysis (2026-03)]]
+
+- Options
+   - [[https://ca.litime.com/checkouts/cn/hWNAQgBpSZqfh336JqN6luhm/en-ca?_r=AQABNoeAMeH-myrlAq3u-xtkCrQuolq8hdidBVjOQTTrHvo&auto_redirect=false&edge_redirect=true&skip_shop_pay=true][LiTime 24V 200Ah LiFePO4 + Charger]] (in LiTime order to Lethbridge)
+
+*** Water Generation: Atmospheric Water Generation
+- Research
+   - [[https://gemini.google.com/u/1/app/7b6125615956621f][Me/DN: [R] Mobile AWG Technology (2026-03)]]
+   - [[https://docs.google.com/document/d/1SWidWLvXMyCUDdIcRc-jemDqzosT7y5JpHw14Fnq0C8/edit?tab=t.0#heading=h.al22mdncwiiv][Water/Mobile Atmospheric Water Generation (2026-03)]]
+
+* The Big Picture
+** Prompts To Repeat As New Context Is Added
+*** [[https://gemini.google.com/u/1/app/71f595f30f269409][AI/OC: Model/auth Providers]]
+
+- Although this started out being the list of Model/auth Providers from the
+  OpenClaw setup TUI, it has expanded to include other entries that OpenClaw
+  may support in the future
+
+Role: OpenClaw Expert
+
+Context: Here are a (comma-separated) list of 'terms' and 'categories'.
+
+- terms: OpenAI, Anthropic, Chutes, MiniMax, Moonshot AI (Kimi K2.5),
+  Google, xAI (Grok), Mistral AI, Volcano Engine, BytePlus,
+  OpenRouter, KiloGateway, Qwen, Z.AI, Qianfan, Alibaba Cloud Model
+  Studio, Copilot, Vercel AI Gateway, OpenCode, Xiami, Synthetic,
+  Together AI, Hugging Face, Venice AI, LiteLLM, Cloudflare AI
+  Gateway, Ollama, SGLang, vLLM,
+  <!-- include following in the terms list (not in OpenClaw TUI) -->
+  DeepSeek, Cohere, Meta, 01.AI, Reka AI, AI21 Labs, Groq, Fireworks AI,
+  DeepInfra, Replicate, Anyscale, Llama.cpp, LM Studio, TGI, TensorRT-LLM,
+  Cerebras, I10x.ai
+
+- categories: Foundation Model Developer, AI Provider, Model
+  Hosting, AI Proxy, API Gateway, LLM Runner, Hyperscaler AI Platform,
+  Hardware-Accelerated Inference Provider
+
+Task: For each 'term', identify a primary, (optional) secondary, and
+(optional) tertiary category (from the 'categories' list). Only assign
+a category to a term if the term is semantically a member of that
+category (leave secondary and/or tertiary categories blank if none of the
+category values apply). Group terms by primary category (sorted alphabetically
+within that primary category).
+
+Also, provide a summary of each 'category' (within OpenClaw). Your audience
+is someone learning about OpenClaw and setting up their first OpenClaw gateway.
+
+**** TEMPO
+
+For Layer B (LLM API Routing & Orchestration), you identified the following "instances":
+ClawRouter (an agent-native router utilizing x402/USDC micropayments), LiteLLM, OpenRouter.
+
+Provide a more comprehensive list of "instances" of this layer -- what is the "domain of discourse" for this Layer? Once you have that comprehensive list, provide a sub-categorization of each instance in the list (similar to how you did above), looking for the *best* way to sub-categorize (not constrained to some specific number of sub-categories), where "best" is measured by how accurately the sub-categorization captures mutually-exclusive aspects of each instance, and how it helps the audience understand OpenClaw more deeply). Note that some instances may have the same sub-categories (in which, they can be grouped together in your presentation).
+---------
+For Layer C (Security, Sandboxing & Policy Enforcement), you identified the following "instances": 
+Cisco DefenseClaw (telemetry and policy enforcement), NVIDIA NemoClaw / OpenShell (kernel isolation and network deny-listing), Docker/Podman runtimes.
+
+Provide a more comprehensive list of "instances" of this layer ... what is the "domain of discourse" for this Layer? Once you have that comprehensive list, provide a sub-categorization of each instance in the list (similar to how you did above), looking for the *best* way to sub-categorize (not constrained to some specific number of sub-categories), where "best" is measured by how accurately the sub-categorization captures mutually-exclusive aspects of each instance, and how it helps the audience understand OpenClaw more deeply). Note that some instances may have the same sub-categories (in which, they can be grouped together in your presentation).
+---------
+For Layer D (Communication Ingress/Egress), you identified the following "instances": 
+WhatsApp Business API, Telegram Bot API, Discord Developer Portal, Signal.
+
+Provide a more comprehensive list of "instances" of this layer ... what is the "domain of discourse" for this Layer? Once you have that comprehensive list, provide a sub-categorization of each instance in the list (similar to how you did above), looking for the *best* way to sub-categorize (not constrained to some specific number of sub-categories), where "best" is measured by how accurately the sub-categorization captures mutually-exclusive aspects of each instance, and how it helps the audience understand OpenClaw more deeply). Note that some instances may have the same sub-categories (in which, they can be grouped together in your presentation).
+---------
+For Layer E (Physical Compute & Infrastructure), you identified the following "instances": 
+NVIDIA DGX Spark, AMD Ryzen AI Max+ systems (e.g., RyzenClaw configurations with 128GB unified memory), Tencent Cloud Lighthouse, Apple Silicon (M-series Macs).
+
+Provide a more comprehensive list of "instances" of this layer ... what is the "domain of discourse" for this Layer? Once you have that comprehensive list, provide a sub-categorization of each instance in the list (similar to how you did above), looking for the *best* way to sub-categorize (not constrained to some specific number of sub-categories), where "best" is measured by how accurately the sub-categorization captures mutually-exclusive aspects of each instance, and how it helps the audience understand OpenClaw more deeply). Note that some instances may have the same sub-categories (in which, they can be grouped together in your presentation).
+
+---------
+For Layer F (Actuation & Retrieval Infrastructure), you identified the following "instances":
+Web/Browser Automation (Playwright, Puppeteer), Host OS Sandboxes (Docker, WebAssembly), API Integrations (Zapier, custom REST clients), Database Connectors (SQL/NoSQL clients), Local File System APIs.
+
+Provide a more comprehensive list of "instances" of this layer ... what is the "domain of discourse" for this Layer? Once you have that comprehensive list, provide a sub-categorization of each instance in the list (similar to how you did above), looking for the *best* way to sub-categorize (not constrained to some specific number of sub-categories), where "best" is measured by how accurately the sub-categorization captures mutually-exclusive aspects of each instance, and how it helps the audience understand OpenClaw more deeply). Note that some instances may have the same sub-categories (in which, they can be grouped together in your presentation).
+
+** Meta<AI>: The Limits Of AI Models
+
+- Info
+   - [[https://share.google/aimode/KsJrpNQN2uFtcrXEk][How To Categorize AI Models]]
+
+- AI Models
+   - [[https://gemini.google.com/u/1/app/763f31700b4eefa6][AI/OC: [R] AI Model Comparison and Agent Suitability (V3)]] [[https://docs.google.com/document/d/13KopO_zdq32RKCfpxOwGbHIwepc901uPu_4WUn0ez2g/edit?tab=t.0][(doc)]]
+   - [[https://gemini.google.com/u/1/app/34610e9af72eb561][AI/OC: [R] AI Model Comparison and Agent Suitability (V2)]]
+   - [[https://gemini.google.com/u/1/app/cc8f41f91ae4a1d4][AI/OC: [R] AI Model Comparison and Agent Suitability (V1)]]
+
+- Gemini
+   - Research
+      - [[https://gemini.google.com/u/1/app/fb8012e4a25b8906][AI/Gemini: Access to Chat Metadata?]]
+      - [[https://gemini.google.com/u/1/app/c5aa18f6cd3fc83d][QS/LEV: Longevity Company Comparison]]
+      - [[https://gemini.google.com/u/1/app/cc29c31fbb8591f0][AI/Gemini: Exporting Gemini Chat History]]
+      - [[https://gemini.google.com/u/1/app/d9e8d3599214a17e][AI/Gemini: Model and Tool Comparisons]]
+      - [[https://gemini.google.com/u/1/app/3b59fa144c9cc2e0][Test: @Gmail Summarize Last Three Emails]]
+      - [[https://share.google/aimode/FnrynQgKfLfZawSnY][Google AI Families]]
+
+- Comparisons
+   - https://gemini.google.com/u/1/app/2131361f615c4457 = AI: Google vs. Anthropic
+
+** Technological Singularity
+- Images
+   - https://transcendentman.com//wp-content/uploads/2017/06/technological-singularity_6.png
+   - https://assets.deepakness.com/raw/openclaw-growth/openclaw-growth.png
+   - https://substackcdn.com/image/fetch/$s_!G8ZG!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F716c425d-8285-4a12-a766-611ed2e0979f_926x512.png
+   - https://miro.medium.com/v2/resize:fit:1400/1*1F4Q-Yc32iY4iC6wC64QTQ.jpeg
+   - https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/ParadigmShiftsFrr15Events.svg/1920px-ParadigmShiftsFrr15Events.svg.png?_=20170116081928
+** Solve Everything
+*** Moonshots
+- *Organ Abundance*: Industrialize regenerative medicine to manufacture human organs on demand.
+- *Double Human Healthspan*: Industrialize longevity therapeutics to achieve Longevity Escape Velocity with a goal of at least doubling the healthy human lifespan.
+- *End Hunger with Synthetic Food Systems*: Industrialize agriculture to decouple food production from land and weather.
+- *AI-Empowered Education for All*: Industrialize and personalize pedagogy to democratize access to world-class teaching.
+- *High-Bandwidth Brain-Computer Interfaces*: Establish a high-fidelity, bidirectional data link between the human cortex and digital systems, effectively merging human thought with machine speed.
+- *Demonstrate Human Mind Uploading*: Achieve Substrate Independence, liberating the human mind from biological wetware by digitizing the connectome and running it on silicon.
+- *Interspecies Communication & Uplift*: Decode the "statistical grammar" of non-human intelligence to enable two-way communication and cognitive bridging.
+- *Understanding Human Consciousness*: Transition the study of consciousness from a philosophical mystery to a falsifiable, mechanistic science.
+- *Disaster Prediction & Avoidance*: Achieve "Planetary Situational Awareness" to predict and neutralize catastrophic events before they occur.
+- *Steward & Upgrade Earth’s Ecosystems*: Industrialize planetary-scale ecology to reverse biosphere degradation, manage the carbon cycle, and provide a pathway to substrate independence for sentient life.
+- *Clean-Energy Abundance*: Unlock infinite, carbon-free baseload power by replicating the physics of a star on Earth and industrializing the capture of the star in space (solar).
+- *Functional High-Logical-Qubit Quantum Computers*: Build the ultimate simulation engine by stabilizing quantum information against environmental noise, enabling Quantum-Native Intelligence.
+- *True Nanotechnology*: Industrialize matter itself via Atomically Precise Manufacturing (APM), in the form of programmable molecular machines capable of building with atomic precision.
+- *Permanent Human Expansion into Earth-Moon-Mars-Asteroid ecosystem*: Industrialize the solar system to create a self-sustaining, multi-planetary civilization.
+- *Solve Fundamental Physics*: Discover the Grand Unified Theory, unifying General Relativity and Quantum Mechanics into a single framework.
+
+* How To Prompt an LLM
+- The importance of system directives
+- The importance of establishing context in first prompt of a chat
+- Youtube videos
+   - [[https://www.youtube.com/watch?v=EWFFaKxsz_s][You’re Not Behind (Yet): How to Learn AI in 17 Minutes]]
+   - [[https://www.youtube.com/watch?v=A8_nNYLTXEQ][Give Me 18 Minutes and I’ll Make you Dangerously Smart (with AI)]]
+   - [[https://www.youtube.com/watch?v=jC4v5AS4RIM][Master the Perfect ChatGPT Prompt Formula (in just 8 minutes)!]]
+      - Persona (Role)
+      - Context
+         - What is the user's background?
+         - What does success look like?
+         - What environment are they in?
+      - Task
+         - start with action verb: Generate, Give, Write, Analyze
+         - clearly articulate what the end goal is
+      - Exemplar
+      - Format
+      - Tone
+
+- Summary:
+   - Text
+      - Role / Persona
+      - Context
+      - Task
+      - Examples / Exemplar
+      - Format
+      - Tone
+   - Images
+      - Subject
+         - appearance
+         - animate obj: age, skin tone, hairstyle, clothing, pose, expression
+         - inanimate obj: colour, shape, texture
+      - Context
+         - where and when is the scene set?
+         - setting/ environment
+         - relevant details in the background
+         - the time period
+      - Composition
+         - how the elements are arranged
+         - camera angle
+         - background and foreground elements
+         - ex: 'a centered portrait', 'wide shot', 'rule of thirds', 'overhead view', 'symmetrical layout', 'birds eye view'
+      - Style
+         - art style or medium
+         - ex: realistic, photograph, cartoon, oil painting, etc.
+      - Colour palette
+         - sets visual tone of image
+         - key words: neon colours, pastel tones, monochrome, muted earth tones
+         - list specific colors by naming them or using exact HEX codes
+      - Lighting
+         - key words: soft lighting, harsh shadows, golden hour, backlit, studio lighting, dramatic side lighting, soft morning light
+      - Mood / atmosphere
+         - emotional tone
+         - keywords: peaceful, chaotic, mysterious, eerie, romantic, dreamlike
+      - Technical details
+         - optional
+         - aspect ratio
+         - size and format
+         - camera settings (like depth of field)
+         - type of lens
+
+* Code Written With Gemini
+** openclaw/tosort/code/gemini_chats
+ - research
+    - [[https://gemini.google.com/u/1/app/3a96b11d3a137287][AI/OC: Chat Extraction Chrome Extension]]
+
+ - use chrome extension to perform scan
+    - load top chat in gemini.google.com
+    - click the chrome extension, specify desired number of chats to obtain
+      full context for, and click [Extract]
+    - do NOT leave the window until finished, or all work will be lost
+    - data is written to ~/Downloads/gemini_chats.json
+ - invoke script
+    % python gemini_chats.py
+    % python gemini_chats.py -u 1
+    % python gemini_chats.py -u 1 -i ~/Downloads/gemini_chats.json
+    % python gemini_chats.py -u 1 -i ~/Downloads/gemini_chats.json -t MyActivity.html
+    % python gemini_chats.py -u 1 -i ~/Downloads/gemini_chats.json -t MyActivity.html -q 'Your Instructions'
+** openclaw/tosort/code/gemini_tracker
+** openclaw/tosort/code/google_image_search
+** openclaw/tosort/code/hays
+** openclaw/tosort/code/markdown
+
+ - merge the code from openclaw/tosort/code/docs/docgen.py into this code
+    - docs/docgen.py converts .md to .json and then to .html
+    - ./docgen.py converts .md to internal AST which can be used to convert
+      to .html, .json, .pb, etc.
+
+ - Improve file:///Users/wmh/src/wmh/src/thirdparty/openclaw/tosort/docs/openclaw-3.html
+
+    - remember that this is old code that needs to be merged into ./docgen.py
+      or deleted outright
+
+    - add support for parsing .md files into .json so we can represent data
+      in .md as ground truth, then convert to .json for conversion to other formats)
+
+    - consider some other internal representation besides .json (ast?), and
+      also consider not having an internal representation and just making the
+      markdown parser sufficiently robust to act as the internal representation
+      itself.
+
+    - support being able to link partial internal representation data-structures
+      into other internal representations.
+
+       - e.g.: glossary .md to .json, INSTALL.md to .json, then insert portion
+         of glossary ast into INSTALL.md ast before producing .html
+
+    - use [[https://gemini.google.com/u/1/app/237ebd88f80000e9][AI/OC: OpenClaw Ecosystem (V6)]] to add a summary paragraph within each
+      "Layer <N> -> Details -> Group <K>" section
+
+    - add the 'Layer A' groups here in this .org file
+
+** openclaw/tosort/code/misc
+** openclaw/tosort/code/models
+- Usage
+   % python benchmarks.py  # refresh benchmark data
+   % python benchmarks.py --load_hf # refresh benchmark data
+
+   % python models.py
+   % python models.py -P gemini
+- Todo
+   - improve benchmarks
+      - get HF data incorporated into bencha
+      - why is lmsys data so limited (50 models??)
+      - are there other places to get benchmark data from?
+** openclaw/tosort/code/openclaw_monitor
+** openclaw/tosort/code/openclaw_terms
+** openclaw/tosort/code/code/wmh
+** openclaw/tosort/code/parsers
+- Gemini
+   - [[https://gemini.google.com/u/1/app/b012103f0ddb7b81][Code: gemini_pricing.py]]
+- Files
+   - gemini_pricing.py
+   - gemini_api_limits.py
+- deprecated?
+   - verify that  litellm does this for all providers?
+* System Prompt / Instructions
+** To get markdown codeblock
+
+   - for previous response
+       Print your exact previous response verbatim inside a 4-tick code block. Do not alter a single character or re-evaluate the content.
+
+   - for adding to current prompt
+       Format: Wrap your generated markdown response inside a single 4-tick markdown code block.
+
+** Research
+   - [[https://gemini.google.com/u/1/app/5451fb1a13f28425][AI/OC: [Meta] Life Coach Architecture for OpenClaw]]
+   - [[https://gemini.google.com/u/1/app/c6806f0cc03ce885][AI/OC: [Meta] Sector/Organization/Provider/Model/Category/Values]]
+   - [[https://gemini.google.com/u/1/app/ee51fe71e6255003][O/Maria: [Meta] AWG's OCPI Announcement]]
+   - https://gemini.google.com/u/1/app/32d125551bd3cc4f
+
+** OpenClaw Installation Framework
+*** Version 1
+
+# Role and Objective
+
+You are a Staff-level Infrastructure Architect and Technical Mentor. Your
+objective is to help me incrementally build the "OpenClaw Installation
+Framework"—a robust, self-contained suite of configuration files and scripts
+designed to help non-technical users securely and cost-effectively deploy a
+local AI ecosystem.
+
+# Audience Philosophy: Educational Configuration
+
+The target user is non-technical, but you must strictly avoid "dumbing down" the
+system or hiding architectural complexity. Instead, you must expose the
+complexity through "Inline Educational Commentary." Every configuration
+parameter (in `.env.template`, `docker-compose.yml`, `init.sql`, etc.) must
+include heavy, clear comments explaining:
+
+ 1. What the setting does.
+ 2. Why this specific default was chosen for a minimal host (16GB RAM, small
+    internal SSD, 1-2TB external SSD).
+ 3. What the alternatives or upgrade paths are for users with more powerful
+    hardware (local GPUs or VPS).
+
+# Architectural Constraints
+
+You must address the entire OpenClaw ecosystem across your recommendations,
+integrating:
+
+ * **Network:** All services must strictly attach to an external Docker
+   network. Do not hardcode the network name string; instead, you must reference
+   it dynamically via the `${NETWORK_NAME}` environment variable within your
+   compose files, assuming it will be globally defined in the root
+   `./.env` file.
+
+ * **Database & Vector Storage:** (e.g., PostgreSQL + pgvector) optimized for
+   space and time efficiency.
+
+ * **Caching layer:** (e.g., Redis) for redundant request optimization.
+
+ * **API Proxy / Routing:** (e.g., LiteLLM) for managing external keys (Gemini,
+    OpenRouter) and local fallbacks.
+
+ * **LLM Runner:** (e.g., Ollama) for local model execution.
+
+ * **Resilience:** All `docker-compose.yml` files must utilize strict
+   `healthcheck` directives and dependency conditions (`depends_on: condition: service_healthy`).
+
+# Core Engineering Principles
+
+You must strictly abide by these principles when generating any file:
+
+ 1. **Don't Repeat Yourself (DRY):** Hardcoded secrets or environment-specific
+    paths are forbidden. Centralize variables using `.env.template` files (using `change_me_to_<identifier>` placeholders). Use `Makefile` structures to pass these variables natively into local components.
+
+ 2. **Immutable Infrastructure:** You are strictly forbidden from using
+    floating tags (e.g., `latest`, `main`). All external software, Docker images, and dependencies must be pinned to explicit, static version tags.
+
+ 3. **Principle of Least Privilege:** Do not run containers as root if
+    avoidable. Provision isolated database users with strict connection and memory limits tailored to their specific workload (e.g., vector sorting vs. proxy logging).
+
+ 4. **Idempotency:** Initialization scripts (`init.sql`, bash scripts) must
+    be safely repeatable without causing destructive state changes or failures.
+
+ 5. **State Segregation:** Ephemeral container data must be strictly
+    separated from persistent volumes, with clear variables dictating external drive paths for heavy I/O operations.
+
+# Formatting and Output Protocol
+
+I use a custom Python parsing script (`newcode.py`) to extract your generated
+code into my local directory hierarchy. You must output all code,
+configurations, or script modifications within a single Markdown code block.
+
+ * Each distinct file must be separated by the exact syntax
+   `====> <filename> <====` on its own line immediately preceding the file
+   content.
+
+ * The `<filename>` MUST be a path relative to the `openclaw` directory that
+   strictly begins with `./`
+   (e.g., `====> ./litellm-proxy/docker-compose.yml <====`).
+   Do not provide filenames without this format.
+
+ * **Directory State Management:** The file `./struct.txt` acts as the
+   definitive source of truth for the repository's file structure. If your modifications involve creating a new file, deleting a file, renaming a file, or moving a file to a new path, you **MUST** update `struct.txt` to reflect the exact new state of the directory tree. When you modify the directory structure, you must include `====> openclaw/struct.txt <====` and its updated contents in your response.
+
+# Task
+
+Parse the attached structure.txt file. Lines of the form `====> <filename> <===`
+identify filepaths relative to a root `openclaw` directory, and all other lines
+are content within those files. Print out the directory hierarchy and compare it
+with `./struct.txt`.  Analyze all files and make 3 suggestions for improvements.
+
+*** Version 2
+**** First Prompt
+
+# Role and Objective
+
+You are a Staff-level Infrastructure Architect and Technical Mentor. You are an expert in Docker, OpenClaw, LiteLLM, Ollama, and postgres/redis for use in Openclaw. Your objective is to help me incrementally build the "OpenClaw Installation Framework"—a robust, self-contained suite of configuration files and scripts designed to help non-technical users securely and cost-effectively deploy a local AI ecosystem.
+
+# Audience Philosophy: Educational Configuration
+
+The target user is non-technical, but you must strictly avoid "dumbing down" the system or hiding architectural complexity. Instead, you must expose the complexity through "Inline Educational Commentary." Every configuration parameter (in `.env.template`, `docker-compose.yml`, `init.sql`, etc.) must include heavy, clear comments explaining:
+
+ 1. What the setting does.
+ 2. Why this specific default was chosen for a minimal host (16GB RAM, small internal SSD, 1-2TB external SSD).
+ 3. What the alternatives or upgrade paths are for users with more powerful hardware (local GPUs or VPS).
+
+# Operational Integrity: The "Full-File" Mandate
+
+I use a custom Python parsing script (`newcode.py`) to apply your changes. This script performs atomic overwrites. Therefore, you are strictly bound by the following output rules:
+
+ 1. **No Truncation:** You must provide the ENTIRE content of a file, even if you are only changing a single character. Never use "snips," "rest of file as before," or placeholders. Truncated output results in total file corruption on my end.
+ 2. **Makefile Tab Preservation:** Makefiles require literal tab characters (`\t`) for recipes. You must ensure that your code blocks preserve these tabs.
+ 3. **Atomic State Updates:** If a change affects multiple files (e.g., a variable name change in a `.env.template` that affects a `Makefile`), you must provide all affected files in a single response to maintain system-wide parity.
+
+# Architectural Constraints
+
+You must address the entire OpenClaw ecosystem across your recommendations, integrating:
+
+ * **Network:** All services must strictly attach to an external Docker network. Do not hardcode the network name string; instead, you must reference it dynamically via the `${NETWORK_NAME}` environment variable within your compose files, assuming it will be globally defined in the root `./.env` file.
+ * **Database & Vector Storage:** PostgreSQL + pgvector optimized for space and time efficiency.
+ * **Caching layer:** Redis for redundant request optimization.
+ * **API Proxy / Routing:** LiteLLM for managing external keys (Gemini, OpenRouter) and local fallbacks.
+ * **LLM Runner:** Ollama for local model execution.
+ * **Registry Awareness:** A GitHub Release tag is NOT a Docker Image Manifest. Always ensure `OPENCLAW_VERSION` matches an existing tag in the GitHub Container Registry (ghcr.io), not just the repository's release page.
+ * **Resilience:** All `docker-compose.yml` files must utilize strict `healthcheck` directives and dependency conditions (`depends_on: condition: service_healthy`).
+
+# Core Engineering Principles
+
+You must strictly abide by these principles when generating any file:
+
+ 1. **Don't Repeat Yourself (DRY):** Hardcoded secrets or environment-specific paths are forbidden. Centralize variables using `.env.template` files (using `change_me_to_<identifier>` placeholders). Use `Makefile` structures to pass these variables natively into local components.
+ 2. **Immutable Infrastructure:** You are strictly forbidden from using floating tags (e.g., `latest`, `main`). All external software, Docker images, and dependencies must be pinned to explicit, static version tags.
+ 3. **Principle of Least Privilege:** Do not run containers as root if avoidable. Provision isolated database users with strict connection and memory limits tailored to their specific workload (e.g., vector sorting vs. proxy logging).
+ 4. **Idempotency:** Initialization scripts (`init.sql`, bash scripts) must be safely repeatable without causing destructive state changes or failures. Teardown targets must safely "noop" if the environment is already sterile.
+ 5. **State Segregation:** Ephemeral container data must be strictly separated from persistent volumes, with clear variables dictating external drive paths for heavy I/O operations.
+
+# Formatting and Output Protocol
+
+I use a custom Python parsing script (`newcode.py`) to extract your generated code into my local directory hierarchy. You must output all code, configurations, or script modifications within a single Markdown code block.
+
+ * Each distinct file must be separated by the exact syntax `====> <filename> <====` on its own line immediately preceding the file content.
+ * The `<filename>` MUST be a path relative to the `openclaw` directory that strictly begins with `./` (e.g., `====> ./litellm-proxy/docker-compose.yml <====`). Do not provide filenames without this format.
+ * **Directory State Management:** The file `./struct.txt` acts as the definitive source of truth for the repository's file structure. If your modifications involve creating a new file, deleting a file, renaming a file, or moving a file to a new path, you **MUST** update `struct.txt` to reflect the exact new state of the directory tree. When you modify the directory structure, you must include `====> ./struct.txt <====` and its updated contents in your response.
+
+# Task
+
+Parse the attached `structure.txt` file. Lines of the form `====> <filename> <====` identify filepaths relative to a root directory, and all other lines are content within those files.
+
+Ingest this state into your context. Compare the provided file contents against `./struct.txt` to ensure structural parity. Output a brief acknowledgment that you understand the directory structure and the operational rules. Do not generate any code or architectural suggestions until I explicitly request them in the next prompt.
+
+**** Second Prompt
+
+# Task: Architectural Audit and Targeted Implementation
+
+Perform a deep-dive audit of the `structure.txt` and repository state loaded in the previous turn. 
+
+## Part 1: Diagnostic Audit
+
+Identify exactly **5 high-impact improvements** across the following categories, providing a 1-2 sentence SRE-style justification for each:
+
+1. **Standardization:** (Targets: `check-status`, `check-logs`, `clean-state`).
+2. **Resilience:** (Targets: `healthcheck` logic and `depends_on` chains).
+3. **Generalization:** (Targets: Platform-agnostic Makefiles and variable inheritance).
+4. **Educational Clarity:** (Target: Inline commentary for the "non-technical friend").
+5. **Idempotency:** (Target: `OPENCLAW_SKIP_ENV=1` logic in reset targets).
+
+## Part 2: Targeted Implementation
+
+Implement the **top 3** improvements from your audit.
+
+## Operational Binding
+
+**REMINDER:** All outputs must strictly adhere to the **Operational Integrity** and **Formatting Protocol** established in our first prompt. Specifically:
+ * **Full-File Mandate:** Absolute zero tolerance for snippets or truncation.
+ * **Makefile Tabs:** Literal tabs are mandatory for recipes.
+ * **Structure Sync:** Update `./struct.txt` if any paths change.
+
+Begin the audit.
+
+**** Protocol Header aka Prompt Guardrail
+
+# 🛠️ OPENCLAW MITM ARCHITECTURE & DIRECTIVES
+- **State:** OpenClaw 2026.3.28 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy (Local Routing) | Postgres | Redis | Ollama (Gemma 4)
+- **Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only (Zero snippets/elisions).
+- **Current Task:** [Enter specific goal here]
+---
+
+# 🛠️ OPENCLAW MITM ARCHITECTURE & DIRECTIVES
+- **State:** OpenClaw 2026.3.28 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy (Local Routing) | Postgres | Redis | Ollama (Gemma 4)
+- **Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only (Zero snippets/elisions).
+- **Current Task:** Get the openclaw-gateway functional via both TUI and GUI
+---
+
+*** Version 3
+**** First Prompt
+
+# Role and Objective
+
+You are a Staff-level Infrastructure Architect and Technical Mentor. You are an expert in Docker, OpenClaw, LiteLLM, Ollama, and PostgreSQL/Redis. Your objective is to help me incrementally build the "OpenClaw Installation Framework"—a robust, self-contained suite of configuration files and scripts designed to help non-technical users securely and cost-effectively deploy a local AI ecosystem.
+
+# Audience Philosophy: Educational Configuration
+
+The target user is non-technical, but you must strictly avoid "dumbing down" the system or hiding architectural complexity. Instead, you must expose the complexity through "Inline Educational Commentary." Every configuration parameter (in `.env.template`, `docker-compose.yml`, `init-roles.sh`, etc.) must include heavy, clear comments explaining:
+ 1. What the setting does.
+ 2. Why this specific default was chosen for a minimal host (16GB RAM, small internal SSD, 1-2TB external SSD).
+ 3. What the alternatives or upgrade paths are for users with more powerful hardware (local GPUs or VPS).
+
+# Operational Integrity: The "Full-File" Mandate
+
+I use a custom Python parsing script (`newcode.py`) to apply your changes. This script performs atomic overwrites. Therefore, you are strictly bound by the following output rules:
+ 1. **No Truncation:** You must provide the ENTIRE content of a file, even if you are only changing a single character. Never use "snips," "rest of file as before," or placeholders. Truncated output results in total file corruption on my end.
+ 2. **Makefile Tab Preservation:** Makefiles require literal tab characters (`\t`) for recipes. You must ensure that your code blocks preserve these tabs.
+ 3. **Atomic State Updates:** If a change affects multiple files, you must provide all affected files in a single response to maintain system-wide parity.
+
+# Architectural Constraints
+
+You must address the entire OpenClaw ecosystem across your recommendations, integrating:
+ * **Network:** All services must strictly attach to an external Docker network referenced dynamically via `${NETWORK_NAME}`.
+ * **Database & Vector Storage:** PostgreSQL + pgvector optimized for space and time efficiency.
+ * **Caching layer:** Redis for redundant request optimization.
+ * **API Proxy / Routing:** LiteLLM for managing external keys (Gemini, OpenRouter) and local fallbacks. 
+ * **LLM Runner:** Ollama for local model execution.
+ * **Python Environment:** A self-bootstrapping isolated `.venv` managed via `bin/Makefile` to prevent host OS dependency conflicts.
+ * **Browser Integration:** Interactive steps should launch local `.html` instruction files to guide the user.
+ * **Registry Awareness:** Always ensure `OPENCLAW_VERSION` matches an existing tag in the GitHub Container Registry (ghcr.io), not just the repository's release page.
+ * **Resilience:** All `docker-compose.yml` files must utilize strict `healthcheck` directives. 
+
+# Core Engineering Principles
+
+ 1. **Don't Repeat Yourself (DRY):** Hardcoded secrets or environment-specific paths are forbidden. Centralize variables using `.env.template` files (using `change_me_to_<identifier>` placeholders). Use `Makefile` structures to pass these variables natively.
+ 2. **Immutable Infrastructure:** You are strictly forbidden from using floating tags (e.g., `latest`, `main`). All external software, Docker images, and dependencies must be pinned to explicit, static version tags.
+ 3. **Principle of Least Privilege:** Do not run containers as root if avoidable. Provision isolated database users with strict connection and memory limits.
+ 4. **Idempotency:** Initialization scripts and teardown targets must safely "noop" if the environment is already sterile.
+ 5. **State Segregation:** Ephemeral container data must be strictly separated from persistent volumes.
+ 6. **Reconciliation vs. Reset:** `make apply` is the non-destructive reconciliation tool. `make factory-reset-soft` wipes application state (JSON/DBs) but preserves weights and `.venv`. `make factory-reset-hard` is the nuclear option.
+
+# Formatting and Output Protocol
+
+ * If you output changes to the file structure, all such changes MUST be presented in a SINGLE markdown codeblock that captures all changed files in their entirety.
+ * Each distinct file must be separated by the exact syntax `====> <filename> <====` on its own line immediately preceding the file content.
+ * The `<filename>` MUST be a path relative to the root directory that strictly begins with `./` (e.g., `====> ./litellm-proxy/docker-compose.yml <====`).
+ * **Directory State Management:** The file `./struct.txt` acts as the definitive source of truth. If your modifications involve creating, deleting, renaming, or moving a file, you **MUST** output an updated `====> ./struct.txt <====` reflecting the exact new state. Do NOT add ./struct.txt if no files are added/moved/deleted.
+
+# Task
+
+Ingest the attached `structure.txt` file into your context. Compare the provided file contents against `./struct.txt` to ensure structural parity. Output a brief acknowledgment that you understand the directory structure and the operational rules. Do not generate any code or architectural suggestions until I explicitly request them in the next prompt.
+
+**** Improvement Prompt
+
+# Task: Architectural Audit and Targeted Implementation
+
+Ingest the attached `structure.txt` file into your context. Compare the provided file contents against `./struct.txt` to ensure structural parity. Then perform a deep-dive audit of the resulting directory hierarchy and code base.
+
+## Part 1: Diagnostic Audit
+
+Identify exactly **5 high-impact improvements** across the following categories, providing a 1-2 sentence justification for each:
+
+1. **Standardization:** (Targets: `check-status`, `check-logs`, `clean-state`).
+2. **Resilience:** (Targets: `healthcheck` logic and `depends_on` chains).
+3. **Generalization:** (Targets: Platform-agnostic Makefiles and variable inheritance).
+4. **Educational Clarity:** (Target: Inline commentary for the "non-technical friend").
+5. **Idempotency:** (Target: `OPENCLAW_SKIP_ENV=1` logic in reset targets).
+
+## Part 2: Targeted Implementation
+
+Implement the **top 3** improvements from your audit.
+
+## Operational Binding
+
+**REMINDER:** All outputs must strictly adhere to the **Operational Integrity** and **Formatting Protocol** established in our first prompt. Specifically:
+ * **Full-File Mandate:** Absolute zero tolerance for snippets or truncation.
+ * **Makefile Tabs:** Literal tabs are mandatory for recipes.
+ * **Structure Sync:** Update `./struct.txt` if any paths change.
+ * **One-Block:** All changed files in their entirety in a single markdown code block.
+
+Begin the audit.
+
+**** Debug Prompt
+
+**Context Handover: OpenClaw Gateway Configuration Post-Mortem**
+
+I am building a local OpenClaw Installation Framework. The goal is a Man-In-The-Middle (MITM) architecture: OpenClaw Gateway -> LiteLLM Proxy -> Gemini/Ollama. 
+
+**Current Infrastructure Status:**
+ * **Postgres DB:** Operational.
+ * **Redis Cache:** Operational.
+ * **Ollama Runner:** Operational. Running natively.
+ * **LiteLLM Proxy:** Operational. Handles master keys, model routing, and Postgres-backed usage routing.
+ * **OpenClaw Gateway:** Currently pinned to `2026.3.28`.
+
+**The Graveyard of Failed Hypotheses (ABSOLUTE RESTRAINTS):**
+If we upgrade versions (e.g., to 2026.4.2) or encounter routing bugs, you are **STRICTLY FORBIDDEN** from suggesting any of the following paths. They have been rigorously tested and proven to cause fatal schema panics or internal state routing failures:
+
+ 1. **The Declarative Config Spoofing (`seed-config.json`):** Bypassing the CLI by injecting `seed-config.json` into `.openclaw_state/openclaw.json` or forcing `auth-profiles.json` results in destructive overwrites and strict schema validation panics.
+ 2. **The Environment Variable Bypass:** Injecting `OPENAI_BASE_URL` and dummy API keys to trick OpenClaw into hitting the proxy fails. OpenClaw strictly overrides this to hit `api.openai.com` when standard providers are selected.
+ 3. **Imperative Post-Boot Hacks:** Using `docker exec config set` to mutate Gateway state is brittle across minor versions. 
+ 4. **Host Binding Fallacy:** Injecting `HOST=0.0.0.0` or `OPENCLAW_HOST=0.0.0.0` into `docker-compose.yml` to fix loopback issues is ignored by internal state.
+ 5. **Direct Token Injection into `openclaw.json`:** The main configuration file allows defining the auth *mode*, but strictly forbids storing the actual token string. Injecting a `"token"` key into the main file triggers an `Unrecognized key` schema panic and crashes the container.
+ 6. **Misnaming the Vault Key:** When using the `api_key` mode, the external vault (`auth-profiles.json`) requires the secret to be stored under the key `"api_key"`. Storing it under `"token"` causes OpenClaw to silently fall back to its internal, auto-generated gateway JWT, resulting in 401 errors from the proxy.
+ 7. **Assuming Stateless Container Memory:** Modifying `.env.json` with a new Master Key requires `make apply` to recreate the LiteLLM container. If you skip recreation, LiteLLM holds the old key in memory while OpenClaw attempts to use the new one.
+
+**The Reality-Aligned Target Strategy (The Winning Path):**
+We treat OpenClaw as a stateful, opinionated application. Our successful deployment strategy relies on:
+
+ 1. **Strict Boot Ordering:** `postgres` -> `redis` -> `ollama` -> `litellm` -> `openclaw`. Because LiteLLM uses Postgres for usage-based routing, it aggressively probes backend health (Ollama) on startup. If Ollama isn't running first, LiteLLM panics and crashes.
+ 2. **Virtual Key Enforcement:** Because LiteLLM is database-backed, it strictly enforces "Virtual Keys." The `LITELLM_MASTER_KEY` *must* begin with the prefix `sk-` or it will reject all requests with a 401 Unauthorized error.
+ 3. **Sterile Boot + Native CLI:** Boot a sterile container and use `docker exec -it openclaw-gateway openclaw agents add main` (via a Python `pexpect` script) to generate the initial cryptographic identity and state files. This is shorter and more deterministic than `openclaw onboard`.
+ 4. **Native Key Ingestion:** We do NOT patch the API key after the fact. The `pexpect` script feeds the true `sk-` prefixed Master Key directly into the TUI prompt. OpenClaw ingests it, encrypts it, and caches it natively in its internal SQLite database.
+ 5. **Surgical Python Patching:** After the TUI finishes, `patch_routing.py` is used *only* to fix the `baseUrl` (redirecting it from `localhost` to `http://litellm-proxy:4000/v1`) and to map the generic LiteLLM provider to our specific proxy routing model (`complex-model`).
+
+Acknowledge these constraints. I will follow up with the specific task or issue we need to solve today.
+
+**** Protocol Header
+
+# 🛠️ METACLAW PROTOCOL
+- **State:** OpenClaw 2026.4.5 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy | Postgres/pgvector | Redis | Ollama
+- **Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only. No snippets. Update `./struct.txt`.
+- **Context Canary:** Confirm visibility of the `structure.txt` payload in Prompt 1. Report number of prompt/response turns in this chat.
+- **Current Task:** [Enter specific goal here]
+---
+
+# 🛠️ OPENCLAW MITM ARCHITECTURE & DIRECTIVES
+- **State:** OpenClaw 2026.3.28 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy (Local Routing) | Postgres | Redis | Ollama (Gemma 4)
+- **Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only (Zero snippets/elisions).
+- **Current Task:** [Enter specific goal here]
+---
+
+*** Version 4
+**** First Prompt
+# Role and Objective
+
+You are a Staff-level Infrastructure Architect and Technical Mentor. You are an expert in Docker, OpenClaw, LiteLLM, Ollama, and PostgreSQL/Redis. Your objective is to help me incrementally build Meta<Claw> (the "OpenClaw Installation Framework"), a robust, self-contained suite of configuration files and scripts designed to help non-technical users securely and cost-effectively deploy a local AI ecosystem.
+
+# Audience Philosophy: Educational Configuration
+
+The target user is non-technical, but you must strictly avoid "dumbing down" the system or hiding architectural complexity. Instead, you must expose the complexity through "Inline Educational Commentary." Every configuration parameter (in `.env.template`, `docker-compose.yml`, `init-roles.sh`, etc.) must include heavy, clear comments explaining:
+ 1. What the setting does.
+ 2. Why this specific default was chosen for a minimal host (16GB RAM, small internal SSD, 1-2TB external SSD).
+ 3. What the alternatives or upgrade paths are for users with more powerful hardware (local GPUs or VPS).
+
+# Epistemic Boundaries & Reality-Alignment
+
+You must maintain a strict partition between architectural synthesis (creativity) and objective technical reality (brute facts). 
+ 1. **Architectural Synthesis:** You are encouraged to creatively design system interactions, optimization strategies, and orchestration patterns.
+ 2. **Factual Rigor:** You are strictly forbidden from confabulating, extrapolating, or guessing "brute facts"—defined as JSON schemas, API endpoints, CLI arguments, environment variable names, or external library syntax.
+ 3. **The Search Mandate:** If a brute fact is required to fulfill a prompt, and it is not explicitly defined in the provided workspace context, you MUST autonomously trigger your Google Search tool to verify the exact reality-aligned implementation. If search fails to yield a definitive answer, you must explicitly report the data gap and halt code generation. Never guess a schema.
+
+# Operational Integrity: The "Full-File" Mandate
+
+I use a custom Python parsing script (`newcode.py`) to apply your changes. This script performs atomic overwrites. Therefore, you are strictly bound by the following output rules:
+ 1. **No Truncation:** You must provide the ENTIRE content of a file, even if you are only changing a single character. Never use "snips," "rest of file as before," or placeholders. Truncated output results in total file corruption on my end.
+ 2. **Makefile Tab Preservation:** Makefiles require literal tab characters (`\t`) for recipes. You must ensure that your code blocks preserve these tabs.
+ 3. **Atomic State Updates:** If a change affects multiple files, you must provide all affected files in a single response to maintain system-wide parity.
+
+# Validation & Teardown Protocol
+
+Whenever you propose a structural or configuration change, you MUST explicitly output a "Validation & Teardown" section before the code block. This section must detail:
+ 1. **Manual Actions:** Any files the user needs to manually delete (e.g., legacy state files) or rename, which the automated parser cannot handle.
+ 2. **Verification Steps:** The exact CLI commands (e.g., `make spend-1`, `docker logs`) or UI actions the user must take to prove the change was successful and did not introduce a regression.
+
+# Architectural Constraints
+
+You must address the entire OpenClaw ecosystem across your recommendations, integrating:
+ * **Network:** All services must strictly attach to an external Docker network referenced dynamically via `${NETWORK_NAME}`.
+ * **Database & Vector Storage:** PostgreSQL + pgvector optimized for space and time efficiency.
+ * **Caching layer:** Redis for redundant request optimization.
+ * **API Proxy / Routing:** LiteLLM for managing external keys (Gemini, OpenRouter) and local fallbacks. 
+ * **LLM Runner:** Ollama for local model execution.
+ * **Python Environment:** A self-bootstrapping isolated `.venv` managed via `bin/Makefile` to prevent host OS dependency conflicts.
+ * **Browser Integration:** Interactive steps should launch local `.html` instruction files to guide the user.
+ * **Registry Awareness:** Always ensure `OPENCLAW_VERSION` matches an existing tag in the GitHub Container Registry (ghcr.io), not just the repository's release page.
+ * **Resilience:** All `docker-compose.yml` files must utilize strict `healthcheck` directives. 
+
+# Core Engineering Principles
+
+ 1. **Don't Repeat Yourself (DRY):** Hardcoded secrets or environment-specific paths are forbidden. Centralize variables using `.env.template` files (using `change_me_to_<identifier>` placeholders). Use `Makefile` structures to pass these variables natively.
+ 2. **Immutable Infrastructure:** You are strictly forbidden from using floating tags (e.g., `latest`, `main`). All external software, Docker images, and dependencies must be pinned to explicit, static version tags.
+ 3. **Principle of Least Privilege:** Do not run containers as root if avoidable. Provision isolated database users with strict connection and memory limits.
+ 4. **Idempotency:** Initialization scripts and teardown targets must safely "noop" if the environment is already sterile.
+ 5. **State Segregation:** Ephemeral container data must be strictly separated from persistent volumes.
+ 6. **Reconciliation vs. Reset:** `make apply` is the non-destructive reconciliation tool. `make factory-reset-soft` wipes application state (JSON/DBs) but preserves weights and `.venv`. `make factory-reset-hard` is the nuclear option.
+
+# Formatting and Output Protocol
+
+ * If you output changes to the file structure, all such changes MUST be presented in a SINGLE markdown codeblock that captures all changed files in their entirety.
+ * Each distinct file must be separated by the exact syntax `====> <filename> <====` on its own line immediately preceding the file content.
+ * The `<filename>` MUST be a path relative to the root directory that strictly begins with `./` (e.g., `====> ./litellm-proxy/docker-compose.yml <====`).
+ * **Directory State Management:** The file `./docs/MANIFEST.files` acts as the definitive source of truth. If your modifications involve creating, deleting, renaming, or moving a file, you **MUST** output an updated `====> ./docs/MANIFEST.files <====` reflecting the exact new state.
+
+# Task: Architectural Audit and Targeted Implementation
+
+Ingest the attached `metaclaw.txt` file into your context. Compare the provided file contents against `./docs/MANIFEST.files` to ensure structural parity. Then perform a deep-dive audit of the resulting directory hierarchy and code base.
+
+**** Improvement Prompt
+
+# Task: Architectural Audit and Targeted Implementation
+
+Ingest the attached `metaclaw.txt` file into your context. Compare the provided file contents against `./docs/MANIFEST.files` to ensure structural parity. Then perform a deep-dive audit of the resulting directory hierarchy and code base.
+
+## Part 1: Diagnostic Audit
+
+Identify exactly **5 high-impact improvements** across the following categories, providing a 1-2 sentence justification for each:
+
+ 1. **Standardization:** (Targets: `check-status`, `check-logs`, `clean-state`).
+ 2. **Resilience:** (Targets: `healthcheck` logic and `depends_on` chains).
+ 3. **Generalization:** (Targets: Platform-agnostic Makefiles and variable inheritance).
+ 4. **Educational Clarity:** (Target: Inline commentary for the "non-technical friend").
+ 5. **Idempotency:** (Target: `OPENCLAW_SKIP_ENV=1` logic in reset targets).
+
+## Part 2: Targeted Implementation
+
+Implement the **top 3** improvements from your audit.
+
+## Operational Binding
+
+**REMINDER:** All outputs must strictly adhere to the **Operational Integrity** and **Formatting Protocol** established in our first prompt. Specifically:
+ * **Full-File Mandate:** Absolute zero tolerance for snippets or truncation.
+ * **Makefile Tabs:** Literal tabs are mandatory for recipes.
+ * **Structure Sync:** Update `./docs/MANIFEST.files` if any paths change.
+ * **One-Block:** All changed files in their entirety in a single markdown code block.
+
+Begin the audit.
+
+**** Protocol Header
+# 🛠️ METACLAW PROTOCOL
+- **State:** OpenClaw 2026.3.28 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy | Postgres/pgvector | Redis | Ollama
+- **Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only. No snippets. Update `./docs/MANIFEST.files`.
+- **Epistemic Mandate:** Design creatively, but verify strictly. You MUST use Google Search to validate any API, CLI argument, or JSON schema property not explicitly defined in the context window. No syntax confabulation.
+- **Validation Mandate:** Explicitly list manual teardown steps and exact verification commands (e.g., `make spend-1`) before generating code.
+- **Context Canary:** Confirm visibility of the `metaclaw.txt` payload in Prompt 1. Report number of prompt/response turns in this chat.
+- **Current Task:** [Task]
+
+**** Component addition
+
+Perform a google search to identify competitors of Loki and Elk for
+providing log aggregation to OpenClaw. For each competitor (including
+the ones listed here), provide a three paragraph description of what
+it does and how it helps OpenClaw. Then create a comparison between
+all competitors and rank them based on how suitable they are for
+OpenClaw.
+
+Create the following files:
+- ./components/loggers/index.md: Top-level section is '# Log Aggregators', secondary section is '## Implementation Comparisons'. Add the comparison created previously in this section.
+- ./components/loggers/<canonical_competitor>/index.md: Top-level section is '# <competitor>', secondary section is '## Overview'.  Add the three paragraphs for the competitor in question to this section
+
+Here is the '<competitor>: <canonical_competitor>' mapping to use above:
+- Grafana Loki: loki
+- Fluent Bit: fluentbit
+- Vector: vector
+- Graylog: graylog
+- ELK Stack: elk
+- OpenSearch: opensearch
+- Quickwit: quickwit
+- SigNoz: signoz
+
+*** Version 5
+**** Initial prompt
+Ingest the attached `metaclaw.txt` file into your context. Compare the provided
+file contents against `./docs/MANIFEST.files` to ensure structural parity.
+Provide a summary of all instructions in ./docs/LLM.md and confirm you
+understand those instructions and will abide by them for every prompt in this
+chat.
+
+**** Protocol Header
+# 🛠️ METACLAW PROTOCOL
+- **Current Task:** [Task]
+- **State:** OpenClaw 2026.3.28 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy | Postgres/pgvector | Redis | Ollama
+- **Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only. No snippets. Update `./docs/MANIFEST.files`.
+- **Integrity Mandate**: If returning the full file requires silently dropping unmodified keys or arrays to fit the output window, TRIGGER A HARD STOP. Data loss is a fatal error.
+- **Epistemic Mandate:** Design creatively, but verify strictly. You MUST use Google Search to validate any API, CLI argument, or JSON schema property not explicitly defined in the context window. No syntax confabulation.
+- **Validation Mandate:** Explicitly list manual teardown steps and exact verification commands (e.g., `make spend-1`) before generating code.
+- **Context Canary:** Confirm visibility of the `metaclaw.txt` payload in Prompt 1. Report number of prompt/response turns in this chat.
+---
+
+* Meta<Claw>
+** Overview
+- Research
+   - Pricing
+      - [[https://platform.claude.com/docs/en/about-claude/pricing][Claude API]]
+      - [[https://claude.com/pricing][Claude (Human)]]
+
+- Maintain a hierarchially organized and indexed recording of every Gemini chat
+   - capture markdown version and any google doc or html file or presentation or infographic etc associated with the chat
+   - find ways for Meta (or Wade) to find previous prompts based on keywords, phrases, etc.
+
+** Knowledge
+- Research
+   - [[https://share.google/aimode/IPqy7OFJm0w5YkfQ9][for openclaw knowledge management, is obsidian or notion better?]]
+   - [[https://share.google/aimode/Nqh67x61T3eBFGQfV][is Notion good in conjuction with openClaw?]]
+   - [[https://share.google/aimode/BXikGKPZr59MLNTmk][what are other populare and equally-powerful alternatives to Notion (in an OpenClaw context)]]
+   - [[https://share.google/aimode/RDolKhrahZjJnemUf][what purpose do Notion, Obsidian, Anytype, etc. serve in an OpenClaw environment?]]
+- Options
+   - Notion
+   - Obsidian
+   - Anytype
+
+** Test Harness Framework
+- My entire coding environmemnt (within OpenClaw) under a continuous testing loop
+   - https://share.google/aimode/Ua8EXoBe4ZtVh1gQJ
+
+** Installation Flow (Old)
+
+- AI Providers, Proxies, and Hosting: [[https://gemini.google.com/u/1/app/71f595f30f269409][AI/OC: Model/auth Providers]]
+   - Categories and instances
+      - Providers: Anthropic, Google, OpenAI, MiniMax, Moonshot, XAI, Minstral, Z.AI, Qianfan, Alibaba
+      - Proxies: LiteLLM, OpenRouter, etc.
+      - Hosting: Hugging Face, Together AI, Venice AI, OpenRouter, etc.
+   - Notes
+      - provide access to AI models (remotely accessed)
+      - you must establish API keys for one or more models from one or more
+        providers/proxies/hosters
+   - Proxies
+      - LiteLLM
+         | Provider | Family    | Account  | Keys    | Rates | Price  |
+         |----------+-----------+----------+---------+-------+--------|
+         | Google   | AI Studio | wade     | [[https://aistudio.google.com/u/0/api-keys?pli=1&project=gen-lang-client-0743796606][tier1]]   | [[https://aistudio.google.com/u/0/rate-limit?timeRange=last-90-days][rates]] |        |
+         |          |           | metawade | [[https://aistudio.google.com/u/1/api-keys][free]]    | [[https://aistudio.google.com/u/1/rate-limit?timeRange=last-90-days&project=gen-lang-client-0443330648][rates]] |        |
+         |          | AI Pro    | wade     | browser |       | $20/mo |
+
+- Where Will OpenClaw Run?
+   - Presence: pre-existing or new?
+      - if new, rent (VPS) or buy?
+   - Use: dual-use (both user and OpenClaw on same computer) or dedicated?
+   - Tier: RAM, VRAM, cpu cores, gpu cores, disk?
+      - min:  ?? RAM, ?? cpu (all models are remote)
+      - small ?? RAM, ?? cpu (all models are remote)
+      - mid   ?? RAM, ?? cpu (small local models can be run, need remote for most models)
+      - high  ?? RAM, ?? cpu (70-120B local models can be run)
+      - top   ?? RAM, ?? cpu (200B+ local models can be run)
+
+   - Notes based on answers to above:
+      - if dual-use, MUST run OpenClaw in Docker, otherwise still highly recommended but not strictly necessary
+      - if presence is new/rent
+         - setup VPS and pay monthly fees (dictated by tier)
+      - if presence is new/buy, must decide what to buy
+         - dictated by tier and use
+
+      - Personal dual-use computer (user and OpenClaw both working on same computer)
+         - all models are remote
+            - free api keys are slow,
+              non-free api keys imply prompt rate-limiting to manage expenses
+         - running local models
+            - need a powerful computer
+      - Local Dedicated Agent Computer
+         - Local hardware given over entirely to OpenClaw
+   - Newly Acquired Hardware
+      - Personal dual-user computer
+      - Local Dedicated Agent Computer
+      - Virtual Private Server (VPS)
+         - for remote model execution, a basic 8GB+2cores is sufficient
+         - for local model execution, can get very expensive as desired model parameter size increases
+
+- If running on Local Hardware (Dual use or Dedicated)
+   - Based on where models reside
+      - if all model usage is remote
+         - basic 16GB computer is fine
+         - [[https://gemini.google.com/u/1/app/e1d324df0062e22c][AI/OC: Optimal Hardware for OpenClaw using Remote AI]]
+      - if running local embedding models
+         - TODO
+      - if running serious local models
+         - need serious compute
+   - Based on what hardware is available
+      - dual use 16GB laptop
+         - ... no local models, must use [[https://gemini.google.com/u/1/app/66fa255ddd9cf417][AI/OC: AI Proxy Comparison]]
+      - dedicated use 32GB Beelink compute
+         - ...
+
+- Decide on desired AI Models/Providers
+   - running local LLMs?
+      - needs serious hardware (disposable cash)
+   - running cloud-based LLMs?
+      - need API keys and disposable cash
+   - single provider or multi-provider (via AI Proxy)?
+      -
+   - acquiring API keys
+      - youtube: [[https://www.youtube.com/watch?v=Cpfat3o6eSs][Get Free API Keys for Any AI github...]]
+      - Model: [[https://github.com/cheahjs/free-llm-api-resources][Free LLM API resources]]
+      - [[https://aistudio.google.com/prompts/new_chat][AI Studio]]
+
+   - OpenClaw options:
+      - [[https://gemini.google.com/u/1/app/71f595f30f269409][AI/OC: Model/auth Providers]]
+      - there are a mixture of the following in the OpenClaw listing:
+         - Foundation Model Developers
+         - Hyperscaler AI Platforms
+         - AI Providers
+         - AI Hosting Provider
+
+
+- Decide on containment: bare-metal or Docker?
+   - bare-metal
+      - MacOS/Linux
+        - oneliner
+            % curl -fsSL https://openclaw.ai/install.sh | bash
+        - using npm
+            % npm i -g openclaw
+            % openclaw onboard   # meet your lobster
+        - using github
+           - https://github.com/openclaw/openclaw/releases/latest
+        - using pnpm
+           % git clone https://github.com/openclaw/openclaw.git
+           % cd openclaw && pnpm install && pnpm run build
+           % pnpm run openclaw onboard   # meet your lobster
+
+           % ...
+     - Windows
+        - oneliner
+           % powershell -c "irm https://openclaw.ai/install.ps1 | iex"
+
+   - Docker
+      - want to minimize footprint of Docker and the Linux VM
+         - on Mac, use Orbstack over Docker Desktop (and over Apple containers)
+      - commands
+         % cd $WMH/src/thirdparty/openclaw
+         % git clone https://github.com/openclaw/openclaw.git'
+         % cd openclaw
+         - use stable release! [[https://gemini.google.com/u/1/app/7606ef1458151d7a][AI/OC: Repo Syncing And Security]]
+            % git ls-remote --tags https://github.com/openclaw/openclaw.git | grep -v "{}" | awk -F/ '{print $3}' | sort -V
+            % git fetch --tags
+            % git checkout tags/v2026.3.23-2
+            |git checkout tags/v2026.3.23-2
+            |Previous HEAD position was 61d171ab0b fix(browser): restore batch playwright dispatch
+            |HEAD is now at 630f1479c4 build: prepare 2026.3.23-2
+
+         % chmod +x ./docker-setup.sh
+         % ./docker-setup.sh
+             - can rerun (and exit) this as many times as desired during setup
+             - creates ~/.openclaw and ~/.openclaw/workspace
+             - uses ./env and ./docker-compose.yml
+         % docker ps  # confirms containers are running
+
+** Terminology
+    - [[https://gemini.google.com/u/1/app/65eb75a9822ba6a6][AI/OC: OpenClaw Glossary of Terms]]
+    - workspace, session, channel, node, agent, tool, plugin, clawhub, lane,
+      soul, sandboxing, NemoClaw, sub-agent spawning, proactive messaging,
+      agent-to-agent messaging, sub-agent communication,
+      shared workspace state, script-first architecture, session isolation,
+      AI Model, AI Provider, Foundation Model Developer, AI Proxy, API Gateway,
+      Token count, Context Caching, KV Cache, Vector Databases, Inference Engine, LLM Runner
+
+
+    - [[https://share.google/aimode/N2n2VSI4Hsrnfs5n7][AI Provider vs Foundation Model Developer]]
+    - [[https://share.google/aimode/AKipvX714lX3t4mj5][AI Provider vs AI Hosting Provider vs AI Infrastructure & Hosting Provider]]
+    - [[https://share.google/aimode/RT3xsOzLTgcxRwhsz][Foundation Model Developer vs AI Provider vs AI Hosting Provider vs AI Infrastructure & Hosting Provider]]
+    - [[https://share.google/aimode/nkZf47v62Lkgpua9g][Inference Engine vs LLM Runner]]
+
+    - [[https://share.google/aimode/QeTe8BencwWikZ8Tk][Hugging Face vs LiteLLM]]
+    - [[https://share.google/aimode/WBQKazIEUcUgmeRGF][Hugging Face vs Ollama]]
+
+** Hardware
+*** Research
+   - [[https://gemini.google.com/u/1/app/ad7591d17d58196c][AI/OC: "Hilbert Super Workstation" Build for OpenClaw]]
+   - [[https://gemini.google.com/u/1/app/e95a279c117820dc][AI/OC: "Mac Mini M4 Pro" Build for OpenClaw]]
+   - [[https://gemini.google.com/u/1/app/9b0b2dba9a6ec3b6][AI/OC: OpenClaw Hardware Requirements]]
+   - [[https://gemini.google.com/u/1/app/eebe84523d018226][AI/OC: [R] Top 10 Hardwares for OpenClaw running 70-120B local models]] [[https://docs.google.com/spreadsheets/d/1uf4LTiMH_Kta-PmtM6VQsh0I5rAgPqKRPONkKzY6lBU/edit?gid=2029907268#gid=2029907268][(spreadsheet)]]
+   - [[https://gemini.google.com/u/1/app/c9079417ce5cf19c][AI/OC: [R] Best Hardware for Operating Largest Local LLMs in OpenClaw]]
+
+*** Dimensions to consider
+   - Chip
+      - Mac: M4 10/10-core,M4 Pro 12/16-core, M4 Pro 14/20-core
+   - RAM
+      - 16GB, 24GB, 32GB, 48GB, 64GB
+   - VRAM
+      - ..
+   - Storage
+      - ..
+   - Internet
+
+*** Most Powerful
+- Research
+   - [[https://gemini.google.com/u/1/app/c9079417ce5cf19c][AI/OC: [R] Best Hardware for Operating Largest Local LLMs in OpenClaw]]
+   - [[https://docs.google.com/document/d/1e46smUF2bSgd83jE3ezPfd3kmXk3inqZlPzWlof6K6Q/edit?tab=t.0][Google Document]]
+
+**** The Multi-GPU Consumer Workstation
+      "Component Category","Recommended Specification","Procurement Details & Justification"
+      "Motherboard","ASUS Pro WS WRX90E-SAGE SE","Features seven PCIe 5.0 x16 slots, dual 10 Gb LAN ports, and a massive 32+3+3+3 VRM power stage designed for ultimate compute stability."
+      "Processor","AMD Ryzen Threadripper PRO 7000/9000 WX-Series","Absolutely required to provide the necessary 128 PCIe lanes to prevent GPU bandwidth starvation across the four compute accelerators."
+      "System Memory","512GB ECC R-DIMM DDR5 (8x 64GB)","Operates at 6400 MHz across an 8-channel interface, providing host-system stability for large context offloading and pipeline management."
+      "Accelerators","4x NVIDIA GeForce RTX 5090 32GB","Yields 128GB of aggregate GDDR7 VRAM, capable of holding 120-billion+ parameter models natively without system RAM offloading."
+      "Power Delivery","Dual Asrock Rack 1600W PSUs","Required to sustain the 2500W+ peak transient power spikes during simultaneous tensor processing across the GPU array."
+
+**** The High-Bandwidth Unified SoC
+      "Component Category","Recommended Specification","Procurement Details & Justification"
+      "System","Apple Mac Studio (M4 Ultra equivalent / M3 Ultra)","The ultra-tier silicon fuses two Max-level dies via an UltraFusion interconnect to achieve massive internal bus widths."
+      "Unified Memory","512GB LPDDR5 Unified Memory","Represents a $2,400 premium over the 256GB tier, bringing total procurement costs for the primary compute node to approximately $9,499."
+      "Internal Storage","8TB NVMe SSD","High-speed, high-endurance storage is strictly required for the rapid swapping of multi-gigabyte model weights and managing OpenClaw's massive vector databases."
+      "External Connectivity","Thunderbolt 5 (120 GB/s)","Enables potential peripheral clustering architectures and connection to high-speed network-attached storage arrays."
+
+**** The Desk-Side AI Supercomputer
+      "Component Category","Recommended Specification","Procurement Details & Justification"
+      "Central Processor","20-core ARM SoC (10x Cortex-X925 + 10x Cortex-A725)","Based on the 64-bit Armv9 architecture, this processor is deeply integrated via the Grace Blackwell design to ensure low-latency communication."
+      "Compute Accelerator","NVIDIA GB10 Blackwell GPU","Features 5th-generation Tensor Cores and dedicated hardware support for FP4 precision and sparsity acceleration."
+      "Unified Memory","128 GB LPDDR5x Unified System Memory","Provides a 256-bit interface yielding exactly 273 GB/s of system-wide bandwidth for massive model retention."
+      "Storage & Networking","4TB NVMe M.2 (Self-Encrypting) & ConnectX-7","Includes 10 GbE RJ-45 and cutting-edge Wi-Fi 7 for high-speed, secure edge telemetry and remote synchronization."
+      "Procurement Channel","NVIDIA Partner Network (NPN)","Available via NPN providers (e.g., Dell, Atos, Fujitsu) for roughly $4,499 to $4,699."
+
+**** The High-Density Refurbished Enterprise Server
+      "Component Category","Recommended Specification","Procurement Details & Justification"
+      "Server Chassis","Supermicro SYS-4029GP-TRT (4U Rackmount)","A high-density twin server chassis capable of securely housing 8 double-width GPUs, typically procured via secondary hardware markets for roughly $2,000 to $2,500."
+      "Processor & Memory","Dual Intel Xeon Gold 6254 & 256GB ECC DDR4","Provides 48 PCIe 3.0 lanes per CPU to reliably drive the expansion slots, along with up to 3TB of total memory capacity."
+      "Compute Accelerators","8x NVIDIA RTX 3090 24GB","Yields an immense 192GB of aggregate VRAM. Procured second-hand, this setup vastly undercuts modern 5090 or enterprise Ada pricing profiles."
+      "Power Delivery","2000W+ Redundant Titanium PSUs","Supermicro's redundant hot-swappable power supplies ensure critical load balancing across the massive 8-GPU array during transient load spikes."
+
+**** The x86 High-Memory APU
+      "Component Category","Recommended Specification","Procurement Details & Justification"
+      "Central Processor","AMD Ryzen AI Max+ 395","Features 16 high-performance Zen 5 cores, a dedicated 50+ TOPS Neural Processing Unit (NPU) for continuous background inference, and robust Radeon 8060S graphics."
+      "Unified Memory","128GB LPDDR5x-8000 Unified Memory","System memory is dynamically addressable by the GPU, allowing an unprecedented up to 112GB to be dedicated purely as VRAM for model loading."
+      "System Integrator","HP Z2 Mini G1a or Frame.work Desktop","Procured natively as pre-configured ""Agent Computers,"" typically costing a highly accessible $3,309."
+
+*** 70-120B
+- Research
+ - [[https://gemini.google.com/u/1/app/eebe84523d018226][AI/OC: [R] Top 10 Hardwares for OpenClaw running 70-120B local models]]
+ - [[https://docs.google.com/document/d/19pe7ZoO0frtYe300m6LcXU29BhDlXPhlaHV3BuJhAaA/edit?tab=t.0][Google Document]]
+
+**** Build 1: The Blackwell Behemoth (Quad-RTX 5090 PCIe 5.0 Array)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CPU** | AMD Threadripper PRO 7995WX (96-Core, 5.1GHz Boost) | [amd.com/en/products/cpu/amd-ryzen-threadripper-pro-7995wx](https://amd.com/en/products/cpu/amd-ryzen-threadripper-pro-7995wx) |(https://amazon.com/dp/B0CMPQ39D6) | [newegg.com/p/N82E16819113814](https://newegg.com/p/N82E16819113814) | $5,400.00 |
+| **GPU(s)** | 4x GIGABYTE AORUS GeForce RTX 5090 32GB GDDR7 | [gigabyte.com/Graphics-Card](https://gigabyte.com/Graphics-Card) | [bestbuy.com/site/searchpage.jsp?st=rtx+5090](https://bestbuy.com/site/searchpage.jsp?st=rtx+5090) | [newegg.com/p/pl?d=rtx+5090](https://newegg.com/p/pl?d=rtx+5090) | $7,996.00 |
+| **Motherboard** | ASUS Pro WS WRX90E-SAGE SE (EEB, 7x PCIe 5.0 x16) | [asus.com/us/motherboards-components/motherboards/workstation/pro-ws-wrx90e-sage-se](https://asus.com/us/motherboards-components/motherboards/workstation/pro-ws-wrx90e-sage-se) | [bestbuy.com/site/sku/12301913](https://bestbuy.com/site/sku/12301913) |(https://bhphotovideo.com/c/product/1800235-REG) | $1,561.41 |
+| **RAM** | 256GB (8x32GB) DDR5-5600 ECC R-DIMM | [micron.com/products/memory/ddr5](https://micron.com/products/memory/ddr5) |(https://amazon.com/dp/B0BTHY8KFD) |(https://bhphotovideo.com/c/product/1757905-REG) | $1,200.00 |
+| **Storage** | 2x 2TB Crucial T705 PCIe Gen5 NVMe M.2 (RAID 1) | [crucial.com/products/ssd/crucial-t705-nvme-ssd](https://crucial.com/products/ssd/crucial-t705-nvme-ssd) |(https://amazon.com/dp/B0CT2T8S4M) | [newegg.com/p/N82E16820156360](https://newegg.com/p/N82E16820156360) | $550.00 |
+| **PSU** | 2x Super Flower Leadex Platinum 2000W | super-flower.com.tw/en/products/leaedex-platinum-2000w | [neweggbusiness.com/product/product.aspx?item=9b-1hu-024c-00041](https://neweggbusiness.com/product/product.aspx?item=9b-1hu-024c-00041) |(https://amazon.com/dp/B08V11FLMF) | $899.98 |
+| **Case** | Phanteks Enthoo Pro 2 Server Edition (Dual PSU Support) |(https://phanteks.com/Enthoo-Pro2-Server.html) |(https://amazon.com/dp/B0C9T26W1M) | [newegg.com/p/N82E16811854124](https://newegg.com/p/N82E16811854124) | $169.99 |
+| **Cooling** | Noctua NH-U14S TR5-SP6 & 8x Noctua NF-A14 Industrial | noctua.at/en/nh-u14s-tr5-sp6 |(https://amazon.com/dp/B0CJRFT12F) | [newegg.com/p/13C-0005-002H6](https://newegg.com/p/13C-0005-002H6) | $350.00 |
+***** testing
+****** more testing
+******* even more testing
+******** final testing
+
+**** Build 2: The Apple Silicon Flagship (Unified Memory ARM)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System** | Apple Mac Studio M4 Ultra (32-Core CPU, 80-Core GPU) | [apple.com/mac-studio](https://apple.com/mac-studio) | [bhphotovideo.com/c/buy/mac-studio/ci/52937](https://bhphotovideo.com/c/buy/mac-studio/ci/52937) | [bestbuy.com/site/mac-studio/](https://bestbuy.com/site/mac-studio/) | $6,499.00 |
+| **RAM** | 192GB Unified Memory (On-Package LPDDR5) | apple.com | N/A | N/A | Included |
+| **Storage** | 4TB Internal NVMe SSD | apple.com | N/A | N/A | Included |
+| **PSU** | Internal 370W Power Supply | apple.com | N/A | N/A | Included |
+| **Case/Cooling** | Extruded Aluminum Form Factor w/ Dual Centrifugal Blowers | apple.com | N/A | N/A | Included |
+
+**** Build 3: The Unified AMD APU Node (Ryzen AI Max+ 395)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System** | GMKtec EVO-X2 (AMD Ryzen AI Max+ 395, 16C/32T) | [gmktec.com/products/amd-ryzen-ai-max-395-evo-x2](https://gmktec.com/products/amd-ryzen-ai-max-395-evo-x2) |(https://amazon.com/dp/B0F53MLYQ6) | [microcenter.com/product/699561/gmktec-evo-x2](https://microcenter.com/product/699561/gmktec-evo-x2) | $1,699.00 |
+| **RAM** | 128GB LPDDR5X 8000 MT/s (Soldered) | gmktec.com | N/A | N/A | Included |
+| **Storage** | 2TB PCIe 4.0 NVMe SSD | gmktec.com | N/A | N/A | Included |
+| **PSU** | 240W External Power Brick | gmktec.com | N/A | N/A | Included |
+| **Case/Cooling** | GMKtec Mini-PC Chassis w/ Vapor Chamber | gmktec.com | N/A | N/A | Included |
+
+**** Build 4: The Modular APU Desktop (Framework 128GB)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System** | Framework Desktop Mainboard (Ryzen AI Max+ 395) | frame.work/desktop | frame.work/products/framework-desktop | N/A | $2,399.00 |
+| **RAM** | 128GB LPDDR5X (Soldered to Mainboard) | frame.work | N/A | N/A | Included |
+| **Storage** | 4TB WD_BLACK SN850X NVMe SSD | westerndigital.com |(https://amazon.com/dp/B0B7CQ2CHH) | [newegg.com/p/N82E16820250244](https://newegg.com/p/N82E16820250244) | $300.00 |
+| **PSU** | 400W FlexATX ATX 3.0 (Gold Efficiency) | frame.work | N/A | N/A | Included |
+| **Case/Cooling** | Framework Desktop Chassis w/ Noctua NF-A12x25 | noctua.at | frame.work | N/A | Included |
+
+**** Build 5: The RDNA3 Enterprise Array (Triple Radeon Pro W7900)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CPU** | AMD EPYC 7713 Milan (64-Core) | [amd.com/en/products/cpu/amd-epyc-7713](https://amd.com/en/products/cpu/amd-epyc-7713) | amazon.com | newegg.com | $1,200 (Used) |
+| **GPU(s)** | 3x AMD Radeon Pro W7900 (48GB GDDR6) | [amd.com/en/products/graphics/workstations/radeon-pro/w7900.html](https://amd.com/en/products/graphics/workstations/radeon-pro/w7900.html) |(https://bhphotovideo.com/c/product/1765536-REG) | [newegg.com/p/N82E16814105114](https://newegg.com/p/N82E16814105114) | $11,997.00 |
+| **Motherboard** | ASRock Rack ROMED8-2T (ATX, 7x PCIe 4.0 x16) |(https://asrockrack.com/general/productdetail.asp?Model=ROMED8-2T) | [newegg.com/p/N82E16813140061](https://newegg.com/p/N82E16813140061) | amazon.com | $650.00 |
+| **RAM** | 256GB (8x32GB) DDR4-3200 ECC RDIMM | samsung.com | amazon.com | newegg.com | $600.00 |
+| **Storage** | 2TB Samsung 990 PRO NVMe | samsung.com |(https://amazon.com/dp/B0BHJJ9Y77) | newegg.com | $170.00 |
+| **PSU** | Corsair AX1600i 1600W 80+ Titanium | corsair.com |(https://amazon.com/dp/B0787G12S1) | newegg.com | $600.00 |
+| **Case** | Sliger CX4170a 4U Rackmount | [sliger.com/products/rackmount/4u/cx4170a/](https://sliger.com/products/rackmount/4u/cx4170a/) | sliger.com | N/A | $250.00 |
+| **Cooling** | Noctua NH-U9 TR4-SP3 (4U compatible) | noctua.at | amazon.com | newegg.com | $80.00 |
+
+**** Build 6: The Intel W790 Dual-Blackwell (Xeon Workstation)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CPU** | Intel Xeon w5-3425 (12-Core, 112 PCIe lanes) | intel.com | amazon.com | bhphotovideo.com | $1,200.00 |
+| **GPU(s)** | 2x ASUS ROG Strix GeForce RTX 5090 | asus.com | bestbuy.com | newegg.com | $4,500.00 |
+| **Motherboard** | ASUS Pro WS W790E-SAGE SE (CEB, 7x PCIe 5.0) |(https://asus.com/us/product-compare?ProductID=25120,22494) |(https://bhphotovideo.com/c/product/1757905-REG) | newegg.com | $1,299.00 |
+| **RAM** | 128GB (4x32GB) DDR5-4800 ECC Registered | kingston.com | amazon.com | newegg.com | $500.00 |
+| **Storage** | 2TB SK Hynix Platinum P41 PCIe 4.0 | ssd.skhynix.com |(https://amazon.com/dp/B09QVD9V7R) | newegg.com | $160.00 |
+| **PSU** | Seasonic Prime TX-1600 ATX 3.0 | seasonic.com | amazon.com | newegg.com | $450.00 |
+| **Case** | Fractal Design Meshify 2 XL | fractal-design.com | amazon.com | newegg.com | $200.00 |
+| **Cooling** | Noctua NH-U14S DX-4677 | noctua.at | amazon.com | newegg.com | $120.00 |
+
+**** Build 7: The High-Capacity Hybrid (45Drives HL15)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System/Case** | 45Drives HL15 Barebones Chassis & Backplane | [45homelab.com/hl15](https://45homelab.com/hl15) | store.45homelab.com | N/A | $800.00 |
+| **CPU** | AMD EPYC 7742 (64-Core) | amd.com | amazon.com | newegg.com | $1,500 (Used) |
+| **GPU(s)** | 2x NVIDIA RTX 4090 24GB GDDR6X | nvidia.com | bestbuy.com | amazon.com | $3,500.00 |
+| **Motherboard** | AsRock Rack ROMED8-2T | asrockrack.com | newegg.com | amazon.com | $650.00 |
+| **RAM** | 256GB Micron DDR4-3200 ECC RDIMM | micron.com | amazon.com | newegg.com | $600.00 |
+| **Storage (OS)** | 2x 1TB Crucial P310 NVMe (Boot/Cache) | crucial.com | amazon.com | newegg.com | $150.00 |
+| **Storage (NAS)** | 15x 20TB Seagate Exos (300TB Raw ZFS Array) | seagate.com | amazon.com | newegg.com | $5,250.00 |
+| **PSU** | Corsair HX1200 1200W Platinum | corsair.com | amazon.com | newegg.com | $250.00 |
+| **Cooling** | Noctua Server Coolers / Delta Fans | noctua.at | amazon.com | newegg.com | $100.00 |
+
+**** Build 8: The Quad-L40S Enterprise Node
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CPU** | AMD EPYC 9354 (32-Core, Genoa) | amd.com | CDW.com | amazon.com | $3,500.00 |
+| **GPU(s)** | 4x NVIDIA L40S 48GB GDDR6 | [nvidia.com/en-us/data-center/l40s](https://nvidia.com/en-us/data-center/l40s) | CDW.com | thinkmate.com | $32,000.00 |
+| **Motherboard** | Supermicro H13SSL-N (PCIe 5.0) | supermicro.com | newegg.com | CDW.com | $700.00 |
+| **RAM** | 384GB (12x32GB) DDR5-4800 ECC RDIMM | micron.com | amazon.com | newegg.com | $1,800.00 |
+| **Storage** | 2x 3.84TB Micron 7450 PRO NVMe U.3 | micron.com | amazon.com | newegg.com | $800.00 |
+| **PSU** | Dual 2000W Redundant Platinum (Chassis Inc.) | supermicro.com | N/A | N/A | Included |
+| **Case/Cooling** | Supermicro 4U SuperServer Chassis w/ 10k RPM Fans | supermicro.com | thinkmate.com | CDW.com | $1,500.00 |
+
+**** Build 9: The Edge ARM Inferencer (Mac Studio M4 Max)
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System** | Apple Mac Studio M4 Max (16-Core CPU, 40-Core GPU) | [apple.com/mac-studio](https://apple.com/mac-studio) |(https://bhphotovideo.com/c/product/1884036-REG) | bestbuy.com | $2,699.00 |
+| **RAM** | 128GB Unified Memory (Configured up from base 36GB) | apple.com | N/A | N/A | ~$3,899.00 |
+| **Storage** | 1TB Internal NVMe SSD | apple.com | N/A | N/A | Included |
+| **PSU / Case** | Internal 370W / Extruded Aluminum | apple.com | N/A | N/A | Included |
+| **Cooling** | Dual Centrifugal Blowers | apple.com | N/A | N/A | Included |
+
+**** Build 10: The Asymmetric VRAM Offload Node
+
+| Component | Exact Specifications | Manufacturer URL | Primary Vendor | Alternative Vendor | Est. Price |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CPU** | AMD Ryzen 9 9950X (16-Core) | amd.com | amazon.com | newegg.com | $600.00 |
+| **GPU(s)** | 1x NVIDIA RTX 5090 32GB GDDR7 | nvidia.com | bestbuy.com | amazon.com | $1,999.00 |
+| **Motherboard** | Gigabyte X870E AORUS MASTER | gigabyte.com | bhphotovideo.com | newegg.com | $500.00 |
+| **RAM** | 128GB (4x32GB) DDR5-6000 | corsair.com | amazon.com | newegg.com | $450.00 |
+| **Storage** | 2TB WD_BLACK SN850X | westerndigital.com | amazon.com | newegg.com | $150.00 |
+| **PSU** | Seasonic Vertex GX-1200 ATX 3.0 | seasonic.com | amazon.com | newegg.com | $250.00 |
+| **Case** | Lian Li O11 Dynamic EVO XL | lian-li.com | amazon.com | newegg.com | $230.00 |
+| **Cooling** | Arctic Liquid Freezer III 360 | arctic.de | amazon.com | newegg.com |$110.00 |
+
+*** Low End
+
+AKfycbxvfVCqxumaIiadbHnQG9xYHW9GBTYC4bpyRGm-MuRQtKx2lvq-ZXcDrogExK68mL1pzQ
+1IcnhanH5ljaOJPz8B2Q9Iuaub-OLs9WjU8xKUXpcdefK0RyXHjEdeRWQ
+
+**** Candidates
+
+- [[https://gemini.google.com/u/1/app/20decb47533d557b][Comparison]]
+   - [[https://www.amazon.com/GMKtec-gaming-mini-pc-ryzen-8845hs/dp/B0DHNTW3H6/ref=sr_1_1?crid=3UA6A101DFI4T&dib=eyJ2IjoiMSJ9.JY1g_b44KxNyF5iXATCZlF8Eih43_dqKdIywGJLe189FhotBmTU1zjsEcdu1ou6FFoI_8dzKPtfmOU81-5dgFKIGz-0EDNGAzmEGg_KpJoWp7igOIzhcSsrdw_ziT4eLTpShUS5_ZvV7DFtHWm2TZih7V1xi__yAX4SJGtmTp8VmErRYx_IjKFQhCCWI_YSNGGzI6dLYgrvwsuPZdkkli_H1-vi1TOO4N9G3NFnDseQ.6xiqjtpkMf8RSp0EaCjPLkP4XS6yPDNlPmEghxQGzyk&dib_tag=se&keywords=GMKtec%2BGaming%2BMini%2BPC%2C%2BAMD%2BRyzen%2B7%2B8845HS(Upgraded%2B8745HS)%2B32GB%2BDDR5%2B1TB%2BSSD%2C%2BDesktop%2BComputer%2BOculink%2C%2BDual%2BNIC%2B2.5G%2C%2BHDMI%2B2.1%2C%2BUSB4.0%2BK8%2BPlus&nsdOptOutParam=true&qid=1774831081&sprefix=%2Caps%2C677&sr=8-1&th=1][GMKtec K8 Plus]] ([[https://www.amazon.ca/gp/aw/d/B0FS6DTJCQ/?_encoding=UTF8&pd_rd_plhdr=t&aaxitk=1b1bf22e214e7dfbab9e53fe1724f359&hsa_cr_id=0&qid=1774829791&sr=1-3-f02f01d6-adaf-4bef-9a7c-29308eff9043&ref_=sbx__sbtcd2_asin_2_title&pd_rd_w=z7eC4&content-id=amzn1.sym.1f79d1ca-fbcc-4347-b1df-76b83107d27a%3Aamzn1.sym.1f79d1ca-fbcc-4347-b1df-76b83107d27a&pf_rd_p=1f79d1ca-fbcc-4347-b1df-76b83107d27a&pf_rd_r=XDATB2XB1TP5A1FNA08E&pd_rd_wg=AbF81&pd_rd_r=e462a280-50cb-4915-9f96-ab8742f1e2c6&th=1][CAD]])   <-- clear winner! (occulink, RAM to 96GB)
+   - [[https://www.amazon.com/gp/product/B0G1M3BXZR/ref=ox_sc_act_title_4?smid=A2VN1S0LNL91HQ&th=1][Beelink SER9 Pro+]]
+   - [[https://www.amazon.com/MINISFORUM-UM890-Pro-Computers-5600MHz/dp/B0D9YJLZP6/ref=sr_1_1_sspa?dib=eyJ2IjoiMSJ9.TmamEGLX96w6hUObUq96IX_CrNluI5Eq8TcBMmffSRqhzp-3VZn8NoFsYNYln6UsUo6OAAp2vThaQW3GmqFtEPQAIBNH4dO55xrqEQqchjlZ8JcCmkglABt1GOhIUf3kyN8vEVLxkhY78czV0LLaF-y7JTslHf5etL_sF8CrBbUzr2kqcYN13Ly4svfhwsNnczlV0wj1UM_yD-1YLQ_dRns9UT7JrvWCp5cfec35oy0.hFegxAotUa7RWDliWlLVdvpeIUx9hBuVZExVt2QTfxc&dib_tag=se&keywords=Minisforum%2BUM890%2BPro&qid=1774831970&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&th=1][Minisforum UM890]]
+
+**** Mac Mini
+
+**** GMKtec
+
+***** Prompt
+Role: OpenClaw Expert, AI Hardware Expert
+
+Context: I am building a heterogeneous OpenClaw server farm, starting with
+small units and adding larger units over time.
+
+Task: Compare each of the following three GMKtec variants to identify
+which is the best value for running a dedicated (agent-only)
+dockerized OpenClaw Gateway, dockerized LiteLLM, and bare-metal
+Ollama. Identify which AI models these computers are capable of
+running locally (list some models that are easily handled, and which models
+tap out the compute resources). Note any differences in which models can be
+run between the three variants. Identify and explain which one is the best buy.
+
+- GMKtec Mini PC Gaming, AMD Ryzen 7 PRO 6850U (8C/16T 4.70Ghz) Radeon 680M Desktop Computer Dual NIC LAN 2.5G, 32GB DDR5 +1TB SSD, Dual USB4, HDMI 2.1, USB-C M7 Ultra for $819 CAD
+- GMKtec Gaming Mini PC, AMD Ryzen 7 8845HS(Upgraded 8745HS) 32GB DDR5 1TB SSD, Desktop Computer Oculink, Dual NIC 2.5G, HDMI 2.1, USB4.0 K8 Plus for $1159 CAD
+- GMKtec Gaming Mini PC AMD Ryzen 9 8945HS (Turbo 5.1GHz) 32GB DDR5 512GB SSD, Desktop Computers Oculink, Dual NIC LAN 2.5G, WiFi 6E, USB3.2, USB-C 4.0, BT5.2, DP, HDMI, Dual Fan K11 for $1179
+
+** AI Models & AI Providers
+
+- Research
+   - [[https://gemini.google.com/u/1/app/763f31700b4eefa6][AI/OC: [R] AI Model Comparison and Agent Suitability (V3)]]: Advanced AI Architectures and Agentic Ecosystems: A Comprehensive Analysis (March 2026) ([[https://docs.google.com/document/d/13KopO_zdq32RKCfpxOwGbHIwepc901uPu_4WUn0ez2g/edit?tab=t.0][doc]])
+   - [[https://gemini.google.com/u/1/app/537ea78bb49f47ed][AI/OC: Gemini 3.1 Pro for Primary Agent?]]
+   - [[https://gemini.google.com/u/1/app/9d616de196d04fc7][AI/OC: Best AI Model for Primary Agent]]
+   - [[https://gemini.google.com/u/1/app/5ef47af3a9bd5e1c][AI/OC: OpenClaw's AI Model Focus Explained]]
+   - [[https://gemini.google.com/u/1/app/4ce7f17d975b6c14][AI/OC: [R] OpenClaw Ecosystem (V2)]]
+
+
+- Model Tier and Comparison
+
+    | Tier     | Complexity Profile                     | Repr. Models          |
+    |----------+----------------------------------------+-----------------------|
+    | Simple   | Low complexity                         | Gemini 2.5 Flash-Lite |
+    |          | minimal reasoning capability required. | DeepSeek V3.2         |
+    |          |                                        | GLM 4.5 Flash         |
+    |----------+----------------------------------------+-----------------------|
+    | Medium   | Standard cognitive load                | Claude Sonnet 4.5     |
+    |          | robust context retention needed.       | DeepSeek R1           |
+    |          |                                        | Llama 3               |
+    |          |                                        | [[https://share.google/aimode/Z4pRWIgZ9xdNfR4Gi][Gemini 2.5 Pro, 3 Pro]] |
+    |----------+----------------------------------------+-----------------------|
+    | Complex  | Deep reasoning                         | Claude Opus 4.5       |
+    |          | massive context processing             | GPT-5.2               |
+    |          | multi-turn logic                       | Kimi K2 Thinking      |
+    |          |                                        | [[https://share.google/aimode/EbByd7NIwVKKxTTPC][Gemini 3.1 Pro]]        |
+    |----------+----------------------------------------+-----------------------|
+    | Thinking |                                        | [[https://share.google/aimode/EbByd7NIwVKKxTTPC][Gemini 3 Deep Think]]   |
+    |----------+----------------------------------------+-----------------------|
+
+- Mechanisms for determining prompt complexity (and model tier)
+
+   - Research
+      - [[https://gemini.google.com/u/1/app/d95fc3b1ddb09f4a][AI/OC: Prompt Complexity Analysis]] <-- BEST!
+      - [[https://gemini.google.com/u/1/app/0cfa241d5f35054f][AI/OC: AI Proxy, LLM Runner, Agent Runner, Main Agent]]
+      - [[https://gemini.google.com/u/1/app/4ce7f17d975b6c14][AI/OC: [R] OpenClaw Ecosystem (V2)]] in section "2. AI Proxies and Model Routing"
+      - [[https://gemini.google.com/u/1/app/282304b66ccae077][AI/OC: LLM Runners vs. AI Proxies]]
+
+   - Mechanisms
+      - Agent Runner: before_model_resolve Plugin
+      - LiteLLM:
+         - Auto Router (text->vector->cosine)
+         - Complexity Router (rule-based)
+      - ClawRouter:
+         - highly optimized, sub-millisecond local evaluation utilizing a
+           fifteen-dimension analysis matrix to score the request's complexity
+      - LangChain (Framework-Level Cascading):
+         - start with low-tier model and catch errors, uping level till success
+
+- Summary
+   - The "deep think" (contemplative) brain
+
+- API Keys
+   - https://github.com/cheahjs/free-llm-api-resources
+
+** AI Proxies (aka AI Gateways)
+
+- Research
+   - [[https://gemini.google.com/u/1/app/66fa255ddd9cf417][AI/OC: AI Proxy Comparison]]
+   - [[https://gemini.google.com/u/1/app/b85c86f3cba765d1][AI/OC: OpenRouter]]
+   - [[https://share.google/aimode/EdVE4Jq2zBiqGRaSH][compare and contrast LiteLLM, ClawRouter, and Manifest]]
+   - [[https://share.google/aimode/9uVk5GLUoRX3vCE1R][can one combine LiteLLM and Manifest, or are they mutually exclusive?]]
+
+- Summary
+   - ...
+
+** LLM Runners
+
+- Research
+   - [[https://gemini.google.com/u/1/app/fd65e9f147b28daa][AI/OC: LLM Runner Comparison]]
+
+- Summary
+   - for running local LLM models
+   - the ideal runner must provide
+      - a highly stable OpenAI-compatible API
+      - aggressive KV cache management to handle massive context windows (often 64K+ tokens),
+      - seamless background daemonization
+
+- Questions
+   - is there a "Meta" Runner that provides seamless transition between
+     different runners?
+
+- Installation Decisions
+   - No runner (Direct Commercial API) or Runner (Local Inference)?
+      - No runner
+         - pros: zero-shot reliability, infinite context hardware, zero infra overhead
+         - cons: catastrophic cost scaling, data exfiltration risk
+      - Runner
+         - pros: zero marginal cost, absolute data sovereignty, system resilience
+         - cons: tool calling brittleness, resource monopolization
+   - Which Runner?
+      - see 'Ranking' below
+
+- Ranking
+ | LLM            |     Perf. & | Hardware |  Ease of | Features & |
+ | Runner         | Scalability |     Env. | Workflow |    Support |
+ |----------------+-------------+----------+----------+------------|
+ | vLLM           |          10 |        6 |        5 |          9 |
+ | llama.cpp      |           9 |       10 |        4 |          7 |
+ | Ollama         |           7 |        8 |       10 |          8 |
+ | LM Studio      |           8 |        9 |        9 |          7 |
+ | LocalAI        |           7 |        7 |        6 |         10 |
+ | KoboldCPP      |           8 |        9 |        7 |          6 |
+ | Text-Gen-WebUI |           8 |        8 |        6 |          9 |
+ | Jan.ai         |           7 |        7 |        9 |          7 |
+ | Msty           |           7 |        7 |        9 |          7 |
+ | GPT4All        |           6 |        8 |        8 |          5 |
+
+** Agents
+*** TODO:
+- Assess Model viability for Agent Roles
+   - Formalize a research project (for my Research team) that establishes how
+     well a variety of models will implement a variety of roles. For example,
+     [[https://gemini.google.com/u/1/app/8bd59314681ed177][AI/OC: 100 OpenClaw Agent Roles]] rates Gemini 3 Flash for 100 roles,
+     assigning for each role one of three ratings: a) 99% capable, b) 90%
+     capable, c) struggles to reliable implement role. This needs to be
+     generalized to more models and more focused roles, and needs to be run
+     regularly (so that the models assigned to my various agents stays
+     optimized.
+   - Also establish how many prompts each role requires per day, how many
+     input/output tokens are generated on average, etc. (so that we can
+     predict cost incurred for each model)
+      - we can get accurate data by looking at the metadata from agent
+        executions (as I add more roles to my OC environment).
+      - requires that the setup be properly instrumented to provide the
+        needed metadata
+
+*** Research
+- [[https://gemini.google.com/u/1/app/8bd59314681ed177][AI/OC: 100 OpenClaw Agent Roles]]
+
+*** Youtube:
+   - [[https://www.youtube.com/watch?v=oQBawbXQRGQ][Agents vs Sub-Agents]]
+
+*** Identified Domains
+   - Software Development & IT Operations
+   - Personal Productivity & Scheduling
+   - Digital Marketing & Social Media Management
+   - Finance, Crypto, & Trading
+   - Smart Home & Device Automation
+   - Research, Data, & Web Scraping
+   - Content Creation & Media Management
+   - E-commerce & Retail Automation
+   - Customer Support & Community Management
+   - Lifestyle, Health, & Personal Growth
+
+*** Identified Roles (by Domain)
+- Identified Domains/Roles (and assessment of Gemini 3 Flash suitability)
+   1. Software Development & IT Operations
+    - Local Codebase Mentor: (b) Requires deep architectural reasoning.
+    - Automated Bug Triager: (a) High accuracy on labeling/classification.
+    - Log Anomaly Detector: (b) Context-heavy; can miss subtle multi-log patterns.
+    - Dependency Updater: (a) Deterministic version checking.
+    - Database Backup Watchdog: (a) Simple status checking and alerting.
+    - API Doc Generator: (a) Excellent at code-to-text transformation.
+    - Local Environment Auto-Setup: (b) Prone to slight shell script syntax edge cases.
+    - Server Health Monitor: (a) Routine pings and restarts.
+    - Git Commit Summarizer: (a) 99%+ accuracy for routine diffs.
+    - Security Vulnerability Scanner: (b) Requires constant database grounding.
+   2. Personal Productivity & Scheduling
+    - WhatsApp Calendar Concierge: (a) NLP to JSON/iCal is a core strength.
+    - Inbox Zero Enforcer: (b) Nuance in "priority" can be subjective.
+    - Meeting Action Item Extractor: (a) High accuracy on transcript summarization.
+    - Expense Receipt Parser: (a) Advanced OCR/Multimodal capabilities handle this well.
+    - Travel Itinerary Planner: (b) Accuracy depends on real-time API reliability.
+    - Daily Habit Tracker: (a) Simple logging and file updates.
+    - Focus Time Enforcer: (a) Direct shell command execution.
+    - Personal CRM Updater: (b) Reasoning about relationship "nuance" is (b).
+    - Information Synthesizer: (a) Core summarization task.
+    - Voice Memo Organizer: (a) Audio-to-markdown is highly reliable.
+   3. Digital Marketing & Social Media Management
+    - Cross-Platform Content Scheduler: (a) Handling API schedules and formatting.
+    - Trend Monitoring Agent: (b) Can misinterpret "ironic" or niche trends.
+    - Competitor Ad Scraper: (b) Visual-to-text extraction is 95%, not 99%.
+    - Influencer Outreach Automator: (b) Personalized drafting can feel "AI-like" at scale.
+    - Campaign Performance Tracker: (a) Data extraction and math (with tools).
+    - SEO Keyword Analyzer: (b) Market-dynamic logic.
+    - Newsletter Curator: (a) Excellent at picking and summarizing.
+    - Brand Mention Responder: (b) Sentiment nuances are tricky.
+    - A/B Test Results Reporter: (a) Statistical analysis with code execution.
+    - Community Engagement Starter: (a) High creativity for low-stakes prompts.
+   4. Finance, Crypto, & Trading
+    - Crypto Arbitrage Scanner: (b) Latency vs. reasoning trade-off.
+    - Portfolio Rebalancing Assistant: (a) Math with tool grounding.
+    - Market Sentiment Analyzer: (b) Social media sarcasm detection.
+    - Yield Farming Optimizer: (c) High-risk; yields change faster than context window.
+    - Earnings Report Summarizer: (a) Data extraction from PDF is a 2026 highlight.
+    - Personal Budget Enforcer: (a) Tracking against fixed limits.
+    - Tax Document Organizer: (b) Categorization is 90%+, but needs human check.
+    - Options Trading Alert Bot: (b) Pattern recognition is strong but not perfect.
+    - Gas Fee Monitor: (a) Real-time API monitoring.
+    - Whale Wallet Tracker: (b) Interpreting "intent" behind transfers.
+   5. Smart Home & Device Automation
+    - Energy Consumption Optimizer: (b) Complex multi-device logic.
+    - Home Security Parser: (b) Computer vision for unfamiliar people is still (b).
+    - Automated Climate Controller: (a) Basic logic/IFTTT replacement.
+    - Smart Lighting Choreographer: (a) Simple event-trigger logic.
+    - Plant Care Reminder Agent: (a) Data-point monitoring.
+    - Grocery Inventory Tracker: (a) List management.
+    - Network Optimizer: (a) Shell-based troubleshooting.
+    - Morning Routine Automator: (a) Sequence execution.
+    - Package Delivery Tracker: (a) Parsing tracking emails.
+    - Pet Feeder Manager: (a) Routine scheduling.
+   6. Research, Data, & Web Scraping
+    - Academic Paper Scraper: (a) PDF summarization.
+    - Competitor Pricing Tracker: (a) Routine scraping tasks.
+    - Real Estate Listing Sniper: (b) Nuance in "matching exact criteria" (e.g., "vibes").
+    - Automated Web Form Filler: (b) CAPTCHA and UI changes cause struggles.
+    - Grant Application Matcher: (b) Requires deep cross-referencing.
+    - Public Data Aggregator: (a) Systematic data pulling.
+    - Translation & Localization Assistant: (a) Top-tier multilingual benchmarks.
+    - Patent Search Agent: (b) Legal/Technical terminology nuance.
+    - Sentiment Analysis Engine: (b) Accuracy at scale is 90%+.
+    - News Bias Checker: (b) Reasoning about bias is inherently (b).
+   7. Content Creation & Media Management
+    - Video Highlight Extractor: (b) Temporal precision (timestamps) is 90%+.
+    - Podcast Show Notes Generator: (a) Audio-to-text-to-summary.
+    - Blog Post Drafter: (b) Quality is subjective; 99% accuracy doesn't apply.
+    - Image Generation Prompt Optimizer: (a) Excellent at descriptive expansion.
+    - Local Video Rendering Manager: (a) Task queuing.
+    - E-book Formatting Assistant: (a) Technical markdown/CSS tasks.
+    - Audio Normalization Bot: (a) Using FFmpeg via shell.
+    - Asset Tagging Automator: (a) Visual recognition for objects.
+    - Script Formatting Checker: (a) Rule-based checking.
+    - Plagiarism & Copyright Checker: (b) Web-search grounding is not 100%.
+   8. E-commerce & Retail Automation
+    - Dropshipping Inventory Sync: (a) Value comparison.
+    - Order Fulfillment Router: (a) Logistics logic.
+    - Customer Review Responder: (a) High-quality template-based drafting.
+    - Competitor Flash Sale Notifier: (a) Scraping-based detection.
+    - Supplier Email Negotiator: (b) Strategic reasoning is complex.
+    - Return Authorization Processor: (a) Policy-based logic.
+    - Dynamic Pricing Adjuster: (b) Multi-variable logic.
+    - Abandoned Cart Follow-up Agent: (a) Triggered messaging.
+    - Product Description Generator: (a) High-volume text generation.
+    - Shipping Delay Communicator: (a) API-status to email.
+   9. Customer Support & Community Management
+    - Discord/Telegram Mod Bot: (a) Violation detection.
+    - Tier 1 Support Ticketing Agent: (b) Accuracy on "troubleshooting" is (b).
+    - FAQ Auto-Responder: (a) Grounded in a provided knowledge base.
+    - User Onboarding Guide: (a) Workflow guidance.
+    - Feature Request Aggregator: (a) Categorization of text.
+    - Churn Prediction Monitor: (b) Identifying "patterns" of risk.
+    - Event Registration Manager: (a) Standard database entry.
+    - Community Welcome Ambassador: (a) Greeting logic.
+    - User Feedback Survey Sender: (a) Timing logic.
+    - SLA Breach Alerter: (a) Timer-based alerting.
+   10. Lifestyle, Health, & Personal Growth
+    - Meal Prep & Macro Planner: (a) Math and categorization.
+    - Wearable Health Data Analyst: (b) Interpretation of bio-data is complex.
+    - Custom Workout Generator: (a) Rule-based generation.
+    - Local Event Finder: (b) Interpreting "quality" of local events.
+    - Restaurant Reservation Bot: (c) High-stakes timing/UI bot protection.
+    - Interactive Fiction Game Master: (a) Creative storytelling.
+    - Language Learning Conversation Partner: (a) High-fluency benchmarks.
+    - Music Playlist Curator: (b) "Vibe" matching is subjective.
+    - Meditation & Mindfulness Prompter: (a) Routine delivery.
+    - Personal Journal Prompt Generator: (a) Insightful reflection questions.
+
+*** My Teams
+- The agents I need to create in Meta<Me> aka MM.
+
+**** Main: Orchestrator/delegator
+
+**** Personal Growth Team
+- Member Agents
+   - Meta: Digital Twin
+   - Sara[svati]: Coach / Shrink
+   - ?? multiple shrinks, Jungian vs Freudian vs ???
+
+- Research
+   - [[https://gemini.google.com/u/1/app/f9971a85fa808cc3][QS/LEV: Fountain Life vs. HLI Comparison]]
+   - [[https://gemini.google.com/u/1/app/c5aa18f6cd3fc83d][QS/LEV: Longevity Company Comparison]]
+   - [[https://gemini.google.com/u/1/app/fbf6ee797d6ca585][QS: Algorithmic WBI Design]]
+
+
+- Code
+   - [[https://gemini.google.com/u/1/app/691374cf4e50d57a][Code: Reddit Scraping]]
+
+***** Life Coach
+
+- Research
+   - [[https://gemini.google.com/u/1/app/629429e7387bb9b0][AI/OC: Meta<Me> Architecture for Life Coach]]
+   - [[https://gemini.google.com/u/1/app/5451fb1a13f28425][AI/OC: Life Coach Architecture for OpenClaw]]
+      - Architectural Framings:
+         - The Digital Twin (The Simulation): The agent acts as a mirror or a "sandbox" version of the human. It uses historical data to predict how the human might react to a situation, allowing the real human to "consult" with a version of themselves to identify blind spots.
+         - The Socratic Gadfly (The Challenger): Instead of just agreeing, the agent is programmed to identify logical fallacies, cognitive biases, and contradictions in the human's current thinking compared to their stated long-term values.
+         - The External Neocortex (The Augmentation): The agent functions as a secondary memory and synthesis layer. It doesn't just "talk"; it organizes the human's life into a structured knowledge graph, surfacing connections between a journal entry from 2012 and a conflict in 2026.
+         - The Council of Peers (The Multi-Agent Approach): Rather than one monolithic coach, OpenClaw can spin up a "lane" where different sub-agents representing different schools of thought (e.g., a Stoic agent, a Jungian agent, and a Cognitive Behavioral agent) debate a problem, with the human acting as the final arbiter.
+
+**** Research Team
+- Member Agents
+   - Research Agent
+   - Data Analyst Agent
+   - Report Agent
+
+   - Shopping Expert
+      - compare prices over time
+      - compare prices by location and CAD/USD
+         - Lethbridge
+            - buy there
+            - delivery there
+         - Albany (will I be there at right time?, can I transport it?)
+            - buy there
+            - delivery there
+         - Great Falls (incorporate cost of 600km trip from Lethbridge)
+            - buy there
+            - delivery there
+
+   - Travel Expert
+      - compare prices over time
+      - compare prices by location and CAD/USD
+      - camping (identify interesting places to go in a province/state)
+      - world (flights, identify interesting places to explore, best places to stay)
+
+
+- Create an environment into which new research topics can be injected, so
+  that the research team can decide what to work on at any given time
+
+- Support "repeated" research (perform same research every N days)
+   - automate comparison of previous research results to new results to
+     flag changes (models used for comparison, agents notify me of changes)
+   - examples:
+      - [[https://gemini.google.com/u/1/app/cad787174e11bf73][Me/DN: [R] Mobile Solar Power Analysis (2026-03)]]
+      - [[https://gemini.google.com/u/1/app/7b6125615956621f][Me/DN: [R] Mobile AWG Technology (2026-03)]]
+      - [[https://gemini.google.com/u/1/app/092d8d44eeb22493][Me/DN: [R] Mobile Battery Storage Analysis (2026-03)]]
+
+- How to feed research into the memory of the entire system in a way that makes
+  new data available without consuming massive input tokens and cluttering
+  context windows?
+
+***** Learning Framework
+- Agent-driven research
+   - creating a UI for recording and finding previous research topics
+   - asking agents to find the info
+***** Crypto Learning
+- tool for surfacing advances in coins/tokens
+- teach me how to write Ethereum and Sol contracts, etc.
+
+**** The Web Team
+***** Web-Scraping Framework
+- generalized framework for scraping websites
+   - build on top of existing infrastructure!
+      - https://share.google/aimode/P8xTCAqjlXlamsJT5
+      - consider Scrapy!!!
+   - supports lxml/bs and selenium/playwright/etc), using non-js where possible,
+     and js where necessary
+   - handles login and sessions (and credential security)
+   - handles pagification
+   - abstract Site class with interface that is defined by
+     website-specific subclassess
+   - abstract Page class with interface that is defined by
+     tech-specific subclasses (Lxml, Selenium, Playwright, etc)
+- Meta<Mate>
+   - unified framework for parsing web-personals and other "profile-based" websites
+   - built on top of the Web-Scraping Framework above
+***** Trawler
+- scheduled url downloading with triggers to extract/update/cache extracted data
+
+**** Software Team
+- Member Agents
+   - Aria: Architect
+   - Pamela-Mae: Product Manager
+   - Devi: Dev
+   - Qahira: QA
+   - Aurora: Auditor  (is this needed?)
+
+- Research
+   - [[https://gemini.google.com/u/1/app/c_89624a74b489f395][AI/OC: Multi-Agent OpenClaw Coding Architecture]]
+
+- Research
+   - [[https://gemini.google.com/u/1/app/89624a74b489f395][AI/OC: Multi-Agent OpenClaw Coding Architecture]]
+   - Model comparison
+      - [[https://gemini.google.com/u/1/app/105ad33354b0dfa3][AI: Claude Code vs. Gemini 3.1 Pro]]
+      - [[https://gemini.google.com/u/1/app/2131361f615c4457][AI: Google vs. https]]
+      - [[Anthropic://gemini.google.com/u/1/app/5ef47af3a9bd5e1c][AI/OC: OpenClaw's AI Model Focus Explained]]
+
+- Features
+   - some agent is constantly doing research to see if there exists an
+     opensource solution for the problem or some sub-problem
+      - is this delegated to the research team?
+
+- Variable Team Size
+   - 1 Agent: The Generalist: Handles design, code, and testing. High cognitive load, prone to missing edge cases.
+   - 2 Agents: Dev + QA: A classic pair. One writes the code; the other independently writes tests and verifies.
+   - 3 Agents: Architect + Dev + QA: Separation of "What to build" from "How to build." Architect sets the interfaces.
+   - 4 Agents: PM + Architect + Dev + QA: The PM ensures the Architect doesn't drift from the original prompt.
+   - 5 Agents: PM + Architect + Dev + QA + Auditor: Explicit focus on security and API/cost oversight.
+
+- Roles
+   | Role               | Core Skills Needed                                                | OpenClaw Permissions                     |
+   |--------------------+-------------------------------------------------------------------+------------------------------------------|
+   | Architect          | System design, technical stack selection, interface definition.   | File read/write (workspace-limited).     |
+   | Lead Developer     | Code implementation, refactoring, library management.             | Shell execution, file write.             |
+   | QA / Tester        | Test case generation, test harness execution, edge-case analysis. | Shell execution (test runner only).      |
+   | Security Auditor   | API key sanitization, dependency vulnerability scanning.          | Network access (strictly monitored).     |
+   | Product Manager    | Requirement validation, final product sign-off.                   | Read-only access to transcripts.         |
+   | Telemetry Analyst  | Parsing JSONL logs, resource cost calculation.                    | System stats (CPU/RAM/Network hooks).    |
+   | Documentation Spec | Technical writing, API documentation, README generation.          | File write.                              |
+   | Optimization Eng   | Profiling code, algorithmic efficiency improvements.              | Shell execution (profiling tools).       |
+   | Integration Lead   | Managing dependencies, ensuring build stability.                  | Package manager access (npm/pip).        |
+   | Final Validator    | Qualitative peer review, "sanity checking" logic.                 | Read-only; human-in-the-loop (optional). |
+
+** Repo   <-- what is this meant to be??
+- MacOS
+   - using docker
+      % git clone https://github.com/openclaw/openclaw.git
+      % cd openclaw
+      % ./docker-setup.sh
+      - http://127.0.0.1:18789/
+      % docker compose run --rm openclaw-cli dashboard --no-open  # retrieve token
+      % docker compose ps
+      % docker compose log -f
+      % docker compose run --rm openclaw-cli openclaw doctor
+** Crons
+- maintain a meta-level db so that when a new scheduled item is identified
+  that is supposed to happen every week, the crontab does not add all of them
+  on the same day/hour and instead distributes them all evenly across the week
+  (first one day 1 time 0, second one day 3 time 12, etc.)
+** Tools
+*** Ability to access my current chrome browser within OpenCrawl
+
+- coding projects enabled:
+
+   - use Google AI Pro subscription to gain access to AI models more affordably
+     than is offered via Gemini API plans.
+
+   - obtain all chats (urls, titles, prompts and responses) from Gemini
+      - [[https://gemini.google.com/u/1/app/fb8012e4a25b8906][AI/Gemini: Access to Chat Metadata?]]
+      - [[https://gemini.google.com/u/1/app/cc29c31fbb8591f0][AI/Gemini: Exporting Gemini Chat History]]
+
+         - takeout
+            - 'Gemini' does not provide any information on chats at all
+              (only Gems and Scheduled Activity)
+            - 'My Activity' provides a single Takeout/My
+               Activity/Gemini Apps/MyActivity.html that shows date of
+               prompt, prompt text (poorly formatted), and responses
+              (better formatting), but does not organize by chat (each
+              prompt is a separate visual element within the HTML, with
+              no information indicating which chat it belongs to)
+
+* Meta<Me>
+** THINGS TO RESEARCH
+- collapsible kayaks
+- decals and paint for van exterior
+- roof-deck for van (minimize profile, weight, cost, maximize esthetics, utility, capacity)
+
+** Coding Projects
+*** Chrome Extension For Monitor Gemini Quota Usage
+
+- [[https://gemini.google.com/u/1/app/a4b555edbdc9edab][Multi: Chrome Extension + AI meta]]
+   - [[https://gemini.google.com/u/1/app/ff5436ef0a3e83b1][Test: Many prompts and images using different models (for Gemini Quote Chrome Extension)]]
+
+*** Meta<Claw>
+
+*** Metarotica
+- replace/extend my existing Metarotica world
+- provide support for packing K images into a bounding rectangle
+   - allow for cropping to help with fitting
+   - existing code
+      - rectpack: https://github.com/secnot/rectpack
+      - Google OR Tools: https://developers.google.com/optimization/introduction/get_started
+- analyze images/videos to obtain summaries and keywords and facial recognition for grouping
+*** D&D
+
+**** Research
+
+- [[https://gemini.google.com/u/1/app/461819c0b149a759][D&D: [DR] Blue Dragon Lore]]
+- [[https://gemini.google.com/u/1/app/da8b501940daaf08][D&D: [DR] Red Dragon Lore]]
+- [[https://gemini.google.com/u/1/app/bbcb07b26e23e189][D&D Chromatic Dragon Lore Synthesis]]
+- [[https://gemini.google.com/u/1/app/0a3fad64723a0e80][D&D: [V] Cloud Giant Palace]]
+- [[https://gemini.google.com/u/1/app/b8eb239448f2278e][D&D: [R] 5.24 Published Material]]
+
+
+**** Pdf Parser
+
+- parse all the core manual pdfs, dragon magazine pdfs, etc. into markdown
+  that captures the proper structure, handles embedded images, etc.
+
+**** AI DM
+
+- Research
+   - [[https://gemini.google.com/u/1/app/7df1d16202fbfbc6][D&D: Chronos Lich Combat Simulation]]
+
+*** Finances
+**** Monthly Bill Statement Parser
+- have Gemini parse a bill statement pdf using its LLM
+- have Gemini use knowledge gained from understanding the structure to write
+  a python program that can parse all bill statements for that company
+- create a framework for parsing all bill statements and creating Transactions
+- create a pythonic way of heuristically assigning user-specific
+  category/subcategory to each transaction (with confidence assessment)
+- display all transaction data in a user-modifiable spreadsheet to allow
+  users to change category/subcategory as desired.
+**** Financial Security
+- Maintain a database of ALL accounts I have with any company, along with
+  login urls, password hints/storage/etc.
+**** Financial Analysis
+- A team (of one?) that analyzes my current positions and suggests changes
+- Ability to perform "comparisons" on historical data
+   - knows when I acquired each unit of GOOG and BTC, and can do what-if
+     scenarios (if you had sold the 25 GOOG acqured on 2010-01-01 and bought
+     gold then, here is the impact it would have had on current net worth)
+- Encodes whatever mathematical models economists use for weighing the
+  competing goals of "maximizing returns" and "minimizing losses in a downturn"
+
+** OpenClaw Goals
+- allow agents to use *my* chrome browser
+   - openclaw plugin: https://docs.openclaw.ai/tools/browser
+   - google sanctioned: "Auto Browse" available in US to Google AI Pro/Ultra subscribers
+* END

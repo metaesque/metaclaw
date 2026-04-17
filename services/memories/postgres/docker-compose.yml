@@ -1,0 +1,46 @@
+services:
+  postgres-db:
+    # WHAT THIS IS: The relational database managing both standard relational data and high-dimensional vectors.
+    # WHY PGVECTOR: OpenClaw requires semantic similarity search to recall memory. Pgvector provides native indexing within the standard Postgres engine.
+    image: ${PGVECTOR_IMAGE}
+    container_name: postgres-db
+    # WHY UNLESS-STOPPED: Ensures state persistence across host reboots or daemon crashes.
+    restart: unless-stopped
+    ports:
+      # WHAT THIS DOES: Maps the default Postgres port for local introspection using tools like DBeaver.
+      # UPGRADE PATH: If migrating to a public-facing cloud instance, remove this directive entirely to enforce network isolation and prevent remote brute-forcing.
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPER_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPER_PASSWORD}
+      LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD}
+      OPENCLAW_DB_PASSWORD: ${OPENCLAW_DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      # WHAT THIS DOES: Anchors the database files to your external SSD.
+      # WHY THIS DEFAULT: Embedding vectors expand massively. A standard 16GB RAM / 256GB SSD host will rapidly exhaust internal disk space, causing hard crashes.
+      # UPGRADE PATH: For VPS scaling, mount this path to an IOPS-provisioned block storage volume (e.g., AWS EBS io2) for rapid retrieval.
+      - ${EXTERNAL_DRIVE_PATH}/openclaw-postgres-data:/var/lib/postgresql/data
+      # WHAT THIS DOES: Injects our security initialization script into the first-boot sequence to provision isolated roles.
+      - ./init-roles.sh:/docker-entrypoint-initdb.d/init-roles.sh:ro
+    networks:
+      openclaw-network:
+        # ==============================================================================
+        # ARCHITECTURAL SHIFT: NETWORK ALIASING
+        # ==============================================================================
+        # Downstream services access the database blindly via the 'active-memory' host.
+        aliases:
+          - active-memory
+    # WHAT THIS DOES: Probes the PostgreSQL socket specifically for the target application database, not just the root process.
+    # WHY IT MATTERS: A generic pg_isready can return true before the init-roles.sh script finishes creating the openclaw_db. This specificity prevents race conditions causing downstream crashes.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPER_USER:-postgres} -d openclaw_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  openclaw-network:
+    # WHAT THIS DOES: Links the database to the globally instantiated Docker bridge.
+    name: ${NETWORK_NAME}
+    external: true

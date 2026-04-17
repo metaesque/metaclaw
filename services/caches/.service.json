@@ -1,0 +1,8 @@
+{
+  "uid": "cache",
+  "uids": "caches",
+  "name": "Real-Time Cache",
+  "names": "Real-Time Caches",
+  "category": "Data & State Management",
+  "purpose": "Ultra-low latency, ephemeral storage. It is used for semantic caching (to save money on repeated API queries), maintaining short-term session states, facilitating multi-agent pub/sub communication, and distributed locking."
+}

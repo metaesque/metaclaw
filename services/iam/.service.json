@@ -1,0 +1,8 @@
+{
+  "uid": "iam",
+  "uids": "iam",
+  "name": "Identity & Access Management",
+  "names": "Identity & Access Management",
+  "category": "Security & Containment",
+  "purpose": "The authentication gatekeeper. Enforces Multi-Factor Authentication (MFA) and Single Sign-On (SSO) at the reverse proxy layer, ensuring unauthorized users cannot access the OpenClaw dashboard from the internet."
+}

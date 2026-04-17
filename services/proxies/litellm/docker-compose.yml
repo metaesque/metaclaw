@@ -1,0 +1,54 @@
+services:
+  litellm-proxy:
+    container_name: litellm-proxy
+    image: ghcr.io/berriai/litellm:${LITELLM_VERSION}
+    ports:
+      - "${LITELLM_PORT:-4000}:4000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./router.json:/app/router.json
+      - ./advanced/patch_entrypoint.py:/app/advanced/patch_entrypoint.py
+      - ./advanced/entrypoint.sh:/app/advanced/entrypoint.sh
+      # WHAT THIS DOES: Binds a persistent storage path for detailed JSON telemetry payloads.
+      # WHY THIS DEFAULT: By default, the json_logs callback writes to ephemeral container storage, meaning prompt history is wiped on restart.
+      - ${EXTERNAL_DRIVE_PATH}/litellm-logs:/app/logs
+    # Injecting memory credentials to satisfy usage-based-routing requirements
+    env_file:
+      - .env
+      # ARCHITECTURAL SHIFT: Inherit the generic ACTIVE_MEMORY_URL_PROXY string dynamically via the symlink.
+      - ../../memory/.env
+    environment:
+      # ARCHITECTURAL SHIFT: We consume the generic Interface string exported by the
+      # memory provider rather than composing the URI manually.
+      - DATABASE_URL=${ACTIVE_MEMORY_URL_PROXY}
+    entrypoint: ["/bin/sh", "/app/advanced/entrypoint.sh"]
+    # We hardcode 4000 here so the internal process is stable.
+    # Host port mapping is handled dynamically by LITELLM_PORT above.
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    healthcheck:
+      # WHAT THIS DOES: Probes the health/readiness endpoint using Python's built-in urllib while passing the required Authorization header.
+      # WHY IT MATTERS: Hitting /v1/models repeatedly causes the json_logs callback to generate empty spend records in the database every 10 seconds. /health/readiness proves the API is alive without triggering billing telemetry.
+      test: ["CMD-SHELL", "python -c \"import urllib.request, os; req = urllib.request.Request('http://127.0.0.1:4000/health/readiness', headers={'Authorization': 'Bearer ' + os.environ.get('ACTIVE_PROXY_KEY', '')}); urllib.request.urlopen(req, timeout=2)\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      shared-network:
+        # ==============================================================================
+        # ARCHITECTURAL SHIFT: NETWORK ALIASING
+        # ==============================================================================
+        # WHAT THIS DOES: This container broadcasts itself to the internal Docker
+        # network under the generic hostname 'active-proxy'.
+        # WHY IT MATTERS: Downstream services (like the Gateway) no longer need to know
+        # if we are running LiteLLM, Helicone, or Bifrost.
+        # They just send traffic to 'http://active-proxy:4000'.
+        # This allows us to swap implementations instantly.
+        aliases:
+          - active-proxy
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME}
+    external: true

@@ -1,0 +1,10 @@
+{
+  "uid": "jan",
+  "name": "Jan.ai",
+  "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
+  "details": [
+    "Jan.ai is a privacy-first, open-source desktop application positioned as a direct, transparent alternative to closed-source GUIs like LM Studio. Built with Electron and React, it provides a clean, modern interface for downloading and interacting with local models entirely offline.",
+    "Under the hood, Jan uses the \"Nitro\" engine, which is a highly optimized C++ wrapper around llama.cpp. Nitro manages the hardware orchestration, ensuring models run smoothly on Mac, Windows, and Linux, while exposing a robust API server that runs alongside the application.",
+    "For OpenClaw, Jan provides a highly stable and open-source endpoint. A user who prefers a desktop GUI to manage their model library can keep Jan running in the background. OpenClaw can simply be pointed to Jan's default `localhost:1337` server port, providing the agent with reliable access to the user's curated GGUF library."
+  ]
+}

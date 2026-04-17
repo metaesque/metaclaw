@@ -1,0 +1,129 @@
+{
+  "uid": "fetcher",
+  "uids": "fetchers",
+  "name": "Web Fetcher",
+  "names": "Web Fetchers",
+  "category": "Intelligence Execution",
+  "purpose": "Bypasses anti-bot measures to fetch, render, and extract clean, LLM-ready markdown or JSON from specific URLs.",
+  "matrix": {
+    "phase-0": {
+      "Darwin": {
+        "safety,cost,resources": {
+          "uid": "jinareader",
+          "why": "Safety #1 combined with Cost #2 (and Phase <= 2) strictly mandates a Cloud API. Jina AI Reader completely offloads JS rendering to the cloud, guaranteeing absolute isolation from the macOS host."
+        },
+        "safety,resources,cost": {
+          "uid": "crawl4ai",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. Crawl4AI runs inside an OrbStack container to provide the required execution boundary for Python-based scraping."
+        },
+        "cost,safety,resources": {
+          "uid": "crawl4ai",
+          "why": "Cost #1 forbids paid Cloud APIs. With Safety as the secondary priority, Crawl4AI is Dockerized to ensure free local fetching without exposing the bare-metal host."
+        },
+        "cost,resources,safety": {
+          "uid": "crawl4ai",
+          "why": "Cost #1 forbids paid Cloud APIs. With Resources prioritized over Safety, Crawl4AI is executed bare-metal in the Python .venv to completely bypass OrbStack virtualization overhead.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "jinareader",
+          "why": "Resources #1 combined with Cost #3 (and Phase <= 2) strictly mandates a Cloud API. Jina AI Reader ensures zero local compute is consumed for fetching, preserving all 16GB of unified memory."
+        },
+        "resources,cost,safety": {
+          "uid": "crawl4ai",
+          "why": "Resources #1 combined with Cost #2 mandates highly optimized native execution. Crawl4AI runs bare-metal to deliver asynchronous scraping with absolute minimal CPU/RAM impact.",
+          "metal": true
+        }
+      },
+      "Windows": {
+        "safety,cost,resources": {
+          "uid": "jinareader",
+          "why": "Safety #1 combined with Cost #2 (and Phase <= 2) strictly mandates a Cloud API. Jina AI Reader offloads execution, ensuring no malformed fetched data can exploit the Windows host."
+        },
+        "safety,resources,cost": {
+          "uid": "crawl4ai",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. Crawl4AI leverages WSL2's highly efficient containerization to isolate the fetcher from the Windows filesystem."
+        },
+        "cost,safety,resources": {
+          "uid": "crawl4ai",
+          "why": "Cost #1 demands a free, locally hosted solution. Safety #2 dictates Dockerization, making WSL2-hosted Crawl4AI the optimal balance of zero financial expenditure and secure containment."
+        },
+        "cost,resources,safety": {
+          "uid": "crawl4ai",
+          "why": "Cost #1 demands a free solution. Resources #2 dictates bypassing WSL2 overhead where possible. Crawl4AI is executed bare-metal for maximum asynchronous speed on a 16GB Windows machine.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "jinareader",
+          "why": "Resources #1 combined with Cost #3 (and Phase <= 2) strictly mandates a Cloud API. This eliminates all local headless browser overhead, keeping the Windows host highly responsive."
+        },
+        "resources,cost,safety": {
+          "uid": "crawl4ai",
+          "why": "Resources #1 combined with Cost #2 mandates highly optimized native execution. Crawl4AI's Python implementation is run bare-metal to maximize efficiency.",
+          "metal": true
+        }
+      }
+    },
+    "phase-1": {
+      "Linux": {
+        "safety,cost,resources": {
+          "uid": "jinareader",
+          "why": "Safety #1 combined with Cost #2 (and Phase <= 2) mandates a Cloud API. Jina AI Reader isolates external web interactions from the 24/7 monolith, ensuring core database services cannot be compromised."
+        },
+        "safety,resources,cost": {
+          "uid": "scrapegraphai",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. ScrapeGraphAI provides containerized isolation, while its self-healing LLM logic is critical for maintaining 24/7 background tasks."
+        },
+        "cost,safety,resources": {
+          "uid": "scrapegraphai",
+          "why": "Cost #1 forbids paid APIs. ScrapeGraphAI dynamically adapts to DOM changes, preventing 24/7 fetch failures, while Dockerization satisfies the Safety #2 requirement."
+        },
+        "cost,resources,safety": {
+          "uid": "scrapegraphai",
+          "why": "Cost #1 forbids paid APIs. With Resources #2 over Safety, ScrapeGraphAI is executed bare-metal to eliminate Docker network overhead while maintaining high resilience for background tasks.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "jinareader",
+          "why": "Resources #1 combined with Cost #3 (and Phase <= 2) strictly mandates a Cloud API. This preserves the 32GB+ monolith's CPU/RAM entirely for VictoriaLogs and PostgreSQL vector indexing."
+        },
+        "resources,cost,safety": {
+          "uid": "scrapegraphai",
+          "why": "Resources #1 combined with Cost #2 strictly mandates optimized native execution. ScrapeGraphAI runs bare-metal to ensure the background fetching daemon consumes minimal continuous resources.",
+          "metal": true
+        }
+      }
+    },
+    "phase-3": {
+      "Linux": {
+        "safety,cost,resources": {
+          "uid": "firecrawl",
+          "why": "Safety #1 forbids bare-metal. Because this is Phase > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. Firecrawl securely contains heavy Redis/Postgres workers in isolated containers on the blast-zone."
+        },
+        "safety,resources,cost": {
+          "uid": "firecrawl",
+          "why": "Safety #1 forbids bare-metal. Because this is Phase > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. Firecrawl securely contains heavy Redis/Postgres workers in isolated containers on the blast-zone."
+        },
+        "cost,safety,resources": {
+          "uid": "firecrawl",
+          "why": "Cost #1 demands a free local solution. Safety #2 mandates containerization. Firecrawl's self-hosted architecture is deployed inside Docker to securely contain the blast radius of heavy, concurrent headless browsers."
+        },
+        "cost,resources,safety": {
+          "uid": "crawl4ai",
+          "why": "Cost #1 demands a free solution. Resources #2 dictates bypassing container overhead. Crawl4AI running natively bare-metal maximizes raw asynchronous Python throughput directly on the blast-zone CPU.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "crawl4ai",
+          "why": "Resources #1 demands minimal host impact. Because Phase > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. Crawl4AI runs bare-metal to maximize efficiency.",
+          "metal": true
+        },
+        "resources,cost,safety": {
+          "uid": "crawl4ai",
+          "why": "Resources #1 demands minimal host impact. Because Phase > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. Crawl4AI runs bare-metal to maximize efficiency.",
+          "metal": true
+        }
+      }
+    }
+  }
+}

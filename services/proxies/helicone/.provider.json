@@ -1,0 +1,10 @@
+{
+  "uid": "helicone",
+  "name": "Helicone",
+  "overview": "Helicone is the ultimate choice for developers who are building custom skills for OpenClaw and need to debug them. Because... (truncated)",
+  "details": [
+    "Helicone is an open-source AI proxy and comprehensive LLM observability platform. While it provides the standard gateway capability of routing requests to various providers via a unified API, its core strength lies in tracking, analyzing, and debugging those requests. It sits transparently between the application and the LLM provider, capturing rich metadata about every single interaction without requiring complex SDK integrations in the codebase.",
+    "The platform offers a powerful dashboard for monitoring critical metrics such as cost, latency, token usage, and error rates. Developers can attach custom properties to requests, enabling them to segment data by user, session, or specific features. Helicone also includes advanced features like prompt management (allowing teams to version and test prompts directly in the platform), automated caching, and rate limiting to control costs and prevent abuse.",
+    "When paired with OpenClaw, Helicone shines as an invaluable debugging and analytics tool. Because OpenClaw agents construct complex, dynamic prompts involving dense workspace context and deep tool descriptions, tracking exactly what was sent to the model can be difficult. Routing OpenClaw's traffic through Helicone allows developers to visually inspect the exact payloads, measure how much context window is being consumed by injected files, and optimize the agent's behavior for better reliability."
+  ]
+}

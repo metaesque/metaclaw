@@ -1,0 +1,129 @@
+{
+  "uid": "browser",
+  "uids": "browsers",
+  "name": "Browser Automation",
+  "names": "Browser Automations",
+  "category": "Intelligence Execution",
+  "purpose": "Provides advanced, AI-driven DOM interaction, visual interpretation, and self-healing autonomous navigation capabilities.",
+  "matrix": {
+    "phase-0": {
+      "Darwin": {
+        "safety,cost,resources": {
+          "uid": "hyperbrowser",
+          "why": "Per strict hierarchy rules, Safety #1 combined with Cost #2 mandates a Cloud API. Hyperbrowser completely offloads the Chromium instance to the cloud, guaranteeing absolute isolation from the macOS host."
+        },
+        "safety,resources,cost": {
+          "uid": "browseruse",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. Browser Use deployed within the OrbStack container provides the required execution boundary while utilizing efficient local APIs."
+        },
+        "cost,safety,resources": {
+          "uid": "browseruse",
+          "why": "Cost #1 forbids paid Cloud APIs. With Safety as the secondary priority, Browser Use is Dockerized to ensure free local automation without exposing the bare-metal host."
+        },
+        "cost,resources,safety": {
+          "uid": "agentbrowser",
+          "why": "Cost #1 forbids paid Cloud APIs. With Resources prioritized over Safety, the Rust-native AgentBrowser is executed bare-metal to completely bypass Docker virtualization overhead.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "hyperbrowser",
+          "why": "Resources #1 combined with Cost #3 strictly mandates a Cloud API. Hyperbrowser ensures zero local compute is consumed, preserving all host memory."
+        },
+        "resources,cost,safety": {
+          "uid": "agentbrowser",
+          "why": "Resources #1 combined with Cost #2 mandates a highly optimized native binary. AgentBrowser runs bare-metal to deliver accessibility trees with absolute minimal CPU/RAM impact.",
+          "metal": true
+        }
+      },
+      "Windows": {
+        "safety,cost,resources": {
+          "uid": "hyperbrowser",
+          "why": "Per strict hierarchy rules, Safety #1 combined with Cost #2 mandates a Cloud API. Hyperbrowser offloads execution, ensuring no rogue navigation flows escape into the Windows host."
+        },
+        "safety,resources,cost": {
+          "uid": "browseruse",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. Browser Use leverages WSL2's highly efficient containerization to isolate the agent from the Windows filesystem."
+        },
+        "cost,safety,resources": {
+          "uid": "browseruse",
+          "why": "Cost #1 demands a free, locally hosted solution. Safety #2 dictates Dockerization, making WSL2-hosted Browser Use the optimal balance of zero financial expenditure and secure containment."
+        },
+        "cost,resources,safety": {
+          "uid": "agentbrowser",
+          "why": "Cost #1 demands a free solution. Resources #2 dictates bypassing WSL2 overhead where possible. AgentBrowser is executed bare-metal for maximum asynchronous speed on a constrained machine.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "hyperbrowser",
+          "why": "Resources #1 combined with Cost #3 strictly mandates a Cloud API. This eliminates all local Chromium overhead, keeping the Windows host highly responsive."
+        },
+        "resources,cost,safety": {
+          "uid": "agentbrowser",
+          "why": "Resources #1 combined with Cost #2 mandates highly optimized native execution. AgentBrowser's Rust implementation is run bare-metal to maximize efficiency.",
+          "metal": true
+        }
+      }
+    },
+    "phase-1": {
+      "Linux": {
+        "safety,cost,resources": {
+          "uid": "hyperbrowser",
+          "why": "Safety #1 combined with Cost #2 mandates a Cloud API. Hyperbrowser isolates external web interactions entirely from the dedicated monolith, ensuring core database services cannot be compromised."
+        },
+        "safety,resources,cost": {
+          "uid": "stagehand",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. Stagehand provides containerized isolation, while its caching mechanism is critical for optimizing the 24/7 token efficiency of the monolith."
+        },
+        "cost,safety,resources": {
+          "uid": "stagehand",
+          "why": "Cost #1 forbids paid APIs. Stagehand's action-caching drastically reduces recurring LLM token spend for 24/7 background tasks, while Dockerization satisfies the Safety #2 requirement."
+        },
+        "cost,resources,safety": {
+          "uid": "agentbrowser",
+          "why": "Cost #1 forbids paid APIs. With Resources #2 over Safety, AgentBrowser is executed bare-metal to eliminate Docker network overhead and preserve maximum CPU limits.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "hyperbrowser",
+          "why": "Resources #1 combined with Cost #3 strictly mandates a Cloud API. This preserves the 32GB+ monolith's CPU/RAM entirely for VictoriaLogs and PostgreSQL vector indexing."
+        },
+        "resources,cost,safety": {
+          "uid": "agentbrowser",
+          "why": "Resources #1 combined with Cost #2 strictly mandates a highly optimized native binary. AgentBrowser runs bare-metal to ensure the background daemon consumes almost zero continuous resources.",
+          "metal": true
+        }
+      }
+    },
+    "phase-3": {
+      "Linux": {
+        "safety,cost,resources": {
+          "uid": "skyvern",
+          "why": "Because this is Phase > 2, Cloud APIs are STRICTLY FORBIDDEN. Safety #1 forbids bare-metal. Therefore, Skyvern runs in a Dockerized environment securely containing its heavy vision-processing loops."
+        },
+        "safety,resources,cost": {
+          "uid": "skyvern",
+          "why": "Because this is Phase > 2, Cloud APIs are STRICTLY FORBIDDEN. Safety #1 forbids bare-metal. Therefore, Skyvern runs in a Dockerized environment securely containing its heavy vision-processing loops."
+        },
+        "cost,safety,resources": {
+          "uid": "skyvern",
+          "why": "Cost #1 demands a free local solution. Safety #2 dictates Dockerization. Skyvern containerizes the blast radius of heavy visual inference tasks and erratic AI DOM scraping on the execution node."
+        },
+        "cost,resources,safety": {
+          "uid": "agentbrowser",
+          "why": "Cost #1 demands a free solution. Resources #2 dictates bare-metal execution to bypass containerization bottlenecks. AgentBrowser runs natively to leverage unhindered access to the blast-zone CPU.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "agentbrowser",
+          "why": "Resources #1 demands minimal host impact. Because Phase > 2 strictly forbids Cloud APIs, we must fallback to highly optimized native binaries. AgentBrowser runs bare-metal to prioritize hardware efficiency.",
+          "metal": true
+        },
+        "resources,cost,safety": {
+          "uid": "agentbrowser",
+          "why": "Resources #1 demands minimal host impact. Because Phase > 2 strictly forbids Cloud APIs, we must fallback to highly optimized native binaries. AgentBrowser runs bare-metal to prioritize hardware efficiency.",
+          "metal": true
+        }
+      }
+    }
+  }
+}

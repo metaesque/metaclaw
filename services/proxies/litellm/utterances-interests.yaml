@@ -1,0 +1,176 @@
+philosophy-model:
+  - Contrast the epistemological approaches of rationalism and empiricism.
+  - What are the core tenets of Stoicism regarding emotional regulation?
+  - Explain the difference between utilitarianism and deontological ethics.
+  - How does existentialism address the concept of inherent meaning in life?
+  - Discuss the problem of evil from a secular humanist perspective.
+  - What is the concept of 'the male gaze' in feminist philosophy?
+  - How does John Rawls define justice in his veil of ignorance thought experiment?
+  - Explain the philosophical distinction between eudaimonia and hedonia.
+  - What are the main arguments for and against determinism?
+  - Discuss the concept of the social contract as theorized by Thomas Hobbes.
+  - How do virtue ethics approach moral dilemmas compared to consequentialism?
+  - What is Cartesian dualism and what are its primary critiques?
+  - Explain the allegory of the cave in Plato's Republic.
+  - How does nihilism differ from absurdism?
+  - Discuss the role of radical acceptance in modern philosophical practice.
+  - What are the philosophical implications of solipsism?
+  - Explain Kant's categorical imperative in simple terms.
+  - How does phenomenology approach the study of human consciousness?
+  - What is the difference between moral relativism and moral absolutism?
+  - Discuss the concept of 'bad faith' in Sartre's existentialism.
+  - How do pragmatists define truth and utility?
+  - Explain the 'is-ought problem' introduced by David Hume.
+  - What is the Ship of Theseus paradox meant to illustrate about identity?
+  - Discuss the philosophical foundation of human rights.
+  - How does Eastern philosophy typically conceptualize the ego compared to Western traditions?
+  - Explain the theory of forms in Platonic idealism.
+  - What are the ethical implications of cognitive enhancement technologies?
+  - Discuss the role of introspection in cultivating self-awareness.
+  - How does philosophical pessimism approach the human condition?
+  - What is the teleological argument for existence?
+
+space-model:
+  - Explain the mechanics of a gravity assist maneuver for interplanetary spacecraft.
+  - What is the difference between a neutron star and a black hole?
+  - How does the expansion of the universe affect the redshift of distant galaxies?
+  - Describe the process of stellar nucleosynthesis in massive stars.
+  - What are the material science challenges of designing a heat shield for atmospheric reentry?
+  - Explain the concept of time dilation near a massive gravitational body.
+  - How do atmospheric water generators function in zero-gravity environments?
+  - What is the composition and origin of the cosmic microwave background radiation?
+  - Discuss the feasibility of using carbon nanotubes for a space elevator.
+  - How do solar sails utilize radiation pressure for propulsion?
+  - What are the primary differences between dark matter and dark energy?
+  - Explain the mechanics of tidal locking in binary planetary systems.
+  - How are exoplanets detected using the transit photometry method?
+  - What is the Chandrasekhar limit and why is it important in astrophysics?
+  - Discuss the long-term effects of microgravity on human bone density.
+  - How does a radioisotope thermoelectric generator (RTG) produce power?
+  - Explain the formation of accretion disks around supermassive black holes.
+  - What are the theoretical physics requirements for a stable wormhole?
+  - Describe the phases of a supernova explosion.
+  - How do cosmic rays impact semiconductor electronics in deep space?
+  - What is the habitable zone around a star and what factors determine it?
+  - Explain the Lagrangian points in a two-body orbital system.
+  - Discuss the potential for in-situ resource utilization on Mars.
+  - How does spectroscopy reveal the chemical composition of distant stars?
+  - What are the physical properties of a Bose-Einstein condensate in microgravity?
+  - Explain the theory of cosmic inflation in the early universe.
+  - How do coronal mass ejections affect Earth's magnetosphere?
+  - What is the Drake Equation used to estimate?
+  - Discuss the thermal management systems required for the International Space Station.
+  - How do ion thrusters generate thrust compared to chemical rockets?
+math-model:
+  - Provide a rigorous proof for the Fundamental Theorem of Calculus.
+  - How does the Riemann hypothesis relate to the distribution of prime numbers?
+  - Explain the concept of topological equivalence using a coffee mug and a donut.
+  - What is the difference between a linear and a non-linear differential equation?
+  - Describe the applications of eigenvectors and eigenvalues in principal component analysis.
+  - How does Fermat's Last Theorem restrict integer solutions for powers greater than two?
+  - Explain the principles of modular arithmetic using cryptography as an example.
+  - What is the significance of Euler's identity in complex analysis?
+  - Discuss the axioms of Zermelo-Fraenkel set theory.
+  - How is the Fibonacci sequence represented in the golden ratio?
+  - Explain the concept of a Taylor series expansion for approximating functions.
+  - What is the difference between a continuous and a discrete probability distribution?
+  - Describe the mechanics of the Simplex algorithm in linear programming.
+  - How do Fourier transforms convert time-domain signals into frequency domains?
+  - Explain the concept of cardinality when comparing different sizes of infinity.
+  - What is the Law of Large Numbers in statistical mechanics?
+  - Discuss the geometric interpretation of the dot product and cross product.
+  - How does Gödel's Incompleteness Theorem affect formal axiomatic systems?
+  - Explain the role of partial derivatives in multi-variable optimization.
+  - What is the Monte Carlo method and how is it used in numerical integration?
+  - Describe the properties of a Markov chain.
+  - How is graph theory used to optimize network routing algorithms?
+  - Explain the difference between Bayesian and frequentist statistics.
+  - What is the significance of the Navier-Stokes equations in fluid dynamics?
+  - Discuss the principles of chaos theory and the butterfly effect.
+  - How do you calculate the determinant of a 3x3 matrix?
+  - Explain the concept of a limit in calculus.
+  - What is the difference between permutation and combination?
+  - Describe the application of game theory in establishing Nash equilibriums.
+  - How does boolean algebra form the basis of digital logic circuits?
+sex-model:
+  - What are the foundational principles of relationship anarchy?
+  - Explain the difference between hierarchical polyamory and egalitarian non-monogamy.
+  - How does the concept of compersion differ from jealousy in open relationships?
+  - What are effective communication strategies for negotiating boundaries in ENM?
+  - Discuss the history of the sex-positive feminist movement.
+  - What are the common scheduling and logistical challenges faced by polycules?
+  - Explain the concept of 'veto power' and its controversies in ethical non-monogamy.
+  - How do polyamorous individuals approach the concept of 'new relationship energy' (NRE)?
+  - Discuss the psychological benefits of sexual hedonia within a secular humanist framework.
+  - What are best practices for establishing STI testing protocols in multi-partner dynamics?
+  - Explain the difference between swinging, open relationships, and polyamory.
+  - How does ethical non-monogamy challenge traditional societal narratives of the 'relationship escalator'?
+  - Discuss the importance of enthusiastic consent in sex-positive communities.
+  - What strategies can be used to manage time and emotional labor in a polyamorous network?
+  - Explain the concept of 'kitchen table polyamory' versus 'parallel polyamory'.
+  - How do intentional communities incorporate sex-positivity into their cultural norms?
+  - Discuss the role of communication frameworks like non-violent communication in ENM.
+  - What are the legal and financial complexities of owning property as a polyamorous triad?
+  - Explain the concept of 'relationship orientation' versus 'sexual orientation'.
+  - How does a sex-positive worldview address the destigmatization of kink and BDSM?
+  - Discuss the impact of ethical non-monogamy on personal autonomy and individual growth.
+  - What is the 'one penis policy' (OPP) and why is it criticized in polyamorous circles?
+  - Explain how polyamorous couples manage shared Google calendars effectively.
+  - Discuss the concept of relationship de-escalation without treating it as a failure.
+  - How do practitioners of ENM navigate jealousy and insecurity internally?
+  - What role does radical honesty play in maintaining trust in open relationships?
+  - Explain the concept of a 'metamour' and strategies for building healthy metamour relationships.
+  - Discuss the intersection of secular humanism and the pursuit of sexual pleasure.
+  - What are the unique challenges of dating as a polyamorous person in a predominantly monogamous dating pool?
+  - Explain the importance of defining 'safer sex' agreements rather than 'safe sex' guarantees.
+bio-model:
+  - Explain the pipeline for aligning next-generation sequencing reads to a reference genome.
+  - What is the biochemical mechanism of CRISPR-Cas9 directed gene editing?
+  - How do hidden Markov models identify protein domains in bioinformatics?
+  - Describe the process of translating mRNA sequences into amino acid structures computationally.
+  - What are the thermodynamic principles underlying protein folding algorithms?
+  - Explain the difference between transcriptomics and proteomics.
+  - How do sequence alignment algorithms like BLAST utilize dynamic programming?
+  - Discuss the role of epigenetics in regulating gene expression without altering DNA sequences.
+  - What is the significance of single nucleotide polymorphisms (SNPs) in genome-wide association studies?
+  - Explain how telomerase length functions as a biological clock for cellular senescence.
+  - How do senolytic drugs target and eliminate senescent cells?
+  - Describe the architecture of a convolutional neural network used for medical image analysis.
+  - What are the computational challenges of assembling a genome de novo?
+  - Explain the function of DNA methylation in mammalian development.
+  - How does flow cytometry isolate specific cell populations based on fluorescent markers?
+  - Discuss the use of Python libraries like Biopython for parsing FASTA files.
+  - What is the difference between orthologous and paralogous genes?
+  - Explain the role of the microbiome in influencing human metabolic pathways.
+  - How do pharmacogenomics utilize patient DNA to predict drug efficacy?
+  - Describe the process of constructing a phylogenetic tree using molecular clock data.
+  - What are the specific biomarkers used to calculate biological age vs chronological age?
+  - Explain the mechanics of polymerase chain reaction (PCR) amplification.
+  - How does RNA interference (RNAi) silence gene expression post-transcriptionally?
+  - Discuss the application of machine learning in predicting protein-ligand binding affinities.
+  - What is the role of mitochondria in cellular apoptosis?
+  - Explain how metabolic pathways are modeled using systems biology approaches.
+  - How do longevity clinics utilize comprehensive blood panels to establish health baselines?
+  - Describe the structure and function of transfer RNA (tRNA) in translation.
+  - What are the ethical considerations of utilizing germline editing technologies?
+  - Explain the concept of synthetic biology and the creation of minimal genomes.
+gems-model:
+  - Explain the relationship between a gemstone's refractive index and its brilliance.
+  - What causes the optical phenomenon of asterism in star sapphires?
+  - How does the Mohs scale of hardness dictate the appropriate settings for different gemstones?
+  - Describe the crystalline structure differences between diamond and graphite.
+  - What is the chemical cause of the red coloration in natural rubies?
+  - Explain how a polariscope is used to distinguish between singly and doubly refractive stones.
+  - How do geological heat and pressure form metamorphic gemstones like jadeite?
+  - Discuss the impact of specific gravity when determining a gemstone's density.
+  - What are the defining characteristics of a 'Type IIa' diamond?
+  - Explain the lapidary process of faceting a rough crystal into a brilliant cut.
+  - How does pleochroism manifest visually in a tanzanite crystal?
+  - What are the industry standards for grading the clarity of an emerald?
+  - Describe the process of identifying synthetic corundum created via the Verneuil process.
+  - How do trace elements like chromium and vanadium affect the color of beryl?
+  - Explain the phenomenon of chatoyancy in tiger's eye quartz.
+  - What is the difference between a gemstone's cleavage and its fracture?
+  - Discuss the thermal conductivity of diamonds and how it is used for testing.
+  - How are natural pearls formed compared to cultured pearls?
+  - Explain the role

@@ -1,0 +1,31 @@
+services:
+  tailscale:
+    # WHAT THIS IS: A zero-config WireGuard mesh VPN daemon.
+    # WHY THIS TOOL: It allows your entire AI farm to communicate securely as if they were
+    # on the same physical switch, and bypasses Starlink/residential CGNAT firewalls.
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    restart: unless-stopped
+    # WHAT THIS DOES: Forces the container to use the host's networking stack directly.
+    # WHY IT MATTERS: Instead of just putting the isolated container on the Tailnet,
+    # this puts the entire physical host machine on the Tailnet, allowing you to SSH
+    # into the host remotely via its 100.x.y.z IP address.
+    network_mode: "host"
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      # Modifies the host OS routing tables rather than staying contained in userspace
+      - TS_USERSPACE=false
+    volumes:
+      # Persists the machine identity so you don't burn through auth keys on reboot
+      - ${EXTERNAL_DRIVE_PATH}/tailscale-state:/var/lib/tailscale
+      # Required for the daemon to create virtual network interfaces
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    healthcheck:
+      test: ["CMD-SHELL", "tailscale status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

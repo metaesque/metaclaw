@@ -1,0 +1,8 @@
+{
+  "uid": "queue",
+  "uids": "queues",
+  "name": "Message Queue",
+  "names": "Message Queues",
+  "category": "Decoupling & Workflow",
+  "purpose": "The asynchronous task broker. It decouples the Gateway from the execution nodes. Instead of waiting synchronously (which causes HTTP timeouts if a local model takes 60 seconds to reply), the Gateway pushes tasks to a queue for worker nodes to consume at their own pace."
+}

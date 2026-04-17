@@ -1,0 +1,147 @@
+{
+  "phase-0": {
+    "uid": "phase-0",
+    "name": "Phase 0: The Day 1 Minilith",
+    "setup": "RAM is strictly budgeted (6GB-8GB). The framework uses lightweight alternatives (SQLite instead of Postgres, LiteLLM routing to Cloud APIs for heavy reasoning, Ollama strictly for local text embeddings).",
+    "benefit": "Zero financial cost to validate the framework's utility.",
+    "resources": {
+      "min": {
+        "ram": "",
+        "cpu": "",
+        "gpu": "",
+        "storage": "",
+        "network": ""
+      },
+      "median": {
+        "ram": "",
+        "cpu": "",
+        "gpu": "",
+        "storage": "",
+        "network": ""
+      },
+      "max": {
+        "ram": "",
+        "cpu": "",
+        "gpu": "",
+        "storage": "",
+        "network": ""
+      }
+    }
+  },
+  "phase-1": {
+    "uid": "phase-1",
+    "name": "Phase 1: The Month 2 Monolith",
+    "setup": "All four Planes run on one machine. Heavy services are rate-limited via Docker to prevent crashes. the Compute Plane remains outsourced to Cloud APIs.",
+    "benefit": "True 24/7 autonomous operation with robust relational memory and background web scraping.",
+    "resources": {
+      "min": {
+        "ram": "32GB (DDR4 or DDR5). This is non-negotiable. PostgreSQL with `pgvector` requires substantial memory for associative recall, and running headless Chromium instances via gVisor sandboxes will rapidly consume 6\u20138GB during active execution.",
+        "cpu": "6-Core / 12-Thread (e.g., AMD Ryzen 5 or Intel Core i5). Sufficient to handle the background orchestration of LiteLLM, VictoriaLogs ingestion, and occasional execution tasks.",
+        "gpu": "Integrated Graphics (iGPU) with 0GB dedicated VRAM. Because heavy reasoning is outsourced to the cloud, local models via Ollama are restricted to lightweight tasks like text embeddings, which can comfortably execute on CPU or shared iGPU memory.",
+        "storage": "1TB NVMe SSD. Essential to handle the continuous write operations of VictoriaLogs and the high-dimensional vector storage of PostgreSQL. Mechanical hard drives or SATA SSDs will cause severe I/O bottlenecks.",
+        "network": "1Gbps Ethernet. Sufficient for local LAN access and Tailscale overlay traffic."
+      },
+      "median": {
+        "ram": "64GB DDR5. Provides a massive buffer for PostgreSQL `shared_buffers` to keep the entire vector index in memory, guaranteeing sub-millisecond semantic search latency.",
+        "cpu": "8-Core / 16-Thread (e.g., AMD Ryzen 7 7840HS, Intel Core i7, or Apple M-Pro). The Execution plane benefits directly from multi-core architecture when spawning concurrent sub-agents or processing heavy continuous integration (CI) tests.",
+        "gpu": "8GB Dedicated VRAM (e.g., mobile RTX 4060) or 32GB+ Unified Memory (Apple Silicon). This allows the local Ollama runner to host 8B-parameter models (e.g., Llama 3 8B) for fast, private, offline tasks (like journaling or log summarization) without paying cloud API costs.",
+        "storage": "2TB NVMe SSD (PCIe Gen 4). Provides ample overhead for logging, Docker image bloat, and expanding memory databases without risking OS disk exhaustion.",
+        "network": "2.5Gbps Ethernet. Ensures that when the cluster expands to Phase 2 (adding a remote GPU node), the network bandwidth does not become an artificial bottleneck for transferring large context windows."
+      },
+      "max": {
+        "ram": "96GB DDR5 (or 64GB Unified Memory on Apple Silicon). Maximizes the caching capabilities of Redis and PostgreSQL, ensuring the agent has near-instantaneous recall of years of transcript data.",
+        "cpu": "14 to 16-Core Mobile/Efficient Desktop Processor (e.g., Intel Core i9 or AMD Ryzen 9). Provides total immunity to CPU starvation, allowing the Sandbox and Browser automation components (Exection Plane) to run highly volatile workloads without impacting the Gateway's routing latency.",
+        "gpu": "16GB Dedicated VRAM (e.g., mobile RTX 4080) or 64GB+ Unified Memory (Apple Silicon Max). This is the thermal and physical limit of the Mini-PC form factor. It permits running high-quality local reasoning models, pushing the boundaries of Phase 1 into pseudo-Phase 2 territory, though thermal throttling will eventually limit sustained 24/7 inference compared to a dedicated desktop tower.",
+        "storage": "4TB NVMe SSD (PCIe Gen 4/5) or a dedicated high-IOPS external Thunderbolt enclosure. Guarantees zero disk contention between the observability stack, version control systems, and active memory databases.",
+        "network": "10Gbps Ethernet. Provides datacenter-grade local bridging for future cluster expansion."
+      }
+    }
+  },
+  "phase-2": {
+    "uid": "phase-2",
+    "name": "Phase 2: Data Sovereignty",
+    "setup": "Tier 2 (LLM Runner) is migrated to the GPU tower. The Proxy routes requests locally.",
+    "benefit": "Absolute data privacy and zero recurring API costs. Infinite agent loops can run overnight without accumulating massive bills.",
+    "resources": {
+      "min": {
+        "ram": "16GB to 32GB DDR4. System RAM primarily acts as a safety buffer. While Ollama can \"spill\" model layers to system RAM if VRAM is exhausted, doing so heavily bottlenecks the PCIe bus and reduces generation speeds from ~40 tokens/sec down to 10-15 tokens/sec.",
+        "cpu": "4-Core / 8-Thread (e.g., AMD Ryzen 5 or Intel Core i5). The CPU is largely idle during inference, so entry-level silicon is sufficient.",
+        "gpu": "8GB to 12GB NVIDIA GPU (e.g., RTX 3060 or 4060). An 8B model quantized at Q4_K_M requires roughly 4.7GB to 5.4GB of VRAM, leaving 2\u20136GB available for the KV cache to handle standard conversational context windows.",
+        "storage": "500GB NVMe SSD. GGUF model weights for 8B models average 4\u20136GB each, making 500GB more than enough for the OS and a curated local library.",
+        "network": "1Gbps Ethernet. Standard gigabit speeds are sufficient for linking back to the Phase 1 Control Plane via Tailscale."
+      },
+      "median": {
+        "ram": "64GB DDR5. High-speed DDR5 prevents bottlenecks when the CPU needs to shuttle large unquantized model weights from disk to the GPU during cold starts.",
+        "cpu": "8-Core / 16-Thread (e.g., AMD Ryzen 7 or Intel Core i7). A mid-tier CPU provides enough PCIe Gen 4 lanes to maximize bandwidth to the GPU.",
+        "gpu": "24GB NVIDIA GPU (e.g., RTX 3090 or RTX 4090). 24GB comfortably fits 32B-class models (like Qwen 2.5 32B) at 4-bit quantization, or it allows you to run smaller 8B models with massive 100k+ context windows during multi-agent swarm tasks.",
+        "storage": "1TB to 2TB NVMe SSD. `vllm` often utilizes unquantized safetensors or heavier FP8/FP16 models, which consume significantly more disk space than standard GGUF files.",
+        "network": "2.5Gbps Ethernet. Prevents network-induced latency when the Phase 1 Gateway transmits massive context histories to the Compute node for evaluation."
+      },
+      "max": {
+        "ram": "128GB+ DDR5. Necessary for caching massive datasets and preventing out-of-memory crashes when building or manipulating 140GB+ FP16 model files in the host OS.",
+        "cpu": "High PCIe-lane processor (e.g., AMD Threadripper or Intel Xeon). Standard consumer CPUs lack the PCIe lanes to run dual GPUs at full x16/x16 speeds. A workstation CPU prevents internal bandwidth bottlenecks.",
+        "gpu": "Dual 24GB NVIDIA GPUs (48GB total) or a single workstation GPU (e.g., RTX A6000 48GB). A 70B model quantized at Q4 requires roughly 40-45GB of VRAM. 48GB is the absolute floor to load the weights and retain enough room for a functional KV cache, requiring Tensor Parallelism (TP) across multiple cards.",
+        "storage": "4TB+ PCIe Gen 4/5 NVMe. 70B models require up to 140GB of disk space at FP16 precision before quantization. A library of specialized 70B models will rapidly consume terabytes of disk space.",
+        "network": "10Gbps Ethernet. Essential for achieving sub-millisecond transfer speeds when sending 100,000-token prompt payloads across the LAN from the Archive Plane."
+      }
+    }
+  },
+  "phase-3": {
+    "uid": "phase-3",
+    "name": "Phase 3: The Sandbox Extraction",
+    "setup": "Tier 4 (Execution Plane) is migrated.",
+    "benefit": "Safe execution of highly volatile workloads. Hallucinated code or memory-leaking browsers will not crash the core Gateway.",
+    "resources": {
+      "min": {
+        "ram": "32GB DDR4. While 16GB is technically possible, it is highly unsafe for the Execution Plane. Modern web pages loaded via Playwright can consume 500MB to 1GB of RAM per tab. Furthermore, CI pipelines running build steps (like `npm install` or compiling binaries) experience massive RAM spikes. 32GB provides the necessary buffer for unpredictable spikes.",
+        "cpu": "6-Core / 12-Thread (e.g., AMD Ryzen 5 or Intel Core i5). Sandboxing and browser automation are inherently multi-processed. A 6-core processor allows the host OS, the CI runner daemon, and the active agent sandboxes to operate without severe thread contention.",
+        "gpu": "Integrated Graphics (iGPU) with 0GB dedicated VRAM. The Execution Plane handles code compilation and DOM parsing, neither of which strictly require dedicated PCIe acceleration.",
+        "storage": "500GB NVMe SSD. CI runners generate massive amounts of ephemeral data (Docker image caches, `node_modules`, build artifacts). 500GB ensures the disk won't silently fill up and halt agent execution during a long-running software development task.",
+        "network": "1Gbps Ethernet. Standard gigabit speeds are sufficient to pull Docker images and push scraped DOM structures back to the Gateway."
+      },
+      "median": {
+        "ram": "64GB DDR5. High-speed DDR5 significantly accelerates code compilation in CI pipelines. 64GB allows the user to safely configure Docker memory limits (e.g., capping each sandbox to 4GB) and run up to a dozen concurrent, heavily isolated execution tasks without invoking the Linux Out-Of-Memory (OOM) killer.",
+        "cpu": "12-Core to 16-Core (e.g., AMD Ryzen 9 7900X/7950X or Intel Core i9). When OpenClaw spawns a swarm of sub-agents that simultaneously execute code tests in isolated gVisor containers while other agents scrape documentation via Playwright, high core counts mathematically prevent latency bottlenecks.",
+        "gpu": "iGPU or Entry-Level Discrete GPU (e.g., RTX 3050 8GB). While not used for LLM inference, an entry-level GPU is highly beneficial for the Browser Automation component. Headless browsers rendering complex, modern WebGL applications or executing visual regression tests will perform significantly faster with hardware acceleration.",
+        "storage": "1TB to 2TB NVMe SSD (PCIe Gen 4). Provides deep overhead for caching massive CI/CD testing environments and retaining historical build artifacts for debugging.",
+        "network": "2.5Gbps Ethernet. Ensures fast traversal of large execution logs and scraped datasets back to the Control Plane."
+      },
+      "max": {
+        "ram": "128GB to 256GB ECC DDR5. Error-Correcting Code (ECC) memory is recommended at this scale to prevent bit-flips during multi-hour, memory-intensive code compilations. This capacity allows for the deployment of in-memory ramdisks (`tmpfs`) for CI runners, resulting in near-instantaneous read/write speeds for ephemeral build artifacts.",
+        "cpu": "24+ Cores (e.g., AMD Ryzen Threadripper or EPYC). A High-End Desktop (HEDT) processor provides the massive PCIe lane allocation and parallel threading required to treat the node as a micro-datacenter for continuous integration and concurrent sandboxing.",
+        "gpu": "Mid-Tier Discrete GPU (e.g., RTX 4070). In advanced workflows, the Execution Plane may be tasked by the Gateway to execute localized machine learning tests (e.g., validating a PyTorch script generated by the agent). Having a capable discrete GPU ensures these sandbox tests do not fail due to a lack of CUDA cores.",
+        "storage": "4TB NVMe SSD (PCIe Gen 4/5) arranged in RAID 0 or RAID 10. The primary bottleneck for continuous integration and Docker container provisioning is storage I/O. A RAID array ensures the disk can keep up with a 32-core CPU tearing through dozens of concurrent file-system operations.",
+        "network": "10Gbps Ethernet. Required to rapidly shuttle heavy Docker images and compiled binaries across the LAN."
+      }
+    }
+  },
+  "phase-4": {
+    "uid": "phase-4",
+    "name": "Phase 4: The Archive Expansion",
+    "setup": "The Archive Plane is migrated. The original Month 2 Monolith is stripped of heavy workloads, running strictly as the Control Plane.",
+    "benefit": "SRE-grade stability with near-infinite, lightning-fast semantic recall. No hardware is wasted; earlier machines are perfectly repurposed.",
+    "resources": {
+      "min": {
+        "ram": "128GB DDR5. This is the absolute floor for Phase 4. Relational/Vector databases like PostgreSQL require massive `shared_buffers` allocations (typically 40GB to 60GB on a 128GB system) to keep the active Hierarchical Navigable Small World (HNSW) index graph entirely in memory.",
+        "cpu": "12-Core / 24-Thread (e.g., AMD Ryzen 9 or Intel Core i9). Log ingestion and vector similarity calculations are highly parallelized. Quickwit, for example, requires roughly 1 CPU core and 4GB of RAM for every 7.5MB/s of log indexing throughput.",
+        "gpu": "0GB (Integrated Graphics). The Archive Plane does not perform LLM inference or DOM rendering. Dedicated PCIe accelerators are unnecessary at this scale.",
+        "storage": "2TB to 4TB NVMe SSD (PCIe Gen 4). A single 1536-dimensional vector consumes roughly 6KB. 10 million vectors require 60GB for raw storage alone, before accounting for the HNSW index overhead, continuous SigNoz distributed tracing, and Gitea repository histories.",
+        "network": "2.5Gbps Ethernet. Required to prevent bottlenecks when the Control Plane retrieves massive contextual payloads (like entire codebase histories) during an agent's RAG execution loop."
+      },
+      "median": {
+        "ram": "256GB ECC DDR5. Error-Correcting Code (ECC) memory becomes highly recommended at this tier. When maintaining hundreds of gigabytes of semantic memory in RAM, cosmic rays or random bit-flips can silently corrupt the vector index, leading to poisoned recall. 256GB prevents the Linux kernel from utilizing swap space under heavy indexing loads.",
+        "cpu": "24-Core to 32-Core (e.g., AMD Threadripper or Intel Xeon W). High-cardinality analytics (such as querying traces in SigNoz backed by ClickHouse) demand massive CPU bandwidth to scan compressed columnar data quickly without timing out.",
+        "gpu": "0GB.",
+        "storage": "8TB NVMe SSD (e.g., 2x 4TB in RAID 1 or 0). At this scale, disk IOPS is the primary failure point. A RAID array ensures that heavy sequential writes from Fluent Bit log streams do not block the random read requests generated by an agent's semantic memory search.",
+        "network": "10Gbps Ethernet. Essential for moving gigabytes of telemetry data from the Compute and Execution planes into the Archive seamlessly."
+      },
+      "max": {
+        "ram": "512GB to 1TB+ ECC Memory. Indexing 1 billion 1536-dimensional vectors translates to over 6TB of raw data. While quantization techniques (like scalar or product quantization) can compress this footprint by 4x to 8x, the system still requires half a terabyte of RAM to hold the quantized index and cache active shards.",
+        "cpu": "64-Core+ Server CPU (e.g., AMD EPYC). Required to sustain thousands of queries per second (QPS) against the vector database while concurrently parsing and indexing massive streams of distributed traces.",
+        "gpu": "Optional Compute GPU (e.g., RTX 4090 24GB or NVIDIA L40). While normally CPU-bound, at the billion-vector scale, utilizing GPU-accelerated vector databases (like Milvus with NVIDIA RAPIDS) provides a 10x speedup for massive batch-indexing operations and graph clustering.",
+        "storage": "16TB+ PCIe Gen 5 NVMe (RAID 10) combined with Object Storage. Deep historical logs and traces are tiered. Active memory remains on the NVMe arrays, while older logs (managed by Quickwit) are pushed to cheap, high-capacity S3-compatible HDDs (the Context Lake) where they remain searchable at a slight latency penalty.",
+        "network": "Dual 10Gbps or 25Gbps Fiber. Guarantees zero packet loss when ingesting raw telemetry and memory dumps from a sprawling, multi-node AI cluster."
+      }
+    }
+  }
+}

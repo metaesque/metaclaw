@@ -1,0 +1,28 @@
+SERVICE_TITLE = VictoriaLogs Aggregator Service
+SERVICE_NAME = victorialogs
+DOCKER_SHELL_CMD = sh
+
+FRAMEWORK_ROOT_REL = ../../..
+FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
+
+include $(FRAMEWORK_ROOT)/.Makefile.inherit
+
+-include $(FRAMEWORK_ROOT)/.env
+-include .env
+export
+
+# VictoriaLogs logs this specific string when it is fully ready to accept HTTP connections
+LOG_READY_SIGNAL = started VictoriaLogs in
+
+post-check-status:
+	@echo "Running diagnostic suite..."
+	@echo "--- 1. HTTP API Health ---" > verification.log
+	@curl -s http://localhost:$(VICTORIALOGS_PORT)/health >> verification.log || echo "CONNECTION_FAILED" >> verification.log
+	@cat verification.log
+	@if grep -q "CONNECTION_FAILED" verification.log; then echo "FATAL: VictoriaLogs API is unreachable."; exit 1; fi
+	@if ! grep -q "OK" verification.log; then echo "FATAL: VictoriaLogs health endpoint returned unexpected state."; exit 1; fi
+
+clean-data:
+	@if [ -z "$(EXTERNAL_DRIVE_PATH)" ]; then echo "FATAL: EXTERNAL_DRIVE_PATH is undefined."; exit 1; fi
+	@echo "[$(SERVICE_TITLE)] Purging external VictoriaLogs database..."
+	@rm -rf $(EXTERNAL_DRIVE_PATH)/victorialogs-data

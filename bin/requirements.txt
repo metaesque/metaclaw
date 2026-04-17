@@ -1,0 +1,11 @@
+python-dotenv
+requests
+numpy
+matplotlib
+scikit-learn
+PyYAML
+pexpect
+lxml
+psycopg2-binary
+playwright
+markdown

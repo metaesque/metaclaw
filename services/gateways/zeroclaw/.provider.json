@@ -1,0 +1,10 @@
+{
+  "uid": "zeroclaw",
+  "name": "ZeroClaw",
+  "overview": "These are exceptional alternatives for users deploying on constrained hardware (like a Raspberry Pi or a cheap VPS). They deliver the core OpenClaw experience with a fraction of the overhead, boasting sub-second boot times and minimal RAM usage.",
+  "details": [
+    "ZeroClaw is a zero-overhead, fully autonomous AI assistant runtime engineered in Rust. Distributed as a single static binary, it is designed to operate on hardware with extremely limited resources, consuming only a few megabytes of RAM while delivering near-instant cold starts. This makes it an exceptionally portable gateway, capable of running on everything from tiny VPS instances to embedded RISC-V boards.",
+    "The framework is built on a highly modular, trait-driven architecture. Providers, memory backends, tools, and communication channels are completely abstracted, allowing developers to swap providers (like changing from OpenAI to a local Ollama provider) via configuration without altering a single line of code. It natively supports over 70 integrations, including Discord, Slack, and Matrix, right out of the box.",
+    "Security and isolation are core to ZeroClaw's design. It features mandatory pairing authentication, strict workspace scoping, and encrypted secrets. For edge computing scenarios or hybrid cloud deployments where efficiency, speed, and cross-architecture compatibility are paramount, ZeroClaw provides a lightweight, industrial-strength foundation."
+  ]
+}

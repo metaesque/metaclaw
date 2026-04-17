@@ -1,0 +1,10 @@
+{
+  "uid": "graylog",
+  "name": "Graylog",
+  "overview": "The Security Backstop. Valuable only if the agent is given root access and requires immediate, automated kill-switches via SIEM alerting.",
+  "details": [
+    "Graylog is a centralized log management platform that focuses heavily on security information and event management (SIEM) and compliance alerting. It relies on Elasticsearch or OpenSearch under the hood for raw data storage but replaces Logstash and Kibana with its own highly tuned processing pipelines and a distinctly user-friendly, security-focused interface.",
+    "It is renowned for its intuitive GUI, making complex log parsing, routing, and threat detection accessible without requiring users to master arcane query languages. Graylog excels at standardizing messy logs from disparate systems, applying real-time data transformations, and triggering immediate alerts before the logs are even written to disk.",
+    "In an OpenClaw context, Graylog is highly useful if the autonomous agent is granted sensitive system permissions (e.g., executing arbitrary bash scripts or modifying host files). Graylog's built-in threat detection could be configured to immediately flag or sever the OpenClaw container's network access if it hallucinates a destructive shell command, providing a robust, automated security backstop."
+  ]
+}

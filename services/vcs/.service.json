@@ -1,0 +1,8 @@
+{
+  "uid": "vcs",
+  "uids": "vcs",
+  "name": "Version Control System",
+  "names": "Version Control Systems",
+  "category": "Observability & Provenance",
+  "purpose": "The source of truth for workspace files. It tracks every code change efficiently and provides strict agent attribution (via Git signatures), answering the question: \"What exactly did the AI alter while I was asleep?\""
+}
