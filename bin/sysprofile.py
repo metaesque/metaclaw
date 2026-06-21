@@ -81,9 +81,6 @@ def platform_details():
 
   total_storage, used_storage, free_storage = shutil.disk_usage('/')
 
-  # TODO(wmh): Decide if these are useful or not. There are differences in
-  # some values on some architectures (platform.uname() returns user-facing
-  # values, os.uname() returns kernel values).
   ukeys = ['system', 'node', 'release', 'version', 'machine']
   uname = dict(zip(ukeys + ['processor'], list(platform.uname())))
   os_uname = dict(zip(ukeys, list(os.uname())))
@@ -130,8 +127,8 @@ def main():
     description="Generate a MetaClaw hardware and provider profile."
   )
   parser.add_argument(
-    '-p', '--phase', type=int, default=-1,
-    help="The architectural phase (0-4) for this node."
+    '-t', '--tier', type=int, default=-1,
+    help="The architectural tier (0-4) for this node."
   )
   parser.add_argument(
     '-w', '--wan', type=str, default="",
@@ -143,26 +140,32 @@ def main():
   )
   args = parser.parse_args()
 
-  phase = args.phase
-  if phase == -1:
+  tier = args.tier
+  if tier == -1:
     border = "=" * 80
     print(border)
     print(" Meta<Claw> Cluster Profiler")
     print(border)
-    print("Select the target architectural phase for this machine:")
-    print("  [0] Phase 0: The Day 1 Minilith (Constrained dual-use laptop)")
-    print("  [1] Phase 1: The Month 2 Monolith (Dedicated Mini-PC, all-in-one)")
-    print("  [2] Phase 2: Data Sovereignty (Dedicated GPU Compute Node)")
-    print("  [3] Phase 3: Sandbox Extraction (Dedicated Execution/CI Node)")
-    print("  [4] Phase 4: Archive Expansion (Dedicated Context Node)")
+    print("Select the target architectural tier for this machine:")
+    print("  [0] Tier 0: The Day 1 Minilith (Constrained dual-use laptop)")
+    print("  [1] Tier 1: The Month 2 Monolith (Dedicated Mini-PC, all-in-one)")
+    print("  [2] Tier 2: Data Sovereignty (Dedicated GPU Compute Node)")
+    print("  [3] Tier 3: Sandbox Extraction (Dedicated Execution/CI Node)")
+    print("  [4] Tier 4: Archive Expansion (Dedicated Context Node)")
+    default_tier = 0
     while True:
       try:
-        choice = int(input("Enter phase [0-4]: "))
-        if 0 <= choice <= 4:
-          phase = choice
+        choice = input("Enter tier [%s]: " % default_tier)
+        if not choice:
+          tier = default_tier
           break
         else:
-          print("Please enter a number between 0 and 4.")
+          choice = int(choice)
+          if 0 <= choice <= 4:
+            tier = choice
+            break
+          else:
+            print("Please enter a number between 0 and 4.")
       except ValueError:
         print("Invalid input. Please enter an integer.")
 
@@ -185,13 +188,14 @@ def main():
   order_input = args.order
   valid_options = {'safety', 'cost', 'resources'}
   if not order_input:
+    default_order = 'cost,safety,resources'
     print("\nPlease specify your priority order for provider selection.")
     print("Provide 'safety', 'cost', and 'resources' separated by commas in your preferred order.")
-    print("Example: safety,cost,resources")
+    print("Example: " + default_order)
     while True:
-      o_choice = input("Enter priority order [safety,cost,resources]: ").strip().lower()
+      o_choice = input("Enter priority order [%s]: " % default_order).strip().lower()
       if o_choice == "":
-        order_input = "safety,cost,resources"
+        order_input = default_order
         break
       parts = [p.strip() for p in o_choice.split(',')]
       if len(parts) == 3 and set(parts) == valid_options:
@@ -221,13 +225,13 @@ def main():
   order_prefs = order_input.split(',')
 
   profile = metaclaw.Inst.updateCluster(
-    profile, hostname, phase, hw_details, require_wan, order_prefs
+    profile, hostname, tier, hw_details, require_wan, order_prefs
   )
 
   with open(profile_path, 'w') as f:
     json.dump(profile, f, indent=2)
 
-  print(f"\n[Profile] Node '{hostname}' registered as Phase {phase}.")
+  print(f"\n[Profile] Node '{hostname}' registered as Tier {tier}.")
   wan_str = 'Enabled' if require_wan else 'Disabled'
   print(f"[Profile] Network mesh (Tailscale) set to: {wan_str}")
   prefs_str = ' > '.join([p.capitalize() for p in order_prefs])

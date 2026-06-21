@@ -41,6 +41,7 @@ services/runners/ollama/bin/
 services/runners/ollama/ollama.log
 services/sandboxes/docker-dood/index.md.fixme
 tmp/metaclaw.zip
+tmp/mc
 tosort/
 workspace/
 ~services/.*/\.env$               # .env files are auto-generated

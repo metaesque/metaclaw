@@ -1,0 +1,7 @@
+limiter: false
+server:
+  bind_address: "0.0.0.0"
+search:
+  formats:
+    - html
+    - json

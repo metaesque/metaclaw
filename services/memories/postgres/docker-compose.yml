@@ -12,15 +12,15 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_SUPER_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_SUPER_PASSWORD}
-      LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD}
-      OPENCLAW_DB_PASSWORD: ${OPENCLAW_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPER_PASSWORD:-}
+      LITELLM_DB_PASSWORD: ${LITELLM_DB_PASSWORD:-}
+      OPENCLAW_DB_PASSWORD: ${OPENCLAW_DB_PASSWORD:-}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       # WHAT THIS DOES: Anchors the database files to your external SSD.
       # WHY THIS DEFAULT: Embedding vectors expand massively. A standard 16GB RAM / 256GB SSD host will rapidly exhaust internal disk space, causing hard crashes.
       # UPGRADE PATH: For VPS scaling, mount this path to an IOPS-provisioned block storage volume (e.g., AWS EBS io2) for rapid retrieval.
-      - ${EXTERNAL_DRIVE_PATH}/openclaw-postgres-data:/var/lib/postgresql/data
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/openclaw-postgres-data:/var/lib/postgresql/data
       # WHAT THIS DOES: Injects our security initialization script into the first-boot sequence to provision isolated roles.
       - ./init-roles.sh:/docker-entrypoint-initdb.d/init-roles.sh:ro
     networks:
@@ -32,7 +32,8 @@ services:
         aliases:
           - active-memory
     # WHAT THIS DOES: Probes the PostgreSQL socket specifically for the target application database, not just the root process.
-    # WHY IT MATTERS: A generic pg_isready can return true before the init-roles.sh script finishes creating the openclaw_db. This specificity prevents race conditions causing downstream crashes.
+    # WHY IT MATTERS: A generic pg_isready can return true before the init-roles.sh script finishes creating the openclaw_db.
+    # This specificity prevents race conditions causing downstream crashes.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPER_USER:-postgres} -d openclaw_db"]
       interval: 5s
@@ -42,5 +43,5 @@ services:
 networks:
   openclaw-network:
     # WHAT THIS DOES: Links the database to the globally instantiated Docker bridge.
-    name: ${NETWORK_NAME}
+    name: ${NETWORK_NAME:-openclaw-network}
     external: true

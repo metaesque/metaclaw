@@ -1,17 +1,12 @@
 // openclaw.config.js
 // Centralized hook configuration injected into the OpenClaw Node.js runtime.
-// REVERTED TO LEGACY SCHEMA: OpenClaw 2026.3.28 requires hooks to be defined
-// under the hooks.internal.handlers path, NOT the newer plugins array.
-
 module.exports = {
-    hooks: {
-        internal: {
-            handlers: {
+    plugins: [
+        {
+            id: 'metaclaw-routing-judge',
+            hooks: {
                 before_model_resolve: async (context) => {
                     console.error("[HOOK: routing-judge] Intercepting before model resolution...");
-
-                    // Dump the schema to the logs so we know exactly where the model string lives
-                    console.error(`[HOOK: routing-judge] Context Keys: ${Object.keys(context).join(', ')}`);
                     if (!context.messages || context.messages.length === 0) return context;
 
                     const lastMessage = context.messages[context.messages.length - 1];
@@ -49,6 +44,7 @@ Guidelines:
 - "complex": System architecture, advanced coding, multi-step data pipelines.
 - "reasoning": Mathematical proofs, paradox resolution, deep logic puzzles.
 `;
+
                     const reqBody = {
                         model: judgeModel,
                         messages: [
@@ -74,6 +70,7 @@ Guidelines:
                             body: JSON.stringify(reqBody),
                             signal: controller.signal
                         });
+
                         clearTimeout(timeoutId);
 
                         if (!response.ok) {
@@ -86,14 +83,17 @@ Guidelines:
 
                         const parsedOutput = JSON.parse(judgeOutput);
                         const complexity = parsedOutput.complexity || "medium";
+
                         const tierMapping = {
                             "simple": "litellm/simple-model",
                             "medium": "litellm/medium-model",
                             "complex": "litellm/complex-model",
                             "reasoning": "litellm/reasoning-model"
                         };
+
                         context.model = tierMapping[complexity] || "litellm/medium-model";
                         console.error(`[HOOK: routing-judge] Predictive Routing applied override: ${context.model}`);
+
                     } catch (err) {
                         console.error(`[HOOK: routing-judge] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to medium.`);
                         context.model = "litellm/medium-model";
@@ -103,5 +103,5 @@ Guidelines:
                 }
             }
         }
-    }
+    ]
 };

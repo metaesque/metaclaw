@@ -7,5 +7,5 @@
     "For OpenClaw, this replaces the need for brittle, hardcoded web-scraping scripts. Instead of telling OpenClaw exactly which hidden HTML div to click (which breaks the moment the website updates its design), you simply tell OpenClaw your end goal.",
     "By utilizing Playwright under the hood, it seamlessly integrates with OpenClaw's Python-based orchestration, granting your local agent the ability to execute complex, multi-step workflows like logging into a portal, navigating to a billing page, and downloading a PDF."
   ],
-  "diagnostics": "1. **API Readiness:** You should see HTTP 200 OK from the `/health` endpoint."
+  "diagnostics": "1. **API Readiness:** You should see a JSON response containing `\"status\":\"healthy\"` followed by `SUCCESS: Browser Use REST API is actively serving requests.`"
 }

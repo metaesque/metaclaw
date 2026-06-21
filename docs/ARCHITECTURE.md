@@ -22,6 +22,18 @@ grows, they can incrementally expand into dedicated hardware. Each new hardware
 purchase targets a specific functional bottleneck, cleanly taking over a subset
 of services without rendering previous hardware obsolete.
 
+### The "Zero Straight-Jacket" Principle
+Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated. Previous
+iterations required aggressive workarounds, monkey-patches, and strict
+architectural straight-jackets to force the ecosystem to function safely. As
+OpenClaw has matured (2026.6.8+), Meta<Claw> has shed this cruft.
+
+Our primary directive is to provide a seamless, robust provisioning pipeline
+that sets up the ecosystem for non-technical users and then **gets completely
+out of the way**. We make it incredibly easy to get up and running, but we do
+not put users in a straight-jacket. The framework does not dictate your agent
+logic, your prompt structures, or your internal UI configurations.
+
 ### The 4 Functional Hardware Planes
 
 To successfully deploy the ecosystem, the services defined in `SERVICES.md` are
@@ -47,26 +59,24 @@ should reside on the same gigabit LAN.
 The planes are formalized in `./planes.json` and available in human-readable
 format in `./docs/STRUCTURE.md`.
 
-### The 5 Phases of the Hardware Journey
+### The 5 Tiers of the Hardware Journey
 
-Meta<Claw> identifies a 5-phase hardware journey that users may take.
-* Many users will start at Phase 0, some will jump right to Phase 1, and many will
-  decide not to go any further, content to use cloud-based LLMs and surviving
-  within the constrained footprints provided by Phases 0 and 1.
-* Some users will explore Phases 2, 3 and 4 (which can occur in any order and
+Meta<Claw> identifies a 5-tier hardware journey that users may take.
+
+* Many users will start at **Tier 0**, some will jump right to **Tier 1**, and
+  many will decide not to go any further, content to use cloud-based LLMs and
+  surviving within the constrained footprints provided by Tiers 0 and 1.
+* Some users will explore Tiers 2, 3 and 4 (which can occur in any order and
   independent of one another).
-* Phase 2 provides local LLM compute (avoiding cloud-based API Keys and bills)
-* Phase 3 moves the Execution Plane from the Phase 1 computer to a dedicated
-  computer whose hardware is especially suited to the services in the
-  Execution Plane.
-* Phase 4 moves the Archive Plane from the Phase 1 computer to a dedicated
-  computer whose hardware is especially suited to the services in the
-  Archive Plane.
-* Phase 5 introduces an edge computer for allowing a user to share some of
+  * **Tier 2** provides local LLM compute (avoiding cloud-based API Keys and bills)
+  * **Tier 3** moves the Execution Plane from the Tier 1 computer to a dedicated
+    computer whose hardware is especially suited to the services in the
+    Execution Plane.
+  * **Tier 4** moves the Archive Plane from the Tier 1 computer to a dedicated
+    computer whose hardware is especially suited to the services in the
+    Archive Plane.
+* **Tier 5** introduces an edge computer for allowing a user to share some of
   their compute resources with other users.
-
-The phases are formalized in `./phases.json` and available in human-readable
-format in `./docs/STRUCTURE.md`.
 
 ## Remote Access
 
@@ -76,10 +86,8 @@ travel (e.g., via Starlink) face a connectivity challenge.
 * **The Zero-Trust Overlay (Tailscale):** Meta<Claw> relies on Tailscale (a
   zero-configuration WireGuard mesh network) deployed directly on the host
   operating systems of all cluster nodes.
-
 * **Mechanics:** Tailscale assigns a static, private `100.x.y.z` IP to every
   node in the homebase cluster and to the nomad's travel laptop.
-
 * **Result:** The user accesses the OpenClaw Dashboard remotely via
   `http://100.x.y.z:18789`. Furthermore, the user can utilize `tailscale ssh`
   to securely jump into any node in the farm to execute `make` targets from
@@ -94,17 +102,15 @@ To ensure services can be swapped instantly or migrated across hardware without
 breaking downstream dependencies, we enforce strict network aliasing and
 centralized configuration.
 
-* **State Synchronization & Distributed DNS:** Migration between hardware phases
+* **State Synchronization & Distributed DNS:** Migration between hardware tiers
   relies on a shared `profile.json` file. As you add new nodes to the cluster,
   the `bin/orchestrate.py` script automatically generates a `.env.cluster` file
   containing dynamic variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.50`). This
   allows services on the Control Plane to seamlessly discover other services that
-  have migrated to Phase 2 or Phase 3 nodes.
-
+  have migrated to Tier 2 or Tier 3 nodes.
 * **`active-proxy`:** Whether running LiteLLM, Helicone, or a custom router,
   the proxy container MUST alias itself on the Docker network as `active-proxy`.
   Downstream services connect blindly to `http://active-proxy:4000`.
-
 * **`active-memory`:** The database container (PostgreSQL, Qdrant, etc.) MUST
   alias itself as `active-memory`.
 
@@ -147,7 +153,6 @@ driving up costs and inducing extreme latency.
 
 * **The Invariant:** All agent default profiles MUST be patched with a strict
   `compaction` threshold policy.
-
 * **The Mechanism:** When a session exceeds the `reserveTokensFloor` (e.g.,
   24,000 tokens), the Gateway invokes a cheaper model (e.g.,
   `litellm/medium-model`) to summarize the history and squash the context window

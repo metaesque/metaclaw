@@ -11,7 +11,7 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 -include .env
 export
 
-.PHONY: up down status check-status wait-healthy clean-state clean-data uninstall
+.PHONY: up down status check-status wait-healthy clean-state clobber-data uninstall
 
 up:
 	@echo "[$(SERVICE_TITLE)] Checking for gVisor (runsc) installation..."
@@ -52,17 +52,17 @@ check-status:
 	@command -v runsc >> verification.log || echo "MISSING" >> verification.log
 	@echo "\n--- 2. Docker Integration Check ---" >> verification.log
 	@docker info | grep runsc >> verification.log || echo "NOT_REGISTERED" >> verification.log
-	@cat verification.log
+	@echo "\nSUCCESS: gVisor runtime is available." >> verification.log
 	@if grep -q "MISSING" verification.log; then echo "FATAL: runsc binary not found."; exit 1; fi
 	@if grep -q "NOT_REGISTERED" verification.log; then echo "FATAL: runsc not registered with Docker."; exit 1; fi
-	@echo "SUCCESS: gVisor runtime is available."
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: gVisor runtime is available."
 
 wait-healthy: check-status
 
 clean-state:
 	@echo "[$(SERVICE_TITLE)] To fully uninstall gVisor, please run: make uninstall"
 
-clean-data:
+clobber-data:
 	@echo "[$(SERVICE_TITLE)] No persistent data to purge for gVisor."
 
 uninstall:

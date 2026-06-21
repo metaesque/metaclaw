@@ -7,5 +7,5 @@
     "For OpenClaw agents, SearXNG serves as the primary Retrieval-Augmented Generation (RAG) backend when Cloud APIs are forbidden. By enforcing local aggregation, the AI can securely fetch up-to-date real-world context without leaking queries to third-party corporate APIs.",
     "SearXNG's architecture is highly hackable, allowing the framework to request `format=json` natively, returning structured data directly to the LLM context window without requiring heavy, local HTML-to-Markdown processing."
   ],
-  "diagnostics": "1. **API Readiness:** You should see HTTP 200 OK from the `/healthz` endpoint."
+  "diagnostics": "1. **API Readiness:** You should see `OK`\n2. **Status:** You should see `SUCCESS: SearXNG API is actively serving requests.`"
 }

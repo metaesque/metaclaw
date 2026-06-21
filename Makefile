@@ -16,7 +16,7 @@ SERVICES_DIR ?= services
 -include $(SERVICES_DIR)/searcher/.env
 -include $(SERVICES_DIR)/ci/.env
 -include $(SERVICES_DIR)/event/.env
--include $(SERVICES_DIR)/vcs/.env
+-include $(SERVICES_DIR)/vcses/.env
 -include $(SERVICES_DIR)/secret/.env
 -include $(SERVICES_DIR)/tracer/.env
 -include $(SERVICES_DIR)/iam/.env
@@ -37,37 +37,41 @@ export OPEN_CMD
 PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
 
 # Teardown order (Reverse dependencies)
-DOCKER_SUBDIRS = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/gateway $(SERVICES_DIR)/proxy-reverse $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/memory $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/queue $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcs $(SERVICES_DIR)/secret $(SERVICES_DIR)/tracer
+DOCKER_SUBDIRS = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/gateway $(SERVICES_DIR)/proxy-reverse $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/memory $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/queue $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/secret $(SERVICES_DIR)/tracer
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
 GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
-# Boot order explicitly defined to capture initial logs before upstream services start
-WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/memory $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcs $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/proxy-reverse $(SERVICES_DIR)/gateway
+# Boot order explicitly defined to capture initial logs before upstream
+# services start
+WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/memory $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcses $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/proxy-reverse $(SERVICES_DIR)/gateway
 
-.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run onboard-interactive onboard-batch apply onboard status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo
+# Meta-level reasoning. Must be a directory relative to the directory this
+# Makefile resides in!
+METACLAW_METAPATH=workspace/src/metaclaw
 
-# Ensure the virtual environment exists before running Python scripts
+.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down
+
+# ==============================================================================
+# ENVIRONMENT BOOTSTRAPPING
+# ==============================================================================
+
+# WHAT IT DOES: Ensures the Python virtual environment exists and dependencies are installed.
+# WHY IT EXISTS: Prevents global pip pollution and ensures deterministic execution of framework scripts.
 $(PYTHON_BIN):
 	@$(MAKE) --no-print-directory -C bin install-code
 
-# Order-only prerequisite
+# WHAT IT DOES: Instantiates `.env` files across the framework from `.env.template` files.
+# WHY IT EXISTS: Required for injecting host-specific configurations (ports, keys) safely into containers.
 .env: .env.template $(wildcard .env.json) | $(PYTHON_BIN)
 	$(PYTHON_BIN) ./bin/env_instantiate.py $(if $(filter factory-reset% clean% undock,$(MAKECMDGOALS)),--teardown)
 
-# Auto-generate dynamic symlinks for the service abstractions
-symlinks: | $(PYTHON_BIN)
-	@echo "Executing Python Cluster Orchestrator..."
-	@$(PYTHON_BIN) ./bin/orchestrate.py
-
-sync-cluster: | $(PYTHON_BIN)
-	@echo "Synchronizing profile.json across cluster nodes..."
-	@$(PYTHON_BIN) ./bin/sync_cluster.py
-
+# WHAT IT DOES: Analyzes the hardware footprint, assigns a Tier (0-5), and generates `profile.json`.
+# WHY IT EXISTS: This is the core cluster-state generator required before deploying services.
 setup: | $(PYTHON_BIN)
 	@echo "################################################################################"
 	@echo "# INITIATING METACLAW ENVIRONMENT SETUP"
 	@echo "################################################################################"
-	@echo "\n[Setup] Step 1: Profiling local hardware and establishing cluster phase..."
+	@echo "\n[Setup] Step 1: Profiling local hardware and establishing cluster tier..."
 	@$(PYTHON_BIN) ./bin/sysprofile.py
 	@echo "\n[Setup] Step 2: Orchestrating dynamic symlinks and cross-node routing..."
 	@$(MAKE) --no-print-directory symlinks
@@ -81,9 +85,27 @@ setup: | $(PYTHON_BIN)
 	@echo "# Proceed by running: make wizard"
 	@echo "################################################################################"
 
+# ==============================================================================
+# ORCHESTRATION & NETWORKING
+# ==============================================================================
+
+# WHAT IT DOES: Reads `profile.json` and creates filesystem symlinks mapping generic services to specific providers.
+# WHY IT EXISTS: Allows dynamic swapping of components (e.g., swapping `searxng` for `tavily`) without rewriting Makefiles.
+symlinks: | $(PYTHON_BIN)
+	@echo "Executing Python Cluster Orchestrator..."
+	@$(PYTHON_BIN) ./bin/orchestrate.py
+
+# WHAT IT DOES: Pushes the local `profile.json` state to remote nodes defined in the cluster array.
+# WHY IT EXISTS: Enables multi-node orchestration, allowing the Gateway on Node A to route traffic to the Runner on Node B.
+sync-cluster: | $(PYTHON_BIN)
+	@echo "Synchronizing profile.json across cluster nodes..."
+	@$(PYTHON_BIN) ./bin/sync_cluster.py
+
+# WHAT IT DOES: Initializes symlinks and establishes the internal Docker bridge network.
 bootstrap: symlinks network
 	@echo "Global infrastructure bootstrap complete."
 
+# WHAT IT DOES: Creates the isolated `openclaw-network` for internal container communication.
 network:
 	@if ! docker network ls | grep -q "$(NETWORK_NAME)"; then \
 		echo "Creating shared Docker network: $(NETWORK_NAME)..."; \
@@ -92,6 +114,7 @@ network:
 		echo "Network $(NETWORK_NAME) already exists. Skipping."; \
 	fi
 
+# WHAT IT DOES: Destroys the shared Docker network.
 clean-network:
 	@echo "Attempting to remove $(NETWORK_NAME)..."
 	@if docker network ls | grep -q "$(NETWORK_NAME)"; then \
@@ -100,6 +123,12 @@ clean-network:
 		echo "Network $(NETWORK_NAME) already removed."; \
 	fi
 
+# ==============================================================================
+# LIFECYCLE MANAGEMENT (START / STOP / STATUS)
+# ==============================================================================
+
+# WHAT IT DOES: Gracefully shuts down all Docker containers defined in the framework in reverse-dependency order.
+# WHY IT EXISTS: Prevents orphan containers or locked resources during a system halt.
 undock:
 	@for dir in $(DOCKER_SUBDIRS); do \
 		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
@@ -110,49 +139,58 @@ undock:
 		fi; \
 	done
 
-factory-reset: factory-reset-soft
-
-factory-reset-soft: undock clean-network
+# WHAT IT DOES: Compares running container configurations against physical `.env` files and restarts/rebuilds them if mismatched.
+# WHY IT EXISTS: The standard deployment command for pushing infrastructure changes gracefully.
+apply: symlinks
 	@echo "################################################################################"
-	@echo "# INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)"
+	@echo "# RECONCILING GLOBAL INFRASTRUCTURE STATE"
 	@echo "################################################################################"
-	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
+	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
-			OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$dir clean-state || echo "Warning: $$dir clean-state failed."; \
-			rm -f "$$dir/.env"; \
+			echo "[Root] Evaluating state in $$dir..."; \
+			$(MAKE) --no-print-directory -C $$dir apply || true; \
 		fi; \
 	done
-	@echo "Purging global runtime state..."
-	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
-	@rm -rf .logs
-	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
-	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
-	@echo "Soft reset complete. External data, .env.json files, profile.json, and python .venv preserved."
 
-factory-reset-hard: factory-reset-soft
+# WHAT IT DOES: Executes `docker ps` for all managed containers, filtered to exclude unmanaged host containers.
+status:
 	@echo "################################################################################"
-	@echo "# PURGING ALL SECRETS AND PERSISTENT DATA (HARD RESET)"
+	@echo "# GLOBAL INFRASTRUCTURE STATUS"
 	@echo "################################################################################"
-	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
+	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
-			OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$dir clean-data || echo "Warning: $$dir clean-data failed."; \
-			rm -f "$$dir/.env.json"; \
+			echo "--------------------------------------------------------------------------------"; \
+			echo "[Root] Checking status of $$dir..."; \
+			$(MAKE) --no-print-directory -C $$dir status || true; \
 		fi; \
 	done
-	@rm -f .env.json profile.json
-	@rm -rf bin/.venv
-	@echo "Hard reset complete. All secrets, data, and environments destroyed."
 
+# WHAT IT DOES: Injects the secure access token and opens the OpenClaw Dashboard in the native host OS browser.
+gui:
+	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui
+
+# WHAT IT DOES: opens the OpenClaw TUI
+tui:
+	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) tui
+
+# ==============================================================================
+# WIZARD BOOT SEQUENCE
+# ==============================================================================
+
+# WHAT IT DOES: Interactive deployment sequence. Prompts user to confirm configurations and verify diagnostic logs sequentially.
 wizard: INTERACTIVE=1
 wizard: wizard-run
 
+# WHAT IT DOES: Unattended deployment sequence. Bypasses all human-in-the-loop prompts. Assumes `.env.json` secrets are intact.
 wizard-batch: INTERACTIVE=0
 wizard-batch: wizard-run
 
+# WHAT IT DOES: Auto-generates local HTML documentation from Markdown files.
 docs: | $(PYTHON_BIN)
 	@echo "Compiling root documentation..."
 	@$(PYTHON_BIN) ./bin/compile_md.py -i docs/index.md --html
 
+# The core execution loop for booting the cluster in a safe, dependency-aware sequence.
 wizard-run: bootstrap docs
 	@echo "################################################################################"
 	@echo "# INITIATING FRAMEWORK SETUP"
@@ -177,6 +215,9 @@ wizard-run: bootstrap docs
 					$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$dir/index.html#env.vars"; \
 				fi; \
 				cd $$dir && $(PYTHON_BIN) $(CURDIR)/bin/env_instantiate.py -v; \
+				if grep -q "prep-instructions:" Makefile; then \
+					$(MAKE) --no-print-directory prep-instructions; \
+				fi; \
 				cd $(CURDIR); \
 				if [ "$(INTERACTIVE)" = "1" ]; then \
 					comp=$$(basename $$dir); \
@@ -190,57 +231,18 @@ wizard-run: bootstrap docs
 			fi; \
 		fi; \
 	done
-	@for dir in $(WIZARD_BOOT_ORDER); do \
-		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
-			if [ -f "$$dir/.metal" ] || [ -f "$$dir/docker-compose.yml" ]; then \
-				echo "################################################################################"; \
-				echo "# Booting $$dir..."; \
-				echo "################################################################################"; \
-				if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$dir/index.md" ]; then \
-					$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$dir/index.html"; \
-				fi; \
-				{ \
-					$(MAKE) --no-print-directory -C $$dir up; \
-					if grep -q "wait-healthy:" "$$dir/Makefile" || grep -q "wait-healthy:" ".Makefile.inherit"; then \
-						$(MAKE) --no-print-directory -C $$dir wait-healthy; \
-					fi; \
-					$(MAKE) --no-print-directory -C $$dir check-logs 2>/dev/null || true; \
-					$(MAKE) --no-print-directory -C $$dir check-status 2>/dev/null || true; \
-				} 2>&1 | tee .logs/$$(basename $$dir).txt; \
-				if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$dir/index.md" ]; then \
-					echo ""; \
-					printf "Does the INTEGRITY VERIFICATION output match HTML expectations? [Y/n] "; \
-					read answer < /dev/tty; \
-					if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ]; then \
-						echo "Wizard aborted by user."; exit 1; \
-					fi; \
-				fi; \
-				echo ""; \
-			fi; \
-		fi; \
-	done
 	@echo "################################################################################"
-	@echo "# GATEWAY CONFIGURATION REQUIRED"
+	@echo "# APPLYING GATEWAY CONFIGURATION"
 	@echo "################################################################################"
-	@if [ "$(INTERACTIVE)" = "1" ]; then \
-		$(MAKE) --no-print-directory onboard-interactive; \
-	else \
-		$(MAKE) --no-print-directory onboard-batch; \
-	fi
 	@echo "Applying routing patch..."
 	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch
 	@echo "################################################################################"
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
-		echo "# WIZARD COMPLETE. LAUNCHING TERMINAL UI..."; \
+		echo "# WIZARD COMPLETE. LAUNCHING WEB GUI..."; \
 		echo "################################################################################"; \
-		echo "First Steps:"; \
-		echo " - Type '/help' to see available commands."; \
-		echo " - Type '/exit' or use Ctrl+C twice to leave the chat."; \
 		echo ""; \
 		echo "Waiting for OpenClaw Gateway to finish booting..."; \
 		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
-		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) tui; \
-		echo "Terminal UI exited. Launching Web GUI setup..."; \
 		$(PYTHON_BIN) ./bin/browser.py --close; \
 		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui-setup; \
 	else \
@@ -248,47 +250,66 @@ wizard-run: bootstrap docs
 		echo "################################################################################"; \
 	fi
 
-onboard:
-	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) onboard
+# ==============================================================================
+# SYSTEM PURGE & RESET TARGETS
+# ==============================================================================
 
-onboard-interactive:
-	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) prep-instructions
-	@$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$(GATEWAY_SUBDIR)/index.html"
-	@echo "Launching interactive onboarding TUI natively..."
-	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) onboard
-
-onboard-batch:
-	@echo "Executing automated batch onboarding via pexpect..."
-	@$(PYTHON_BIN) ./$(GATEWAY_SUBDIR)/onboard_expect.py
-
-apply: symlinks
+# WHAT IT DOES: Deletes ephemeral files (`verification.log`, cached `.html` pages, `.state_*` flags) globally.
+# WHY IT EXISTS: Cleans up the developer workspace without harming secrets or databases.
+clean-state:
 	@echo "################################################################################"
-	@echo "# RECONCILING GLOBAL INFRASTRUCTURE STATE"
+	@echo "# CLEANING LOCAL STATE ACROSS ALL SERVICES"
 	@echo "################################################################################"
-	@for dir in $(WIZARD_BOOT_ORDER); do \
+	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
-			echo "[Root] Evaluating state in $$dir..."; \
-			$(MAKE) --no-print-directory -C $$dir apply || true; \
+			OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$dir clean-state || echo "Warning: $$dir clean-state failed."; \
 		fi; \
 	done
 
-status:
+# WHAT IT DOES: Triggers `factory-reset-soft` as the default reset behavior.
+factory-reset: factory-reset-soft
+
+# WHAT IT DOES: Tears down all containers, destroys the network, and wipes `.env` text files.
+# WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data. This is the safest way to bounce a broken framework.
+factory-reset-soft: undock clean-network
 	@echo "################################################################################"
-	@echo "# GLOBAL INFRASTRUCTURE STATUS"
+	@echo "# INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)"
 	@echo "################################################################################"
-	@for dir in $(WIZARD_BOOT_ORDER); do \
+	@$(MAKE) --no-print-directory clean-state
+	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
-			echo "--------------------------------------------------------------------------------"; \
-			echo "[Root] Checking status of $$dir..."; \
-			$(MAKE) --no-print-directory -C $$dir status || true; \
+			rm -f "$$dir/.env"; \
 		fi; \
 	done
+	@echo "Purging global runtime state..."
+	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
+	@rm -rf .logs
+	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
+	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
+	@echo "Soft reset complete. External data, .env.json files, profile.json, and python .venv preserved."
 
-gui:
-	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui
+# WHAT IT DOES: The Nuclear Option. Destroys everything, including cached `.env.json` secrets and the hardware `profile.json`.
+# WHY IT EXISTS: Required if the user wishes to redeploy from scratch with entirely new API keys or a different hardware cluster configuration.
+factory-reset-hard: factory-reset-soft
+	@echo "################################################################################"
+	@echo "# PURGING ALL SECRETS AND PERSISTENT DATA (HARD RESET)"
+	@echo "################################################################################"
+	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
+		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
+			OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$dir clobber-data || echo "Warning: $$dir clobber-data failed."; \
+			rm -f "$$dir/.env.json"; \
+		fi; \
+	done
+	@rm -f .env.json profile.json
+	@rm -rf bin/.venv
+	@echo "Hard reset complete. All secrets, data, and environments destroyed."
 
+# ==============================================================================
+# PACKAGING & ANALYSIS TOOLS
+# ==============================================================================
+
+# WHAT IT DOES: Creates a deployable ZIP archive of the framework respecting `MANIFEST.files`.
 zip: tmp/metaclaw.zip
-
 tmp/metaclaw.zip: FORCE | $(PYTHON_BIN)
 	@echo "################################################################################"
 	@echo "# PACKAGING FRAMEWORK"
@@ -308,24 +329,66 @@ tmp/metaclaw.zip: FORCE | $(PYTHON_BIN)
 	@rm -rf .tmp_pack
 	@echo "Packaging complete: tmp/metaclaw.zip generated successfully."
 
+# WHAT IT DOES: Concatenates the entire framework into a single `.txt` payload for injection into an LLM context window.
 txt: tmp/metaclaw.txt
-
 tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
 	$(PYTHON_BIN) ./bin/newcode.py -s docs/MANIFEST.files > tmp/metaclaw.txt
 	@echo "Manifest generated at: tmp/metaclaw.txt"
 
+# WHAT IT DOES: Parses a block of AI-generated Markdown and writes the files back to disk atomically.
 newcode: | $(PYTHON_BIN)
 	@echo "Applying AI-generated changes from ./input..."
 	$(PYTHON_BIN) ./bin/newcode.py ./input
 
+# WHAT IT DOES: Analyzes PostgreSQL logs to calculate actual API spend over the last N hours.
 spend-%: | $(PYTHON_BIN)
 	$(PYTHON_BIN) bin/postgres_analysis.py --spend --hours="$*"
-
 jspend-%: | $(PYTHON_BIN)
 	$(PYTHON_BIN) bin/postgres_analysis.py --spend --hours="$*" -j
 
+# WHAT IT DOES: Scans the codebase for TODO tags and generates a consolidated report.
 todo: | $(PYTHON_BIN)
 	@$(PYTHON_BIN) ./bin/todo.py
 
+# ==============================================================================
+# AIR-GAPPED STAGING ENVIRONMENT (AGENT BOOTSTRAPPING)
+# ==============================================================================
+
+# WHAT IT DOES: Destroys the staging environment and forcefully pushes the live host files down into it.
+# WHY IT EXISTS: Used to completely reset the staging directory if the agent makes a mistake and you want to start over.
+meta-push: | $(PYTHON_BIN)
+	@$(PYTHON_BIN) ./bin/meta_sync.py --push
+
+# WHAT IT DOES: Diffs the live host codebase against the staging directory without executing writes.
+# WHY IT EXISTS: Provides a safe, colorized dry-run preview of the agent's work.
+meta-cmp: | $(PYTHON_BIN)
+	@$(PYTHON_BIN) ./bin/meta_sync.py --dryrun
+
+# WHAT IT DOES: Interactively reviews and merges changes from the staging environment back to the live host.
+# WHY IT EXISTS: Closes the loop on agent-driven development. Uses an interactive Python script to prevent accidental overwrites.
+meta-pull: | $(PYTHON_BIN)
+	@$(PYTHON_BIN) ./bin/meta_sync.py --pull
+
+# WHAT IT DOES: Cleans up and deletes the staging environment entirely.
+meta-down:
+	@if [ -f $(METACLAW_METAPATH)/.env ] && [ $$(docker ps | wc -l) -gt 1 ] ; then \
+		echo "Shutting down Meta<Claw>"; \
+		cd $(METACLAW_METAPATH); make factory-reset-soft; \
+	fi
+	@if [ -d $(METACLAW_METAPATH) ] ; then \
+		echo ""; \
+		printf "Destroy $(METACLAW_METAPATH)? [y/N] "; \
+		read answer < /dev/tty; \
+		if [ "$$answer" == "Y" ] || [ "$$answer" == "y" ]; then \
+			rm -rf $(METACLAW_METAPATH); \
+			echo "NOTE: Removed $(METACLAW_METAPATH)"; \
+		else \
+			echo "NOTE: Did NOT remove $(METACLAW_METAPATH)"; \
+		fi; \
+	fi
+
 FORCE:
+
+tst:
+	echo "PYTHON_BIN=$(PYTHON_BIN)"

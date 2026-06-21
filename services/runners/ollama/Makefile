@@ -9,12 +9,6 @@ FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
 -include .env
 # ARCHITECTURAL SHIFT: Depend on the abstracted gateway symlink instead of hardcoding openclaw-gateway
 -include $(FRAMEWORK_ROOT)/services/gateway/.env
-
-# Safety fallback for EXTERNAL_DRIVE_PATH
-ifeq ($(strip $(EXTERNAL_DRIVE_PATH)),)
-EXTERNAL_DRIVE_PATH := $(FRAMEWORK_ROOT)/external/metaclaw
-endif
-export EXTERNAL_DRIVE_PATH
 export
 
 PYTHON_BIN ?= python3
@@ -25,7 +19,7 @@ LOG_FILE = ollama.log
 # Strips the Litellm provider prefix (e.g., 'ollama/') to isolate the native model name
 JUDGE_MODEL_CLEAN = $(shell echo $(OPENCLAW_JUDGE_MODEL) | sed 's/ollama\///')
 
-.PHONY: up down status clean-state clean-data check-status check-logs wait-healthy pull-judge apply docs
+.PHONY: up down status clean-state clobber-data check-status check-logs wait-healthy pull-judge apply docs
 
 docs: | $(PYTHON_BIN)
 	@if [ -f index.md ]; then \
@@ -35,7 +29,7 @@ docs: | $(PYTHON_BIN)
 
 .env: .env.template $(wildcard .env.json)
 	@echo "Instantiating .env for $(SERVICE_TITLE)..."
-	$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/env_instantiate.py $(if $(filter down clean-state clean-data,$(MAKECMDGOALS)),--teardown)
+	$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/env_instantiate.py $(if $(filter down clean-state clobber-data,$(MAKECMDGOALS)),--teardown)
 
 up: .env ./bin/ollama docs
 	@if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
@@ -79,15 +73,14 @@ check-status: status
 	@echo "Running diagnostic suite..."
 	@echo "--- 1. API Responsiveness ---" > verification.log
 	@curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" >> verification.log || echo "API unreachable." >> verification.log
-	@cat verification.log
 	@if grep -q "API unreachable" verification.log; then echo "FATAL: Ollama API unreachable."; exit 1; fi
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "Models Loaded:"
 
 clean-state: down
-	@echo "Scrubbing local runtime state and binaries..."
-	@rm -f $(LOG_FILE) $(PID_FILE) verification.log index.html
-	@rm -rf ./bin .updated
+	@echo "Scrubbing local runtime state..."
+	@rm -f $(LOG_FILE) $(PID_FILE) verification.log index.html .updated
 
-clean-data:
+clobber-data:
 	@if [ -n "$(EXTERNAL_DRIVE_PATH)" ]; then \
 		echo "Purging Ollama models from external drive..." ; \
 		rm -rf $(EXTERNAL_DRIVE_PATH)/ollama-models ; \

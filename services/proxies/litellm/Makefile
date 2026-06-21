@@ -22,15 +22,28 @@ RESTART_DEPS = config.yaml router.json advanced/patch_entrypoint.py advanced/ent
 
 ROUTER_KIND ?= tiers
 
+# ==============================================================================
+# SERVICE-SPECIFIC TARGETS
+# ==============================================================================
+
+# Override the inherited 'apply' to explicitly track config.yaml modifications
+apply:
+	@if [ config.yaml -nt .start ] 2>/dev/null || [ ! -f .start ]; then \
+		echo "[$(SERVICE_TITLE)] Detected config.yaml modifications. Restarting proxy..."; \
+		$(MAKE) --no-print-directory restart; \
+	else \
+		$(MAKE) --no-print-directory -f $(FRAMEWORK_ROOT)/.Makefile.inherit apply; \
+	fi
+
 post-check-status:
 	@echo "Running diagnostic suite (~30s) ..."
 	@echo "--- 1. Web Server Health ---" > verification.log
 	@curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $(ACTIVE_PROXY_KEY)" http://localhost:4000/v1/models >> verification.log || echo "CONNECTION_FAILED" >> verification.log
 	@echo "\n--- 2. Active Model Inventory ---" >> verification.log
 	@curl -s http://localhost:4000/v1/models -H "Authorization: Bearer $(ACTIVE_PROXY_KEY)" | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(json.dumps([m['id'] for m in data['data']], indent=2))" >> verification.log
-	@cat verification.log
 	@if grep -q "CONNECTION_FAILED" verification.log; then echo "FATAL: Web Server Health check failed."; exit 1; fi
 	@if ! grep -q "simple-model" verification.log; then echo "FATAL: Model Inventory check failed."; exit 1; fi
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "200" "simple-model" "medium-model"
 
 router.json: utterances-$(ROUTER_KIND).yaml advanced/generate_router.py
 	@echo "Compiling YAML into router.json..."

@@ -16,7 +16,7 @@ vulnerability. Meta<Claw> relies on an overlay mesh network (like Tailscale)
 for secure, zero-trust access.
 
 1. Install Tailscale on all your homebase nodes and your travel laptop.
-2. Note the static `100.x.y.z` IP assigned to your Phase 1 Monolith (the Control
+2. Note the static `100.x.y.z` IP assigned to your Tier 1 Monolith (the Control
    Plane).
 3. Open your browser and navigate to `http://[Tailscale-IP]:18789` to access
    the OpenClaw Dashboard securely from anywhere.
@@ -24,7 +24,7 @@ for secure, zero-trust access.
    `ssh user@[Tailscale-IP]`.
 
 ### Expanding the Cluster (Adding Hardware)
-When upgrading from Phase 0 to Phase 1, or adding a Phase 2 GPU node, you must
+When upgrading from Tier 0 to Tier 1, or adding a Tier 2 GPU node, you must
 synchronize the cluster state so the existing nodes know where the new services
 live.
 
@@ -36,7 +36,7 @@ live.
     Node**.
 2.  **Profile:** SSH into the **New Node** and run: `python bin/sysprofile.py`
     * *The script reads the existing JSON, profiles the new local hardware,
-      assigns the phase, and appends the new node's state into the cluster
+      assigns the tier, and appends the new node's state into the cluster
       array.*
 3.  **Push:** From the **New Node**, run: `make sync-cluster`
     * *This utilizes `rsync` over SSH to blast the updated `profile.json` back
@@ -62,10 +62,9 @@ it preserves your API keys, your PostgreSQL database, and your Python
 environments.**
 
 1.  In your terminal, run: `make factory-reset-soft`
-2.  Once complete, rebuild the environment by running: `make wizard`
-    * *Note: The wizard will re-bootstrap the network, apply essential routing
-      patches, and launch the interactive terminal setup. Upon completion, it
-      will automatically launch your web browser to pair the UI.*
+2.  Once complete, rebuild the environment by running: `make wizard-batch`
+    * *Note: The batch wizard will safely bypass interactive inputs, boot the
+      network, apply essential routing patches, and generate HTML documentation.*
 
 ### The "Nuclear Option" (Hard Reset)
 Use this only if you need to completely purge everything, including your
@@ -91,7 +90,7 @@ burn through expensive API credits.
 3.  **Apply Version Change:** Open
     `./components/gateways/openclaw/.env.template` (or your active
     `.env.json`) and update the `OPENCLAW_VERSION` variable.
-4.  **Rebuild:** Run `make factory-reset-soft` followed by `make wizard` to
+4.  **Rebuild:** Run `make factory-reset-soft` followed by `make wizard-batch` to
     cleanly instantiate the new version.
 
 ## Validating the Routing Engine (Cost Control)
@@ -132,18 +131,11 @@ If the alias is missing, verify that your `docker-compose.yml` nests the `aliase
 
 ## Managing the Graphical User Interface (GUI)
 
-The OpenClaw Web UI requires a secure pairing token the very first time it
-connects to the background server.
+The OpenClaw Web UI access has been streamlined to bypass manual pairing.
 
-* **First Run:** Running `make wizard` handles this entire pairing sequence
-  automatically.
-* **Manual Pairing:** If your browser gets stuck on a page saying "Pairing
-  Required", do not panic. Leave the browser open, open a new terminal window
-  in the framework root, and run `make gui-setup`. The script will monitor the
-  network for the browser's request and automatically approve it.
-* **Normal Day-to-Day Access:** When the system is healthy and previously
-  paired, you can simply run `make gui` to instantly launch the dashboard in
-  your native browser.
+* **Authentication:** A secure token is automatically injected into the gateway via the `OPENCLAW_GATEWAY_TOKEN` environment variable (defaulting to your `ACTIVE_PROXY_KEY`).
+* **Launch:** Running `make gui` from the framework root will instantly launch the dashboard in your native browser using the injected token.
+* **First Run:** Running `make wizard` handles this entire sequence automatically, opening the GUI once the backend is healthy and fully configured.
 
 ## Adding a New Service
 
@@ -202,20 +194,18 @@ providers exist in the broader ecosystem that we are not yet considering.
 Analyze the semantics of the `<INSERT_SERVICE_UID_HERE>` service described in
 ./services/<INSERT_SERVICE_UID_HERE>/.service.json and the associated providers
 defined in ./services/<INSERT_SERVICE_UID_HERE>/*/.provider.json. Determine the
-the optimal provider for specific Hardware/Phase constraints based on varying
+the optimal provider for specific Hardware/Tier constraints based on varying
 priority orders.
 
 **Constraints**:
 
 The priority `--order` flag takes permutations of `safety`, `cost`, and
-`resources` as a comma-separated string.
-
-Evaluate the optimal provider for each of the 6 possible order permutations
-across the following specific architectural phases:
-- Darwin Phase 0 (macOS, constrained RAM, effficent OrbStack)
-- Windows Phase 0 (Windows, constrained RAM, efficient WSL2)
-- Linux Phase 1 (Dedicated 32GB+ Monolith, 24/7 background tasks)
-- Linux Phase <3_OR_4> (Dedicated execution blast-zone OR massive RAM context
+`resources` as a comma-separated string. Evaluate the optimal provider for each of the 6 possible order permutations
+across the following specific architectural tiers:
+- Darwin Tier 0 (macOS, constrained RAM, effficent OrbStack)
+- Windows Tier 0 (Windows, constrained RAM, efficient WSL2)
+- Linux Tier 1 (Dedicated 32GB+ Monolith, 24/7 background tasks)
+- Linux Tier <3_OR_4> (Dedicated execution blast-zone OR massive RAM context
   archive)
 
 **Instructions**:
@@ -225,8 +215,8 @@ across the following specific architectural phases:
 2. Capture the structured matrix of optimal providers within
       `./services/<plural_service>/.service.json`
    by adding a new `matrix` key.
-3. The value of the `matrix` key should be a dictionary that maps phase (e.g.
-   'phase-0', 'phase-3') to a dictionary that maps platform (e.g. 'Darwin',
+3. The value of the `matrix` key should be a dictionary that maps tier (e.g.
+   'tier-0', 'tier-3') to a dictionary that maps platform (e.g. 'Darwin',
     'Windows', 'Linux') to a dictionary that maps order (e.g.
     'safety,cost,resources') to a dictionary containing:
    - `uid`: The uid of the best provider for this specific configuration.
@@ -242,8 +232,8 @@ across the following specific architectural phases:
 ```text
 # 🛠️ METACLAW PROTOCOL
 **Current Task:** Implement the `{{PROVIDER_UID}}` provider for the `{{SERVICE_UID}}` service.
-**State:** OpenClaw 2026.3.28 | Network: `openclaw-net`
-**Code Mandate:** EXACTLY ONE Markdown block containing FULL FILES only. No snippets. Update `./docs/MANIFEST.files`.
+**State:** OpenClaw 2026.6.8 | Network: `openclaw-net`
+**Code Mandate:** EXACTLY ONE 4-backtick (````) Markdown block containing FULL FILES only. No snippets. Update `./docs/MANIFEST.files`.
 **Integrity Mandate:** If returning the full file requires silently dropping unmodified keys or arrays, TRIGGER A HARD STOP. Data loss is a fatal error.
 **Epistemic Mandate:** Validate strictly. No syntax confabulation. You MUST use Google Search to verify the exact Docker image repository, version tag, and healthcheck commands for this provider.
 
@@ -260,42 +250,7 @@ Execute the provisioning of the new `{{PROVIDER_UID}}` provider within the `./se
    - Map persistent volumes exclusively to `${EXTERNAL_DRIVE_PATH}/<provider-data>`.
    - Write a robust, native `healthcheck` block.
    - Define the standard `active-{{SERVICE_UID}}` network alias if this service acts as a primary backend.
-6. **Priority Matrix Registration:** Update `./services/{{SERVICE_PLURAL}}/.service.json` to insert `{{PROVIDER_UID}}` into the `matrix` routing table for relevant Phase/OS/Priority permutations. Provide concise, highly technical justifications in the `why` field indicating exactly how it fulfills the specific order constraints.
+6. **Priority Matrix Registration:** Update `./services/{{SERVICE_PLURAL}}/.service.json` to insert `{{PROVIDER_UID}}` into the `matrix` routing table for relevant Tier/OS/Priority permutations. Provide concise, highly technical justifications in the `why` field indicating exactly how it fulfills the specific order constraints.
 7. **Root Makefile Lifecycle Registration:** You MUST examine the root `Makefile`. If `$(SERVICES_DIR)/{{SERVICE_UID}}` (the singular symlink) is missing from the `DOCKER_SUBDIRS` array, the `WIZARD_BOOT_ORDER` array, or the `-include` directives, you MUST output the updated root `Makefile`. Failing to do so will cause `make factory-reset-soft` to leave zombie containers running because the teardown orchestrator will be blind to the new service category.
 8. **Manifest Tracking:** Generate the updated `docs/MANIFEST.files` including the new files, ensuring strict alphabetical order.
 ```
-
-## Adding a New Provider
-
-To introduce a specific implementation for an existing service (e.g., adding
-Qdrant as a Memory provider):
-
-1.  **Define the Provider:** Verify that
-      `./services/<plural_service>/<provider_uid>/.provider.json`
-    exists and has the keys `uid`, `name`, `overview`, `details` (array of
-    paragraphs), and `diagnostics`.
-2.  **Provisioning Files:** Create the `Makefile`, `.env.template`, and
-    `docker-compose.yml` within the provider directory.
-    Ensure the `Makefile`
-    inherits from the root framework and defines `SERVICE_NAME`.
-3.  **Distributed Networking:** In the `docker-compose.yml`, you must support
-    multi-node routing.
-    Do not hardcode internal Docker aliases if the target
-    service might reside on another machine.
-    Use the `.env.cluster` variables
-    (e.g., `${ACTIVE_LOGGER_HOST:-active-logger}`) to allow dynamic fallback
-    between the local bridge and the Tailscale mesh.
-4.  **Priority Matrix Registration:** Update the routing matrix inside
-    `./services/<plural_service>/.service.json` to evaluate and insert the
-    new provider into the appropriate phase/OS priority permutations so the
-    cluster orchestrator can deploy it.
-5.  **Root Makefile Registration:** Ensure that the parent service's generic
-    symlink (e.g., `$(SERVICES_DIR)/browser`) is present in the root `Makefile`
-    under the `DOCKER_SUBDIRS` and `WIZARD_BOOT_ORDER` variables, and in the
-    `-include` directives block. This ensures that global lifecycle targets like
-    `make factory-reset-soft` or `make wizard` correctly teardown and boot the
-    provider instead of leaving zombie containers running.
-6.  **Documentation Generation:** Run `python bin/compile_md.py --setup` to
-    generate the `index.md` documentation for the new provider.
-7.  **Manifest Tracking:** Append all newly created files to
-    `docs/MANIFEST.files`.

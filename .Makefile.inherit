@@ -21,15 +21,15 @@ export COMPOSE_PROJECT_NAME := $(SERVICE_NAME)
 FRAMEWORK_ROOT ?= ..
 PYTHON_BIN ?= $(abspath $(FRAMEWORK_ROOT)/bin/.venv/bin/python)
 
-RECREATE_DEPS ?= docker-compose.yml .env $(FRAMEWORK_ROOT)/.env
+RECREATE_DEPS ?= $(wildcard docker-compose.yml) $(wildcard .env) $(FRAMEWORK_ROOT)/.env
 RESTART_DEPS ?=
 
-.PHONY: up down logs pre-up post-up pre-down post-down verify_service status shell clean-state wait-healthy clean-data check-logs check-status post-check-status apply restart docs
+.PHONY: up down logs pre-up post-up pre-down post-down verify_service status shell clean-state wait-healthy clobber-data check-logs check-status post-check-status apply restart docs
 
 # Standardized .env instantiation.
 .env: .env.template $(wildcard .env.json)
 	@echo "[$(SERVICE_NAME)] Validating environment configuration..."
-	$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/env_instantiate.py $(if $(filter down clean-state clean-data,$(MAKECMDGOALS)),--teardown)
+	$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/env_instantiate.py $(if $(filter down clean-state clobber-data,$(MAKECMDGOALS)),--teardown)
 
 ifeq ($(strip $(EXTERNAL_DRIVE_PATH)),)
 EXTERNAL_DRIVE_PATH := $(FRAMEWORK_ROOT)/external/metaclaw
@@ -145,9 +145,10 @@ check-logs:
 		if [ -z "$(LOG_READY_SIGNAL)" ]; then \
 			echo "[$(SERVICE_NAME)] No LOG_READY_SIGNAL defined. Skipping scan."; \
 		else \
-			docker logs --tail 200 $(SERVICE_NAME) 2>&1 | grep -q "$(LOG_READY_SIGNAL)" && \
+			docker logs --tail 200 $(SERVICE_NAME) 2>&1 | \
+			grep -q "$(LOG_READY_SIGNAL)" && \
 			echo "[$(SERVICE_NAME)] Readiness signal detected." || \
-			(echo "Readiness signal not found."; exit 1); \
+			(echo "FATAL: Readiness signal not found."; exit 1); \
 		fi; \
 	fi
 
@@ -160,8 +161,11 @@ check-status:
 		echo "================================================================================"; \
 		if [ ! -f .metal ]; then \
 			STATUS=$$(docker inspect --format="{{.State.Status}}" $(SERVICE_NAME) 2>/dev/null || echo "MISSING"); \
-			echo "Container State: $$STATUS"; \
-			if [ "$$STATUS" != "running" ]; then exit 1; fi; \
+			if [ "$$STATUS" = "running" ]; then \
+				echo "Container State: $$STATUS"; \
+			else \
+				echo "FATAL: Container State: $$STATUS"; exit 1; \
+			fi; \
 		fi; \
 		$(MAKE) --no-print-directory post-check-status; \
 	fi
@@ -208,5 +212,5 @@ pre-up:
 post-up:
 pre-down:
 post-down:
-clean-data:
+clobber-data:
 post-check-status:

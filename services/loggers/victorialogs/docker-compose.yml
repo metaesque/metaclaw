@@ -16,7 +16,7 @@ services:
     volumes:
       # WHAT THIS DOES: Persists the highly compressed columnar log files.
       # WHY THIS DEFAULT: Routes data to your external drive to prevent OS disk exhaustion.
-      - ${EXTERNAL_DRIVE_PATH}/victorialogs-data:/victoria-logs-data
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/victorialogs-data:/victoria-logs-data
     networks:
       shared-network:
         # WHAT THIS DOES: Establishes a generic internal DNS alias.
@@ -44,5 +44,5 @@ services:
 
 networks:
   shared-network:
-    name: ${NETWORK_NAME}
+    name: ${NETWORK_NAME:-openclaw-network}
     external: true

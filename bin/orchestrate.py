@@ -118,6 +118,7 @@ def main():
       cwd = os.getcwd()
       os.chdir(services_dir)
       os.symlink(target_path, svc)
+      print(f'NOTE: created symlink from {target_path} to {svc}')
       os.chdir(cwd)
 
     # Establish execution state hooks for Makefiles

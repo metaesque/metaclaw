@@ -5,13 +5,14 @@ non-technical individuals to install a large number of powerful tools that
 together provide safe, secure, cost-effective, personal AI capabilities.
 This framework focuses predominantly on OpenClaw and the large ecosystem
 of external-to-OpenClaw tools that it uses, leaving OpenClaw-specific
-customization up to the individual user. The goal is to get a user able to
-interact with OpenClaw (or other personal AI gateway) with as little effort
-as possible, so they can focus all of their time on creating and interacting
-with their agents instead of learning how to setup, configure, maintain, and
-synchronize the details of how OpenClaw talks to AI models, runs local models,
-efficiently stores and indexes memories, and many other things needed for a
-safe, efficient, cost-effective AI environment.
+customization up to the individual user.
+
+**Our Philosophy:** Meta<Claw> is designed to be unobtrusive and un-opinionated.
+Our primary goal is to make it incredibly easy for non-technical people to get
+up and running with a production-grade OpenClaw environment, *without* putting
+them in an architectural straight-jacket. Once the infrastructure is running,
+the framework gets out of your way, granting you full autonomy to design your
+agents however you see fit.
 
 ## Services
 
@@ -34,12 +35,82 @@ As the user starts exploring more and more of what OpenClaw can do, they can
 graduate to more sophisticated/advanced providers for each service. Here
 are the services Meta<Claw> supports:
 
-- Gateway (e.g., OpenClaw, Moltis, n8n)
-- AI Proxy (e.g., LiteLLM, OpenRouter, Manifest)
-- LLM Runner (e.g., Ollama, vLLM, llama.cpp)
-- Memory (e.g., PostgreSQL+pgvector, Qdrant)
-- Cache (e.g., Redis, Turso)
-- Log Aggregation (e.g., VictoriaLogs, Loki)
-- Sandboxing (e.g., gVisor, E2B)
-- Overlay Networks (e.g., Tailscale, ZeroTier)
-- Browser Automation (e.g., Playwright, Browser Use)
+- AI Gateway (`gateways`)
+  - Providers: OpenClaw (`openclaw`), Moltis (`moltis`), n8n (`n8n`)
+  - Summary: The core intelligence layer acting as the user-facing agent
+    framework that handles tool definitions, workflow execution, and multi-agent
+    routing.
+- AI Proxy (`proxies`)
+  - Providers: LiteLLM (`litellm`), OpenRouter (`openrouter`), Manifest (`manifest`)
+  - Summary: Middleware between the Gateway and external LLMs, acting as a
+    central control plane for cost management, load balancing, and guarding API
+    keys.
+- LLM Runner (`runners`)
+  - Providers: Ollama (`ollama`), vLLM (`vllm`), llama.cpp (`llamacpp`)
+  - Summary: Manages and executes local Large Language Models and Multimodal
+    models directly on bare-metal hardware for offline intelligence.
+- Long-Term Memory (`memories`)
+  - Providers: PostgreSQL (`postgres`), Qdrant (`qdrant`), Milvus (`milvus`)
+  - Summary: The permanent, space-efficient archive for the agent supporting
+    high-dimensional vector embeddings for semantic search alongside standard
+    relational data.
+- Real-Time Cache (`caches`)
+  - Providers: Redis (`redis`), Turso (`turso`), Convex (`convex`)
+  - Summary: Ultra-low latency ephemeral storage used for semantic caching,
+    session states, multi-agent communication, and distributed locking.
+- Log Aggregator (`loggers`)
+  - Providers: VictoriaLogs (`victorialogs`), Loki (`loki`), SigNoz (`signoz`)
+  - Summary: The central repository for system logs, providing real-time
+    visibility to monitor agent behavior and audit actions.
+- Overlay Network (`networks`)
+  - Providers: Tailscale (`tailscale`), ZeroTier (`zerotier`), Cloudflare Tunnels (`cloudflare-tunnels`)
+  - Summary: Provides zero-trust mesh networking and secure inbound routing to
+    access the AI cluster remotely without exposing router ports.
+- Browser Automation (`browsers`)
+  - Providers: Browser Use (`browseruse`), Stagehand (`stagehand`), Skyvern (`skyvern`)
+  - Summary: Provides advanced, AI-driven DOM interaction, visual
+    interpretation, and self-healing autonomous navigation capabilities.
+- Execution Sandbox (`sandboxes`)
+  - Providers: Docker DooD (`docker-dood`), gVisor (`gvisor`), E2B (`e2b`)
+  - Summary: Hardened execution environments designed to contain the blast
+    radius of agent actions and volatile code generation.
+- Secrets Manager (`secrets`)
+  - Providers: Doppler (`doppler`), Bitwarden (`bitwarden`), Vault (`vault`)
+  - Summary: A centralized, encrypted vault that securely stores and injects
+    third-party API keys directly into the agent's runtime memory.
+- Identity & Access Management (`iam`)
+  - Providers: Authelia (`authelia`), Keycloak (`keycloak`), Authentik (`authentik`)
+  - Summary: The authentication gatekeeper enforcing MFA and SSO at the reverse
+    proxy layer to secure the dashboard from unauthorized internet access.
+- Distributed Tracer (`tracers`)
+  - Providers: Langfuse (`langfuse`), OpenTelemetry (`opentelemetry`), SigNoz (`signoz`)
+  - Summary: Measures execution duration across services to debug latency
+    bottlenecks in complex, multi-step agent trajectories.
+- Web Fetcher (`fetchers`)
+  - Providers: Crawl4AI (`crawl4ai`), Firecrawl (`firecrawl`), Jina AI Reader (`jinareader`)
+  - Summary: Bypasses anti-bot measures to fetch, render, and extract clean,
+    LLM-ready markdown or JSON from specific URLs.
+- Web Search API (`searchers`)
+  - Providers: SearXNG (`searxng`), Exa (`exa`), Tavily (`tavily`)
+  - Summary: Executes high-speed, lightweight HTTP searches to return structured
+    snippets, URLs, and real-time knowledge context.
+- Continuous Integration (`ci`)
+  - Providers: Woodpecker (`woodpecker`), Drone (`drone`), GitHub Actions (`github-actions`)
+  - Summary: The automated testing pipeline that proves agent-generated code
+    works against a test suite before it is deployed.
+- Message Queue (`queues`)
+  - Providers: RabbitMQ (`rabbitmq`), Kafka (`kafka`), NATS (`nats`)
+  - Summary: The asynchronous task broker that decouples the Gateway from
+    execution nodes to prevent HTTP timeouts during long-running workloads.
+- Event Gateway (`events`)
+  - Providers: Hookdeck (`hookdeck`), Svix (`svix`), ngrok (`ngrok`)
+  - Summary: Securely ingests, queues, and standardizes incoming webhooks from
+    the outside world to wake up the agent asynchronously.
+- Reverse Proxy (`proxies-reverse`)
+  - Providers: Caddy (`caddy`), Traefik (`traefik`), Nginx (`nginx`)
+  - Summary: The network front door handling SSL termination, load balancing,
+    and rate limiting for the local AI ecosystem.
+- Version Control System (`vcses`)
+  - Providers: Forgejo (`forgejo`), Gitea (`gitea`), GitLab (`gitlab`)
+  - Summary: The immutable state capture layer that tracks all code
+    modifications and documentation updates generated by autonomous agents.

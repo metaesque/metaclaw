@@ -1,0 +1,19 @@
+# parallelai: Parallel AI Search
+
+## Overview
+
+When a human uses a search engine, they look for links to click. When an AI uses
+a search engine, it needs information-dense tokens. Parallel AI is built
+exclusively for the latter. It excels at answering complex questions that
+require synthesizing data from five different websites, a process known as
+multi-hop reasoning.
+
+In a standard OpenClaw setup, answering a complex question causes the agent to
+enter a loop: search, read a page, realize it's missing context, search again,
+read another page. This compounds latency and explodes token costs. Parallel AI
+solves this by resolving the entire multi-faceted query on its own backend.
+
+By delivering a single, comprehensive payload to the OpenClaw Gateway, Parallel
+AI drastically reduces the number of sequential calls the agent has to make. It
+provides state-of-the-art accuracy for deep enterprise research while
+effectively halving the operational cost of the agent.

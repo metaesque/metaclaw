@@ -21,7 +21,8 @@ post-check-status:
 	@docker exec $(SERVICE_NAME) redis-cli info memory | grep "maxmemory_human" >> verification.log
 	@echo "\n--- 3. Eviction Policy ---" >> verification.log
 	@docker exec $(SERVICE_NAME) redis-cli config get maxmemory-policy >> verification.log
-	@cat verification.log
 	@if ! grep -q "PONG" verification.log; then echo "FATAL: Redis connectivity failed."; exit 1; fi
 	@if ! grep -q "512.00M" verification.log; then echo "FATAL: Redis memory limit not enforced."; exit 1; fi
 	@if ! grep -q "allkeys-lru" verification.log; then echo "FATAL: Redis eviction policy incorrect."; exit 1; fi
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "PONG" "512.00M" "allkeys-lru"
+

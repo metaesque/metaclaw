@@ -1,6 +1,5 @@
-SERVICE_TITLE = Hardened Docker DooD Sandbox Service
+SERVICE_TITLE = Docker-out-of-Docker Sandbox
 SERVICE_NAME = docker-dood
-DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
 FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
@@ -8,8 +7,12 @@ FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
 include $(FRAMEWORK_ROOT)/.Makefile.inherit
 
 -include $(FRAMEWORK_ROOT)/.env
+-include $(FRAMEWORK_ROOT)/services/gateways/openclaw/.env
 -include .env
 export
 
-post-check-status:
-	@echo "SUCCESS: Sandbox is active, sterile, and network-isolated."
+# ==============================================================================
+# SERVICE-SPECIFIC TARGETS
+# ==============================================================================
+# Inherits standard lifecycle targets (up, down, restart, apply, status, logs)
+# from .Makefile.inherit.

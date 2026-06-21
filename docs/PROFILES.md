@@ -1,7 +1,7 @@
 # Cluster Profiling & Distributed Orchestration
 
-As Meta<Claw> scales from a single laptop (Phase 0: The Day 1 Minilith) to a
-distributed multi-node architecture (Phase 4), hardcoding service paths in
+As Meta<Claw> scales from a single laptop (Tier 0: The Day 1 Minilith) to a
+distributed multi-node architecture (Tier 4), hardcoding service paths in
 `Makefile`s becomes unviable. Meta<Claw> utilizes a "Cluster Profile" system to
 achieve declarative, multi-node orchestration without requiring heavy tools like
 Kubernetes or Ansible.
@@ -17,8 +17,8 @@ physical machine is responsible for which service.
   "cluster_id": "metaclaw-cluster-1a2b3c",
   "nodes": [
     {
-      "hostname": "Phase-1-Monolith",
-      "phase": 1,
+      "hostname": "Tier-1-Monolith",
+      "tier": 1,
       "hardware": { "os": "Linux", "ram_gb": 32.0, "ip_address": "192.168.1.10" },
       "providers": {
         "gateway": "openclaw",
@@ -28,8 +28,8 @@ physical machine is responsible for which service.
       }
     },
     {
-      "hostname": "Phase-2-GPU-Rig",
-      "phase": 2,
+      "hostname": "Tier-2-GPU-Rig",
+      "tier": 2,
       "hardware": { "os": "Linux", "vram_gb": 24.0, "ip_address": "192.168.1.11" },
       "providers": {
         "runner": "vllm",
@@ -46,13 +46,13 @@ When you run `python bin/sysprofile.py` to add a new machine to the cluster,
 the script acts as an automated systems engineer. It applies **Cluster State
 Reconciliation**.
 
-If you add a Phase 2 (Compute) node, the script intelligently recognizes that
-the primary LLM `runner` should no longer exist on the Phase 1 Monolith. It
-mutates `profile.json`, stripping the `runner` responsibility from Phase 1 and
-assigning it to Phase 2.
+If you add a Tier 2 (Compute) node, the script intelligently recognizes that
+the primary LLM `runner` should no longer exist on the Tier 1 Monolith. It
+mutates `profile.json`, stripping the `runner` responsibility from Tier 1 and
+assigning it to Tier 2.
 
-* **Eviction:** If you add a Phase 1: The Month 2 Monolith, the script marks
-  any existing Phase 0: The Day 1 Minilith machines for total teardown,
+* **Eviction:** If you add a Tier 1: The Month 2 Monolith, the script marks
+  any existing Tier 0: The Day 1 Minilith machines for total teardown,
   migrating the ecosystem off the constrained laptop.
 
 ## The State Enforcer (`bin/orchestrate.py`)
@@ -71,5 +71,5 @@ Before `make` executes any deployment commands, the Makefile triggers
 3. **Distributed DNS:** It scans the entire `profile.json` to find out which IP
    addresses hold which services. It generates a `.env.cluster` file
    containing routing variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.11`).
-   Downstream services (like the Gateway on Phase 1) read this file, instantly
-   discovering that they need to send API traffic to the new Phase 2 node.
+   Downstream services (like the Gateway on Tier 1) read this file, instantly
+   discovering that they need to send API traffic to the new Tier 2 or Tier 3 nodes.

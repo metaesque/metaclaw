@@ -4,6 +4,7 @@
   "overview": "Provides a hardened, sterile execution environment for the Sandbox service. If your OpenClaw agent hallucinates a dangerous Python or Bash script, or is tricked via prompt injection into running malicious code, this environment ensures the code cannot escape and compromise your host machine.",
   "details": [
     "This provider creates a hardened, sterile execution environment for the Sandbox service. If your OpenClaw agent hallucinates a dangerous Python or Bash script, or is tricked via prompt injection into running malicious code, this environment ensures the code cannot escape and compromise your host machine. By utilizing Docker-out-of-Docker (DooD) principles, the main gateway routes all code execution requests into this isolated container rather than executing them internally.",
-    "Security Posture:\n* Network Isolation: The sandbox has no access to the internet or your internal openclaw-net Docker network. It cannot exfiltrate data or scan internal ports.\n* Capability Dropping: All Linux kernel capabilities are explicitly dropped (cap_drop: ALL).\n* No New Privileges: The container is forbidden from gaining new privileges via setuid binaries."
-  ]
+    "Security Posture:\n\n* Network Isolation: The sandbox has no access to the internet or your internal openclaw-net Docker network. It cannot exfiltrate data or scan internal ports.\n\n* Capability Dropping: All Linux kernel capabilities are explicitly dropped (cap_drop: ALL).\n\n* No New Privileges: The container is forbidden from gaining new privileges via setuid binaries."
+  ],
+  "diagnostics": "1. **Container State:** You should see `Container State: running`\n\n2. **Sandbox Check:** You should see `SUCCESS: Sandbox is active, sterile, and network-isolated.`\n\n*Note: The logs for this container will naturally be completely empty because it is a silent, waiting sandbox environment.*"
 }

@@ -1,0 +1,25 @@
+# signoz: SigNoz
+
+## Overview
+
+SigNoz is a comprehensive, open-source observability platform built natively on
+OpenTelemetry standards and backed by ClickHouse, a lightning-fast columnar
+database. Unlike tools that focus purely on logging, SigNoz provides a unified
+interface for distributed tracing, metrics, and logs in a single pane of glass.
+It acts as a direct, self-hosted alternative to expensive proprietary SaaS
+platforms.
+
+The platform excels at high-cardinality analytics and utilizes specialized data
+codecs (like wrapping Delta compression in ZSTD) to shrink storage footprints by
+50%. By storing traces and logs in the same underlying ClickHouse engine,
+developers can seamlessly correlate a latency spike in an API endpoint directly
+to the exact log lines generated during that millisecond.
+
+For OpenClaw, SigNoz perfectly addresses the complex observability requirements
+outlined in Phase 4 of the framework's architecture roadmap. Because OpenClaw
+utilizes a predictive LLM-as-a-judge router and often spawns concurrent sub-
+agents, simple text logs are insufficient to understand *why* a specific task
+failed or took too long. SigNoz allows developers to visualize the entire
+distributed trace—from the initial API request to the LiteLLM proxy, down to the
+exact duration of the LLM inference step—making it an invaluable tool for
+debugging complex multi-agent workflows.

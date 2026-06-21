@@ -3,6 +3,7 @@ import shutil
 import time
 import json
 import re
+import subprocess
 import sys
 import textwrap
 import markdown as md_lib
@@ -66,9 +67,9 @@ class MetaClaw:
 
     relevant_files = []
 
-    phases_path = os.path.join(root_dir, '.phases.json')
-    if os.path.exists(phases_path):
-      relevant_files.append(phases_path)
+    tiers_path = os.path.join(root_dir, '.tiers.json')
+    if os.path.exists(tiers_path):
+      relevant_files.append(tiers_path)
 
     planes_path = os.path.join(root_dir, '.planes.json')
     if os.path.exists(planes_path):
@@ -90,7 +91,9 @@ class MetaClaw:
           if not os.path.isdir(prov_folder_path):
             continue
 
-          prov_json = os.path.join(prov_folder_path, '.provider.json')
+          prov_json = os.path.join(
+            prov_folder_path, '.provider.json'
+          )
           if os.path.exists(prov_json):
             relevant_files.append(prov_json)
 
@@ -105,9 +108,9 @@ class MetaClaw:
 
     struct = {}
 
-    if os.path.exists(phases_path):
-      with open(phases_path, 'r', encoding='utf-8') as f:
-        struct['phases'] = json.load(f)
+    if os.path.exists(tiers_path):
+      with open(tiers_path, 'r', encoding='utf-8') as f:
+        struct['tiers'] = json.load(f)
 
     if os.path.exists(planes_path):
       with open(planes_path, 'r', encoding='utf-8') as f:
@@ -154,7 +157,7 @@ class MetaClaw:
     self,
     profile,
     current_hostname,
-    phase,
+    tier,
     hardware,
     require_wan,
     order_prefs
@@ -168,7 +171,7 @@ class MetaClaw:
     Args:
       profile (dict): The current cluster profile loaded from profile.json.
       current_hostname (str): The hostname of the node being profiled.
-      phase (int): The target architectural phase (0-4) for this node.
+      tier (int): The target architectural tier (0-4) for this node.
       hardware (dict): The hardware details dictionary for this node.
       require_wan (bool): Whether the node requires remote WAN access.
       order_prefs (list of str): Priority order for provider selection
@@ -184,7 +187,7 @@ class MetaClaw:
       node = {"hostname": current_hostname}
       profile["nodes"].append(node)
 
-    node["phase"] = phase
+    node["tier"] = tier
     node["hardware"] = hardware
 
     # Baseline all-in-one defaults
@@ -204,20 +207,20 @@ class MetaClaw:
     node["providers"] = providers
 
     # ============================================================================
-    # PHASE REDISTRIBUTION LOGIC (CLUSTER RECONCILIATION)
+    # TIER REDISTRIBUTION LOGIC (CLUSTER RECONCILIATION)
     # ============================================================================
-    if phase == 1:
-      # Adding a Phase 1 node obsoletes Phase 0 nodes
+    if tier == 1:
+      # Adding a Tier 1 node obsoletes Tier 0 nodes
       for n in profile["nodes"]:
-        if n["phase"] == 0:
+        if n["tier"] == 0:
           n["providers"] = {} # Mark for full teardown
 
-    elif phase >= 2:
+    elif tier >= 2:
       control_node = next(
-        (n for n in profile["nodes"] if n["phase"] == 1), None
+        (n for n in profile["nodes"] if n["tier"] == 1), None
       )
 
-      if phase == 2:
+      if tier == 2:
         node["providers"] = {
           "runner": {"uid": "vllm" if hardware["vram_gb"] > 20 else "ollama", "metal": True},
         }
@@ -226,7 +229,7 @@ class MetaClaw:
         if control_node and "runner" in control_node["providers"]:
           del control_node["providers"]["runner"]
 
-      elif phase == 3:
+      elif tier == 3:
         node["providers"] = {
           "sandbox": {"uid": "docker-dood" if hardware["os"] == "Darwin" else "gvisor"},
           "ci": {"uid": "woodpecker"},
@@ -249,7 +252,7 @@ class MetaClaw:
             if svc in control_node["providers"]:
               del control_node["providers"][svc]
 
-      elif phase == 4:
+      elif tier == 4:
         node["providers"] = {
           "memory": {"uid": "postgres"},
           "logger": {"uid": "victorialogs"},
@@ -269,17 +272,17 @@ class MetaClaw:
 
     for svc_key, svc_data in struct.get('services', {}).items():
       if 'matrix' in svc_data:
-        phase_key = f"phase-{phase}"
+        tier_key = f"tier-{tier}"
         os_key = hardware["os"]
         matrix = svc_data['matrix']
 
-        if phase_key in matrix and os_key in matrix[phase_key] and order_str in matrix[phase_key][os_key]:
-          decision = matrix[phase_key][os_key][order_str]
+        if tier_key in matrix and os_key in matrix[tier_key] and order_str in matrix[tier_key][os_key]:
+          decision = matrix[tier_key][os_key][order_str]
           prov_uid = decision.get("uid")
           metal = decision.get("metal", False)
           why = decision.get("why", "No justification provided.")
 
-          print(f"[Matrix] Selected '{prov_uid}' for {svc_key} (Phase {phase}, {os_key}, {order_str})")
+          print(f"[Matrix] Selected '{prov_uid}' for {svc_key} (Tier {tier}, {os_key}, {order_str})")
           print(f"         Reason: {why}")
 
           node["providers"][svc_key] = {
@@ -288,6 +291,126 @@ class MetaClaw:
           }
 
     return profile
+
+  def envInstantiate(self, teardown=False, verbose=False):
+    """
+    Instantiate the .env file in current directory.
+    """
+    env_json_path = '.env.json'
+    env_template_path = '.env.template'
+    env_tmp_path = '.env.tmp'
+    env_path = '.env'
+
+    skip_env_prompt = teardown or os.environ.get('OPENCLAW_SKIP_ENV') == '1'
+
+    if teardown:
+      for f in [env_path, env_tmp_path]:
+        if os.path.exists(f):
+          os.remove(f)
+      return
+
+    if not os.path.exists(env_template_path):
+      return
+
+    env_vars = {}
+    if os.path.exists(env_json_path):
+      with open(env_json_path, 'r') as f:
+        try:
+          env_vars = json.load(f)
+        except json.JSONDecodeError:
+          print(f"Error parsing {env_json_path}. Starting with empty mapping.")
+
+    # Regex matches: KEY=change_me_to_IDENTIFIER[OPTIONAL_DEFAULT] SUFFIX
+    # Identifier is optional to handle empty defaults like 'change_me_to_'
+    pattern = re.compile(
+      r'^(?P<var_name>[^=]+)='
+      r'change_me_to_(?P<identifier>[A-Za-z0-9_]*)'
+      r'(?:\[(?P<default>.*?)\])?'
+      r'(?P<suffix>.*)$')
+
+    # Ensure framework libraries (like newpwd) are in the path
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+    with open(env_template_path, 'r') as f_in, open(env_tmp_path, 'w') as f_out:
+      for line in f_in:
+        line_stripped = line.rstrip('\n')
+        match = pattern.match(line_stripped)
+
+        if match:
+          var_name = match.group('var_name').strip()
+          identifier = match.group('identifier')
+          explicit_default = match.group('default')
+          suffix = match.group('suffix')
+
+          computed_val = ""
+          if identifier == "AUTO_PWD":
+            computed_val = os.getcwd()
+            if explicit_default:
+              # We abuse the default syntax to provide a subpath
+              computed_val = os.path.abspath(
+                os.path.join(computed_val, explicit_default))
+          elif identifier == "AUTO_PASSWORD":
+            try:
+              from newpwd import generate_password
+              computed_val = generate_password()
+            except ImportError:
+              computed_val = "FAILED_TO_GENERATE"
+          elif identifier == "AUTO_PASSWORD_SK":
+            try:
+              from newpwd import generate_password
+              computed_val = "sk-" + generate_password()
+            except ImportError:
+              computed_val = "sk-FAILED_TO_GENERATE"
+          elif explicit_default is not None:
+            computed_val = explicit_default
+
+          # Prioritize the cached value from .env.json
+          if var_name in env_vars and not env_vars[var_name].startswith('change_me_to_'):
+            val = env_vars[var_name]
+          else:
+            if skip_env_prompt:
+              # Provide safe dummy values for non-interactive teardown
+              if "PORT" in var_name:
+                val = "8080"
+              elif "VERSION" in var_name:
+                val = "latest"
+              else:
+                val = "TEARDOWN_DUMMY_VALUE"
+            else:
+              prompt_str = f"Enter value for {var_name}"
+              display_default = computed_val if computed_val else identifier
+              if display_default:
+                prompt_str += f" [{display_default}]"
+              prompt_str += ": "
+
+              try:
+                user_val = input(prompt_str).strip()
+                if user_val:
+                  val = user_val
+                elif computed_val:
+                  val = computed_val
+                else:
+                  val = ""
+              except EOFError:
+                 val = computed_val if computed_val else ""
+
+            # Update the cache for future persistence
+            env_vars[var_name] = val
+
+          out_line = f"{var_name}={val}{suffix}\n"
+          f_out.write(out_line)
+
+          if verbose:
+            print(f"  {var_name}={val}{suffix}")
+        else:
+          # Pass non-variable configuration lines straight through
+          f_out.write(line_stripped + '\n')
+
+    if not skip_env_prompt:
+      with open(env_json_path, 'w') as f:
+        json.dump(env_vars, f, indent=2)
+
+    shutil.move(env_tmp_path, env_path)
 
   def validate(self):
     """
@@ -332,13 +455,13 @@ class MetaClaw:
     on the filesystem.
     """
     root_dir = self.rootdir()
-    phases = struct_data.get('phases', {})
+    tiers = struct_data.get('tiers', {})
     planes = struct_data.get('planes', {})
     services = struct_data.get('services', {})
 
-    if phases:
-      path = os.path.join(root_dir, '.phases.json')
-      self.saveFile(path, json.dumps(phases, indent=2), backup=False)
+    if tiers:
+      path = os.path.join(root_dir, '.tiers.json')
+      self.saveFile(path, json.dumps(tiers, indent=2), backup=False)
 
     if planes:
       path = os.path.join(root_dir, '.planes.json')
@@ -481,12 +604,12 @@ class Markdown:
       f"    body {{ font-family: -apple-system, BlinkMacSystemFont, "
       f"\"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; "
       f"background-color: #1e1e1e; color: #d4d4d4; max-width: 800px; "
-      f"margin: 0 auto; padding: 40px 20px; line-height: 1.6; }}\n"
+      f"margin: 0 auto; padding: 40px 20px 80vh 20px; line-height: 1.6; }}\n"
       f"    h1 {{ color: #569cd6; border-bottom: 1px solid #333; "
-      f"padding-bottom: 10px; }}\n"
+      f"padding-bottom: 10px; scroll-margin-top: 80px; }}\n"
       f"    h2 {{ color: #4ec9b0; margin-top: 30px; border-bottom: 1px "
-      f"solid #333; padding-bottom: 5px; }}\n"
-      f"    h3 {{ color: #ce9178; margin-top: 25px; }}\n"
+      f"solid #333; padding-bottom: 5px; scroll-margin-top: 80px; }}\n"
+      f"    h3 {{ color: #ce9178; margin-top: 25px; scroll-margin-top: 80px; }}\n"
       f"    .guide {{ background-color: #252526; padding: 20px; "
       f"border-left: 4px solid #4ec9b0; margin-bottom: 30px; }}\n"
       f"    pre {{ background-color: #000; padding: 15px; border-radius: 6px; "
@@ -505,6 +628,22 @@ class Markdown:
       f"    ul, ol {{ padding-left: 20px; }}\n"
       f"    li {{ margin-bottom: 5px; }}\n"
       f"  </style>\n"
+      f"  <script>\n"
+      f"    window.onload = function() {{\n"
+      f"      if (window.location.hash.includes('env.vars')) {{\n"
+      f"        var banner = document.createElement('div');\n"
+      f"        banner.innerHTML = '&#9432; <strong>PRE-FLIGHT CHECK:</strong> This page is informational only. Please review the service overview and return to your terminal to continue.';\n"
+      f"        banner.style = 'background-color: #0e639c; color: white; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; margin-bottom: 20px; border-radius: 4px;';\n"
+      f"        document.body.insertBefore(banner, document.body.firstChild);\n"
+      f"      }} else if (window.location.hash.includes('diagnostic-checks')) {{\n"
+      f"        var banner = document.createElement('div');\n"
+      f"        banner.innerHTML = '&#9432; <strong>BOOT SEQUENCE:</strong> Scroll down to the <strong>Diagnostic Checks</strong> section and verify your terminal output matches the expected results.';\n"
+      f"        banner.style = 'background-color: #d7ba7d; color: black; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; margin-bottom: 20px; border-radius: 4px;';\n"
+      f"        document.body.insertBefore(banner, document.body.firstChild);\n"
+      f"        setTimeout(function() {{ var el = document.getElementById('diagnostic-checks'); if(el) el.scrollIntoView({{behavior: \"smooth\"}}); }}, 200);\n"
+      f"      }}\n"
+      f"    }};\n"
+      f"  </script>\n"
       f"</head>\n"
       f"<body>\n"
       f"  {html_body}\n"
@@ -532,7 +671,7 @@ class Markdown:
     struct = Inst.structure()
     services = struct.get('services', {})
     planes = struct.get('planes', {})
-    phases = struct.get('phases', {})
+    tiers = struct.get('tiers', {})
 
     categories = {}
     for uid, svc in services.items():
@@ -581,21 +720,21 @@ class Markdown:
 
         services_md.append("")
 
-    # --- Phases ---
-    if phases:
-      services_md.append("## Phases\n")
-      for ph_uid, phase in phases.items():
-        services_md.append(f"### {phase['name']} {{#{phase['uid']}}}")
+    # --- Tiers ---
+    if tiers:
+      services_md.append("## Tiers\n")
+      for t_uid, tier in tiers.items():
+        services_md.append(f"### {tier['name']} {{#{tier['uid']}}}")
         services_md.append("")
 
-        if 'setup' in phase:
-          setup_text = f"* **Setup**: {phase['setup']}"
+        if 'setup' in tier:
+          setup_text = f"* **Setup**: {tier['setup']}"
           services_md.append(
             textwrap.fill(setup_text, width=80, subsequent_indent="  ")
           )
 
-        if 'benefit' in phase:
-          benefit_text = f"* **Benefit**: {phase['benefit']}"
+        if 'benefit' in tier:
+          benefit_text = f"* **Benefit**: {tier['benefit']}"
           services_md.append(
             textwrap.fill(benefit_text, width=80, subsequent_indent="  ")
           )
@@ -651,13 +790,25 @@ class Markdown:
           p_md.append(textwrap.fill(paragraph, width=80))
           p_md.append("")
 
-        if 'diagnostics' in provider and provider['diagnostics'].strip():
-          p_md.append("## Diagnostic Checks\n")
-          p_md.append(provider['diagnostics'])
-          p_md.append("")
-
         provider_index_path = f"services/{svc['uids']}/{p_uid}/index.md"
-        Inst.saveFile(provider_index_path, '\n'.join(p_md), backup=False)
+        template_path = f"services/{svc['uids']}/{p_uid}/index.template.md"
+
+        if os.path.exists(template_path):
+          with open(template_path, 'r', encoding='utf-8') as tf:
+            t_md = tf.read()
+          if 'diagnostics' in provider and provider['diagnostics'].strip():
+            diag_block = f"<h2 id=\"diagnostic-checks\">Diagnostic Checks ({svc.get('uid', 'unknown')} {p_uid})</h2>\n\n{provider['diagnostics']}\n\n"
+            if '__DIAGNOSTICS__' in t_md:
+              t_md = t_md.replace('__DIAGNOSTICS__', diag_block)
+            else:
+              t_md += "\n" + diag_block
+          Inst.saveFile(provider_index_path, t_md, backup=False)
+        else:
+          if 'diagnostics' in provider and provider['diagnostics'].strip():
+            p_md.append(f"<h2 id=\"diagnostic-checks\">Diagnostic Checks ({svc.get('uid', 'unknown')} {p_uid})</h2>")
+            p_md.append(provider['diagnostics'])
+            p_md.append("")
+          Inst.saveFile(provider_index_path, '\n'.join(p_md), backup=False)
 
       index_path = f"services/{svc['uids']}/index.md"
       Inst.saveFile(index_path, '\n'.join(svc_md), backup=False)

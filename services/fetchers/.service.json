@@ -6,11 +6,11 @@
   "category": "Intelligence Execution",
   "purpose": "Bypasses anti-bot measures to fetch, render, and extract clean, LLM-ready markdown or JSON from specific URLs.",
   "matrix": {
-    "phase-0": {
+    "tier-0": {
       "Darwin": {
         "safety,cost,resources": {
           "uid": "jinareader",
-          "why": "Safety #1 combined with Cost #2 (and Phase <= 2) strictly mandates a Cloud API. Jina AI Reader completely offloads JS rendering to the cloud, guaranteeing absolute isolation from the macOS host."
+          "why": "Safety #1 combined with Cost #2 (and Tier <= 2) strictly mandates a Cloud API. Jina AI Reader completely offloads JS rendering to the cloud, guaranteeing absolute isolation from the macOS host."
         },
         "safety,resources,cost": {
           "uid": "crawl4ai",
@@ -27,7 +27,7 @@
         },
         "resources,safety,cost": {
           "uid": "jinareader",
-          "why": "Resources #1 combined with Cost #3 (and Phase <= 2) strictly mandates a Cloud API. Jina AI Reader ensures zero local compute is consumed for fetching, preserving all 16GB of unified memory."
+          "why": "Resources #1 combined with Cost #3 (and Tier <= 2) strictly mandates a Cloud API. Jina AI Reader ensures zero local compute is consumed for fetching, preserving all 16GB of unified memory."
         },
         "resources,cost,safety": {
           "uid": "crawl4ai",
@@ -38,7 +38,7 @@
       "Windows": {
         "safety,cost,resources": {
           "uid": "jinareader",
-          "why": "Safety #1 combined with Cost #2 (and Phase <= 2) strictly mandates a Cloud API. Jina AI Reader offloads execution, ensuring no malformed fetched data can exploit the Windows host."
+          "why": "Safety #1 combined with Cost #2 (and Tier <= 2) strictly mandates a Cloud API. Jina AI Reader offloads execution, ensuring no malformed fetched data can exploit the Windows host."
         },
         "safety,resources,cost": {
           "uid": "crawl4ai",
@@ -55,7 +55,7 @@
         },
         "resources,safety,cost": {
           "uid": "jinareader",
-          "why": "Resources #1 combined with Cost #3 (and Phase <= 2) strictly mandates a Cloud API. This eliminates all local headless browser overhead, keeping the Windows host highly responsive."
+          "why": "Resources #1 combined with Cost #3 (and Tier <= 2) strictly mandates a Cloud API. This eliminates all local headless browser overhead, keeping the Windows host highly responsive."
         },
         "resources,cost,safety": {
           "uid": "crawl4ai",
@@ -64,11 +64,11 @@
         }
       }
     },
-    "phase-1": {
+    "tier-1": {
       "Linux": {
         "safety,cost,resources": {
           "uid": "jinareader",
-          "why": "Safety #1 combined with Cost #2 (and Phase <= 2) mandates a Cloud API. Jina AI Reader isolates external web interactions from the 24/7 monolith, ensuring core database services cannot be compromised."
+          "why": "Safety #1 combined with Cost #2 (and Tier <= 2) mandates a Cloud API. Jina AI Reader isolates external web interactions from the 24/7 monolith, ensuring core database services cannot be compromised."
         },
         "safety,resources,cost": {
           "uid": "scrapegraphai",
@@ -85,7 +85,7 @@
         },
         "resources,safety,cost": {
           "uid": "jinareader",
-          "why": "Resources #1 combined with Cost #3 (and Phase <= 2) strictly mandates a Cloud API. This preserves the 32GB+ monolith's CPU/RAM entirely for VictoriaLogs and PostgreSQL vector indexing."
+          "why": "Resources #1 combined with Cost #3 (and Tier <= 2) strictly mandates a Cloud API. This preserves the 32GB+ monolith's CPU/RAM entirely for VictoriaLogs and PostgreSQL vector indexing."
         },
         "resources,cost,safety": {
           "uid": "scrapegraphai",
@@ -94,15 +94,15 @@
         }
       }
     },
-    "phase-3": {
+    "tier-3": {
       "Linux": {
         "safety,cost,resources": {
           "uid": "firecrawl",
-          "why": "Safety #1 forbids bare-metal. Because this is Phase > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. Firecrawl securely contains heavy Redis/Postgres workers in isolated containers on the blast-zone."
+          "why": "Safety #1 forbids bare-metal. Because this is Tier > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. Firecrawl securely contains heavy Redis/Postgres workers in isolated containers on the blast-zone."
         },
         "safety,resources,cost": {
           "uid": "firecrawl",
-          "why": "Safety #1 forbids bare-metal. Because this is Phase > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. Firecrawl securely contains heavy Redis/Postgres workers in isolated containers on the blast-zone."
+          "why": "Safety #1 forbids bare-metal. Because this is Tier > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. Firecrawl securely contains heavy Redis/Postgres workers in isolated containers on the blast-zone."
         },
         "cost,safety,resources": {
           "uid": "firecrawl",
@@ -115,12 +115,12 @@
         },
         "resources,safety,cost": {
           "uid": "crawl4ai",
-          "why": "Resources #1 demands minimal host impact. Because Phase > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. Crawl4AI runs bare-metal to maximize efficiency.",
+          "why": "Resources #1 demands minimal host impact. Because Tier > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. Crawl4AI runs bare-metal to maximize efficiency.",
           "metal": true
         },
         "resources,cost,safety": {
           "uid": "crawl4ai",
-          "why": "Resources #1 demands minimal host impact. Because Phase > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. Crawl4AI runs bare-metal to maximize efficiency.",
+          "why": "Resources #1 demands minimal host impact. Because Tier > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. Crawl4AI runs bare-metal to maximize efficiency.",
           "metal": true
         }
       }

@@ -9,17 +9,15 @@ fi
 mkdir -p ./bin
 rm -f .updated
 
-if [ -f "./bin/ollama" ]; then
-  # Check if the existing file is a valid binary before checking version
-  if file ./bin/ollama | grep -q "executable"; then
-    CURRENT_VERSION=$(./bin/ollama -v | awk '{print $4}' || echo "unknown")
-    if [ "$CURRENT_VERSION" = "$OLLAMA_VERSION" ]; then
-      echo "[Ollama Runner] Version $OLLAMA_VERSION is already installed."
-      exit 0
-    fi
+if [ -x "./bin/ollama" ]; then
+  # Extract purely the semantic version number via regex to prevent parsing errors
+  CURRENT_VERSION=$(./bin/ollama -v | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+  if [ "$CURRENT_VERSION" = "$OLLAMA_VERSION" ]; then
+    echo "[Ollama Runner] Version $OLLAMA_VERSION is already installed."
+    exit 0
   fi
   echo "Version mismatch or corrupted binary detected. Removing..."
-  rm ./bin/ollama
+  rm -f ./bin/ollama
 fi
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
