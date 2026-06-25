@@ -23,17 +23,25 @@ for secure, zero-trust access.
 4. To run `make` commands remotely, SSH into the node using its mesh IP:
    `ssh user@[Tailscale-IP]`.
 
+### Core Development Workflow (Headless)
+MetaClaw is designed for headless deployment. Active development of the framework
+should occur directly on the cluster nodes over SSH, not via local file transfers.
+
+* **Native Emacs / CLI:** SSH into the Control Node (`ssh metaclaw@100.x.y.z`)
+  and utilize `emacs -nw`, `vim`, or `nano` directly in the terminal.
+* **Emacs TRAMP:** To avoid copying your `.emacs.d` configuration files to every
+  node in the cluster, use TRAMP from your local laptop:
+  `C-x C-f /ssh:metaclaw@100.x.y.z:/path/to/metaclaw/file`
+
 ### Expanding the Cluster (Adding Hardware)
 When upgrading from Tier 0 to Tier 1, or adding a Tier 2 GPU node, you must
 synchronize the cluster state so the existing nodes know where the new services
-live.
-
-**You must profile the NEW machine locally.**
+live. **You must profile the NEW machine locally.**
 
 **The "Pull -> Profile -> Push" Workflow:**
-1.  **Pull:** Use `scp` to copy the `profile.json` from your existing Master
-    Node to the root directory of the Meta<Claw> repository on your **New
-    Node**.
+1.  **Pull:** Use `rsync` from your **New Node** to pull the `profile.json`
+    from your existing Master Node into the root directory of the Meta<Claw>
+    repository.
 2.  **Profile:** SSH into the **New Node** and run: `python bin/sysprofile.py`
     * *The script reads the existing JSON, profiles the new local hardware,
       assigns the tier, and appends the new node's state into the cluster
@@ -118,7 +126,8 @@ expensive model, your routing configuration is broken and needs to be patched.
 
 When building providers that act as primary backends (e.g., `active-browser`, `active-fetcher`), you must verify that the internal Docker DNS aliases are successfully registered.
 
-Do NOT use `docker network inspect <network_name>` for this. The Docker daemon does not expose container-level aliases in the network's root `Containers` map; it only lists the primary container name and its assigned IP address.
+Do NOT use `docker network inspect <network_name>` for this. The Docker daemon does not expose container-level aliases in the network's root `Containers` map;
+it only lists the primary container name and its assigned IP address.
 
 To accurately verify an alias, you must inspect the container's isolated network settings:
 
@@ -157,100 +166,3 @@ ingestion pipeline):
 5.  **Documentation Generation:** Run `python bin/compile_md.py --setup` to
     auto-generate the `index.md` files and update `docs/SERVICES.md` based on
     the new JSON structure.
-
-### Prompts
-
-When working on adding a new service to Meta<Claw> or improving a pre-existing
-service, you can use the following prompts to instruct your LLM assistant
-(e.g., Gemini) to research providers and construct the necessary JSON files.
-
-**Prompt 1: Provider Discovery & JSON Generation**
-
-```text
-**Context**:
-
-We are working on improving the <INSERT_SERVICE_NAME> service. Existing details
-on this service are specified in `./services/<plural_service>/.service.json`,
-but you are NOT to limit yourself to those details. The goal here see what
-providers exist in the broader ecosystem that we are not yet considering.
-
-**Instructions**:
-
-1. Use your search tools to independently research candidate software providers
-   for this service category in the modern AI ecosystem.
-2. Compile a comprehensive list of candidate providers, surfacing the full
-   scope of available solutions (do not hide complexity; document it).
-3. For each candidate, generate a fully hydrated `.provider.json` file inside
-   its respective `./services/<plural_service>/<provider_uid>/` directory.
-4. The JSON must contain: `uid` (string), `name` (string), `overview` (a
-   single-paragraph summary), and `details` (an array of exactly three
-   strings/paragraphs explicitly explaining the provider's underlying mechanics
-   and how those mechanics specifically benefit an OpenClaw agent deployment).
-```
-
-**Prompt 2: The Priority Matrix Evaluation**
-
-```text
-Analyze the semantics of the `<INSERT_SERVICE_UID_HERE>` service described in
-./services/<INSERT_SERVICE_UID_HERE>/.service.json and the associated providers
-defined in ./services/<INSERT_SERVICE_UID_HERE>/*/.provider.json. Determine the
-the optimal provider for specific Hardware/Tier constraints based on varying
-priority orders.
-
-**Constraints**:
-
-The priority `--order` flag takes permutations of `safety`, `cost`, and
-`resources` as a comma-separated string. Evaluate the optimal provider for each of the 6 possible order permutations
-across the following specific architectural tiers:
-- Darwin Tier 0 (macOS, constrained RAM, effficent OrbStack)
-- Windows Tier 0 (Windows, constrained RAM, efficient WSL2)
-- Linux Tier 1 (Dedicated 32GB+ Monolith, 24/7 background tasks)
-- Linux Tier <3_OR_4> (Dedicated execution blast-zone OR massive RAM context
-  archive)
-
-**Instructions**:
-
-1. Analyze the resource footprints, cost structures, and security profiles of
-   the candidate providers.
-2. Capture the structured matrix of optimal providers within
-      `./services/<plural_service>/.service.json`
-   by adding a new `matrix` key.
-3. The value of the `matrix` key should be a dictionary that maps tier (e.g.
-   'tier-0', 'tier-3') to a dictionary that maps platform (e.g. 'Darwin',
-    'Windows', 'Linux') to a dictionary that maps order (e.g.
-    'safety,cost,resources') to a dictionary containing:
-   - `uid`: The uid of the best provider for this specific configuration.
-   - `why`: A concise, highly technical paragraph justifying the routing logic
-     and explaining the reasons for picking that provider.
-   - `metal`: boolean true if this provider should NOT be placed in its own
-     docker image (the default). This key should be absent if the provider
-     *should* be put in a docker container.
-```
-
-**Prompt 3: Provider Implementation**
-
-```text
-# 🛠️ METACLAW PROTOCOL
-**Current Task:** Implement the `{{PROVIDER_UID}}` provider for the `{{SERVICE_UID}}` service.
-**State:** OpenClaw 2026.6.8 | Network: `openclaw-net`
-**Code Mandate:** EXACTLY ONE 4-backtick (````) Markdown block containing FULL FILES only. No snippets. Update `./docs/MANIFEST.files`.
-**Integrity Mandate:** If returning the full file requires silently dropping unmodified keys or arrays, TRIGGER A HARD STOP. Data loss is a fatal error.
-**Epistemic Mandate:** Validate strictly. No syntax confabulation. You MUST use Google Search to verify the exact Docker image repository, version tag, and healthcheck commands for this provider.
-
-# THE OBJECTIVE
-Execute the provisioning of the new `{{PROVIDER_UID}}` provider within the `./services/{{SERVICE_PLURAL}}/` directory. You must adhere strictly to the `docs/LLM.md` directives: use atomic state updates, provide inline educational commentary, and ensure immutable infrastructure.
-
-# INSTRUCTIONS
-1. **Validation & Teardown Protocol:** Explicitly list manual teardown steps and verification commands (e.g., `make check-status`, `docker logs`) before generating code.
-2. **Define the Provider:** Generate `./services/{{SERVICE_PLURAL}}/{{PROVIDER_UID}}/.provider.json`. Include a clear `overview`, technical `details` array, and a `diagnostics` command string.
-3. **Generate .env.template:** Pin the Docker image to a specific semantic version. Use `change_me_to_` placeholders for secrets. Include inline educational comments explaining the parameters and typical resource impacts.
-4. **Generate Makefile:** Inherit from `$(FRAMEWORK_ROOT)/.Makefile.inherit`. Define `SERVICE_NAME`, `SERVICE_TITLE`, and custom logic for `LOG_READY_SIGNAL` or `post-check-status`.
-5. **Generate docker-compose.yml:** - Pin the image using the env variable.
-   - Attach to the `${NETWORK_NAME}` external network.
-   - Map persistent volumes exclusively to `${EXTERNAL_DRIVE_PATH}/<provider-data>`.
-   - Write a robust, native `healthcheck` block.
-   - Define the standard `active-{{SERVICE_UID}}` network alias if this service acts as a primary backend.
-6. **Priority Matrix Registration:** Update `./services/{{SERVICE_PLURAL}}/.service.json` to insert `{{PROVIDER_UID}}` into the `matrix` routing table for relevant Tier/OS/Priority permutations. Provide concise, highly technical justifications in the `why` field indicating exactly how it fulfills the specific order constraints.
-7. **Root Makefile Lifecycle Registration:** You MUST examine the root `Makefile`. If `$(SERVICES_DIR)/{{SERVICE_UID}}` (the singular symlink) is missing from the `DOCKER_SUBDIRS` array, the `WIZARD_BOOT_ORDER` array, or the `-include` directives, you MUST output the updated root `Makefile`. Failing to do so will cause `make factory-reset-soft` to leave zombie containers running because the teardown orchestrator will be blind to the new service category.
-8. **Manifest Tracking:** Generate the updated `docs/MANIFEST.files` including the new files, ensuring strict alphabetical order.
-```

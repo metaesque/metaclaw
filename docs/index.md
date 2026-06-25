@@ -1,18 +1,22 @@
+Meta<Claw> is an installation framework designed to deploy and manage a secure, cost-effective, and capable personal AI ecosystem. It provides an automated, modular infrastructure that allows non-technical individuals to instantly deploy a swarm of sibling technologies that give their AI agents vastly more capability, reliability, and security.
+
+
 # Meta<Claw>: Your Personal AI Installation Framework
 
 ## Overview
 
-Meta<Claw> is a comprehensive, SRE-aligned installation framework designed to
-deploy and manage a secure, cost-effective, and highly capable personal AI
-ecosystem. While front-end AI gateways (like OpenClaw or n8n) provide the user
-interface and basic agent logic, they cannot function securely or efficiently
-in a vacuum. They require a surrounding ecosystem of databases, memory caches,
-secure sandboxes, and logging pipelines to reach their full potential.
+Meta<Claw> is a comprehensive installation framework designed to deploy and
+manage a secure, cost-effective, and highly capable personal AI ecosystem. While
+front-end AI gateways (like OpenClaw or n8n) provide the user interface and
+basic agent logic, they cannot function securely or efficiently in a vacuum.
+They require a surrounding ecosystem of databases, memory caches, secure
+sandboxes, and logging pipelines to reach their full potential.
 
 Meta<Claw> removes the immense technical complexity of configuring this
 ecosystem. It provides an automated, modular infrastructure that allows
 non-technical individuals to instantly deploy a swarm of sibling technologies
 that give their AI agents vastly more capability, reliability, and security.
+
 
 ### Vocabulary: Services, Providers, and Skills
 

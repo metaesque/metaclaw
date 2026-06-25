@@ -47,7 +47,7 @@ def _get_mac_gpu():
     pass
   return "Unknown Mac GPU", 0
 
-def _get_linux_gpu():
+def _get_linux_gpu(ram_bytes=0):
   # Check NVIDIA
   nvidia = _run_cmd([
     'nvidia-smi', '--query-gpu=name,memory.total', '--format=csv,noheader'
@@ -57,6 +57,14 @@ def _get_linux_gpu():
     name = parts[0].strip()
     vram_mb = int(parts[1].replace('MiB', '').strip())
     return name, vram_mb * 1024 * 1024
+
+  # Check AMD APU (Strix Halo / Ryzen AI Max) first
+  cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
+  if cpu_info and 'Ryzen AI Max' in cpu_info:
+    # Strix Halo allocates VRAM dynamically from system RAM.
+    # We estimate 75% of total system RAM is addressable by the APU for inference.
+    vram_mb = int((ram_bytes * 0.75) / (1024 * 1024))
+    return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_mb * 1024 * 1024
 
   # Check AMD ROCm
   rocm = _run_cmd(['rocm-smi', '--showproductname'])
@@ -116,7 +124,7 @@ def platform_details():
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
 
   elif sys_os == 'Linux':
-    details['gpu_name'], vram_bytes = _get_linux_gpu()
+    details['gpu_name'], vram_bytes = _get_linux_gpu(ram_bytes)
     if vram_bytes > 0:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
 

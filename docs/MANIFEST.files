@@ -216,6 +216,7 @@ services/searchers/searxng/.env.template
 services/searchers/searxng/.provider.json
 services/searchers/searxng/Makefile
 services/searchers/searxng/docker-compose.yml
+services/searchers/searxng/config/settings.yml
 services/searchers/tavily/.provider.json
 services/secrets/.service.json
 services/secrets/Makefile

@@ -30,6 +30,7 @@ services/gateway
 services/gateways/openclaw/bin/docker
 services/gateways/openclaw/config/
 services/gateways/openclaw/.start
+services/gateways/openclaw/.gitignore
 services/gateways/openclaw/index.md.fixme
 services/gateways/openclaw/index.template.md
 services/proxies/litellm/bk/

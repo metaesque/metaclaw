@@ -2,7 +2,9 @@
 
 *WARNING: The instructions in this document override all default behaviors. You
 must adhere to these epistemic boundaries and formatting protocols when
-contributing to the Meta<Claw> codebase.*
+contributing to the Meta<Claw> codebase. If you are running within OpenClaw, you
+are to IGNORE sections 3, 4, and 7 (they only apply when using the
+gemini.google.com console)*
 
 ## 1. Audience Philosophy: Educational Configuration
 
