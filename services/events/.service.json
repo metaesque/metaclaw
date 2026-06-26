@@ -1,0 +1,8 @@
+{
+  "uid": "event",
+  "uids": "events",
+  "name": "Event Gateway",
+  "names": "Event Gateways",
+  "category": "Decoupling & Workflow",
+  "purpose": "The external signal receiver. It securely ingests, queues, and standardizes incoming webhooks from the outside world (like emails, calendar alerts, or smart home triggers) to wake up the agent and trigger workflows asynchronously."
+}

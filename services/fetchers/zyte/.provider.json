@@ -1,0 +1,10 @@
+{
+  "uid": "zyte",
+  "name": "Zyte",
+  "overview": "Zyte is an enterprise-grade, all-in-one Web Scraping API that specializes in bypassing the most aggressive anti-bot protections on the internet.",
+  "details": [
+    "Many valuable data sources (like major e-commerce platforms or real estate listings) employ sophisticated defense systems like Cloudflare, Datadome, or behavioral CAPTCHAs to block automated scrapers. Zyte automatically manages a massive pool of residential proxies and mimics human browsing patterns to ensure requests succeed.",
+    "For OpenClaw, Zyte is the nuclear option for data retrieval. If the agent repeatedly encounters '403 Forbidden' errors or CAPTCHA walls when using standard fetching tools, routing the request through the Zyte API guarantees the data will be successfully retrieved.",
+    "While it relies on a commercial API subscription, it eliminates the immense engineering overhead of manually managing proxy pools and reverse-engineering anti-bot algorithms, allowing the agent to focus purely on data analysis."
+  ]
+}

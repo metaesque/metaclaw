@@ -1,0 +1,7 @@
+{
+  "uid": "openclaw",
+  "name": "OpenClaw",
+  "overview": "The gold standard for power users. It is a fully local, multi-agent, highly customizable terminal-first framework that prioritizes deep integration, privacy, and full control over agent workflows.",
+  "details": [],
+  "diagnostics": "1. **Container State:** You should see `Container State: running`\n2. **GUI Check:** You should see `Bypassing GUI healthcheck until native configuration is established.`"
+}

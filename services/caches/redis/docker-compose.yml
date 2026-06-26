@@ -1,0 +1,30 @@
+services:
+  redis-cache:
+    # WHAT THIS IS: An in-memory data store acting as a high-speed cache for OpenClaw.
+    # WHY THIS VERSION: Pinned to 7.2.4-alpine for a minimized attack surface and predictable memory footprint.
+    image: redis:${REDIS_VERSION}
+    container_name: redis-cache
+    # WHY UNLESS-STOPPED: Automatically revives the cache if the daemon restarts, ensuring OpenClaw doesn't fail on boot.
+    restart: unless-stopped
+    ports:
+      # WHAT THIS DOES: Exposes Redis for local debugging and client access.
+      # UPGRADE PATH: On a public VPS, remove this port mapping to prevent unauthorized remote access, relying solely on the internal Docker network.
+      - "${REDIS_PORT}:6379"
+    # WHAT THIS DOES: Restricts Redis to 512MB RAM and evicts the oldest keys when full.
+    # Disables disk saving ("") to prevent I/O bottlenecks.
+    # WHY THIS DEFAULT: Prevents Redis from consuming all host RAM on standard 16GB machines while processing repetitive LLM context requests.
+    command: ["redis-server", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    healthcheck:
+      # WHAT THIS DOES: Probes the internal Redis socket rather than relying on the container engine state.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - openclaw-network
+
+networks:
+  openclaw-network:
+    # WHAT THIS DOES: Joins the globally defined external network shared by all OpenClaw services.
+    external: true
+    name: ${NETWORK_NAME}

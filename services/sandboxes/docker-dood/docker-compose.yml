@@ -1,0 +1,29 @@
+services:
+  docker-dood:
+    # WHAT THIS IS: A persistent, isolated Python environment. Agents use 'docker exec' to run scripts inside this jail.
+    image: python:3.11-slim
+    container_name: docker-dood
+    restart: unless-stopped
+    volumes:
+      # WHAT THIS DOES: Mounts the agent's workspace directly into the execution sandbox so it can access its own scripts and data.
+      - ${OPENCLAW_WORKSPACE}:/workspace
+      # Optional: Bind the host's docker socket if you want the sandbox itself to be able to spawn sub-containers (true DooD).
+      # - /var/run/docker.sock:/var/run/docker.sock
+    # ARCHITECTURAL SHIFT: Dynamic Dependency Injection
+    # WHAT THIS DOES: Instead of forcing a custom Docker build, the container automatically installs
+    # any packages listed in the workspace requirements file upon boot.
+    command: >
+      /bin/sh -c "
+      if [ -f /workspace/src/requirements.txt ]; then
+        echo 'Installing workspace dependencies...';
+        pip install --no-cache-dir -r /workspace/src/requirements.txt;
+      fi &&
+      tail -f /dev/null
+      "
+    networks:
+      - openclaw-net
+
+networks:
+  openclaw-net:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true

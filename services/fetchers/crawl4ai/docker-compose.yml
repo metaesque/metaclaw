@@ -1,0 +1,47 @@
+services:
+  crawl4ai:
+    # WHAT THIS IS: An ultra-fast LLM-friendly web crawler and data extractor.
+    # WHY THIS VERSION: Pinned via the env template to guarantee repeatable builds.
+    image: unclecode/crawl4ai:${CRAWL4AI_VERSION}
+    container_name: crawl4ai
+    # WHY UNLESS-STOPPED: Automatically restarts the background fetcher on unexpected crashes,
+    # ensuring the agent's web ingestion pipeline remains highly available.
+    restart: unless-stopped
+    ports:
+      # WHAT THIS DOES: Exposes the crawler's REST API internally for OpenClaw agents.
+      - "${CRAWL4AI_PORT}:11235"
+    environment:
+      - CRAWL4AI_API_TOKEN=${CRAWL4AI_API_TOKEN:-}
+      - MAX_CONCURRENT_TASKS=${MAX_CONCURRENT_TASKS:-5}
+      # WHAT THIS DOES: Routes all internal AI extraction requests (e.g. schema mapping)
+      # through the central OpenClaw proxy layer, eliminating the need to pass duplicate keys.
+      - OPENAI_BASE_URL=http://active-proxy:4000/v1
+      - OPENAI_API_KEY=${ACTIVE_PROXY_KEY}
+    volumes:
+      # WHAT THIS DOES: Allocates shared memory required by headless Chromium/Playwright.
+      # WHY IT MATTERS: Prevents the underlying browser from crashing silently during
+      # heavy concurrent DOM rendering workflows.
+      - /dev/shm:/dev/shm
+      # WHAT THIS DOES: Mounts persistent browser data to the external drive to prevent
+      # cache/cookie exhaustion on the host OS.
+      - ${EXTERNAL_DRIVE_PATH}/crawl4ai-data:/root/.crawl4ai
+    networks:
+      openclaw-network:
+        # WHAT THIS DOES: Associates the container with a generic internal routing alias.
+        # WHY IT MATTERS: OpenClaw connects blindly to 'active-fetcher', allowing seamless
+        # swapping between Crawl4AI, Firecrawl, etc. based on Priority Matrix changes.
+        aliases:
+          - active-fetcher
+    # WHAT THIS DOES: Probes the API health endpoint to verify readiness.
+    # WHY IT MATTERS: The official image supports native curl commands for direct verification.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11235/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  openclaw-network:
+    name: ${NETWORK_NAME}
+    external: true

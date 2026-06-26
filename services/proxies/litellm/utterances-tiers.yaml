@@ -1,0 +1,184 @@
+simple-model:
+  - What is the capital of Australia?
+  - Translate 'Where is the library?' to French.
+  - What is the atomic number of Gold?
+  - Convert 100 degrees Fahrenheit to Celsius.
+  - Spell the word 'accommodate'.
+  - Who wrote '1984'?
+  - What is 15% of 850?
+  - List the primary colors.
+  - How many days are in a leap year?
+  - What is the chemical formula for water?
+  - Define the word 'ubiquitous'.
+  - Who was the first person to walk on the moon?
+  - What is the largest ocean on Earth?
+  - Give me a synonym for 'happy'.
+  - What year did the Titanic sink?
+  - Convert 5 kilometers to miles.
+  - What is the square root of 144?
+  - Name the planets in our solar system.
+  - How many continents are there?
+  - What is the speed of light in a vacuum?
+  - Who painted the Mona Lisa?
+  - What is the currency of Japan?
+  - Write a regular expression to match an email address.
+  - What is the boiling point of water at sea level?
+  - Format this unformatted JSON string into a readable structure.
+  - What is the time difference between New York and Lisbon?
+  - List the standard polyhedral dice used in tabletop RPGs.
+  - What temperature does a cone 6 ceramic glaze fire to?
+  - How many steps are in a typical 5K walk?
+  - Convert 180 degrees Celsius to Fahrenheit.
+  - Summarize this text in one sentence.
+  - What is the capital of New Zealand?
+  - Translate 'hello' into Portuguese.
+  - Who wrote the science fiction novel 'Neuromancer'?
+  - What is considered a healthy resting heart rate?
+  - Extract the zip code from this address string.
+  - Output the current Unix timestamp.
+  - Capitalize the first letter of each word in this string.
+  - What is the distance from the Earth to the Sun?
+  - Identify the language of this text block.
+  - What is the standard VAT rate in Portugal?
+  - Define the philosophical term 'eudaimonia'.
+  - How do I say 'thank you' in Maori?
+  - Who is the editor of 'Supermen: Tales of the Posthuman Future'?
+  - What is the standard size limit for a carry-on bag?
+medium-model:
+  - Summarize the plot of 'The Matrix' in three paragraphs.
+  - Write a Python script to parse a CSV file and output JSON.
+  - Draft a professional email declining a job offer.
+  - Explain the difference between TCP and UDP to a junior developer.
+  - Write a basic SQL query to join a 'users' table with an 'orders' table.
+  - What are the pros and cons of using a NoSQL database?
+  - Debug this simple React component that isn't updating state correctly.
+  - Explain the concept of closure in JavaScript with an example.
+  - Write a bash script to find and delete files older than 30 days.
+  - Outline a marketing strategy for a new coffee shop.
+  - Compare and contrast REST and GraphQL APIs.
+  - Write a function in Go to reverse a string in place.
+  - Explain how a DNS resolution works step-by-step.
+  - Draft a project proposal for implementing a new CRM system.
+  - What are the key principles of Object-Oriented Programming?
+  - Write a Dockerfile for a standard Node.js application.
+  - Explain the concept of Big O notation and give examples of O(1) and O(n).
+  - Describe the MVC architectural pattern.
+  - Write a unit test for a function that calculates the Fibonacci sequence.
+  - How does garbage collection work in Java?
+  - Explain the differences between Git Merge and Git Rebase.
+  - Write a Terraform script to provision a basic AWS S3 bucket.
+  - Describe the lifecycle hooks in a Vue.js application.
+  - Explain what a JWT (JSON Web Token) is and how it is used.
+  - Write a simple REST API in Express.js with a GET and POST endpoint.
+  - Create a 10-day travel itinerary for New Zealand's South Island.
+  - Write a Python class representing a Dungeons & Dragons character.
+  - Explain the difference between a ceramic kiln's oxidation and reduction atmospheres.
+  - Write a script to parse Apple Health XML data into a CSV format.
+  - Draft a commercial lease agreement termination letter.
+  - Compare the average cost of living between Albany, NY and Lisbon, Portugal.
+  - Explain the core execution loop of an autonomous AI agent.
+  - Write a Chrome extension content script to highlight specific keywords on a page.
+  - Design a weekly workout routine optimized for cardiovascular longevity.
+  - Write a Python script to track and calculate daily macronutrients.
+  - Explain the concept of 'accelerating change' in the context of technology history.
+  - Draft a business plan outline for a retail supply store expanding to offer classes.
+  - Write a SQL query to calculate month-over-month revenue retention for a local business.
+  - Explain the fundamental differences between Proof of Work and Proof of Stake consensus.
+  - Write a Docker Compose file for a basic Ollama and LiteLLM local proxy setup.
+  - How do I set up a reverse proxy using Nginx to route traffic to multiple containers?
+  - Create a guide for setting up public workshops in a retail studio space.
+  - Write a Python script using the LiteLLM library to proxy a standard OpenAI request.
+  - Explain the architectural differences between an LLM runner and an AI proxy gateway.
+  - Describe the eudaimonic approach to psychological well-being and life evaluation.
+complex-model:
+  - Design a microservices architecture for a high-traffic ticketing system.
+  - Write a Rust program implementing a concurrent web scraper using asynchronous I/O.
+  - Analyze the security implications of using local storage versus HTTP-only cookies for JWTs.
+  - Explain the Paxos consensus algorithm and its failure modes.
+  - Optimize this nested SQL query that is causing full table scans on a billion-row table.
+  - Design a rate-limiting middleware using Redis and explaining the chosen algorithm.
+  - Explain the mechanics of an SQL injection attack and how parameterized queries prevent it.
+  - Architect a data pipeline to process 10TB of telemetry data per day using Kafka and Spark.
+  - Write a Kubernetes deployment manifest utilizing init containers, probes, and resource limits.
+  - Explain the B-Tree data structure and why it is optimal for database indexing.
+  - Debug this C++ code suffering from a race condition and a potential deadlock.
+  - Design a multi-region active-active failover strategy for a global web application.
+  - Explain the internal workings of the V8 JavaScript engine's garbage collector.
+  - Write a Python script implementing a custom LRU cache thread-safe decorator.
+  - Analyze the trade-offs between Event Sourcing and traditional CRUD state management.
+  - Implement a distributed lock using ZooKeeper.
+  - Explain how CPU cache coherence protocols (like MESI) function in multi-core processors.
+  - Design an anomaly detection system for network traffic logs.
+  - Write a parser in C for a custom, binary network protocol.
+  - Explain the differences in memory management between Rust and C++.
+  - Architect a real-time collaborative text editor backend using Operational Transformation.
+  - Analyze a Linux kernel panic log to identify a faulty driver.
+  - Implement a custom memory allocator in C.
+  - Design a scalable search engine architecture utilizing inverted indexes.
+  - Explain the cryptography behind elliptic curve Diffie-Hellman (ECDH) key exchange.
+  - Design a multi-agent framework where specialized agents review each other's Python code.
+  - Architect a local Kubernetes cluster utilizing GPUs for running multiple LLM inference nodes.
+  - Write a custom Python metaclass that automatically registers subclasses into a centralized factory.
+  - Analyze the commercial zoning regulations in Albany, NY for mixed-use retail and manufacturing space.
+  - Calculate the Challenge Rating of a custom D&D monster with legendary actions and lair actions.
+  - Design a quantified self data warehouse integrating wearable APIs, blood panels, and daily journal sentiment.
+  - Write a smart contract in Solidity for a decentralized autonomous organization governing a treasury.
+  - Analyze the thermal dynamics of a high-fire gas kiln and its impact on glaze crystallization.
+  - Design a Chrome extension architecture that uses a local AI proxy to summarize background tabs.
+  - Implement a custom retrieval-augmented generation pipeline using Milvus and LangChain.
+  - Design a failover topology for a multi-region API proxy handling millions of requests per minute.
+  - Write a Python script that uses AST manipulation to dynamically rewrite object-oriented method calls.
+  - Analyze the long-term demographic and economic trends impacting digital nomad visas in Europe.
+  - Design an event-driven microservice architecture for managing retail inventory and class bookings.
+  - Evaluate the technological singularities proposed in posthuman science fiction literature.
+  - Implement a distributed consensus mechanism for a swarm of autonomous software testing agents.
+  - Design a real-time health telemetry dashboard using Grafana, Prometheus, and custom wearable data exporters.
+  - Write a script to automate the deployment of a dual-homed Docker swarm environment.
+  - Analyze the tokenomics of a newly proposed layer-2 blockchain scaling solution.
+  - Design a dynamic pricing algorithm for studio memberships based on utilization and time-of-day.
+reasoning-model:
+  - Prove that the square root of 2 is irrational.
+  - Solve the Monty Hall problem and provide a rigorous mathematical proof for why switching is optimal.
+  - Analyze the ethical implications of deploying autonomous weapons systems.
+  - If P=NP were proven true, what would be the specific cryptographic and economic consequences?
+  - Formulate a logical argument resolving the Ship of Theseus paradox.
+  - Evaluate the architectural trade-offs between eventual consistency and linearizability.
+  - Explain Gödel's First Incompleteness Theorem and its implications for formal axiomatic systems.
+  - Deduce the outcome of this complex game theory scenario involving incomplete information.
+  - Critically analyze the simulation hypothesis from a physical and computational perspective.
+  - Provide a step-by-step mathematical proof of Euler's formula.
+  - Evaluate the ontological arguments for the existence of abstract mathematical objects.
+  - Resolve a specific edge-case paradox in special relativity involving simultaneous events.
+  - Analyze the logical structure of a self-referential paradox and propose a resolution.
+  - Determine the optimal resource allocation strategy in a complex economy using linear programming.
+  - Evaluate the philosophical concept of free will in a deterministic universe.
+  - Provide a rigorous proof for the Pythagorean theorem using similar triangles.
+  - Analyze the fundamental limits of computation as defined by the Halting Problem.
+  - Formulate a comprehensive risk model for a novel financial derivative.
+  - Evaluate the epistemological challenges of determining consciousness in artificial intelligence.
+  - Solve a multi-layered cryptogram utilizing frequency analysis and known-plaintext attacks.
+  - Analyze the thermodynamic limits of energy efficiency in computation.
+  - Construct a formal proof in propositional calculus for a complex logical theorem.
+  - Evaluate the societal impacts of universal basic income using distinct macroeconomic models.
+  - Explain the concept of quantum entanglement and how it violates local realism.
+  - Formulate a strategy to stabilize a complex, chaotic system using control theory methodologies.
+  - Evaluate the impact of the Singularity on secular humanist ethics and moral frameworks.
+  - Analyze a complex multi-agent system log to identify the root cause of an emergent cascading failure.
+  - Formulate a philosophical argument reconciling eudaimonic well-being with existential risk.
+  - Analyze the biological limits of human longevity based on current telomerase and senolytic research.
+  - Design a mathematically balanced combat encounter for five level 15 D&D characters facing a multi-stage boss.
+  - Evaluate the socioeconomic implications of accelerating technological change on independent small businesses.
+  - Debug a race condition in a custom multi-threading Python framework designed for agentic task execution.
+  - Analyze the epistemological limits of quantified self-tracking data in determining holistic health.
+  - Formulate a game-theoretic optimal strategy for negotiating commercial real estate leases in a downturn.
+  - Evaluate the theoretical constraints of using LLMs to augment object-oriented design patterns.
+  - Analyze the thermodynamic efficiency of operating local GPU clusters versus cloud inference for AI agents.
+  - Formulate a comprehensive ethical framework for autonomous software agents making financial transactions.
+  - Deduce the cause of a sporadic latency spike in a Dockerized environment using isolated network namespaces.
+  - Analyze the chemical interactions of transitional metals in ceramic glazes at cone 10 reduction.
+  - Evaluate the viability of stateless societies through the lens of early cyberpunk and posthuman literature.
+  - Formulate a mathematical model to optimize the scheduling of multi-agent workloads across heterogeneous hardware.
+  - Analyze the logical consistency of aligning superintelligent AI with human values.
+  - Evaluate the long-term viability of cryptographic proof-of-work in an energy-constrained future.
+  - Deduce the failure mode of a complex smart contract that was exploited via a reentrancy attack.
+  - Analyze the psychological tension between hedonistic pursuits and long-term eudaimonic fulfillment.

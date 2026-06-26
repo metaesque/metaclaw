@@ -1,0 +1,21 @@
+# nullclaw: NullClaw
+
+## Overview
+
+NullClaw pushes the limits of minimalist AI infrastructure, built entirely in
+the low-level systems programming language Zig. The result is a staggering
+678-kilobyte static binary that boots in under 2 milliseconds and uses
+approximately 1MB of peak RAM. It is the smallest and fastest runtime in the
+extended OpenClaw ecosystem, targeting cheap hardware and tiny cloud instances.
+
+Despite its microscopic footprint, NullClaw is a fully autonomous assistant
+infrastructure. It supports daemon mode for continuous operation and includes
+over 18 built-in tools for file manipulation, shell command execution, and
+browser interaction. It integrates smoothly with local models like Ollama,
+offering a fast, SQLite-backed memory system out of the box.
+
+NullClaw is designed for users who demand absolute efficiency and minimal
+overhead. Onboarding is handled via a rapid CLI process, and connecting it to
+platforms like Telegram is as simple as dropping a bot token into a
+configuration file. It represents the pinnacle of lean, performant agent
+deployment.

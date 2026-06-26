@@ -1,0 +1,8 @@
+{
+  "uid": "network",
+  "uids": "networks",
+  "name": "Overlay Network",
+  "names": "Overlay Networks",
+  "category": "Security & Containment",
+  "purpose": "Provides zero-trust mesh networking and secure inbound routing. It allows you to access your AI cluster remotely without exposing router ports, and allows external services (like Google Chat webhooks) to securely POST data to your local gateway through CGNAT firewalls."
+}

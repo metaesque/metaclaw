@@ -1,0 +1,8 @@
+{
+  "uid": "logger",
+  "uids": "loggers",
+  "name": "Log Aggregator",
+  "names": "Log Aggregators",
+  "category": "Observability & Provenance",
+  "purpose": "The central repository for system logs. It provides the visibility required to monitor agent behavior in real-time, troubleshoot tool execution errors, and audit actions when the agent is granted deep system access."
+}

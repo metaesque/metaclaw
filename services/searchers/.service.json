@@ -1,0 +1,129 @@
+{
+  "uid": "searcher",
+  "uids": "searchers",
+  "name": "Web Search API",
+  "names": "Web Search APIs",
+  "category": "Intelligence Execution",
+  "purpose": "Executes high-speed, lightweight HTTP searches to return structured snippets, URLs, and real-time knowledge.",
+  "matrix": {
+    "tier-0": {
+      "Darwin": {
+        "safety,cost,resources": {
+          "uid": "tavily",
+          "why": "Safety #1 combined with Cost #2 (and Tier <= 2) strictly mandates a Cloud API. Tavily completely offloads RAG synthesis to the cloud, guaranteeing absolute isolation from the macOS host while returning LLM-ready snippets."
+        },
+        "safety,resources,cost": {
+          "uid": "searxng",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. SearXNG runs inside an OrbStack container to provide a secure execution boundary while aggregating search results without third-party tracking."
+        },
+        "cost,safety,resources": {
+          "uid": "searxng",
+          "why": "Cost #1 forbids paid Cloud APIs. With Safety as the secondary priority, SearXNG is Dockerized to ensure free local metasearch capabilities without exposing the bare-metal macOS host."
+        },
+        "cost,resources,safety": {
+          "uid": "searxng",
+          "why": "Cost #1 forbids paid Cloud APIs. With Resources prioritized over Safety, SearXNG is executed bare-metal to completely bypass OrbStack virtualization overhead on the constrained 16GB RAM machine.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "tavily",
+          "why": "Resources #1 combined with Cost #3 (and Tier <= 2) strictly mandates a Cloud API. Tavily ensures zero local compute is consumed for search aggregation and synthesis, preserving unified memory."
+        },
+        "resources,cost,safety": {
+          "uid": "searxng",
+          "why": "Resources #1 combined with Cost #2 mandates highly optimized native execution. SearXNG runs bare-metal to deliver parallel search aggregation with absolute minimal CPU/RAM impact.",
+          "metal": true
+        }
+      },
+      "Windows": {
+        "safety,cost,resources": {
+          "uid": "tavily",
+          "why": "Safety #1 combined with Cost #2 (and Tier <= 2) strictly mandates a Cloud API. Tavily offloads execution, ensuring no malformed search data can exploit the Windows host."
+        },
+        "safety,resources,cost": {
+          "uid": "searxng",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. SearXNG leverages WSL2's highly efficient containerization to isolate the metasearch engine from the Windows filesystem."
+        },
+        "cost,safety,resources": {
+          "uid": "searxng",
+          "why": "Cost #1 demands a free, locally hosted solution. Safety #2 dictates Dockerization, making WSL2-hosted SearXNG the optimal balance of zero financial expenditure and secure containment."
+        },
+        "cost,resources,safety": {
+          "uid": "searxng",
+          "why": "Cost #1 demands a free solution. Resources #2 dictates bypassing WSL2 overhead where possible. SearXNG is executed bare-metal for maximum speed on a constrained Windows machine.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "tavily",
+          "why": "Resources #1 combined with Cost #3 (and Tier <= 2) strictly mandates a Cloud API. This eliminates all local processing overhead, keeping the Windows host highly responsive."
+        },
+        "resources,cost,safety": {
+          "uid": "searxng",
+          "why": "Resources #1 combined with Cost #2 mandates highly optimized native execution. SearXNG is run bare-metal to maximize efficiency for local search aggregation.",
+          "metal": true
+        }
+      }
+    },
+    "tier-1": {
+      "Linux": {
+        "safety,cost,resources": {
+          "uid": "exa",
+          "why": "Safety #1 combined with Cost #2 (and Tier <= 2) mandates a Cloud API. Exa's neural search and 'Highlights' extraction isolates the monolith while cutting local LLM token processing time by up to 50%."
+        },
+        "safety,resources,cost": {
+          "uid": "searxng",
+          "why": "Safety #1 combined with Cost #3 mandates a Dockerized provider. SearXNG provides containerized isolation for local metasearch, keeping the 24/7 monolith secure from rogue search responses."
+        },
+        "cost,safety,resources": {
+          "uid": "searxng",
+          "why": "Cost #1 forbids paid APIs. SearXNG provides unlimited, free search capabilities, while Dockerization satisfies the Safety #2 requirement for the background monolith."
+        },
+        "cost,resources,safety": {
+          "uid": "searxng",
+          "why": "Cost #1 forbids paid APIs. With Resources #2 over Safety, SearXNG is executed bare-metal to eliminate Docker network overhead while maintaining high resilience for 24/7 background tasks.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "exa",
+          "why": "Resources #1 combined with Cost #3 (and Tier <= 2) strictly mandates a Cloud API. Exa preserves the 32GB+ monolith's CPU/RAM entirely for VictoriaLogs and PostgreSQL vector indexing."
+        },
+        "resources,cost,safety": {
+          "uid": "searxng",
+          "why": "Resources #1 combined with Cost #2 strictly mandates optimized native execution. SearXNG runs bare-metal to ensure the background search daemon consumes minimal continuous resources.",
+          "metal": true
+        }
+      }
+    },
+    "tier-3": {
+      "Linux": {
+        "safety,cost,resources": {
+          "uid": "searxng",
+          "why": "Safety #1 forbids bare-metal. Because this is Tier > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. SearXNG securely contains search operations in isolated containers on the blast-zone."
+        },
+        "safety,resources,cost": {
+          "uid": "searxng",
+          "why": "Safety #1 forbids bare-metal. Because this is Tier > 2, Cloud APIs are strictly forbidden. The rules therefore mandate a Dockerized deployment. SearXNG securely contains search operations in isolated containers on the blast-zone."
+        },
+        "cost,safety,resources": {
+          "uid": "searxng",
+          "why": "Cost #1 demands a free local solution. Safety #2 mandates containerization. SearXNG's self-hosted architecture is deployed inside Docker to securely contain the blast radius of heavy search aggregation."
+        },
+        "cost,resources,safety": {
+          "uid": "searxng",
+          "why": "Cost #1 demands a free solution. Resources #2 dictates bypassing container overhead. SearXNG running natively bare-metal maximizes raw search throughput directly on the blast-zone CPU.",
+          "metal": true
+        },
+        "resources,safety,cost": {
+          "uid": "searxng",
+          "why": "Resources #1 demands minimal host impact. Because Tier > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. SearXNG runs bare-metal to maximize efficiency.",
+          "metal": true
+        },
+        "resources,cost,safety": {
+          "uid": "searxng",
+          "why": "Resources #1 demands minimal host impact. Because Tier > 2 strictly forbids Cloud APIs, we must bypass heavy Docker VMs and fall back to highly optimized native binaries. SearXNG runs bare-metal to maximize efficiency.",
+          "metal": true
+        }
+      }
+    }
+  }
+}

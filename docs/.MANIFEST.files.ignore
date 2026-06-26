@@ -1,0 +1,54 @@
+.env
+.env.cluster
+.env.json
+.executable.txt
+.git/
+.logs/
+.old/
+.tmp_pack
+.versions/
+__pycache__/
+bin/structure.json.old
+prompt
+bin/.venv/
+bin/__pycache__/
+bk/
+config/
+docs/.MANIFEST.files.ignore
+docs/INSTALL.md
+docs/SERVICES.md
+docs/TODO.org
+docs/WORKSPACE.files
+docs/index.html
+external/
+lib/__pycache__/
+openclaw_framework.zip
+output/
+profile.json
+services/cache
+services/gateway
+services/gateways/openclaw/bin/docker
+services/gateways/openclaw/config/
+services/gateways/openclaw/.start
+services/gateways/openclaw/.gitignore
+services/gateways/openclaw/index.md.fixme
+services/gateways/openclaw/index.template.md
+services/proxies/litellm/bk/
+services/proxies/litellm/output/
+services/proxies/litellm/router.json
+services/runners/ollama/.ollama.pid
+services/runners/ollama/.updated
+services/runners/ollama/bin/
+services/runners/ollama/ollama.log
+services/sandboxes/docker-dood/index.md.fixme
+tmp/metaclaw.zip
+tmp/mc
+tosort/
+workspace/
+~services/.*/\.env$               # .env files are auto-generated
+~services/.*/\.env\.json$         # .env.json files are secrets
+~services/.*/\.metal$             # controls whether Docker or bare-metal
+~services/.*/\.state_(?:recreate|restart)$  # tmp makefile targets
+~services/.*/index.html$          # index.html files are auto-generated
+~services/.*/index.md$            # index.md files are auto-generated
+~services/.*/verification.log$    # auto-generated

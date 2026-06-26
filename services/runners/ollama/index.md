@@ -1,0 +1,22 @@
+# ollama: Ollama
+
+## Overview
+
+Ollama is a lightweight, Go-based provider built as a wrapper around llama.cpp,
+designed to make running local models as easy as running Docker containers. It
+abstracts away the complex command-line arguments of llama.cpp, allowing users
+to download and execute models with simple commands like `ollama run gemma`. It
+operates as a background system daemon, automatically managing model weights,
+detecting available hardware acceleration (Metal, CUDA, ROCm), and dynamically
+loading or unloading models from memory as requests come in. It features a
+highly stable REST API that conforms closely to community standards.
+
+For OpenClaw, Ollama represents the absolute gold standard for local execution.
+OpenClaw natively supports Ollama via its LiteLLM integration, allowing users to
+configure models using simple aliases like `ollama/gemma4:e4b`. Because Ollama
+runs as a headless background service, it perfectly matches OpenClaw's own
+background gateway architecture, creating a frictionless local AI environment.
+
+<h2 id="diagnostic-checks">Diagnostic Checks (runner ollama)</h2>
+1. **API Responsiveness:**
+   * *Expectation:* You should see `Models Loaded: X` (where X is a number representing the currently pulled models).

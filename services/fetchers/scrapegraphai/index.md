@@ -1,0 +1,18 @@
+# scrapegraphai: ScrapeGraphAI
+
+## Overview
+
+Traditional web scrapers require developers to hardcode specific XPath or CSS
+selectors. If the target website changes its layout, the scraper immediately
+breaks. ScrapeGraphAI solves this by using AI to analyze the DOM and
+intelligently locate the requested information, regardless of the underlying
+HTML structure.
+
+For OpenClaw, this introduces a highly resilient, 'self-healing' fetching
+mechanism. When OpenClaw needs to extract specific data (like 'Find all product
+prices on this page'), it passes the natural language request to ScrapeGraphAI.
+
+Because it integrates seamlessly with local models via LiteLLM or Ollama,
+OpenClaw can execute these adaptive scrapes entirely offline, guaranteeing that
+long-running background tasks won't fail just because a website updated its
+stylesheet.

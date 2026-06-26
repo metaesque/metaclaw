@@ -1,0 +1,10 @@
+{
+  "uid": "n8n",
+  "name": "n8n + AI",
+  "overview": "The absolute best choice for visual thinkers and non-developers. By offering a drag-and-drop node interface with built-in guardrails and human-in-the-loop approvals, it makes deploying robust AI agents accessible to anyone without requiring deep terminal expertise.",
+  "details": [
+    "n8n is a highly popular workflow automation platform that has deeply integrated AI agent capabilities into its node-based visual builder. It allows users to blend deterministic, rule-based automation with the dynamic decision-making of AI agents. By connecting to over 500 pre-built integrations, n8n empowers agents to interact with databases, CRMs, and APIs out of the box.",
+    "The platform prioritizes control and observability. Users can explicitly define logic paths, enforce human-in-the-loop approvals, and set precise boundaries to prevent AI agents from going rogue. The visual canvas makes it easy to trace exactly what prompt was sent, what the model returned, and how the workflow executed, offering unparalleled transparency.",
+    "For individuals who prefer a visual, low-code approach to building autonomous agents, n8n is exceptional. It is much easier to deploy and manage than code-heavy frameworks like OpenClaw, making it accessible to non-developers. While it lacks the bare-metal, terminal-first ethos of OpenClaw, its vast integration ecosystem and robust control mechanisms make it a premier choice for practical business automation."
+  ]
+}

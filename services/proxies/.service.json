@@ -1,0 +1,8 @@
+{
+  "uid": "proxy",
+  "uids": "proxies",
+  "name": "AI Proxy",
+  "names": "AI Proxies",
+  "category": "Orchestration & Routing",
+  "purpose": "The middleware sitting between the Gateway and external LLM providers. It acts as a central control plane for cost management, enforcing guardrails, load balancing requests, and masking raw API keys from the agent."
+}

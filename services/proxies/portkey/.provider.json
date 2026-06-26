@@ -1,0 +1,10 @@
+{
+  "uid": "portkey",
+  "name": "Portkey",
+  "overview": "",
+  "details": [
+    "Portkey is an enterprise-grade AI gateway designed to serve as a comprehensive production control plane for Generative AI applications. It abstracts the complexities of connecting to over 1,600 different models, providing a unified API interface. However, its primary focus extends far beyond basic routing, aiming to provide the security, governance, and reliability required by large organizations deploying AI systems at scale.",
+    "The platform emphasizes strict guardrails and policy enforcement over API traffic. Portkey allows administrators to implement content moderation, enforce strict organizational budgets and quotas, and apply rigorous access controls before any request ever reaches an LLM. It also features robust orchestration capabilities, including smart routing, automatic retries, and fallbacks, coupled with deep observability tools to trace errors across the enterprise stack.",
+    "In the context of OpenClaw, Portkey is the ideal gateway for enterprise deployments where the agent's actions must be strictly governed. If OpenClaw is deployed in a corporate environment with access to sensitive internal data or customer-facing channels, Portkey acts as a critical security layer. It ensures that OpenClaw's generated prompts and the model's responses adhere to corporate compliance policies while safely load-balancing the agent's requests across approved endpoints."
+  ]
+}

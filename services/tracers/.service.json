@@ -1,0 +1,8 @@
+{
+  "uid": "tracer",
+  "uids": "tracers",
+  "name": "Distributed Tracer",
+  "names": "Distributed Tracers",
+  "category": "Observability & Provenance",
+  "purpose": "While logging tells you what happened, tracing tells you how long it took. It measures execution duration across services (Gateway -> Proxy -> LLM Runner) to debug latency bottlenecks in complex multi-step trajectories."
+}

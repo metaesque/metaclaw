@@ -1,0 +1,18 @@
+# koboldcpp: KoboldCPP
+
+## Overview
+
+KoboldCPP is a self-contained, C++-based executable originally forked from
+llama.cpp. It was historically developed to cater to the AI roleplay and
+storytelling communities, which require large context windows and rapid back-
+and-forth conversational capabilities. Its standout technical feature is
+"ContextShift" (or SmartContext). When a conversation grows long, standard
+inference engines often re-evaluate the entire prompt upon every new message.
+
+KoboldCPP intelligently caches the unchanged portions of the context window,
+drastically reducing the time to first token on subsequent turns, especially on
+consumer GPUs. This makes KoboldCPP highly valuable for OpenClaw's memory
+architecture. Because OpenClaw agents frequently load large transcripts and the
+extensive `MEMORY.md` file into their context on every turn, KoboldCPP's
+ContextShift prevents massive processing delays. OpenClaw connects via its API,
+resulting in a much snappier, responsive real-time agent.

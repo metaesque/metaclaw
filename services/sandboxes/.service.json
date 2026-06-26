@@ -1,0 +1,8 @@
+{
+  "uid": "sandbox",
+  "uids": "sandboxes",
+  "name": "Execution Sandbox",
+  "names": "Execution Sandboxes",
+  "category": "Security & Containment",
+  "purpose": "Hardened execution environments designed to contain the blast radius of agent actions. If an agent hallucinates a dangerous Python or Bash script, this layer prevents that code from escaping and destroying the host machine. (Standard Docker is insufficient here)."
+}

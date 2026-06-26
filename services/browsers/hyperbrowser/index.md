@@ -1,0 +1,18 @@
+# hyperbrowser: Hyperbrowser
+
+## Overview
+
+When a local AI agent attempts to scrape data from popular websites, it is
+almost immediately blocked by security systems like Cloudflare, CAPTCHAs, or IP
+bans. Hyperbrowser acts as a heavy-duty shield, automatically solving CAPTCHAs,
+rotating proxy IP addresses, and mimicking legitimate human browsing patterns to
+bypass these defenses.
+
+For OpenClaw, Hyperbrowser shifts the burden of web execution off your local
+machine. Instead of spinning up RAM-hungry Chrome instances on your laptop,
+OpenClaw pings the Hyperbrowser API.
+
+This allows your single OpenClaw agent to instantly launch hundreds of parallel
+web-scraping tasks in the cloud, gathering massive amounts of data in seconds
+without risking your home IP address getting blacklisted by your favorite
+websites.

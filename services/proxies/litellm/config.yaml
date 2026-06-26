@@ -1,0 +1,116 @@
+# ==============================================================================
+# LITELLM PROXY ROUTING CONFIGURATION
+# ==============================================================================
+# WHAT THIS FILE DOES:
+# This file is the central nervous system for LLM routing. It abstracts multiple
+# external API keys (Gemini, OpenAI, Anthropic) and local models (Ollama) into a
+# single, unified OpenAI-compatible endpoint. OpenClaw only communicates with LiteLLM.
+#
+# EDUCATIONAL CONTEXT - MINIMAL HARDWARE DEFAULTS:
+# Running state-of-the-art LLMs locally requires massive VRAM (64GB+). For a
+# minimal host (e.g., 16GB RAM), we offload heavy cognitive lifting to cloud models
+# (like Gemini via API) while preserving local processing for small, private tasks
+# (like the Socratic Mirror or Archivist queries).
+#
+# UPGRADE PATH:
+# If you acquire a machine with a 24GB+ GPU (e.g., RTX 4090 or Mac Studio),
+# you can swap these cloud models for local Ollama endpoints (e.g., llama3:70b).
+
+model_list:
+  # --------------------------------------------------------------------------
+  # PRIMARY TIERS (Used by the Predictive Judge for automatic cost-routing)
+  # --------------------------------------------------------------------------
+
+  - model_name: simple-model
+    litellm_params:
+      model: gemini/gemini-2.5-flash-lite
+      api_key: "os.environ/GEMINI_API_KEY_SIMPLE"
+
+  - model_name: medium-model
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: "os.environ/GEMINI_API_KEY_MEDIUM"
+
+  - model_name: complex-model
+    litellm_params:
+      model: gemini/gemini-3.1-pro-preview
+      api_key: "os.environ/GEMINI_API_KEY_COMPLEX"
+
+  # The critical alias to catch OpenClaw's literal provider string
+  - model_name: litellm/complex-model
+    litellm_params:
+      model: gemini/gemini-3.1-pro-preview
+      api_key: "os.environ/GEMINI_API_KEY_COMPLEX"
+
+  - model_name: reasoning-model
+    litellm_params:
+      model: gemini/gemini-3-deep-think
+      api_key: "os.environ/GEMINI_API_KEY_REASONING"
+
+  - model_name: prompt-embedding-model
+    litellm_params:
+      model: gemini/gemini-embedding-001
+      api_key: "os.environ/GEMINI_API_KEY_EMBEDDING"
+
+  # --------------------------------------------------------------------------
+  # FALLBACK CHAIN (Resilience against API downtime or rate limits)
+  # --------------------------------------------------------------------------
+  # WHAT THIS DOES: If the primary 'complex-model' fails, LiteLLM automatically
+  # routes the request to this fallback instead of crashing the OpenClaw agent.
+
+  - model_name: complex-model-fallback
+    litellm_params:
+      model: gemini/gemini-2.5-pro
+      api_key: "os.environ/GEMINI_API_KEY_MEDIUM"
+
+  - model_name: reasoning-model-fallback
+    litellm_params:
+      model: gemini/gemini-3.1-pro-preview
+      api_key: "os.environ/GEMINI_API_KEY_COMPLEX"
+
+  # --------------------------------------------------------------------------
+  # ROUTER BINDINGS (System components)
+  # --------------------------------------------------------------------------
+
+  - model_name: semantic-router
+    litellm_params:
+      model: gemini/gemini-embedding-001
+      api_key: "os.environ/GEMINI_API_KEY_EMBEDDING"
+
+  - model_name: complexity-router
+    litellm_params:
+      model: gemini/gemini-3.1-flash-lite-preview
+      api_key: "os.environ/GEMINI_API_KEY_EMBEDDING"
+
+  # --------------------------------------------------------------------------
+  # LOCAL LLM-AS-A-JUDGE (Air-gapped execution for privacy)
+  # --------------------------------------------------------------------------
+  - model_name: ollama/gemma4:e4b
+    litellm_params:
+      # WHY LOCAL: We run the complexity judge and the Archivist locally to ensure
+      # zero PII leakage during routine triaging or personal journal querying.
+      model: ollama/gemma4:e4b
+      # HOST.DOCKER.INTERNAL allows the Docker container to bridge back out
+      # to the host OS where Ollama is running natively.
+      api_base: "http://host.docker.internal:11434"
+
+litellm_settings:
+  drop_params: true
+  num_retries: 2
+  allowed_fails: 3
+  # Directs the 'json_logs' success callback to output to our mapped persistent volume
+  # for the Auditor agent to parse and calculate cumulative spend.
+  success_callbacks: ["json_logs"]
+
+router_settings:
+  routing_strategy: usage-based-routing-v2
+  routing_strategy_args:
+    auto_router_config_path: "/app/router.json"
+  fallbacks:
+    - {"complex-model": ["complex-model-fallback"]}
+    - {"reasoning-model": ["reasoning-model-fallback"]}
+
+general_settings:
+  # Hard budget constraint to prevent infinite loop exploitation by rogue agents
+  max_budget: 10
+  disable_on_budget_exceeded: true

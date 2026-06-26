@@ -1,0 +1,52 @@
+services:
+  openclaw-gateway:
+    # WHAT THIS IS: This is the core OpenClaw application that coordinates your AI agents.
+    # WHY THIS VERSION: We strictly pin to ${OPENCLAW_VERSION} to ensure immutable infrastructure. Floating tags risk unverified, breaking updates.
+    image: ghcr.io/openclaw/openclaw:${OPENCLAW_VERSION}
+    container_name: openclaw-gateway
+    # WHY ROOT: OpenClaw requires raw access to the Docker socket to spawn sandboxes via DooD.
+    user: root
+    # WHY UNLESS-STOPPED: Provides basic resilience.
+    # If the Docker daemon restarts or the process crashes, the orchestrator handles recovery.
+    restart: unless-stopped
+    # WHAT THIS DOES: Prevents the gateway from crash-looping on a blank config, keeping it alive for the framework configuration patcher.
+    command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
+    ports:
+      # WHAT THIS DOES: Binds the internal port 18789 to your host machine's specified port.
+      # UPGRADE PATH: For remote VPS deployments, bind this to "127.0.0.1:${OPENCLAW_PORT}:18789" and place an SSL-terminating reverse proxy (like Nginx) in front of it.
+      - "${OPENCLAW_PORT}:18789"
+    volumes:
+      # WHAT THIS DOES:
+      #   Segregates ephemeral container data from persistent state.
+      # WHY THIS DEFAULT:
+      #   Because the container runs as root, os.homedir() resolves to /root.
+      #   We explicitly map the host ./config directly to the internal root context.
+      - ./config:/root/.openclaw
+      # WHAT THIS DOES:
+      #   Mounts the agent workspace sandbox so agents can read/write files
+      #   without accessing your entire hard drive.
+      - ${OPENCLAW_WORKSPACE}:/root/.openclaw/workspace
+      # WHAT THIS DOES:
+      #   Mounts the host's Docker socket and the dynamically downloaded static
+      #   Docker CLI.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./bin/docker:/usr/bin/docker:ro
+    env_file:
+      - .env
+      - ../../proxy/.env
+    environment:
+      # WHAT THIS DOES: Explicitly tells OpenClaw to load our custom predictive scoring hooks.
+      - OPENCLAW_CONFIG_FILE=/root/.openclaw/openclaw.config.js
+      # WHAT THIS DOES: Satisfies the strict security requirement to authenticate an open 0.0.0.0 bind.
+      # We reuse the ACTIVE_PROXY_KEY (which is guaranteed to be exported) as the gateway token.
+      - OPENCLAW_GATEWAY_TOKEN=${ACTIVE_PROXY_KEY:-metaclaw_secure_bypass_token}
+    networks:
+      - openclaw-net
+    # Docker healthcheck removed. The framework will fall back to parsing the logs
+    # for the native [gateway] ready signal to avoid 401 Unauthorized false-negatives.
+
+networks:
+  openclaw-net:
+    # WHAT THIS DOES: Bridges the gateway to the globally defined network array.
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true

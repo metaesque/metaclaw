@@ -1,0 +1,8 @@
+{
+  "uid": "memory",
+  "uids": "memories",
+  "name": "Long-Term Memory",
+  "names": "Long-Term Memories",
+  "category": "Data & State Management",
+  "purpose": "The permanent, space-efficient archive for the agent. This database must support high-dimensional vector embeddings for semantic search (associative recall) alongside standard relational data (configs, logs)."
+}

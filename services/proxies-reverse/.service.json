@@ -1,0 +1,8 @@
+{
+  "uid": "proxy-reverse",
+  "uids": "proxies-reverse",
+  "name": "Reverse Proxy",
+  "names": "Reverse Proxies",
+  "category": "Orchestration & Routing",
+  "purpose": "The network front door. It handles SSL termination, load balancing incoming external requests, rate limiting, and securely exposing your local AI ecosystem to the internet for remote access."
+}
