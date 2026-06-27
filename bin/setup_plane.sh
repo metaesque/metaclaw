@@ -16,7 +16,8 @@ EMAIL="wade@holst.ca"
 GIT_NAME="Wade Holst"
 SSH_KEY_PATH="$HOME/.ssh/id_ed25519_metaesque"
 REPO_URL="git@metaesque.ssh:metaesque/metaclaw.git"
-TARGET_DIR="$HOME/workspace/src/metaclaw"
+#TARGET_DIR="$HOME/workspace/src/metaclaw"
+TARGET_DIR="$HOME"
 
 # ------------------------------------------------------------------------------
 # 1. SSH Identity Generation
@@ -99,12 +100,17 @@ echo "Git identity set to: $GIT_NAME <$EMAIL>"
 # ------------------------------------------------------------------------------
 echo -e "\n[5/6] Cloning MetaClaw Repository..."
 
-mkdir -p "$HOME/workspace/src"
-cd "$HOME/workspace/src"
-
-if [[ -d "$TARGET_DIR" ]]; then
+if [[ "$TARGET_DIR" == "$HOME" ]] ; then
+    # We do not use 'git clone' because that requires an empty directory,
+    # and $HOME is not empty even on a fresh install).
+    cd $TARGET_DIR
+    git init
+    git remote add origin "$REPO_URL"
+    git pull origin main
+elif [[ -d "$TARGET_DIR" ]]; then
     echo "Directory $TARGET_DIR already exists. Skipping clone."
 else
+    mkdir -p "$TARGET_DIR"
     echo "Cloning from $REPO_URL..."
     # The clone relies on the SSH alias established in step 3 to authenticate
     # using the newly generated key, bypassing any generic github.com keys.

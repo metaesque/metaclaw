@@ -25,3 +25,15 @@ profile.json
 tmp/
 tosort/
 verification.log
+
+# Found on Tier 1+ nodes when MetaClaw is installed at $HOME
+/.bash_aliases
+/.bash_history
+/.bash_logout
+/.bashrc
+/.cache/
+/.gitconfig
+/.profile
+/.ssh/
+/.sudo_as_admin_successful
+
