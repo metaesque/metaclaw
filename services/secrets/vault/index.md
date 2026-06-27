@@ -1,3 +1,0 @@
-# vault: HashiCorp Vault
-
-## Overview

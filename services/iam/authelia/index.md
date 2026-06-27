@@ -1,3 +1,0 @@
-# authelia: Authelia
-
-## Overview

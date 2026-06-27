@@ -1,3 +1,0 @@
-# signoz: SigNoz
-
-## Overview

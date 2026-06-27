@@ -1,3 +1,0 @@
-# hookdeck: Hookdeck
-
-## Overview

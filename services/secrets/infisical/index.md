@@ -1,3 +1,0 @@
-# infisical: Infisical
-
-## Overview

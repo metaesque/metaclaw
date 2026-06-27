@@ -1,3 +1,0 @@
-# rabbitmq: RabbitMQ
-
-## Overview

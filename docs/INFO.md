@@ -22,5 +22,3 @@ limit."
 In the gemini.google.com UI, in Settings -> Usage Limits:
  - a single Gemini 3.1 Pro + Deep Research + Extended Thinking consumes 84% of 5 hour quota
  - a single Gemini 3.1 Pro command took me from 84% to 99% (WTF?)  Don't know of Extended thinking was on or not
- - 
- 

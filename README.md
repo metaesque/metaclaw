@@ -1,4 +1,4 @@
-# Meta<Claw>
+# MetaClaw
 
 This is an installation framework for personal AI agents, meant to allow
 non-technical individuals to install a large number of powerful tools that
@@ -7,7 +7,7 @@ This framework focuses predominantly on OpenClaw and the large ecosystem
 of external-to-OpenClaw tools that it uses, leaving OpenClaw-specific
 customization up to the individual user.
 
-**Our Philosophy:** Meta<Claw> is designed to be unobtrusive and un-opinionated.
+**Our Philosophy:** MetaClaw is designed to be unobtrusive and un-opinionated.
 Our primary goal is to make it incredibly easy for non-technical people to get
 up and running with a production-grade OpenClaw environment, *without* putting
 them in an architectural straight-jacket. Once the infrastructure is running,
@@ -17,7 +17,7 @@ agents however you see fit.
 ## Services
 
 The various external-to-OpenClaw services and technologies supported by
-Meta<Claw> have been categorized according to their use within OpenClaw, and
+MetaClaw have been categorized according to their use within OpenClaw, and
 each such category is called a _service_. Each service is fulfilled by one of
 a variety of (usually mutually exclusive) concrete _providers_. For example,
 the AI gateway itself is considered a service, with one provider being
@@ -25,15 +25,15 @@ OpenClaw, but many others available to explore as well (NemoClaw, PicoClaw,
 etc).
 
 Because of the large number of services, and the even larger number of
-providers for each service, Meta<Claw> is by definition a work-in-progress,
+providers for each service, MetaClaw is by definition a work-in-progress,
 with support for specific service/provider pairs being added when someone
-in the Meta<Claw> community wants to explore it. The initial version of
-Meta<Claw> makes a specific choice for which provider to use for each
+in the MetaClaw community wants to explore it. The initial version of
+MetaClaw makes a specific choice for which provider to use for each
 service (usually aimed at an end-user running OpenClaw on their local laptop).
 
 As the user starts exploring more and more of what OpenClaw can do, they can
 graduate to more sophisticated/advanced providers for each service. Here
-are the services Meta<Claw> supports:
+are the services MetaClaw supports:
 
 - AI Gateway (`gateways`)
   - Providers: OpenClaw (`openclaw`), Moltis (`moltis`), n8n (`n8n`)

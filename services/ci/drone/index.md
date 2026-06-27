@@ -1,3 +1,0 @@
-# drone: Gitea/Drone
-
-## Overview

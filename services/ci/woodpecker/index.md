@@ -1,3 +1,0 @@
-# woodpecker: Woodpecker CI
-
-## Overview

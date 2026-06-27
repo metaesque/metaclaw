@@ -14,6 +14,10 @@ if os.path.exists(env_path):
         internal_home = line.strip().split('=', 1)[1]
 
 CONFIG_PATH = 'config/openclaw.json'
+
+# Ensure the directory exists to prevent FileNotFoundError if OpenClaw hasn't natively flushed its config yet
+os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+
 port = os.environ.get('OPENCLAW_PORT', '18789')
 # Retrieve the exact proxy key injected by the orchestrator
 proxy_key = os.environ.get('ACTIVE_PROXY_KEY', 'metaclaw_secure_bypass_token')

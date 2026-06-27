@@ -1,3 +1,0 @@
-# kafka: Apache Kafka
-
-## Overview

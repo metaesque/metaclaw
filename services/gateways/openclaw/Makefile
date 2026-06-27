@@ -21,7 +21,7 @@ LOG_READY_SIGNAL = \[gateway\] ready
 
 .PHONY: check-status check-logs gui gui-setup gui-status tui patch clean-local-state prep-instructions sync symlink
 
-pre-up:
+pre-up: symlink
 	@echo "[$(SERVICE_TITLE)] Ensuring agent scaffolding exists on host..."
 	@mkdir -p config/agents/main/agent
 	@echo "[$(SERVICE_TITLE)] Ensuring static Docker CLI is available for DooD (Docker-out-of-Docker)..."
@@ -36,9 +36,13 @@ pre-up:
 		elif [ "$$ARCH" = "aarch64" ] || [ "$$ARCH" = "arm64" ]; then DOCKER_ARCH="aarch64"; \
 		else echo "Unsupported architecture: $$ARCH"; exit 1; fi; \
 		echo "Downloading static Docker CLI for $$DOCKER_ARCH..."; \
-		curl -sSL "https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin --strip-components=1 docker/docker; \
+		mkdir -p bin/.tmp; \
+		curl -f -sSL "https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin/.tmp; \
+		mv bin/.tmp/docker/docker ./bin/docker; \
+		rm -rf bin/.tmp; \
 		chmod +x ./bin/docker; \
 	fi
+	@if [ ! -f ./bin/docker ]; then echo "FATAL: Failed to download docker CLI."; exit 1; fi
 
 post-up:
 	@date +%Y%m%d-%H%M%S > .start
@@ -67,11 +71,8 @@ clean-local-state:
 	@docker ps -a -q --filter "name=openclaw-sandbox" | xargs -r docker rm -f || true
 	@docker rmi openclaw-sandbox:bookworm-slim 2>/dev/null || true
 
-# Apply target fixed to trigger patching and non-destructive reload
-apply: symlink
-	@echo "[$(SERVICE_TITLE)] Reconciling gateway container..."
-	@mkdir -p config
-	@$(MAKE) --no-print-directory patch
+# Apply target fixed to trigger symlink and pre-up before non-destructive reload
+apply: symlink pre-up .state_recreate .state_restart
 
 # Creates a human-friendly symlink from project root to service config
 symlink:
@@ -81,6 +82,8 @@ symlink:
 	fi
 
 patch:
+	@echo "[$(SERVICE_TITLE)] Awaiting normal OpenClaw turnup before instrumentation..."
+	@$(MAKE) --no-print-directory wait-healthy
 	@echo "[$(SERVICE_TITLE)] Patching OpenClaw routing and configuration..."
 	@$(PYTHON_BIN) patch_routing.py
 	@cp openclaw.config.js config/openclaw.config.js

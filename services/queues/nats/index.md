@@ -1,3 +1,0 @@
-# nats: NATS
-
-## Overview

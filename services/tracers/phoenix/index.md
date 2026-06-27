@@ -1,3 +1,0 @@
-# phoenix: Phoenix
-
-## Overview

@@ -1,3 +1,0 @@
-# haproxy: HAProxy
-
-## Overview

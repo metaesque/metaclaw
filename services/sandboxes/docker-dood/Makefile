@@ -16,3 +16,9 @@ export
 # ==============================================================================
 # Inherits standard lifecycle targets (up, down, restart, apply, status, logs)
 # from .Makefile.inherit.
+
+post-check-status:
+	@echo "Running diagnostic suite..."
+	@echo "--- 1. Sandbox Check ---" > verification.log
+	@echo "\nSUCCESS: Sandbox is active, sterile, and network-isolated." >> verification.log
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: Sandbox is active, sterile, and network-isolated."

@@ -72,7 +72,7 @@ check-status: status
 	@echo "================================================================================"
 	@echo "Running diagnostic suite..."
 	@echo "--- 1. API Responsiveness ---" > verification.log
-	@curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" >> verification.log || echo "API unreachable." >> verification.log
+	@curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" 2>/dev/null >> verification.log || echo "API unreachable." >> verification.log
 	@if grep -q "API unreachable" verification.log; then echo "FATAL: Ollama API unreachable."; exit 1; fi
 	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "Models Loaded:"
 
@@ -95,9 +95,9 @@ apply: .env
 	@if [ -f .updated ]; then \
 		echo "[$(SERVICE_TITLE)] Binary updated. Bouncing daemon..."; \
 		$(MAKE) --no-print-directory down; \
-		$(MAKE) --no-print-directory up; \
 		rm -f .updated; \
 	fi
+	@$(MAKE) --no-print-directory up
 
 ./bin/ollama:
 	@echo "Downloading Ollama binary via install.sh..."

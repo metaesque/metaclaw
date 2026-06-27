@@ -15,6 +15,7 @@ bin/__pycache__/
 bk/
 config/
 docs/.MANIFEST.files.ignore
+docs/INFO.md
 docs/INSTALL.md
 docs/SERVICES.md
 docs/TODO.org

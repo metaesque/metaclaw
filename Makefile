@@ -81,8 +81,7 @@ setup: | $(PYTHON_BIN)
 	@echo "\n[Setup] Step 4: Instantiating global environment variables..."
 	@$(MAKE) --no-print-directory .env
 	@echo "################################################################################"
-	@echo "# SETUP COMPLETE."
-	@echo "# Proceed by running: make wizard"
+	@echo "# SETUP COMPLETE. Proceed by running: make wizard"
 	@echo "################################################################################"
 
 # ==============================================================================
@@ -232,6 +231,28 @@ wizard-run: bootstrap docs
 		fi; \
 	done
 	@echo "################################################################################"
+	@echo "# DEPLOYING CLUSTER INFRASTRUCTURE"
+	@echo "################################################################################"
+	@for dir in $(WIZARD_BOOT_ORDER); do \
+		if [ -L "$$dir" ] || [ -d "$$dir" ]; then \
+			echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"; \
+			echo "[Root] Deploying $$dir..."; \
+			$(MAKE) --no-print-directory -C $$dir apply || true; \
+			if [ -f "$$dir/.metal" ] || [ -f "$$dir/docker-compose.yml" ]; then \
+				$(MAKE) --no-print-directory -C $$dir wait-healthy || true; \
+				$(MAKE) --no-print-directory -C $$dir check-status || true; \
+				if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$dir/index.md" ]; then \
+					$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$dir/index.html#diagnostic-checks"; \
+					printf "Verify diagnostics for $$dir. Proceed? [Y/n] "; \
+					read answer < /dev/tty; \
+					if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
+						echo "Setup aborted by user."; exit 1; \
+					fi; \
+				fi; \
+			fi; \
+		fi; \
+	done
+	@echo "################################################################################"
 	@echo "# APPLYING GATEWAY CONFIGURATION"
 	@echo "################################################################################"
 	@echo "Applying routing patch..."
@@ -270,7 +291,8 @@ clean-state:
 factory-reset: factory-reset-soft
 
 # WHAT IT DOES: Tears down all containers, destroys the network, and wipes `.env` text files.
-# WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data. This is the safest way to bounce a broken framework.
+# WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data.
+#   This is the safest way to bounce a broken framework.
 factory-reset-soft: undock clean-network
 	@echo "################################################################################"
 	@echo "# INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)"
