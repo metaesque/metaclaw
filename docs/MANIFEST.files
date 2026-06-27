@@ -17,6 +17,7 @@ bin/destruct.py
 bin/env_instantiate.py
 bin/gateway-logs.py
 bin/highlight.py
+bin/install_docker.sh
 bin/litellm_test.py
 bin/meta_sync.py
 bin/newcode.py

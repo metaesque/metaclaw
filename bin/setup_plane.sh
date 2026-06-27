@@ -117,6 +117,11 @@ else
     git clone "$REPO_URL"
 fi
 
+# TODO(wmh): consider adding some or all of these
+#   git pull origin main
+#   git branch --set-upstream-to=origin/main main
+#   git push -u origin main
+
 # ------------------------------------------------------------------------------
 # 6. Hydrate Local State
 # ------------------------------------------------------------------------------

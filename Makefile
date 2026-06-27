@@ -49,11 +49,19 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down
+.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker
 
 # ==============================================================================
 # ENVIRONMENT BOOTSTRAPPING
 # ==============================================================================
+
+# WHAT IT DOES: Analyzes the host OS and automatically installs Docker Engine or OrbStack.
+# WHY IT EXISTS: Streamlines bare-metal node provisioning before 'make setup'.
+install-docker:
+	@echo "################################################################################"
+	@echo "# INSTALLING DOCKER ENGINE"
+	@echo "################################################################################"
+	@bash ./bin/install_docker.sh
 
 # WHAT IT DOES: Ensures the Python virtual environment exists and dependencies are installed.
 # WHY IT EXISTS: Prevents global pip pollution and ensures deterministic execution of framework scripts.
