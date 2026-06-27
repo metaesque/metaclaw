@@ -56,6 +56,37 @@ live. **You must profile the NEW machine locally.**
     were migrated away and redirect internal traffic via the newly generated
     `.env.cluster` file.
 
+## Git Version Control: Restoring Stable States
+
+The MetaClaw framework is publicly maintained at
+`https://github.com/metaesque/metaclaw`. If experimental framework modifications
+break your local deployment, you can leverage Git tags to rewind time to a known
+stable state (e.g., `stable-v1`).
+
+### 1. Inspecting a Stable State
+If you just want to "look around" at the codebase when it was stable without
+permanently overwriting your current work:
+```bash
+git fetch --tags
+git checkout stable-v1
+```
+*(Note: This puts you in a "detached HEAD" state. Do not commit changes here).*
+
+### 2. Branching from Stability
+To throw away your broken branch and start fresh from the stable baseline:
+```bash
+git checkout -b my-new-feature-branch stable-v1
+```
+
+### 3. The Hard Reset (Nuclear Rewind)
+If you are on the `main` branch, have pushed broken commits, and want to violently
+rewind the branch to the stable point (throwing away all commits made after the tag):
+```bash
+git reset --hard stable-v1
+# If you need to force this rewind up to GitHub:
+git push origin main --force
+```
+
 ## Starting From Scratch (Wiping State)
 
 If your environment becomes corrupted, your agents get stuck in infinite loops,

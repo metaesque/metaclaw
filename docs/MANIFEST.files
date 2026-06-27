@@ -191,6 +191,7 @@ services/runners/lmstudio/.provider.json
 services/runners/localai/.provider.json
 services/runners/msty/.provider.json
 services/runners/ollama/.env.template
+services/runners/ollama/.gitignore
 services/runners/ollama/.provider.json
 services/runners/ollama/Makefile
 services/runners/ollama/install.sh

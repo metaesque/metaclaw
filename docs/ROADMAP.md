@@ -2,33 +2,39 @@
 
 *Note: With the upgrade to OpenClaw 2026.6.8, Meta<Claw> has formally adopted an "un-opinionated" design goal. We aim to make it incredibly easy for non-technical users to get OpenClaw running, without placing them in a straight-jacket once the environment is operational. All future roadmap items are evaluated against this ethos.*
 
-This document outlines the prioritized architectural strategy for integrating future software capabilities.
-
-*(Semantic Note: The "Phases" below refer exclusively to software capability rollouts. The hardware scaling progression is referred to as "Hardware Tiers". See the Hardware Scaling section at the bottom of this document for critical infrastructure questions.)*
+This document outlines the prioritized architectural strategy for integrating future software capabilities and migrating across hardware tiers.
 
 ---
 
-## 🎯 IMMEDIATE MILESTONE 1: The Tier 0 Demonstration Gallery
+## 🟢 MILESTONE 1: The Tier 0 Foundation (Achieved)
+
+**Status: COMPLETED (`stable-v1`)**
+**Public Repository:** [https://github.com/metaesque/metaclaw](https://github.com/metaesque/metaclaw)
+
+**The Accomplishment:** We have successfully built and verified a working Tier 0 environment. MetaClaw now reliably bootstraps OpenClaw alongside its essential caching and observability services. We have transitioned framework development natively into the local OpenClaw agent workflow, granting it read/write workspace access to iteratively improve the ecosystem.
+
+---
+
+## 🟡 MILESTONE 2: The Tier 1 & Tier 2 Linux Migration
 
 **Urgency: HIGH**
+**Status: IN PROGRESS**
 
-**The Goal:** Prove the concrete utility of MetaClaw's complex service architecture to non-technical users by providing pre-configured "Example Agents" that tangibly benefit from the installed providers.
+**Current Hardware State:**
+The dedicated edge hardware has been successfully physically provisioned. Both nodes are running headless Ubuntu Server, are accessible remotely via Tailscale, can be managed seamlessly via Emacs TRAMP, and have the `metaesque/metaclaw` repository cloned into the `metaclaw` user's `$HOME` directory.
 
-**Demonstration Use-Cases to Implement:**
-1.  **The "Live Researcher" Agent:** Demonstrates the `searxng` and `jinareader` (Tier 0 Fetchers/Searchers). When asked about a software library released yesterday, the agent autonomously searches the web, fetches the live documentation, parses the markdown, and answers accurately, proving it is no longer bound by its stale training data.
-2.  **The "Long-Term Colleague" Agent:** Demonstrates `postgres/pgvector` (Memory). The agent recalls minor personal details (like hardware specs or preferred coding styles) established weeks prior across dozens of disconnected chat sessions via semantic RAG.
-3.  **The "Autonomous Coder" Agent:** Demonstrates `docker-dood` (Sandbox). Instead of just printing Python code in a chat block, the agent silently spins up an ephemeral container, executes the script, captures a `SyntaxError`, fixes its own code, runs it again, and only replies to the user once the code executes successfully.
+*   **The Control Node:** GMKtec K8 Plus
+*   **The Compute Node:** GMKtec EVO X2
 
-## 🎯 IMMEDIATE MILESTONE 2: The Tier 2 Linux Migration
+### Step A: Evolve the Control Node (Tier 1)
+We must upgrade MetaClaw so the K8 Plus can act as the dedicated **Tier 1 Control Plane**.
+1. **Ubuntu Optimization:** Refactor Makefiles and deployment scripts to account for Ubuntu-specific constraints (e.g., native Docker socket permissions versus macOS OrbStack).
+2. **Provider Diversification:** Expand the `services` architecture to support robust, bare-metal or heavy-docker providers that are unsuitable for a laptop (e.g., full PostgreSQL pgvector orchestration, advanced continuous loggers).
 
-**Urgency: HIGH**
-
-**The Goal:** Graduate from the constrained Tier 0 laptop and deploy the framework onto dedicated edge hardware (GMKtec K8 Plus as the Tier 1 Control/Archive Monolith, and GMKtec EVO-X2 as the Tier 2 Compute node).
-
-**Critical Path:**
-1. **Physical Provisioning:** Install Ubuntu Server 24.04 LTS, pin the EVO-X2 BIOS VRAM allocation for the Strix Halo APU, and establish the Tailscale mesh.
-2. **AMD Inference Optimization:** Patch the `ollama` provider to support ROCm/Vulkan device passthrough (`/dev/kfd`, `/dev/dri`) to utilize the EVO-X2's unified memory.
-3. **Execution Plane Upgrades:** Implement Linux-native, 24/7 background providers: `stagehand` (Browsers), `scrapegraphai` (Fetchers), and `exa` (Searchers).
+### Step B: Evolve the Compute Node (Tier 2)
+We must upgrade MetaClaw so the EVO X2 can act as the dedicated **Tier 2 LLM Runner**.
+1. **Local Model Hosting:** Configure the LLM Runner (e.g., Ollama or vLLM) to utilize the EVO X2's Strix Halo APU and unified memory for high-speed local inference.
+2. **Cluster Request Routing:** Update MetaClaw's networking bindings to allow the Compute Node to receive and process LLM inference requests from the Control Node (K8 Plus), as well as from authorized remote endpoints across the Tailscale mesh.
 
 ---
 
