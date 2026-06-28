@@ -26,9 +26,9 @@ pre-up: symlink
 	@mkdir -p config/agents/main/agent
 	@echo "[$(SERVICE_TITLE)] Ensuring static Docker CLI is available for DooD (Docker-out-of-Docker)..."
 	@mkdir -p bin
-	@if [ -d ./bin/docker ]; then \
+	@if [ -e ./bin/docker ] && [ ! -f ./bin/docker ]; then \
 		echo "Removing invalid docker directory..."; \
-		sudo rm -rf ./bin/docker || rm -rf ./bin/docker; \
+		docker run --rm -v $(CURDIR)/bin:/mnt alpine rm -rf /mnt/docker || sudo rm -rf ./bin/docker; \
 	fi
 	@if [ ! -f ./bin/docker ]; then \
 		ARCH=$$(uname -m); \
@@ -38,11 +38,10 @@ pre-up: symlink
 		echo "Downloading static Docker CLI for $$DOCKER_ARCH..."; \
 		mkdir -p bin/.tmp; \
 		curl -f -sSL "https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin/.tmp; \
-		mv bin/.tmp/docker/docker ./bin/docker; \
+		cp bin/.tmp/docker/docker ./bin/docker; \
 		rm -rf bin/.tmp; \
 		chmod +x ./bin/docker; \
 	fi
-	@if [ ! -f ./bin/docker ]; then echo "FATAL: Failed to download docker CLI."; exit 1; fi
 
 post-up:
 	@date +%Y%m%d-%H%M%S > .start
