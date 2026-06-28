@@ -23,7 +23,7 @@ LOG_READY_SIGNAL = \[gateway\] ready
 
 pre-up: symlink
 	@echo "[$(SERVICE_TITLE)] Ensuring agent scaffolding exists on host..."
-	-@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine sh -c "chown -R $$(id -u):$$(id -g) /mnt/config" 2>/dev/null || true; fi
+	@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine chown -R $(shell id -u):$(shell id -g) /mnt/config 2>/dev/null || true; fi
 	@mkdir -p config/agents/main/agent
 	@echo "[$(SERVICE_TITLE)] Ensuring static Docker CLI is available for DooD (Docker-out-of-Docker)..."
 	@mkdir -p bin
@@ -43,6 +43,9 @@ pre-up: symlink
 		rm -rf bin/.tmp; \
 		chmod +x ./bin/docker; \
 	fi
+
+# ENFORCED ORDERING: Prevent Docker Compose from mounting bin/docker as a directory before pre-up creates the file
+.state_recreate: pre-up
 
 post-up:
 	@date +%Y%m%d-%H%M%S > .start
