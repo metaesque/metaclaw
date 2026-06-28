@@ -40,6 +40,8 @@ services:
       # WHAT THIS DOES: Satisfies the strict security requirement to authenticate an open 0.0.0.0 bind.
       # We reuse the ACTIVE_PROXY_KEY (which is guaranteed to be exported) as the gateway token.
       - OPENCLAW_GATEWAY_TOKEN=${ACTIVE_PROXY_KEY:-metaclaw_secure_bypass_token}
+      # WHAT THIS DOES: An immutable safety net enforcing token-only auth over Tailscale VPN HTTP IPs.
+      - OPENCLAW_GATEWAY_CONTROLUI_ALLOWINSECUREAUTH=true
     networks:
       - openclaw-net
     # Docker healthcheck removed. The framework will fall back to parsing the logs

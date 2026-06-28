@@ -93,8 +93,10 @@ patch:
 	@echo "[$(SERVICE_TITLE)] Patching OpenClaw routing and configuration..."
 	@$(PYTHON_BIN) patch_routing.py
 	@cp openclaw.config.js config/openclaw.config.js
-	@echo "[$(SERVICE_TITLE)] Restarting gateway to apply patches and load config..."
-	@$(MAKE) --no-print-directory restart
+	@echo "[$(SERVICE_TITLE)] Force-killing gateway to prevent config overwrite on shutdown..."
+	@docker kill $(SERVICE_NAME) >/dev/null || true
+	@echo "[$(SERVICE_TITLE)] Starting gateway to apply patches and load config..."
+	@docker start $(SERVICE_NAME) >/dev/null || true
 
 sync:
 	@echo "[$(SERVICE_TITLE)] Forcing native filesystem sync to invalidate cache..."
