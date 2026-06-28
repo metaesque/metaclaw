@@ -84,6 +84,8 @@ symlink:
 patch:
 	@echo "[$(SERVICE_TITLE)] Awaiting normal OpenClaw turnup before instrumentation..."
 	@$(MAKE) --no-print-directory wait-healthy
+	@echo "[$(SERVICE_TITLE)] Adjusting Linux permissions for host patching..."
+	@docker exec $(SERVICE_NAME) chown -R $(shell id -u):$(shell id -g) /root/.openclaw || true
 	@echo "[$(SERVICE_TITLE)] Patching OpenClaw routing and configuration..."
 	@$(PYTHON_BIN) patch_routing.py
 	@cp openclaw.config.js config/openclaw.config.js

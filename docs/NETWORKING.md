@@ -50,3 +50,18 @@ For remote-first deployments, the host location must utilize a 100% symmetrical 
 
 ### Satellite Networks (Starlink)
 Starlink is explicitly forbidden as a host network for Meta<Claw> nodes. While excellent for remote clients, its upload speeds (15–35 Mbps) and high latency jitter make it architecturally unviable for hosting a server infrastructure that must be accessed remotely.
+
+## The Zero-Trust Overlay (Tailscale)
+
+Standard residential internet connections use dynamic IPs and block inbound ports. Modifying your router to expose internal ports (like 18789) directly to the public internet is a massive security vulnerability. MetaClaw utilizes **Tailscale**, a zero-configuration WireGuard mesh network, to solve this.
+
+### What Tailscale Does
+Tailscale creates a secure, encrypted peer-to-peer network between your devices, entirely bypassing Carrier-Grade NAT (CGNAT) and firewalls.
+* It assigns a static, private `100.x.y.z` IP address to every node in your cluster, as well as your travel laptop or mobile phone.
+* When you travel, you access your OpenClaw Dashboard securely via `http://[Tailscale-IP]:18789` without needing a VPN server or complex port-forwarding rules.
+
+### Emacs TRAMP & Automated SSH Constraints
+By default, Tailscale Access Control Lists (ACLs) are configured to use **Check mode** for SSH connections. If you connect to a node (e.g., `ssh compute`), Tailscale intercepts the connection and prompts you to visit a URL (e.g., `https://login.tailscale.com/a/...`) to re-authenticate via your web browser to prove your identity.
+
+* **The Problem:** This interactive web-check completely breaks automated headless tools like Emacs TRAMP, `rsync` scripts, or `make sync-cluster` commands, causing them to hang indefinitely.
+* **The Solution:** To fix this for automation, you must log into the Tailscale Admin Console (`https://login.tailscale.com/admin/acls`), navigate to your Access Controls, and modify the SSH rules to disable Check Mode. Changing the action from `"action": "check"` to `"action": "accept"` ensures that devices cryptographically authenticated to your tailnet are granted instant SSH access to your MetaClaw nodes.
