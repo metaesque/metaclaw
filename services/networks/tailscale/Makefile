@@ -13,7 +13,7 @@ export
 
 post-check-status:
 	@echo "Running diagnostic suite..."
-	@if [ -f .metal ]; then \
+	@if [ -f "$(CURDIR)/.metal" ]; then \
 		echo "Bare-metal Tailscale active. Skipping container diagnostics." > verification.log; \
 	else \
 		echo "--- 1. Daemon Status ---" > verification.log; \

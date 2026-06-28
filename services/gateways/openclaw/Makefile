@@ -23,12 +23,13 @@ LOG_READY_SIGNAL = \[gateway\] ready
 
 pre-up: symlink
 	@echo "[$(SERVICE_TITLE)] Ensuring agent scaffolding exists on host..."
+	-@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine sh -c "chown -R $$(id -u):$$(id -g) /mnt/config" 2>/dev/null || true; fi
 	@mkdir -p config/agents/main/agent
 	@echo "[$(SERVICE_TITLE)] Ensuring static Docker CLI is available for DooD (Docker-out-of-Docker)..."
 	@mkdir -p bin
 	@if [ -e ./bin/docker ] && [ ! -f ./bin/docker ]; then \
 		echo "Removing invalid docker directory..."; \
-		docker run --rm -v $(CURDIR)/bin:/mnt alpine rm -rf /mnt/docker || sudo rm -rf ./bin/docker; \
+		docker run --rm -v $(CURDIR)/bin:/mnt alpine rm -rf /mnt/docker 2>/dev/null || sudo rm -rf ./bin/docker; \
 	fi
 	@if [ ! -f ./bin/docker ]; then \
 		ARCH=$$(uname -m); \
@@ -63,7 +64,7 @@ clean-local-state:
 		cp -R config/workspace-* "$$DEST/workspaces/" 2>/dev/null || true; \
 	fi
 	@echo "[$(SERVICE_TITLE)] Adjusting permissions to allow deletion of root-owned files..."
-	@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine sh -c "rm -rf /mnt/config /mnt/.openclaw_state /mnt/.start /mnt/seed-config.json" || sudo rm -rf config .openclaw_state .start seed-config.json; fi
+	-@docker run --rm -v $(CURDIR):/mnt alpine sh -c "rm -rf /mnt/config /mnt/.openclaw_state /mnt/.start /mnt/seed-config.json /mnt/bin/docker" 2>/dev/null || sudo rm -rf config .openclaw_state .start seed-config.json ./bin/docker 2>/dev/null || true
 	@rm -f index.html index.md
 	@rm -f $(FRAMEWORK_ROOT)/config
 	@echo "[$(SERVICE_TITLE)] Purging dynamically generated sandbox artifacts..."
