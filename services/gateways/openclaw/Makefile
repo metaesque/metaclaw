@@ -28,7 +28,7 @@ pre-up: symlink
 	@mkdir -p bin
 	@if [ -d ./bin/docker ]; then \
 		echo "Removing invalid docker directory..."; \
-		rm -rf ./bin/docker; \
+		sudo rm -rf ./bin/docker || rm -rf ./bin/docker; \
 	fi
 	@if [ ! -f ./bin/docker ]; then \
 		ARCH=$$(uname -m); \
@@ -63,8 +63,9 @@ clean-local-state:
 		cp -R config/agents/*/sessions/* "$$DEST/sessions/" 2>/dev/null || true; \
 		cp -R config/workspace-* "$$DEST/workspaces/" 2>/dev/null || true; \
 	fi
-	@rm -rf config .openclaw_state .start
-	@rm -f seed-config.json index.html index.md
+	@echo "[$(SERVICE_TITLE)] Adjusting permissions to allow deletion of root-owned files..."
+	@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine sh -c "rm -rf /mnt/config /mnt/.openclaw_state /mnt/.start /mnt/seed-config.json" || sudo rm -rf config .openclaw_state .start seed-config.json; fi
+	@rm -f index.html index.md
 	@rm -f $(FRAMEWORK_ROOT)/config
 	@echo "[$(SERVICE_TITLE)] Purging dynamically generated sandbox artifacts..."
 	@docker ps -a -q --filter "ancestor=openclaw-sandbox:bookworm-slim" | xargs -r docker rm -f || true

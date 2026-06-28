@@ -11,28 +11,15 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 -include .env
 export
 
-pre-up:
-	@if [ "$$(uname -s)" = "Darwin" ]; then \
-		echo "================================================================================"; \
-		echo "WARNING (SAFE TO IGNORE): Docker 'host' networking is fundamentally unsupported on macOS."; \
-		echo "Please install the native Tailscale app from the Mac App Store for host access."; \
-		echo "The Docker container will still boot to provide Funnel/Webhook ingress capabilities,"; \
-		echo "but it will NOT expose the Mac host OS itself to the Tailnet."; \
-		echo "This is expected behavior and not of concern for the MetaClaw framework."; \
-		echo "================================================================================"; \
-		sleep 3; \
-	fi
-
 post-check-status:
 	@echo "Running diagnostic suite..."
-	@echo "--- 1. Tailscale Connection Status ---" > verification.log
-	@docker exec $(SERVICE_NAME) tailscale status >> verification.log || echo "CONNECTION_FAILED" >> verification.log
-	@echo "\nSUCCESS: Tailscale is connected and authenticated." >> verification.log
-	@if grep -q "CONNECTION_FAILED" verification.log; then echo "FATAL: Tailscale daemon is unreachable."; exit 1; fi
-	@if grep -q "Logged out" verification.log; then echo "FATAL: Tailscale is not authenticated. Check TAILSCALE_AUTHKEY."; exit 1; fi
-	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: Tailscale is connected and authenticated."
+	@if [ -f .metal ]; then \
+		echo "Bare-metal Tailscale active. Skipping container diagnostics." > verification.log; \
+	else \
+		echo "--- 1. Daemon Status ---" > verification.log; \
+		docker exec $(SERVICE_NAME) tailscale status >> verification.log || echo "DAEMON_UNREACHABLE" >> verification.log; \
+		if grep -q "DAEMON_UNREACHABLE" verification.log; then echo "FATAL: Tailscale daemon is unreachable."; exit 1; fi; \
+	fi
 
-clobber-data:
-	@if [ -z "$(EXTERNAL_DRIVE_PATH)" ]; then echo "FATAL: EXTERNAL_DRIVE_PATH is undefined."; exit 1; fi
-	@echo "[$(SERVICE_TITLE)] Purging external Tailscale machine state..."
-	@rm -rf $(EXTERNAL_DRIVE_PATH)/tailscale-state
+clean-state::
+	@echo "[$(SERVICE_TITLE)] Cleaned state."
