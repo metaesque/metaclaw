@@ -30,11 +30,15 @@ if os.path.exists(CONFIG_PATH):
   except json.JSONDecodeError:
     pass
 
-# 1. Patch the Operating Mode
+# 1. Patch the Operating Mode and UI Auth
 if 'gateway' not in data:
   data['gateway'] = {}
 
 data['gateway']['mode'] = 'local'
+
+if 'controlUi' not in data['gateway']:
+  data['gateway']['controlUi'] = {}
+data['gateway']['controlUi']['allowInsecureAuth'] = True
 
 # 2. Hijack the Default OpenAI Provider
 if 'models' not in data:
@@ -91,6 +95,7 @@ with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
 
 print("SUCCESS: Patched baseline network routing and loopback binding.")
+print("SUCCESS: Allowed insecure HTTP auth to facilitate Tailscale mesh IP access.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Enforced 'complex-model' fallback to prevent nonexistent model requests.")
 print(f"SUCCESS: Auto-discovered and registered {len(agents_list) - 1} custom agents from workspace.")

@@ -38,6 +38,7 @@ up: .env ./bin/ollama docs
 		echo "Cleaning up any orphaned processes before boot..." ; \
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
+		mkdir -p $(EXTERNAL_DRIVE_PATH)/ollama-models ; \
 		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama serve > $(LOG_FILE) 2>&1 & \
 		echo $$! > $(PID_FILE) ; \
 	fi
