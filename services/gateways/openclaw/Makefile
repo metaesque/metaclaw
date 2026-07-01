@@ -99,6 +99,10 @@ patch:
 	@docker start $(SERVICE_NAME) >/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Awaiting patched gateway stabilization (5s)..."
 	@sleep 5
+	@if command -v tailscale >/dev/null 2>&1 && tailscale status >/dev/null 2>&1; then \
+		echo "[$(SERVICE_TITLE)] Configuring Tailscale Serve for secure HTTPS remote access..."; \
+		tailscale serve --bg $(OPENCLAW_PORT) || true; \
+	fi
 
 sync:
 	@echo "[$(SERVICE_TITLE)] Forcing native filesystem sync to invalidate cache..."
@@ -122,11 +126,19 @@ gui:
 	if [ -z "$$TOKEN" ]; then TOKEN="$(ACTIVE_PROXY_KEY)"; fi; \
 	if [ -z "$$TOKEN" ]; then TOKEN="metaclaw_secure_bypass_token"; fi; \
 	URL="http://127.0.0.1:$(OPENCLAW_PORT)/?token=$$TOKEN"; \
-	echo "[$(SERVICE_TITLE)] Opening $$URL in default browser..."; \
+	if command -v tailscale >/dev/null 2>&1 && tailscale status >/dev/null 2>&1; then \
+		TS_DNS=$$(tailscale status --json | $(PYTHON_BIN) -c "import sys, json; print(json.load(sys.stdin).get('Self', {}).get('DNSName', '').rstrip('.'))"); \
+		if [ -n "$$TS_DNS" ]; then URL="https://$$TS_DNS/?token=$$TOKEN"; fi; \
+	fi; \
+	echo "[$(SERVICE_TITLE)] Access URL: $$URL"; \
 	if [ -n "$(OPEN_CMD)" ] && command -v $(OPEN_CMD) >/dev/null 2>&1; then \
 		$(OPEN_CMD) "$$URL"; \
 	else \
-		echo "Please manually navigate to: $$URL"; \
+		echo ""; \
+		echo "================================================================================"; \
+		echo "PLEASE MANUALLY NAVIGATE TO: $$URL"; \
+		echo "================================================================================"; \
+		echo ""; \
 	fi
 
 gui-setup:

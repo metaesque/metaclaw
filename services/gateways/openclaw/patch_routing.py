@@ -41,23 +41,33 @@ if 'controlUi' not in data['gateway']:
   data['gateway']['controlUi'] = {}
 data['gateway']['controlUi']['allowInsecureAuth'] = True
 
-# 1b. Inject Tailscale IP into Allowed Origins to bypass Secure Context blocks
+# 1b. Inject Tailscale URLs into Allowed Origins to satisfy CORS
 allowed_origins = data['gateway']['controlUi'].get('allowedOrigins', [])
 
-# Always allow local interfaces to prevent locking out localhost
+# Always allow local interfaces
 if f"http://127.0.0.1:{port}" not in allowed_origins:
     allowed_origins.append(f"http://127.0.0.1:{port}")
 if f"http://localhost:{port}" not in allowed_origins:
     allowed_origins.append(f"http://localhost:{port}")
 
-# Dynamically fetch Tailscale IP if available on the host
+# Dynamically fetch Tailscale IP and MagicDNS if available on the host
 try:
-    ts_result = subprocess.run(['tailscale', 'ip', '-4'], capture_output=True, text=True, check=True)
-    ts_ip = ts_result.stdout.strip()
-    if ts_ip:
-        ts_origin = f"http://{ts_ip}:{port}"
+    ts_status = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, check=True)
+    ts_data = json.loads(ts_status.stdout)
+
+    # Allow explicit Tailscale IPs
+    for ip in ts_data.get('Self', {}).get('TailscaleIPs', []):
+        ts_origin = f"http://{ip}:{port}"
         if ts_origin not in allowed_origins:
             allowed_origins.append(ts_origin)
+
+    # Allow MagicDNS for Tailscale Serve (HTTPS)
+    dns_name = ts_data.get('Self', {}).get('DNSName', '')
+    if dns_name:
+        dns_name = dns_name.rstrip('.')
+        https_origin = f"https://{dns_name}"
+        if https_origin not in allowed_origins:
+            allowed_origins.append(https_origin)
 except Exception:
     pass # Tailscale not installed or not accessible to the script
 
