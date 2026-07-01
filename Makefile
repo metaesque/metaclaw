@@ -139,6 +139,7 @@ clean-network:
 undock:
 	@for dir in $(DOCKER_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping 'down'."; continue; fi; \
 		echo "################################################################################"; \
 		echo "# Executing teardown in $$REAL_DIR..."; \
 		echo "################################################################################"; \
@@ -153,6 +154,7 @@ apply: symlinks
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping 'apply'."; continue; fi; \
 		echo "[Root] Evaluating state in $$REAL_DIR..."; \
 		$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 	done
@@ -164,6 +166,7 @@ status:
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
 		echo "--------------------------------------------------------------------------------"; \
 		echo "[Root] Checking status of $$REAL_DIR..."; \
 		$(MAKE) --no-print-directory -C $$REAL_DIR status || true; \
@@ -213,6 +216,7 @@ wizard-run: bootstrap docs
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
 		if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
 			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.md" ]; then \
 				$(PYTHON_BIN) $(CURDIR)/bin/compile_md.py -i $$REAL_DIR/index.md --html; \
@@ -239,6 +243,7 @@ wizard-run: bootstrap docs
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping deploy."; continue; fi; \
 		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"; \
 		echo "[Root] Deploying $$REAL_DIR..."; \
 		if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
@@ -290,6 +295,7 @@ clean-state:
 	@echo "################################################################################"
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
 		OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clean-state || echo "Warning: $$REAL_DIR clean-state failed."; \
 	done
 
@@ -323,6 +329,7 @@ factory-reset-hard: factory-reset-soft
 	@echo "################################################################################"
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ ! -f "$$REAL_DIR/Makefile" ]; then rm -f "$$REAL_DIR/.env.json"; continue; fi; \
 		OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clobber-data || echo "Warning: $$REAL_DIR clobber-data failed."; \
 		rm -f "$$REAL_DIR/.env.json"; \
 	done

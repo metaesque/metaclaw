@@ -77,6 +77,14 @@ def _get_linux_gpu(ram_bytes=0):
 
   return "No Discrete GPU Detected", 0
 
+def _is_tailscale_running():
+  """Checks if the Tailscale daemon is currently running on the host OS."""
+  try:
+    result = subprocess.run(['tailscale', 'status'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.returncode == 0
+  except FileNotFoundError:
+    return False
+
 def platform_details():
   sys_os = platform.system()
   arch = platform.machine()
@@ -277,14 +285,21 @@ def main():
 
   headless_input = args.headless.lower()
   if headless_input not in ['y', 'n', 'yes', 'no']:
+    ts_running = _is_tailscale_running()
+    default_hl = 'y' if ts_running else 'n'
+    prompt_hl = 'Y/n' if ts_running else 'y/N'
+
     print("\nIs this machine running as a headless server (no monitor/GUI, accessed via SSH)?")
     while True:
-      hl_choice = input("Headless server? [y/N]: ").strip().lower()
+      hl_choice = input(f"Headless server? [{prompt_hl}]: ").strip().lower()
       if hl_choice in ['y', 'yes']:
         is_headless = True
         break
-      elif hl_choice in ['n', 'no', '']:
+      elif hl_choice in ['n', 'no']:
         is_headless = False
+        break
+      elif hl_choice == '':
+        is_headless = ts_running
         break
   else:
     is_headless = headless_input in ['y', 'yes']
