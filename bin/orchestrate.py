@@ -117,7 +117,8 @@ def main():
     sym_path = os.path.join(services_dir, svc)
     target_path = os.path.join(uids, provider)
 
-    if not os.path.exists(sym_path):
+    # Use lexists to correctly detect broken symlinks targeting unimplemented providers
+    if not os.path.lexists(sym_path):
       cwd = os.getcwd()
       os.chdir(services_dir)
       os.symlink(target_path, svc)

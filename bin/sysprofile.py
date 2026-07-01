@@ -187,21 +187,75 @@ def main():
 
   planes_input = args.planes
   if not planes_input:
-    print("\nWhat plane(s) does this host represent?")
-    print("Available: control, compute, execution, archive")
-    print("Enter comma-separated planes, or 'all' for all planes.")
-    while True:
-      p_choice = input("Enter plane(s) [all]: ").strip().lower()
-      if not p_choice or p_choice == 'all':
-        planes_input = "control,compute,execution,archive"
-        break
-      parts = [p.strip() for p in p_choice.split(',')]
-      valid = {'control', 'compute', 'execution', 'archive'}
-      if all(p in valid for p in parts):
-        planes_input = ",".join(parts)
-        break
-      else:
-        print("Invalid input. Please enter valid planes (e.g., control,compute).")
+    if tier in [0, 1]:
+      planes_input = "control,compute,execution,archive"
+    elif tier == 2:
+      print("\nWhat role does this node play in your Tier 2 cluster?")
+      print("  [1] Compute node (provides access to large LLMs)")
+      print("  [2] Control node without runner (control + execution + archive)")
+      print("  [3] Control node with all planes")
+      while True:
+        choice = input("Enter choice [1]: ").strip()
+        if not choice or choice == '1':
+          planes_input = "compute"
+          break
+        elif choice == '2':
+          planes_input = "control,execution,archive"
+          break
+        elif choice == '3':
+          planes_input = "control,compute,execution,archive"
+          break
+        else:
+          print("Invalid choice. Enter 1, 2, or 3.")
+    elif tier == 3:
+      print("\nWhat role does this node play in your Tier 3 cluster?")
+      print("  [1] Compute node (provides access to large LLMs)")
+      print("  [2] Execution node (sandboxes and volatile CI workloads)")
+      print("  [3] Control node without runner (control + archive)")
+      print("  [4] Control node with runner (control + archive + compute)")
+      while True:
+        choice = input("Enter choice [1]: ").strip()
+        if not choice or choice == '1':
+          planes_input = "compute"
+          break
+        elif choice == '2':
+          planes_input = "execution"
+          break
+        elif choice == '3':
+          planes_input = "control,archive"
+          break
+        elif choice == '4':
+          planes_input = "control,archive,compute"
+          break
+        else:
+          print("Invalid choice. Enter 1, 2, 3, or 4.")
+    elif tier == 4:
+      print("\nWhat role does this node play in your Tier 4 cluster?")
+      print("  [1] Compute node (provides access to large LLMs)")
+      print("  [2] Execution node (sandboxes and volatile CI workloads)")
+      print("  [3] Archive node (vector databases and observability)")
+      print("  [4] Control node without runner (control only)")
+      print("  [5] Control node with runner (control + compute)")
+      while True:
+        choice = input("Enter choice [1]: ").strip()
+        if not choice or choice == '1':
+          planes_input = "compute"
+          break
+        elif choice == '2':
+          planes_input = "execution"
+          break
+        elif choice == '3':
+          planes_input = "archive"
+          break
+        elif choice == '4':
+          planes_input = "control"
+          break
+        elif choice == '5':
+          planes_input = "control,compute"
+          break
+        else:
+          print("Invalid choice. Enter 1, 2, 3, 4, or 5.")
+
   planes = planes_input.split(',')
 
   wan_input = args.wan.lower()
