@@ -101,7 +101,7 @@ patch:
 	@sleep 5
 	@if command -v tailscale >/dev/null 2>&1 && tailscale status >/dev/null 2>&1; then \
 		echo "[$(SERVICE_TITLE)] Configuring Tailscale Serve for secure HTTPS remote access..."; \
-		tailscale serve --bg $(OPENCLAW_PORT) || true; \
+		sudo tailscale serve --bg $(OPENCLAW_PORT) || true; \
 	fi
 
 sync:
