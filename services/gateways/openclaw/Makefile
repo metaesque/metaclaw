@@ -19,12 +19,14 @@ export
 # Escaped brackets for grep compatibility during the log scan fallback
 LOG_READY_SIGNAL = \[gateway\] ready
 
-.PHONY: check-status check-logs gui gui-setup gui-status tui patch clean-local-state prep-instructions sync symlink
+.PHONY: check-status check-logs gui gui-setup gui-status tui patch clean-local-state prep-instructions sync symlink update-env
+
+update-env: .env
 
 pre-up: symlink
 	@echo "[$(SERVICE_TITLE)] Ensuring agent scaffolding exists on host..."
+	@mkdir -p "$(OPENCLAW_WORKSPACE)/agents/main/agent"
 	@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine chown -R $(shell id -u):$(shell id -g) /mnt/config 2>/dev/null || true; fi
-	@mkdir -p config/agents/main/agent
 	@echo "[$(SERVICE_TITLE)] Ensuring static Docker CLI is available for DooD (Docker-out-of-Docker)..."
 	@mkdir -p bin
 	@if [ -e ./bin/docker ] && [ ! -f ./bin/docker ]; then \
@@ -90,10 +92,8 @@ patch:
 	@$(MAKE) --no-print-directory wait-healthy
 	@echo "[$(SERVICE_TITLE)] Adjusting Linux permissions for host patching..."
 	@docker exec $(SERVICE_NAME) chown -R $(shell id -u):$(shell id -g) /root/.openclaw || true
-	@echo "[$(SERVICE_TITLE)] Patching OpenClaw routing and configuration..."
+	@echo "[$(SERVICE_TITLE)] Executing non-destructive config patch and routing module injection..."
 	@$(PYTHON_BIN) patch_routing.py
-	@echo "[$(SERVICE_TITLE)] Applying Lexical-Predictive Routing Module..."
-	@cp modules/routing/lexical_predictive.js config/openclaw.config.js
 	@echo "[$(SERVICE_TITLE)] Force-killing gateway to prevent config overwrite on shutdown..."
 	@docker kill $(SERVICE_NAME) >/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Starting gateway to apply patches and load config..."

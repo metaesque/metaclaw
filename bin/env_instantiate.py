@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import shutil
 
 # Ensure we can import metaclaw from the lib directory
 sys.path.insert(

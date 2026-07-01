@@ -3,6 +3,7 @@
 .gitignore
 .planes.json
 .tiers.json
+.workspace.template/README.md
 LICENSE
 Makefile
 README.md
@@ -112,6 +113,7 @@ services/gateways/openclaw/bin/.gitignore
 services/gateways/openclaw/docker-compose.yml
 services/gateways/openclaw/index.template.md
 services/gateways/openclaw/modules/routing/lexical_predictive.js
+services/gateways/openclaw/modules/routing/pass_through.js
 services/gateways/openclaw/patch_routing.py
 services/gateways/picoclaw/.provider.json
 services/gateways/trustclaw/.provider.json

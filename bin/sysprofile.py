@@ -61,8 +61,6 @@ def _get_linux_gpu(ram_bytes=0):
   # Check AMD APU (Strix Halo / Ryzen AI Max) first
   cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
   if cpu_info and 'Ryzen AI Max' in cpu_info:
-    # Strix Halo allocates VRAM dynamically from system RAM.
-    # We estimate 75% of total system RAM is addressable by the APU for inference.
     vram_mb = int((ram_bytes * 0.75) / (1024 * 1024))
     return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_mb * 1024 * 1024
 
@@ -100,13 +98,6 @@ def platform_details():
   ukeys = ['system', 'node', 'release', 'version', 'machine']
   uname = dict(zip(ukeys + ['processor'], list(platform.uname())))
   os_uname = dict(zip(ukeys, list(os.uname())))
-  for ukey in ukeys:
-    pval = uname[ukey]
-    oval = os_uname[ukey]
-    if pval != oval:
-      print(
-        'WARNING: %-20 user-facing "%s" != "%s" kernel' % (ukey, pval, oval)
-      )
 
   details = {
     "os": sys_os,
@@ -139,29 +130,13 @@ def platform_details():
   return details
 
 def main():
-  parser = argparse.ArgumentParser(
-    description="Generate a MetaClaw hardware and provider profile."
-  )
-  parser.add_argument(
-    '-t', '--tier', type=int, default=-1,
-    help="The architectural tier (0-4) of the cluster."
-  )
-  parser.add_argument(
-    '-p', '--planes', type=str, default="",
-    help="Comma-separated planes this host represents (e.g., control,compute)"
-  )
-  parser.add_argument(
-    '-w', '--wan', type=str, default="",
-    help="Require WAN access (y/n)."
-  )
-  parser.add_argument(
-    '-hl', '--headless', type=str, default="",
-    help="Is this node a headless server? (y/n)"
-  )
-  parser.add_argument(
-    '-o', '--order', type=str, default="",
-    help="Priority order for provider selection (e.g. safety,cost,resources)"
-  )
+  parser = argparse.ArgumentParser(description="Generate a MetaClaw hardware and provider profile.")
+  parser.add_argument('-t', '--tier', type=int, default=-1, help="The architectural tier (0-4) of the cluster.")
+  parser.add_argument('-p', '--planes', type=str, default="", help="Comma-separated planes this host represents.")
+  parser.add_argument('-w', '--wan', type=str, default="", help="Require WAN access (y/n).")
+  parser.add_argument('-hl', '--headless', type=str, default="", help="Is this node a headless server? (y/n)")
+  parser.add_argument('-o', '--order', type=str, default="", help="Priority order for provider selection.")
+  parser.add_argument('-r', '--routing', type=str, default="", help="OpenClaw prompt-to-model routing strategy.")
   args = parser.parse_args()
 
   tier = args.tier
@@ -266,14 +241,30 @@ def main():
 
   planes = planes_input.split(',')
 
+  routing_input = args.routing.lower()
+  if not routing_input and "control" in planes:
+    print("\nSelect Prompt Routing Strategy for OpenClaw:")
+    print("  [1] Lexical + Predictive (Uses local Judge Model to score complexity)")
+    print("  [2] Pass-Through (Rigid 1:1 mapping based entirely on YAML profiles)")
+    while True:
+      r_choice = input("Enter choice [1]: ").strip()
+      if not r_choice or r_choice == '1':
+        routing_strategy = "lexical_predictive"
+        break
+      elif r_choice == '2':
+        routing_strategy = "pass_through"
+        break
+      else:
+        print("Invalid choice.")
+  else:
+    routing_strategy = routing_input or "pass_through"
+
   wan_input = args.wan.lower()
   if wan_input not in ['y', 'n', 'yes', 'no']:
     print("\nDo you require remote WAN access to your cluster while traveling,")
     print("or the ability to receive external webhooks (e.g., Telegram bots)?")
-    print("If you only plan to use OpenClaw on your home Wi-Fi, answer No.")
     while True:
       wan_choice = input("Require WAN access? [Y/n]: ").strip().lower()
-      # Defaulting to 'yes' if empty string is provided
       if wan_choice in ['y', 'yes', '']:
         require_wan = True
         break
@@ -309,7 +300,6 @@ def main():
   if not order_input:
     default_order = 'cost,safety,resources'
     print("\nPlease specify your priority order for provider selection.")
-    print("Provide 'safety', 'cost', and 'resources' separated by commas in your preferred order.")
     print("Example: " + default_order)
     while True:
       o_choice = input("Enter priority order [%s]: " % default_order).strip().lower()
@@ -324,9 +314,6 @@ def main():
         print("Invalid input. You must provide exactly 'safety', 'cost', and 'resources' separated by commas.")
   else:
     parts = [p.strip() for p in order_input.split(',')]
-    if len(parts) != 3 or set(parts) != valid_options:
-      print(f"FATAL: Invalid --order argument '{order_input}'. Must be a permutation of safety,cost,resources.")
-      sys.exit(1)
     order_input = ",".join(parts)
 
   profile_path = "profile.json"
@@ -347,10 +334,15 @@ def main():
     profile, hostname, tier, planes, hw_details, require_wan, is_headless, order_prefs
   )
 
+  if "control" in planes:
+    profile["routing_strategy"] = routing_strategy
+
   with open(profile_path, 'w') as f:
     json.dump(profile, f, indent=2)
 
   print(f"\n[Profile] Node '{hostname}' registered as Tier {tier} representing planes: {', '.join(planes)}.")
+  if "control" in planes:
+    print(f"[Profile] Routing Strategy set to: {routing_strategy}")
   wan_str = 'Enabled (Bare-Metal Lifeline)' if require_wan and is_headless else ('Enabled (Dockerized)' if require_wan else 'Disabled')
   print(f"[Profile] Network mesh (Tailscale) set to: {wan_str}")
   prefs_str = ' > '.join([p.capitalize() for p in order_prefs])

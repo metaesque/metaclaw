@@ -16,8 +16,7 @@ EMAIL="wade@holst.ca"
 GIT_NAME="Wade Holst"
 SSH_KEY_PATH="$HOME/.ssh/id_ed25519_metaesque"
 REPO_URL="git@metaesque.ssh:metaesque/metaclaw.git"
-#TARGET_DIR="$HOME/workspace/src/metaclaw"
-TARGET_DIR="$HOME"
+TARGET_DIR="$HOME/metaclaw"
 
 # ------------------------------------------------------------------------------
 # 1. SSH Identity Generation
@@ -31,10 +30,6 @@ if [[ -f "$SSH_KEY_PATH" ]]; then
     echo "SSH key already exists at $SSH_KEY_PATH. Skipping generation."
 else
     echo "Generating new Ed25519 SSH key..."
-    # -t ed25519: modern secure algorithm
-    # -C: comment/label
-    # -f: output file location
-    # -N "": empty passphrase for frictionless automated operations
     ssh-keygen -t ed25519 -C "$EMAIL" -f "$SSH_KEY_PATH" -N ""
     echo "SSH key generated successfully."
 fi
@@ -55,7 +50,6 @@ cat "${SSH_KEY_PATH}.pub"
 echo ""
 echo "================================================================================"
 
-# Pause execution until the user explicitly confirms completion
 read -p "Press [Enter] ONLY AFTER you have successfully added the key to GitHub... "
 
 # ------------------------------------------------------------------------------
@@ -67,7 +61,6 @@ SSH_CONFIG="$HOME/.ssh/config"
 touch "$SSH_CONFIG"
 chmod 600 "$SSH_CONFIG"
 
-# Check if the alias already exists to prevent duplicate entries
 if grep -q "Host metaesque.ssh" "$SSH_CONFIG"; then
     echo "Host alias 'metaesque.ssh' already exists in $SSH_CONFIG. Skipping."
 else
@@ -100,43 +93,36 @@ echo "Git identity set to: $GIT_NAME <$EMAIL>"
 # ------------------------------------------------------------------------------
 echo -e "\n[5/6] Cloning MetaClaw Repository..."
 
-if [[ "$TARGET_DIR" == "$HOME" ]] ; then
-    # We do not use 'git clone' because that requires an empty directory,
-    # and $HOME is not empty even on a fresh install).
-    cd $TARGET_DIR
-    git init
-    git remote add origin "$REPO_URL"
+if [[ -d "$TARGET_DIR" ]]; then
+    echo "Directory $TARGET_DIR already exists. Pulling latest..."
+    cd "$TARGET_DIR"
     git pull origin main
-elif [[ -d "$TARGET_DIR" ]]; then
-    echo "Directory $TARGET_DIR already exists. Skipping clone."
 else
-    mkdir -p "$TARGET_DIR"
-    echo "Cloning from $REPO_URL..."
-    # The clone relies on the SSH alias established in step 3 to authenticate
-    # using the newly generated key, bypassing any generic github.com keys.
-    git clone "$REPO_URL"
+    echo "Cloning from $REPO_URL to $TARGET_DIR..."
+    git clone "$REPO_URL" "$TARGET_DIR"
 fi
 
-# TODO(wmh): consider adding some or all of these
-#   git pull origin main
-#   git branch --set-upstream-to=origin/main main
-#   git push -u origin main
-
 # ------------------------------------------------------------------------------
-# 6. Hydrate Local State
+# 6. Hydrate External Workspace State
 # ------------------------------------------------------------------------------
-echo -e "\n[6/6] Hydrating Local Workspace State..."
+echo -e "\n[6/6] External Workspace Provisioning..."
 
 cd "$TARGET_DIR"
 
-if [[ -d "workspace" ]]; then
-    echo "Local 'workspace' directory already exists. Skipping template copy."
+DEFAULT_WS="$HOME/openclaw"
+read -p "Enter path for your persistent OpenClaw workspace directory [$DEFAULT_WS]: " USER_WS
+WORKSPACE_PATH="${USER_WS:-$DEFAULT_WS}"
+
+if [[ -d "$WORKSPACE_PATH" ]]; then
+    echo "External workspace already exists at $WORKSPACE_PATH. Preserving user data."
 else
-    if [[ -d "workspace_template" ]]; then
-        echo "Copying 'workspace_template' to 'workspace'..."
-        cp -r workspace_template workspace
+    if [[ -d ".workspace.template" ]]; then
+        echo "Copying '.workspace.template' to '$WORKSPACE_PATH'..."
+        cp -r .workspace.template "$WORKSPACE_PATH"
+        echo "Template hydrated successfully."
     else
-        echo "WARNING: 'workspace_template' not found in repo. Cannot hydrate."
+        echo "WARNING: '.workspace.template' not found in repo. Creating empty directory at $WORKSPACE_PATH."
+        mkdir -p "$WORKSPACE_PATH"
     fi
 fi
 
@@ -145,5 +131,5 @@ echo "# Setup Complete."
 echo "#"
 echo "# NEXT STEPS:"
 echo "# 1. Manually transfer your private .env.json and profile.json to $TARGET_DIR"
-echo "# 2. Run 'make wizard-batch' to initialize the MetaClaw environment."
+echo "# 2. Run 'make wizard' to initialize the MetaClaw environment."
 echo "################################################################################"

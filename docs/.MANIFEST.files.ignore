@@ -48,6 +48,7 @@ tmp/metaclaw.zip
 tmp/mc
 tosort/
 workspace/
+.workspace.template/
 ~services/.*/\.env$               # .env files are auto-generated
 ~services/.*/\.env\.json$         # .env.json files are secrets
 ~services/.*/\.metal$             # controls whether Docker or bare-metal

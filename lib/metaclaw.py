@@ -389,6 +389,18 @@ class MetaClaw:
             # Update the cache for future persistence
             env_vars[var_name] = val
 
+            # --- AUTO-PROVISIONING INJECTION FOR WORKSPACE ---
+            if var_name == "OPENCLAW_WORKSPACE" and val:
+                expanded_val = os.path.expanduser(val)
+                if not os.path.exists(expanded_val):
+                    template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.workspace.template'))
+                    if os.path.exists(template_dir):
+                        print(f"  [MetaClaw] Auto-provisioning workspace from template into: {expanded_val}")
+                        shutil.copytree(template_dir, expanded_val)
+                    else:
+                        print(f"  [MetaClaw] Creating empty workspace directory: {expanded_val}")
+                        os.makedirs(expanded_val)
+
           out_line = f"{var_name}={val}{suffix}\n"
           f_out.write(out_line)
 
