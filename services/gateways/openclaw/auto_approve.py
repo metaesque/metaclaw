@@ -31,6 +31,9 @@ def get_pending_uuids():
         return []
 
 def main():
+    # Flush=True ensures the output hits the Make terminal immediately without Python buffering
+    print("[Auto-Approve] Starting background watch loop for 30 seconds...", flush=True)
+
     # Loop for 30 seconds (15 iterations * 2s sleep)
     # This provides ample time for the browser to open, load the React app,
     # generate the crypto keys, establish the WebSocket, and submit the pending request.
@@ -39,7 +42,7 @@ def main():
 
         for req_id in uuids:
             # We found a UUID. Attempt to approve it.
-            print(f"\n[Auto-Approve] Caught pending device request ({req_id}). Approving...")
+            print(f"\n[Auto-Approve] Caught pending device request ({req_id}). Approving...", flush=True)
             result = subprocess.run(
                 ["docker", "exec", "openclaw-gateway", "openclaw", "devices", "approve", req_id],
                 capture_output=True,
@@ -47,7 +50,7 @@ def main():
             )
 
             if result.returncode == 0:
-                print(f"[Auto-Approve] Successfully paired device. You may proceed in the browser.")
+                print(f"[Auto-Approve] Successfully paired device. You may proceed in the browser.", flush=True)
                 sys.exit(0)
             else:
                 # If approval fails (e.g., the UUID was a paired device string rather than a request),
@@ -55,6 +58,8 @@ def main():
                 pass
 
         time.sleep(2)
+
+    print("\n[Auto-Approve] Watch loop finished. No pending requests approved (Device likely already paired).", flush=True)
 
 if __name__ == "__main__":
     main()
