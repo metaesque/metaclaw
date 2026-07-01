@@ -41,7 +41,7 @@ if 'controlUi' not in data['gateway']:
   data['gateway']['controlUi'] = {}
 data['gateway']['controlUi']['allowInsecureAuth'] = True
 
-# 1b. Inject Tailscale URLs into Allowed Origins to satisfy CORS
+# 1b. Inject Tailscale IPs into Allowed Origins to satisfy CORS
 allowed_origins = data['gateway']['controlUi'].get('allowedOrigins', [])
 
 # Always allow local interfaces
@@ -72,6 +72,11 @@ except Exception:
     pass # Tailscale not installed or not accessible to the script
 
 data['gateway']['controlUi']['allowedOrigins'] = allowed_origins
+
+# 1c. Forcefully Synchronize the Authentication Token
+if 'auth' not in data['gateway']:
+  data['gateway']['auth'] = {}
+data['gateway']['auth']['token'] = proxy_key
 
 # 2. Hijack the Default OpenAI Provider
 if 'models' not in data:
@@ -129,6 +134,7 @@ with open(CONFIG_PATH, 'w') as f:
 
 print("SUCCESS: Patched baseline network routing and loopback binding.")
 print("SUCCESS: Allowed insecure HTTP auth and injected Tailscale IPs to facilitate mesh access.")
+print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Enforced 'complex-model' fallback to prevent nonexistent model requests.")
 print(f"SUCCESS: Auto-discovered and registered {len(agents_list) - 1} custom agents from workspace.")
