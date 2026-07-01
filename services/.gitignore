@@ -13,7 +13,5 @@
 /proxy-reverse
 /queue
 /secret
-/tracer
 /vcs
-
-
+/tracer

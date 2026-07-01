@@ -97,6 +97,8 @@ patch:
 	@docker kill $(SERVICE_NAME) >/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Starting gateway to apply patches and load config..."
 	@docker start $(SERVICE_NAME) >/dev/null || true
+	@echo "[$(SERVICE_TITLE)] Awaiting patched gateway stabilization (5s)..."
+	@sleep 5
 
 sync:
 	@echo "[$(SERVICE_TITLE)] Forcing native filesystem sync to invalidate cache..."
