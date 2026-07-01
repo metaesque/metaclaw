@@ -136,7 +136,11 @@ def main():
   )
   parser.add_argument(
     '-t', '--tier', type=int, default=-1,
-    help="The architectural tier (0-4) of the cluster this node joins/forms."
+    help="The architectural tier (0-4) of the cluster."
+  )
+  parser.add_argument(
+    '-p', '--planes', type=str, default="",
+    help="Comma-separated planes this host represents (e.g., control,compute)"
   )
   parser.add_argument(
     '-w', '--wan', type=str, default="",
@@ -158,12 +162,12 @@ def main():
     print(border)
     print(" Meta<Claw> Cluster Profiler")
     print(border)
-    print("Select the cluster architectural tier this machine represents/joins:")
+    print("What tier is this host in? (0-4)")
     print("  [0] Tier 0: The Day 1 Minilith (Constrained dual-use laptop)")
     print("  [1] Tier 1: The Month 2 Monolith (Dedicated Mini-PC, all-in-one)")
-    print("  [2] Compute Node (Advances cluster to Tier 2: Data Sovereignty)")
-    print("  [3] Execution Node (Advances cluster to Tier 3: Sandbox Extraction)")
-    print("  [4] Archive Node (Advances cluster to Tier 4: Archive Expansion)")
+    print("  [2] Tier 2: Data Sovereignty (Adds Compute Node)")
+    print("  [3] Tier 3: Sandbox Extraction (Adds Execution Node)")
+    print("  [4] Tier 4: Archive Expansion (Adds Archive Node)")
     default_tier = 0
     while True:
       try:
@@ -180,6 +184,25 @@ def main():
             print("Please enter a number between 0 and 4.")
       except ValueError:
         print("Invalid input. Please enter an integer.")
+
+  planes_input = args.planes
+  if not planes_input:
+    print("\nWhat plane(s) does this host represent?")
+    print("Available: control, compute, execution, archive")
+    print("Enter comma-separated planes, or 'all' for all planes.")
+    while True:
+      p_choice = input("Enter plane(s) [all]: ").strip().lower()
+      if not p_choice or p_choice == 'all':
+        planes_input = "control,compute,execution,archive"
+        break
+      parts = [p.strip() for p in p_choice.split(',')]
+      valid = {'control', 'compute', 'execution', 'archive'}
+      if all(p in valid for p in parts):
+        planes_input = ",".join(parts)
+        break
+      else:
+        print("Invalid input. Please enter valid planes (e.g., control,compute).")
+  planes = planes_input.split(',')
 
   wan_input = args.wan.lower()
   if wan_input not in ['y', 'n', 'yes', 'no']:
@@ -252,23 +275,13 @@ def main():
   order_prefs = order_input.split(',')
 
   profile = metaclaw.Inst.updateCluster(
-    profile, hostname, tier, hw_details, require_wan, order_prefs
+    profile, hostname, tier, planes, hw_details, require_wan, is_headless, order_prefs
   )
-
-  # Override network to strictly treat Tailscale as a bare-metal lifeline
-  # This prevents docker compose teardowns from severing SSH connections on headless nodes
-  if require_wan:
-    for node in profile.get("nodes", []):
-      if node["hostname"] == hostname:
-        if "network" in node.get("providers", {}):
-          node["providers"]["network"]["metal"] = is_headless
-        # Track the headless state in the hardware dictionary for future reference
-        node["hardware"]["headless"] = is_headless
 
   with open(profile_path, 'w') as f:
     json.dump(profile, f, indent=2)
 
-  print(f"\n[Profile] Node '{hostname}' registered as Tier {tier}.")
+  print(f"\n[Profile] Node '{hostname}' registered as Tier {tier} representing planes: {', '.join(planes)}.")
   wan_str = 'Enabled (Bare-Metal Lifeline)' if require_wan and is_headless else ('Enabled (Dockerized)' if require_wan else 'Disabled')
   print(f"[Profile] Network mesh (Tailscale) set to: {wan_str}")
   prefs_str = ' > '.join([p.capitalize() for p in order_prefs])

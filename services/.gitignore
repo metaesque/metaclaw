@@ -9,4 +9,11 @@
 /runner
 /sandbox
 /searcher
+/event
+/proxy-reverse
+/queue
+/secret
+/tracer
+/vcs
+
 

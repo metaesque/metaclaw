@@ -59,7 +59,8 @@ class MetaClaw:
   def structure(self):
     """
     Loads and returns the comprehensive MetaClaw service taxonomy by
-    reconstructing it from modular JSON fragments. Uses internal caching
+    reconstructing it from modular JSON fragments.
+    Uses internal caching
     based on file modification timestamps to prevent disk I/O bottlenecks.
     """
     lib_dir = os.path.dirname(os.path.abspath(__file__))
@@ -158,137 +159,128 @@ class MetaClaw:
     profile,
     current_hostname,
     tier,
+    planes,
     hardware,
     require_wan,
+    is_headless,
     order_prefs
   ):
     """
     Analyzes the entire cluster and redistributes service providers based
-    on the newly added node. Handles the 'teardown' logic by removing assignments
-    from older nodes. Utilizes the order_prefs prioritization matrix to select
-    the optimal providers based on Safety, Cost, and Resources.
+    on the newly added node and the specific structural planes it represents.
+    Handles 'teardown' logic by evicting overlapping planes from older nodes.
+    Utilizes the order_prefs prioritization matrix to select the optimal providers.
 
     Args:
       profile (dict): The current cluster profile loaded from profile.json.
       current_hostname (str): The hostname of the node being profiled.
       tier (int): The target architectural tier (0-4) for this node.
+      planes (list): A list of planes this node represents (e.g., ["control", "compute"]).
       hardware (dict): The hardware details dictionary for this node.
       require_wan (bool): Whether the node requires remote WAN access.
-      order_prefs (list of str): Priority order for provider selection
-        (e.g., ['safety', 'cost', 'resources']).
+      is_headless (bool): Whether the node is a bare-metal headless server.
+      order_prefs (list of str): Priority order for provider selection.
 
     Returns:
       dict: The updated cluster profile.
     """
-    node = next(
-      (n for n in profile["nodes"] if n["hostname"] == current_hostname), None
-    )
+    node = next((n for n in profile["nodes"] if n["hostname"] == current_hostname), None)
     if not node:
-      node = {"hostname": current_hostname}
-      profile["nodes"].append(node)
+        node = {"hostname": current_hostname, "hardware": hardware}
+        profile["nodes"].append(node)
 
     node["tier"] = tier
-    node["hardware"] = hardware
-
-    # Baseline all-in-one defaults
-    providers = {
-      "gateway": {"uid": "openclaw"},
-      "proxy": {"uid": "litellm"},
-      "logger": {"uid": "victorialogs"},
-      "cache": {"uid": "redis"},
-      "memory": {"uid": "postgres"},
-      "runner": {"uid": "ollama", "metal": True},
-      "sandbox": {"uid": "docker-dood" if hardware["os"] == "Darwin" else "gvisor"},
-    }
-
-    if require_wan:
-      providers["network"] = {"uid": "tailscale"}
-
-    node["providers"] = providers
+    node["planes"] = planes
+    node["order_prefs"] = order_prefs
+    node["require_wan"] = require_wan
+    node["hardware"]["headless"] = is_headless
+    node["hardware"].update(hardware)
 
     # ============================================================================
-    # TIER REDISTRIBUTION LOGIC (CLUSTER RECONCILIATION)
+    # PLANE EVICTION LOGIC (CLUSTER RECONCILIATION)
     # ============================================================================
-    if tier == 1:
-      # Adding a Tier 1 node obsoletes Tier 0 nodes
-      for n in profile["nodes"]:
-        if n["tier"] == 0:
-          n["providers"] = {} # Mark for full teardown
-
-    elif tier >= 2:
-      control_node = next(
-        (n for n in profile["nodes"] if n["tier"] == 1), None
-      )
-
-      if tier == 2:
-        node["providers"] = {
-          "runner": {"uid": "vllm" if hardware["vram_gb"] > 20 else "ollama", "metal": True},
-        }
-        if require_wan:
-          node["providers"]["network"] = {"uid": "tailscale"}
-        if control_node and "runner" in control_node["providers"]:
-          del control_node["providers"]["runner"]
-
-      elif tier == 3:
-        node["providers"] = {
-          "sandbox": {"uid": "docker-dood" if hardware["os"] == "Darwin" else "gvisor"},
-          "ci": {"uid": "woodpecker"},
-        }
-        if require_wan:
-          node["providers"]["network"] = {"uid": "tailscale"}
-
-        # Keep legacy fallback for fetcher/searcher until they are migrated to the matrix
-        node["providers"]["fetcher"] = {"uid": "firecrawl"}
-        cost_idx = order_prefs.index('cost') if 'cost' in order_prefs else 1
-        res_idx = order_prefs.index('resources') if 'resources' in order_prefs else 2
-        cost_over_resources = cost_idx < res_idx
-        if cost_over_resources:
-          node["providers"]["searcher"] = {"uid": "searxng"}
-        else:
-          node["providers"]["searcher"] = {"uid": "parallelai"}
-
-        if control_node:
-          for svc in ["sandbox", "browser", "fetcher", "searcher"]:
-            if svc in control_node["providers"]:
-              del control_node["providers"][svc]
-
-      elif tier == 4:
-        node["providers"] = {
-          "memory": {"uid": "postgres"},
-          "logger": {"uid": "victorialogs"},
-          "vcs": {"uid": "gitea"},
-        }
-        if require_wan:
-          node["providers"]["network"] = {"uid": "tailscale"}
-        if control_node:
-          control_node["providers"].pop("memory", None)
-          control_node["providers"].pop("logger", None)
+    # Ensure there is only one authoritative node per plane in the cluster.
+    for other_node in profile["nodes"]:
+        if other_node["hostname"] != current_hostname:
+            other_node["planes"] = [p for p in other_node.get("planes", []) if p not in planes]
 
     # ============================================================================
-    # MATRIX RESOLUTION (DYNAMIC OVERRIDES)
+    # PROVIDER RESOLUTION VIA MATRIX
     # ============================================================================
-    order_str = ",".join(order_prefs)
     struct = self.structure()
+    all_planes = struct.get('planes', {})
 
-    for svc_key, svc_data in struct.get('services', {}).items():
-      if 'matrix' in svc_data:
-        tier_key = f"tier-{tier}"
-        os_key = hardware["os"]
-        matrix = svc_data['matrix']
+    for n in profile["nodes"]:
+        n_tier = n.get("tier", 0)
+        n_os = n.get("hardware", {}).get("os", "Linux")
+        n_order = ",".join(n.get("order_prefs", order_prefs))
+        n_planes = n.get("planes", [])
+        n_wan = n.get("require_wan", False)
 
-        if tier_key in matrix and os_key in matrix[tier_key] and order_str in matrix[tier_key][os_key]:
-          decision = matrix[tier_key][os_key][order_str]
-          prov_uid = decision.get("uid")
-          metal = decision.get("metal", False)
-          why = decision.get("why", "No justification provided.")
+        assigned_services = set()
+        for p in n_planes:
+            if p in all_planes:
+                assigned_services.update(all_planes[p].get("services", []))
 
-          print(f"[Matrix] Selected '{prov_uid}' for {svc_key} (Tier {tier}, {os_key}, {order_str})")
-          print(f"         Reason: {why}")
+        if n_wan:
+            assigned_services.add("network")
 
-          node["providers"][svc_key] = {
-            "uid": prov_uid,
-            "metal": metal
-          }
+        new_providers = {}
+        for svc_key in assigned_services:
+            svc_data = struct.get('services', {}).get(svc_key, {})
+            prov_uid = None
+            metal = False
+
+            # Check matrix for overriding providers
+            if 'matrix' in svc_data:
+                tier_key = f"tier-{n_tier}"
+                matrix = svc_data['matrix']
+                if tier_key in matrix and n_os in matrix[tier_key] and n_order in matrix[tier_key][n_os]:
+                    decision = matrix[tier_key][n_os][n_order]
+                    prov_uid = decision.get("uid")
+                    metal = decision.get("metal", False)
+
+            # Fallbacks if matrix misses or isn't defined
+            if not prov_uid:
+                fallbacks = {
+                    "gateway": "openclaw",
+                    "proxy": "litellm",
+                    "logger": "victorialogs",
+                    "cache": "redis",
+                    "memory": "postgres",
+                    "runner": "ollama",
+                    "sandbox": "docker-dood" if n_os == "Darwin" else "gvisor",
+                    "browser": "browseruse",
+                    "fetcher": "crawl4ai",
+                    "searcher": "searxng",
+                    "ci": "woodpecker",
+                    "vcs": "gitea",
+                    "network": "tailscale",
+                    "proxy-reverse": "caddy",
+                    "iam": "authelia",
+                    "secret": "doppler",
+                    "event": "hookdeck",
+                    "queue": "rabbitmq",
+                    "tracer": "signoz"
+                }
+                prov_uid = fallbacks.get(svc_key)
+                if svc_key == "runner" and prov_uid == "ollama":
+                    metal = True
+                if svc_key == "network":
+                    metal = n.get("hardware", {}).get("headless", False)
+
+            if prov_uid:
+                new_providers[svc_key] = {"uid": prov_uid, "metal": metal}
+
+        # Explicitly protect the lifeline for headless WAN nodes
+        if n_wan and n.get("hardware", {}).get("headless", False):
+            if "network" in new_providers:
+                new_providers["network"]["metal"] = True
+
+        n["providers"] = new_providers
+
+    # Prune orphaned nodes that have been completely evicted of planes and services
+    profile["nodes"] = [n for n in profile["nodes"] if n.get("planes") or n.get("providers")]
 
     return profile
 
