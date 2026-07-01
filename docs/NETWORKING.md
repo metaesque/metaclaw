@@ -60,6 +60,15 @@ Tailscale creates a secure, encrypted peer-to-peer network between your devices,
 * When you SSH via a `100.x.y.z` IP, the traffic flows peer-to-peer directly between your devices; the Tailscale website merely coordinates the initial key exchange.
 * When you travel, you access your OpenClaw Dashboard securely via `http://[Tailscale-IP]:18789` without needing a VPN server or complex port-forwarding rules.
 
+### Secure Contexts & WebCrypto API (The Tailscale Serve Mandate)
+Accessing the OpenClaw GUI over a remote Tailscale network requires `tailscale serve`.
+
+Modern browsers (Chrome, Safari) enforce a strict security policy for the **WebCrypto API** (the `crypto.subtle` library OpenClaw uses to generate the cryptographic "Device Identity" for login pairing). Browsers hardcode `127.0.0.1` and `localhost` as Secure Contexts.
+
+However, Tailscale IPs (`100.x.y.z`) are considered public/remote IPs by the browser. If accessed over plain `http://`, the browser flags it as an Insecure Context and completely disables the WebCrypto API, resulting in a continuous, unresolvable login loop in the OpenClaw GUI.
+
+MetaClaw automates `tailscale serve --bg 18789` during deployment. This commands the host's Tailscale daemon to generate a valid SSL certificate and establish an HTTPS reverse proxy (e.g., `https://control.tail5ce120.ts.net`). Accessing this URL satisfies the browser's Secure Context requirements, enabling seamless device pairing.
+
 ### Bare-Metal vs Dockerized Tailscale (The Lifeline)
 If you are using Tailscale to SSH into a headless remote node, Tailscale **MUST** be installed natively on the bare-metal host OS. If it is run as a Docker container, executing a framework teardown (`make factory-reset-soft`) will kill the container, severing your SSH tunnel and permanently locking you out of the machine. MetaClaw strictly treats Tailscale as a bare-metal lifeline (`metal: true` in `profile.json`) to prevent automated orchestration from destroying your connection.
 

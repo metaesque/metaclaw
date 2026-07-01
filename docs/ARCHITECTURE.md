@@ -59,11 +59,11 @@ should reside on the same gigabit LAN.
 The planes are formalized in `./planes.json` and available in human-readable
 format in `./docs/SERVICES.md`.
 
-### The 5 Tiers of the Hardware Journey
+### Decoupling Tiers from Planes
 
-Meta<Claw> identifies a 5-tier hardware journey that a user's cluster may take.
-A "Tier" does not represent a single computer; rather, it represents a discrete
-stage in the growth of your overall local cluster.
+Meta<Claw> draws a strict architectural distinction between a "Tier" and a "Plane".
+* **A Plane** is a logical, functional role (Control, Compute, Execution, Archive).
+* **A Tier** does not represent a single computer. A Tier represents a discrete stage in the growth of your overall local cluster. A single node within a cluster hosts one or more Planes.
 
 * Many users will start at **Tier 0**, some will jump right to **Tier 1**, and
     many will decide not to go any further, content to use cloud-based LLMs and
@@ -81,23 +81,24 @@ stage in the growth of your overall local cluster.
 * **Tier 5** introduces an edge computer for allowing a user to share some of
     their compute resources with other users (Future Roadmap).
 
-## Remote Access
+## Remote Access & The Headless Invariant
 
 Because most of the services must be co-located on a high-speed LAN, users who
-travel (e.g., via Starlink) face a connectivity challenge.
+travel (e.g., via Starlink) face a connectivity challenge. Meta<Claw> relies on Tailscale deployed directly on the host operating systems of all cluster nodes.
 
-* **The Zero-Trust Overlay (Tailscale):** Meta<Claw> relies on Tailscale (a
-    zero-configuration WireGuard mesh network) deployed directly on the host
-    operating systems of all cluster nodes.
-* **Mechanics:** Tailscale assigns a static, private `100.x.y.z` IP to every
-    node in the homebase cluster and to the nomad's travel laptop.
-* **Result:** The user accesses the OpenClaw Dashboard remotely via
-    `http://100.x.y.z:18789`. Furthermore, the user can utilize `tailscale ssh`
-    to securely jump into any node in the farm to execute `make` targets from
-    anywhere in the world, entirely bypassing the public internet without exposing
-    sensitive GUI ports.
+**THE HEADLESS LIFELINE INVARIANT:**
+When deploying to a headless Linux node (accessed exclusively via SSH), Tailscale **MUST** be run natively on the bare-metal OS (`"metal": true`). It is strictly forbidden to run Tailscale within a Docker container on a headless node.
+If Tailscale is containerized, any framework reset (e.g., `make factory-reset-soft` calling `docker compose down`) will destroy the mesh interface, sever the user's SSH tunnel, and permanently lock them out of the remote machine. MetaClaw's orchestrator natively detects bare-metal lifelines and excludes them from teardown loops.
 
 ## Software Design Decisions
+
+### Ephemeral Gateway State (Cattle, not Pets)
+
+Standard OpenClaw installations treat `~/.openclaw` as a "pet"—something to be kept alive, updated, and carefully maintained across versions. MetaClaw treats the OpenClaw Gateway as "cattle"—ephemeral compute that can be destroyed and rebuilt instantly.
+
+During a `factory-reset-soft`, the entire `config/openclaw.json` state is wiped.
+* **The Benefit:** Wiping the JSON guarantees zero configuration drift between framework updates, ensuring a sterile, perfect boot sequence. It enforces an "Immutable Infrastructure" mindset, forcing users to define their agents natively in `.yaml` workspace files rather than relying on brittle UI state.
+* **The Tradeoff:** Wiping the config deletes the browser's pairing state. To mitigate this, MetaClaw implements an `auto_approve.py` background worker that uses schema-aware JSON parsing to seamlessly intercept and approve new Device Identities the moment a user opens the GUI, ensuring the user experience remains frictionless.
 
 ### Centralized Service Discovery & Network Aliasing
 

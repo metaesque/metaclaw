@@ -22,19 +22,20 @@ This document outlines the prioritized architectural strategy for integrating fu
 
 **Current Hardware State:**
 The dedicated edge hardware has been successfully physically provisioned. Both nodes are running headless Ubuntu Server, are accessible remotely via Tailscale, can be managed seamlessly via Emacs TRAMP, and have the `metaesque/metaclaw` repository cloned into the `metaclaw` user's `$HOME` directory.
+* **The Control Node:** GMKtec K8 Plus
+* **The Compute Node:** GMKtec EVO X2
 
-*   **The Control Node:** GMKtec K8 Plus
-*   **The Compute Node:** GMKtec EVO X2
+### Step A: Evolve the Control Node (Tier 2 Control Plane)
+**Status: Mostly Complete (July 1, 2026).** The node successfully boots, handles remote Tailscale HTTPS UI access, and resolves basic prompts. Comprehensive testing of fetchers/searchers is pending.
+1. **Ubuntu Optimization:** Refactored Makefiles and deployment scripts to account for headless Ubuntu constraints (e.g., bare-metal Tailscale lifelines, WebCrypto HTTPS requirements).
+2. **Provider Diversification:** Expanded the `services` architecture to support robust, bare-metal or heavy-docker providers (PostgreSQL pgvector, VictoriaLogs, LiteLLM).
 
-### Step A: Evolve the Control Node (Tier 1)
-We must upgrade MetaClaw so the K8 Plus can act as the dedicated **Tier 1 Control Plane**.
-1. **Ubuntu Optimization:** Refactor Makefiles and deployment scripts to account for Ubuntu-specific constraints (e.g., native Docker socket permissions versus macOS OrbStack).
-2. **Provider Diversification:** Expand the `services` architecture to support robust, bare-metal or heavy-docker providers that are unsuitable for a laptop (e.g., full PostgreSQL pgvector orchestration, advanced continuous loggers).
-
-### Step B: Evolve the Compute Node (Tier 2)
-We must upgrade MetaClaw so the EVO X2 can act as the dedicated **Tier 2 LLM Runner**.
-1. **Local Model Hosting:** Configure the LLM Runner (e.g., Ollama or vLLM) to utilize the EVO X2's Strix Halo APU and unified memory for high-speed local inference.
-2. **Cluster Request Routing:** Update MetaClaw's networking bindings to allow the Compute Node to receive and process LLM inference requests from the Control Node (K8 Plus), as well as from authorized remote endpoints across the Tailscale mesh.
+### Step B: Evolve the Compute Node (Tier 2 Compute Plane)
+**Status: PENDING (Next Immediate Step).**
+We must configure the EVO X2 to act as the dedicated **Tier 2 LLM Runner** to eliminate expensive API costs for trivial agent actions.
+1. **Local Model Hosting:** Configure the LLM Runner (Ollama or vLLM) to utilize the EVO X2's Strix Halo APU and unified memory for high-speed local inference.
+2. **Proxy Routing Matrix:** Update LiteLLM's `config.yaml` on the Control Node to route `simple-model` tasks (e.g., tool execution) to small, fast models on the K8 Plus, while routing `complex-model` tasks to massive reasoning models (e.g., Llama 4 109B) over the LAN to the EVO-X2.
+3. **Hot/Cold Swapping:** Establish logic/timeout protocols within the runners to seamlessly swap specialized models (vision, code) into VRAM when required and evict them when idle.
 
 ---
 
@@ -53,7 +54,8 @@ We must upgrade MetaClaw so the EVO X2 can act as the dedicated **Tier 2 LLM Run
 
 * **Category:** `services/vcses/` & `services/ci/`
 * **Target Providers:** `Forgejo / Gitea`, `Woodpecker CI / Drone`
-* **Purpose:** As agents autonomously modify workspace files, we need absolute attribution. CI pipelines will mathematically prove the agent's code works against a test suite before it is deployed. Note: The `vcses` service currently has no providers implemented and needs initial integrations added.
+* **Purpose:** As agents autonomously modify workspace files, we need absolute attribution. CI pipelines will mathematically prove the agent's code works against a test suite before it is deployed.
+Note: The `vcses` service currently has no providers implemented and needs initial integrations added.
 
 ## Phase 4: Decoupling & Debugging (Queues & Tracing)
 

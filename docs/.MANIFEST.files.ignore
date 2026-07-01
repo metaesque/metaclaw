@@ -42,6 +42,7 @@ services/runners/ollama/.updated
 services/runners/ollama/bin/
 services/runners/ollama/ollama.log
 services/sandboxes/docker-dood/index.md.fixme
+services/vcs
 tmp/metaclaw.zip
 tmp/mc
 tosort/
