@@ -3,6 +3,7 @@ import os
 import sys
 import glob
 import yaml
+import subprocess
 
 # Load local .env to fetch parameterized container paths
 env_path = '.env'
@@ -39,6 +40,28 @@ data['gateway']['mode'] = 'local'
 if 'controlUi' not in data['gateway']:
   data['gateway']['controlUi'] = {}
 data['gateway']['controlUi']['allowInsecureAuth'] = True
+
+# 1b. Inject Tailscale IP into Allowed Origins to bypass Secure Context blocks
+allowed_origins = data['gateway']['controlUi'].get('allowedOrigins', [])
+
+# Always allow local interfaces to prevent locking out localhost
+if f"http://127.0.0.1:{port}" not in allowed_origins:
+    allowed_origins.append(f"http://127.0.0.1:{port}")
+if f"http://localhost:{port}" not in allowed_origins:
+    allowed_origins.append(f"http://localhost:{port}")
+
+# Dynamically fetch Tailscale IP if available on the host
+try:
+    ts_result = subprocess.run(['tailscale', 'ip', '-4'], capture_output=True, text=True, check=True)
+    ts_ip = ts_result.stdout.strip()
+    if ts_ip:
+        ts_origin = f"http://{ts_ip}:{port}"
+        if ts_origin not in allowed_origins:
+            allowed_origins.append(ts_origin)
+except Exception:
+    pass # Tailscale not installed or not accessible to the script
+
+data['gateway']['controlUi']['allowedOrigins'] = allowed_origins
 
 # 2. Hijack the Default OpenAI Provider
 if 'models' not in data:
@@ -95,7 +118,7 @@ with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
 
 print("SUCCESS: Patched baseline network routing and loopback binding.")
-print("SUCCESS: Allowed insecure HTTP auth to facilitate Tailscale mesh IP access.")
+print("SUCCESS: Allowed insecure HTTP auth and injected Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Enforced 'complex-model' fallback to prevent nonexistent model requests.")
 print(f"SUCCESS: Auto-discovered and registered {len(agents_list) - 1} custom agents from workspace.")
