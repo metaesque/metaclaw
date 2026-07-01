@@ -2,6 +2,12 @@
 
 This document records significant changes and updates made to the MetaClaw framework.
 
+## 2026-07-01 (Part 3)
+
+* **Sibling Directory Architecture**: Officially formalized the `repo/`, `workspace/`, and `external/` sibling hierarchy. Nested Git repositories (placing the workspace inside MetaClaw) are strictly forbidden to prevent `git clean` operations from destroying personal data.
+* **Streamlined Bootstrapping**: Refactored `setup_plane.sh` and `env_instantiate.py`. The setup process now gracefully pulls `.workspace.template` into the external sibling directory on both local laptops and headless servers automatically.
+* **Interactive Pipeling Bug Fix**: Removed interactive `read` commands from the `setup_plane.sh` script to ensure compatibility when the script is piped directly from `curl` into `bash`.
+
 ## 2026-07-01 (Part 2)
 
 * **GitOps Agent Development**: Transitioned the `meta-push`, `meta-cmp`, and `meta-pull` staging commands away from legacy local Python synchronization (`bin/meta_sync.py`) to a native GitHub Pull Request workflow, leveraging the newly public MetaClaw repository.

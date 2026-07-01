@@ -48,13 +48,16 @@ def main():
         print(f"  -> Routing Strategy saved: {routing_strategy}")
 
         # 2. Workspace Provisioning (Saved to service-level cache to bypass prompting)
-        default_ws = "../workspace"
-        print(f"\nEnter path for your persistent OpenClaw workspace directory [{default_ws}]: ")
+        # We calculate the absolute path based on the user's current working directory
+        # so they clearly see where the workspace will be placed relative to the system root.
+        default_ws_abs = os.path.abspath(os.path.join(os.getcwd(), "..", "workspace"))
+
+        print(f"\nEnter path for your persistent OpenClaw workspace directory [{default_ws_abs}]: ")
         ws_choice = input("> ").strip()
         if not ws_choice:
-            ws_choice = default_ws
+            ws_choice = default_ws_abs
 
-        # Resolve absolute path
+        # Resolve absolute path (in case they typed something relative or used ~)
         abs_ws_path = os.path.abspath(os.path.expanduser(ws_choice))
 
         if os.path.exists(abs_ws_path):

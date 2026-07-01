@@ -92,6 +92,21 @@ If Tailscale is containerized, any framework reset (e.g., `make factory-reset-so
 
 ## Software Design Decisions
 
+### The Sibling Directory Architecture (The GitOps Invariant)
+
+To guarantee the user's highly sensitive, personalized data is decoupled from the MetaClaw framework's version control and destructive reset commands, MetaClaw enforces a **Sibling Directory** architecture.
+
+You must not nest your workspace inside the MetaClaw git repository. Doing so creates nested `.git` contexts which can lead to accidental data loss during `git clean` operations.
+
+The standard node hierarchy is defined as follows:
+```text
+/home/metaclaw/
+   repo/          <-- The cloned MetaClaw repository (Ephemeral infrastructure logic)
+   workspace/     <-- The OpenClaw workspace jail (Persistent agents, skills, and memory)
+   external/      <-- The persistent data volumes (e.g., PostgreSQL databases, Ollama weights)
+```
+Docker Compose natively mounts `../workspace` and `../external` into the containers, ensuring your custom modifications survive framework reboots and `factory-reset` teardowns intact.
+
 ### Ephemeral Gateway State (Cattle, not Pets)
 
 Standard OpenClaw installations treat `~/.openclaw` as a "pet"—something to be kept alive, updated, and carefully maintained across versions. MetaClaw treats the OpenClaw Gateway as "cattle"—ephemeral compute that can be destroyed and rebuilt instantly.
