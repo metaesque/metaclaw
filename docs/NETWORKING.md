@@ -8,7 +8,6 @@ Wi-Fi is strictly forbidden for inter-node cluster communication. Wi-Fi operates
 
 ### Hardware Bridging
 All Meta<Claw> nodes must be hardwired into a dedicated Multi-Gigabit Ethernet switch.
-
 * **Tier 1 (Control Plane):** Requires a minimum 1GbE connection, with 2.5GbE strongly recommended to prevent bottlenecks when acting as the Tailscale subnet router.
 * **Tier 2 (Compute Plane):** Requires a minimum 2.5GbE connection, with 10GbE recommended for rapid offloading of generated tokens and ingestion of massive RAG payloads.
 * **Tier 3/4 (Execution/Archive Planes):** Requires a minimum 2.5GbE connection to support heavy Docker image shuffling and continuous vector database ingestion without saturating the port.
@@ -18,8 +17,8 @@ MetaClaw deployments must utilize a **Star Topology**. Daisy-chaining switches (
 
 ### Switch Recommendations
 To support a Star Topology, your core switch must possess enough 10GbE ports to accommodate all future Tier 2/Compute expansions without requiring a second chained switch.
-
-* **Budget (Single 10G Uplink):** Horaco / MokerLink 8-Port 2.5GbE + 1x 10GbE SFP+ (~$100 CAD). *Warning: Only suitable if you will never own more than one 10GbE node.*
+* **Budget (Single 10G Uplink):** Horaco / MokerLink 8-Port 2.5GbE + 1x 10GbE SFP+ (~$100 CAD).
+  *Warning: Only suitable if you will never own more than one 10GbE node.*
 * **Mid-Range (Quad 10G Uplinks):** MokerLink / SODOLA 8-Port 2.5GbE + 4x 10GbE SFP+ (~$150 - $200 CAD). The optimal balance, allowing up to four Mac Studios/Servers to hit the backplane at full speed.
 * **Advanced Mixed-Media Backbone:** Binardat 8-Port 10G Managed Switch (~$270 CAD). 4x 10GbE RJ45 + 4x 10GbE SFP+. The optimal configuration for bridging native copper 2.5G/10G edge nodes (like GMKtec PCs and Mac Studios) without requiring immediate SFP+ transceiver purchases. Features auto-adaptive NBASE-T support.
 * **Homelab Enterprise (All 10G):** MikroTik CRS309-1G-8S+IN (~$330 - $400 CAD). 8x 10GbE SFP+ ports. Requires copper transceivers for RJ45 nodes.
@@ -57,11 +56,14 @@ Standard residential internet connections use dynamic IPs and block inbound port
 
 ### What Tailscale Does
 Tailscale creates a secure, encrypted peer-to-peer network between your devices, entirely bypassing Carrier-Grade NAT (CGNAT) and firewalls.
-* It assigns a static, private `100.x.y.z` IP address to every node in your cluster, as well as your travel laptop or mobile phone.
+* The `tailscaled` daemon **MUST** be running on both your client device (e.g., your MacBook) and the host nodes (e.g., the GMKtec machines).
+* When you SSH via a `100.x.y.z` IP, the traffic flows peer-to-peer directly between your devices; the Tailscale website merely coordinates the initial key exchange.
 * When you travel, you access your OpenClaw Dashboard securely via `http://[Tailscale-IP]:18789` without needing a VPN server or complex port-forwarding rules.
 
-### Emacs TRAMP & Automated SSH Constraints
-By default, Tailscale Access Control Lists (ACLs) are configured to use **Check mode** for SSH connections. If you connect to a node (e.g., `ssh compute`), Tailscale intercepts the connection and prompts you to visit a URL (e.g., `https://login.tailscale.com/a/...`) to re-authenticate via your web browser to prove your identity.
+### Bare-Metal vs Dockerized Tailscale (The Lifeline)
+If you are using Tailscale to SSH into a headless remote node, Tailscale **MUST** be installed natively on the bare-metal host OS. If it is run as a Docker container, executing a framework teardown (`make factory-reset-soft`) will kill the container, severing your SSH tunnel and permanently locking you out of the machine. MetaClaw strictly treats Tailscale as a bare-metal lifeline (`metal: true` in `profile.json`) to prevent automated orchestration from destroying your connection.
 
+### Emacs TRAMP & Automated SSH Constraints
+By default, Tailscale Access Control Lists (ACLs) are configured to use **Check mode** for SSH connections. If you connect to a node (e.g., `ssh compute`), Tailscale intercepts the connection and prompts you to visit a URL to re-authenticate via your web browser.
 * **The Problem:** This interactive web-check completely breaks automated headless tools like Emacs TRAMP, `rsync` scripts, or `make sync-cluster` commands, causing them to hang indefinitely.
 * **The Solution:** To fix this for automation, you must log into the Tailscale Admin Console (`https://login.tailscale.com/admin/acls`), navigate to your Access Controls, and modify the SSH rules to disable Check Mode. Changing the action from `"action": "check"` to `"action": "accept"` ensures that devices cryptographically authenticated to your tailnet are granted instant SSH access to your MetaClaw nodes.

@@ -236,11 +236,18 @@ def main():
     profile, hostname, tier, hw_details, require_wan, order_prefs
   )
 
+  # Override network to strictly treat Tailscale as a bare-metal lifeline
+  # This prevents docker compose teardowns from severing SSH connections
+  if require_wan:
+    for node in profile.get("nodes", []):
+      if "network" in node.get("providers", {}):
+        node["providers"]["network"]["metal"] = True
+
   with open(profile_path, 'w') as f:
     json.dump(profile, f, indent=2)
 
   print(f"\n[Profile] Node '{hostname}' registered as Tier {tier}.")
-  wan_str = 'Enabled' if require_wan else 'Disabled'
+  wan_str = 'Enabled (Lifeline Protected)' if require_wan else 'Disabled'
   print(f"[Profile] Network mesh (Tailscale) set to: {wan_str}")
   prefs_str = ' > '.join([p.capitalize() for p in order_prefs])
   print(f"[Profile] Priorities set to: {prefs_str}")

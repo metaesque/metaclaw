@@ -79,9 +79,12 @@ def main():
       print(f"[Orchestrator] Teardown triggered for service: {sym}")
       env = dict(os.environ, OPENCLAW_SKIP_ENV="1")
       try:
-        # Execute 'make down' using the OLD state (.metal or docker) before altering symlinks
+        # MANDATE: Resolve symlink to physical path so Docker Compose relative paths evaluate correctly.
+        # If PWD is the symlink (services/proxy), then ../../memory/.env resolves incorrectly to services/.env.
+        # By resolving the realpath (services/proxies/litellm), ../../memory/.env resolves correctly to services/memory/.env.
+        real_sym_path = os.path.realpath(sym_path)
         subprocess.run(
-          ["make", "--no-print-directory", "-C", sym_path, "down"],
+          ["make", "--no-print-directory", "-C", real_sym_path, "down"],
           env=env, check=False
         )
       except Exception as e:

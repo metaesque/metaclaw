@@ -47,6 +47,7 @@ docs/ROADMAP.md
 docs/index.md
 docs/personal/Wade.md
 lib/metaclaw.py
+services/.gitignore
 services/browsers/.service.json
 services/browsers/Makefile
 services/browsers/agentbrowser/.provider.json

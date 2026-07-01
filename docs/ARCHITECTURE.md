@@ -123,6 +123,19 @@ The framework is strictly delineated into modular services, each with their own
 directory hierarchy (see `SERVICES.md`). Mixing concerns (e.g., placing
 Observability tools inside the Sandbox service) is forbidden.
 
+### The Symlink Context Invariant
+Meta<Claw> relies heavily on symlinks within the `services/` directory (e.g.,
+`services/proxy` -> `services/proxies/litellm`).
+
+**CRITICAL INVARIANT:** Whenever executing commands (especially `make` or `docker compose`)
+against a service, automation scripts MUST resolve the symlink to its physical path
+(using `readlink` or `os.path.realpath()`).
+
+If Docker Compose is executed from within a logical symlink path, it evaluates
+relative paths (like `- ../../memory/.env`) based on the symlink's location,
+resulting in missing files, silent failures, and orphaned containers during teardown.
+The MetaClaw root `Makefile` and `bin/orchestrate.py` strictly enforce physical path resolution.
+
 ## Prompt-to-Model Routing
 
 Ensuring that the right AI model is used for each prompt is critical. "Right" is
