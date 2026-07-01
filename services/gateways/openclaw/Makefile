@@ -131,6 +131,8 @@ gui:
 		if [ -n "$$TS_DNS" ]; then URL="https://$$TS_DNS/?token=$$TOKEN"; fi; \
 	fi; \
 	echo "[$(SERVICE_TITLE)] Access URL: $$URL"; \
+	echo "[$(SERVICE_TITLE)] Watching for pending device pairing requests in the background..."; \
+	$(PYTHON_BIN) auto_approve.py & \
 	if [ -n "$(OPEN_CMD)" ] && command -v $(OPEN_CMD) >/dev/null 2>&1; then \
 		$(OPEN_CMD) "$$URL"; \
 	else \

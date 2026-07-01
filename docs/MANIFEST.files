@@ -108,6 +108,7 @@ services/gateways/nullclaw/.provider.json
 services/gateways/openclaw/.env.template
 services/gateways/openclaw/.provider.json
 services/gateways/openclaw/Makefile
+services/gateways/openclaw/auto_approve.py
 services/gateways/openclaw/bin/.gitignore
 services/gateways/openclaw/docker-compose.yml
 services/gateways/openclaw/index.template.md
