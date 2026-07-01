@@ -12,6 +12,7 @@ bin/structure.json.old
 prompt
 bin/.venv/
 bin/__pycache__/
+bin/legacy
 bk/
 config/
 docs/.MANIFEST.files.ignore

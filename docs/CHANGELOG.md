@@ -2,6 +2,11 @@
 
 This document records significant changes and updates made to the MetaClaw framework.
 
+## 2026-07-01 (Part 2)
+
+* **GitOps Agent Development**: Transitioned the `meta-push`, `meta-cmp`, and `meta-pull` staging commands away from legacy local Python synchronization (`bin/meta_sync.py`) to a native GitHub Pull Request workflow, leveraging the newly public MetaClaw repository.
+* **Roadmap Update (Routing & Customization)**: Formally documented the limitations of the current opinionated prompt-to-model routing architecture and established Milestone 3: The Modular Routing & Un-opinionated Customization Refactor.
+
 ## 2026-07-01
 
 * **Milestone 2 Progress**: Successfully established a headless Tier 2 Control Node (GMKtec K8 Plus). The node successfully boots the OpenClaw gateway, LiteLLM proxy, VictoriaLogs, and PostgreSQL, and responds to prompts, though comprehensive integration testing of all providers remains pending.

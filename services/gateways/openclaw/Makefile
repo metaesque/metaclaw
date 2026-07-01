@@ -92,7 +92,8 @@ patch:
 	@docker exec $(SERVICE_NAME) chown -R $(shell id -u):$(shell id -g) /root/.openclaw || true
 	@echo "[$(SERVICE_TITLE)] Patching OpenClaw routing and configuration..."
 	@$(PYTHON_BIN) patch_routing.py
-	@cp openclaw.config.js config/openclaw.config.js
+	@echo "[$(SERVICE_TITLE)] Applying Lexical-Predictive Routing Module..."
+	@cp modules/routing/lexical_predictive.js config/openclaw.config.js
 	@echo "[$(SERVICE_TITLE)] Force-killing gateway to prevent config overwrite on shutdown..."
 	@docker kill $(SERVICE_NAME) >/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Starting gateway to apply patches and load config..."

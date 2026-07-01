@@ -39,6 +39,37 @@ We must configure the EVO X2 to act as the dedicated **Tier 2 LLM Runner** to el
 
 ---
 
+## 🟡 MILESTONE 3: The Modular Routing & Un-opinionated Customization Refactor
+
+**Urgency: HIGH**
+**Status: PENDING**
+
+As MetaClaw transitions from an opinionated script into a general-purpose facilitator, we must address how users customize their environment without forcing them to become infrastructure engineers.
+
+### The 3 Levels of User Customization
+
+1. **The Workspace (Agent-Driven Customization):** Agents operate entirely within `~/.openclaw/workspace`. This is a strict security invariant. Giving an agent read/write access to the MetaClaw root directory `.` would expose `.env.json` secrets, API keys, and infrastructure Makefiles, creating a catastrophic vulnerability. Agents can write their own skills (`SKILL.md`) and YAML profiles, but they remain jailed.
+2. **The Configuration (`openclaw.json`):**
+   OpenClaw relies heavily on its internal `openclaw.json` state. Currently, MetaClaw's `patch_routing.py` aggressively overwrites this file on every boot, destroying user customizations (like adding new agents or tweaking UI settings). We must refactor the patcher to perform *non-destructive merges* of the JSON file, preserving user state while injecting the necessary infrastructure bindings.
+3. **The Infrastructure (MetaClaw Core):**
+   Non-technical users should *never* need to edit Makefiles or Python scripts. If a feature requires modifying MetaClaw core files, MetaClaw has failed as a facilitator. To bridge this gap, we are moving toward "Pre-packaged Modules" that users can select during `make wizard` (e.g., choosing a routing strategy from a menu, which automatically injects the correct logic).
+
+### The Prompt-to-Model Routing Overhaul
+
+Routing is the central nervous system of OpenClaw. If flawed, agents either burn cash unnecessarily on trivial tasks or fail complex tasks using weak models. Currently, MetaClaw forces a disjointed routing implementation onto users. We must decouple this into selectable, plug-and-play modules.
+
+**Current State & Limitations:**
+1. **Deterministic Routing (Pre-cognitive):** Natively supported via OpenClaw YAML profiles. *Limitation:* Highly rigid; if a user sets the default model to a premium tier, all trivial tasks bleed capital.
+2. **Lexical Routing (Heuristic / Fast-Path):** Implemented via JS hooks intercepting keywords (e.g., "heartbeat"). *Limitation:* Extremely primitive. It requires editing Node.js logic to add new rules (e.g., routing markdown code blocks to coding models).
+3. **Semantic Routing (Vector Similarity):** Implemented via heavy monkey-patching in LiteLLM (`router.json`). *Limitation:* It is an "orphaned" system. OpenClaw's JS hook overrides it by explicitly passing model names, causing the two systems to fight.
+4. **Predictive Routing (LLM-as-a-Judge):** Intercepts prompts and uses a local model (e.g., Gemma) to score complexity before routing. *Limitation (CRITICAL):* It suffers from severe context blindness. The judge only sees the very last message string, completely missing conversation history or tool output payloads, leading to catastrophic misrouting.
+5. **Fallback Routing (Reactive Cascading):** Handled by LiteLLM on HTTP failure. *Limitation:* It cannot detect "cognitive failures" (e.g., a cheap model returning a perfectly valid HTTP 200 response containing malformed JSON tool calls).
+
+**The Solution:**
+Introduce a `services/gateways/openclaw/routing_modules/` directory containing pre-packaged JavaScript hook files. During setup, the user selects their preferred strategy (e.g., "Strict Predictive", "Hybrid Semantic", "Pass-through"), and MetaClaw seamlessly injects the chosen module into `openclaw.config.js`.
+
+---
+
 ## Phase 1: Safe Execution (Sandboxing)
 
 * **Category:** `services/sandboxes/`

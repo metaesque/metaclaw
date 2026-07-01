@@ -385,30 +385,43 @@ todo: | $(PYTHON_BIN)
 	@$(PYTHON_BIN) ./bin/todo.py
 
 # ==============================================================================
-# AIR-GAPPED STAGING ENVIRONMENT (AGENT BOOTSTRAPPING)
+# AGENT DEVELOPMENT ENVIRONMENT (GITOPS)
 # ==============================================================================
 
-# WHAT IT DOES: Destroys the staging environment and forcefully pushes the live host files down into it.
-# WHY IT EXISTS: Used to completely reset the staging directory if the agent makes a mistake and you want to start over.
-meta-push: | $(PYTHON_BIN)
-	@$(PYTHON_BIN) ./bin/meta_sync.py --push
-
-# WHAT IT DOES: Diffs the live host codebase against the staging directory without executing writes.
-# WHY IT EXISTS: Provides a safe, colorized dry-run preview of the agent's work.
-meta-cmp: | $(PYTHON_BIN)
-	@$(PYTHON_BIN) ./bin/meta_sync.py --dryrun
-
-# WHAT IT DOES: Interactively reviews and merges changes from the staging environment back to the live host.
-# WHY IT EXISTS: Closes the loop on agent-driven development. Uses an interactive Python script to prevent accidental overwrites.
-meta-pull: | $(PYTHON_BIN)
-	@$(PYTHON_BIN) ./bin/meta_sync.py --pull
-
-# WHAT IT DOES: Cleans up and deletes the staging environment entirely.
-meta-down:
-	@if [ -f $(METACLAW_METAPATH)/.env ] && [ $$(docker ps | wc -l) -gt 1 ] ; then \
-		echo "Shutting down Meta<Claw>"; \
-		cd $(METACLAW_METAPATH); make factory-reset-soft; \
+# WHAT IT DOES: Provisions a Git clone of MetaClaw into the agent's workspace.
+# WHY IT EXISTS: Allows the agent to autonomously develop the framework via standard Git PRs.
+meta-push:
+	@echo "################################################################################"
+	@echo "# [GitOps] Provisioning MetaClaw repository in agent workspace..."
+	@echo "################################################################################"
+	@if [ ! -d $(METACLAW_METAPATH) ]; then \
+		git clone https://github.com/metaesque/metaclaw.git $(METACLAW_METAPATH); \
+	else \
+		cd $(METACLAW_METAPATH) && git pull; \
 	fi
+	@echo "Agent workspace ready at $(METACLAW_METAPATH)"
+
+# WHAT IT DOES: Reminds the user of the new GitOps workflow.
+# WHY IT EXISTS: Replaces the old local diffing tool now that MetaClaw is public.
+meta-cmp:
+	@echo "################################################################################"
+	@echo "# [GitOps] Local diffing is deprecated."
+	@echo "# The agent should now commit and push its changes to a feature branch."
+	@echo "# Please review the Pull Request directly on GitHub:"
+	@echo "# https://github.com/metaesque/metaclaw/pulls"
+	@echo "################################################################################"
+
+# WHAT IT DOES: Pulls the merged changes from GitHub into the live host.
+# WHY IT EXISTS: Closes the loop on agent-driven development securely.
+meta-pull:
+	@echo "################################################################################"
+	@echo "# [GitOps] Pulling merged updates from the public repository to the live host..."
+	@echo "################################################################################"
+	@git pull origin main
+	@echo "Run 'make apply' to deploy the new state."
+
+# WHAT IT DOES: Cleans up and deletes the staging environment clone.
+meta-down:
 	@if [ -d $(METACLAW_METAPATH) ] ; then \
 		echo ""; \
 		printf "Destroy $(METACLAW_METAPATH)? [y/N] "; \

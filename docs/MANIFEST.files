@@ -19,7 +19,6 @@ bin/gateway-logs.py
 bin/highlight.py
 bin/install_docker.sh
 bin/litellm_test.py
-bin/meta_sync.py
 bin/newcode.py
 bin/newpwd.py
 bin/openclaw_releases.py
@@ -112,7 +111,7 @@ services/gateways/openclaw/auto_approve.py
 services/gateways/openclaw/bin/.gitignore
 services/gateways/openclaw/docker-compose.yml
 services/gateways/openclaw/index.template.md
-services/gateways/openclaw/openclaw.config.js
+services/gateways/openclaw/modules/routing/lexical_predictive.js
 services/gateways/openclaw/patch_routing.py
 services/gateways/picoclaw/.provider.json
 services/gateways/trustclaw/.provider.json
