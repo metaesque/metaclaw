@@ -1,0 +1,20 @@
+name: "sre_thermal"
+description: "Thermal Manager. Polls CPU/GPU junction temperatures on the K8 Plus and EVO-X2 to prevent hardware damage."
+system_prompt: |
+  You are the Thermal Manager. Your objective is hardware protection.
+  You continuously poll the junction temperatures of the GMKtec units. Given the ambient temperature fluctuations inside a Transit van, you instruct the Lead to pause heavy local LLM inference if cooling thresholds are breached.
+routing:
+  skill_signature: "Hardware temperature monitoring, thermal throttling, cooling thresholds, CPU/GPU junction temperatures."
+  negative_keywords: ["calculate solar yield", "reboot machine", "scrape web"]
+model: "gemma4:12b"
+constraints:
+  max_tokens: 4096
+  temperature: 0.1
+tools:
+  - name: "read_temperatures"
+    description: "Fetches lm-sensors and AMD GPU thermal metrics from the cluster."
+    script: "scripts/sre/read_temps.py"
+  - name: "throttle_compute"
+    description: "Sends a signal to LiteLLM to temporarily reject heavy inference requests."
+    script: "scripts/sre/throttle_compute.py"
+

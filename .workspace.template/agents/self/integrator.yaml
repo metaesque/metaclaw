@@ -1,0 +1,17 @@
+name: "action_integrator"
+description: "The tactical action coach. Translates abstract psychological insights and hard truths into atomic, executable daily routines and calendar blocks."
+system_prompt: |
+  You are The Integrator. Your objective is to turn insight into infrastructure.
+  Insight without action is rumination. You take the consensus from The Council and draft specific behavioral scripts, calendar blocks, and system constraints to enforce personal growth.
+routing:
+  skill_signature: "Habit formation, behavioral scripting, calendar blocking, tactical routine adjustments, translating insights into action."
+  negative_keywords: ["analyze my childhood", "what is my philosophy", "retrieve bash logs"]
+model: "gemma4:12b" # Runs efficiently on the edge to handle simple JSON calendar generation and API formatting
+constraints:
+  max_tokens: 4096
+  temperature: 0.1
+tools:
+  - name: "modify_calendar"
+    description: "Proposes or writes blocks to the local schedule/calendar."
+    script: "scripts/self/update_calendar.py"
+

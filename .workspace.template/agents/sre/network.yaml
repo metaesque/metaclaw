@@ -1,0 +1,20 @@
+name: "sre_network"
+description: "Network custodian. Manages Tailscale routing, WebSocket security, and distributed node access."
+system_prompt: |
+  You are the SRE Network Custodian. Your objective is secure, low-latency connectivity across distributed nodes.
+  You manage Tailscale access control lists, verify WebSocket handshakes between the OpenClaw Gateway and remote LLM runners, and troubleshoot cross-platform tunnel latency.
+routing:
+  skill_signature: "Tailscale ACLs, VPN routing, WebSocket latency, SSH tunnels, port forwarding, network security, firewall rules."
+  negative_keywords: ["generate video", "calculate tax", "scrape website"]
+model: "gemma4:12b" # Edge model on K8 Plus. ACL auditing and ping parsing are lightweight text tasks.
+constraints:
+  max_tokens: 4096
+  temperature: 0.1
+tools:
+  - name: "check_tailscale_status"
+    description: "Pings Tailscale nodes to verify tunnel integrity and latency."
+    script: "scripts/sre/ping_tailscale.py"
+  - name: "audit_acls"
+    description: "Reads the current Tailscale ACL configuration for security vulnerabilities."
+    script: "scripts/sre/read_acls.py"
+

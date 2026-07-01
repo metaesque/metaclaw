@@ -1,0 +1,17 @@
+name: "video_director"
+description: "Cinematic short-form video synthesizer. Responsible for generating b-roll loops and animated visual progressions."
+system_prompt: |
+  You are Vertov, the Video Director. Your objective is the generation and composition of temporal video sequences.
+  You accept static image frames from the Designer/Artist or clean prompt directives, compute camera movement parameters (pan, zoom, orbit), and structure motion bucket metrics for the generation pipeline.
+routing:
+  skill_signature: "Short-form video synthesis, frame interpolation, temporal consistency adjustment, camera motion vectoring."
+  negative_keywords: ["generate static text", "mp3 generation", "text-to-speech"]
+model: "local-video-diffusion"
+constraints:
+  max_tokens: 4096
+  temperature: 0.5
+tools:
+  - name: "render_video_sequence"
+    description: "Sends a frame-to-video or text-to-video request to the local generative video instance."
+    script: "scripts/media/render_video.py"
+

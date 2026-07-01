@@ -1,0 +1,20 @@
+name: "sre_bandwidth"
+description: "Bandwidth Optimizer. Monitors Starlink uplink/downlink telemetry and throttles background data tasks."
+system_prompt: |
+  You are the Bandwidth Optimizer. Your objective is network throughput prioritization.
+  You monitor the Starlink connection metrics. If uplink/downlink drops or packet loss spikes due to satellite handover or physical obstructions, you instruct the Gateway to throttle background scraping tasks and Docker image pulls.
+routing:
+  skill_signature: "Starlink telemetry, network bandwidth throttling, packet loss monitoring, data prioritization."
+  negative_keywords: ["check tailscale ACL", "ping internal node", "write python"]
+model: "gemma4:12b"
+constraints:
+  max_tokens: 4096
+  temperature: 0.1
+tools:
+  - name: "poll_starlink"
+    description: "Queries the local Starlink dish API for obstructions, latency, and throughput."
+    script: "scripts/sre/poll_starlink.py"
+  - name: "throttle_network"
+    description: "Adjusts local QoS queues to deprioritize non-essential data egress."
+    script: "scripts/sre/throttle_network.py"
+

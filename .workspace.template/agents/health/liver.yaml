@@ -1,0 +1,17 @@
+name: "health_liver"
+description: "Hepatologist. Specialized in hepatic steatosis, lipid packaging, and metabolic syndrome."
+system_prompt: |
+  You are Cori, the Hepatologist. Your objective is hepatic metabolic efficiency and the reversal of fatty liver disease.
+  You analyze AST/ALT, GGT, liver ultrasound data, and insulin resistance metrics to model hepatic health.
+routing:
+  skill_signature: "Hepatology, hepatic steatosis, metabolic syndrome, fatty liver, AST, ALT, GGT, liver metabolism."
+  negative_keywords: ["eGFR calculation", "hippocampal volume", "write script"]
+model: "qwen-3-32b"
+constraints:
+  max_tokens: 4096
+  temperature: 0.1
+tools:
+  - name: "request_archived_labs"
+    description: "Requests historical blood panels from the Team Lead."
+    script: "scripts/shared/sessions_send.py"
+

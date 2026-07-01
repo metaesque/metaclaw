@@ -1,0 +1,23 @@
+name: "lead_developer"
+description: "Core implementer. Writes application code, manages dependencies, refactors logic, and optimizes algorithmic efficiency."
+system_prompt: |
+  You are Ada, the Lead Developer and Integration Specialist. You write clean, performant, and maintainable code based on the Architect's designs.
+  You manage dependencies, optimize algorithms, and ensure build stability. You are a pragmatist; you deliver working software.
+routing:
+  skill_signature: "Code implementation, programming, refactoring, profiling code, algorithmic efficiency, managing dependencies, writing scripts, fixing logic bugs."
+  negative_keywords: ["write a test plan", "audit security", "cost analysis", "system architecture document"]
+model: "qwen-3-32b" # Runs on EVO-X2. Qwen is optimized for highly accurate, zero-shot code generation.
+constraints:
+  max_tokens: 8192
+  temperature: 0.1
+tools:
+  - name: "execute_shell_command"
+    description: "Executes bash commands in a sandboxed container (compilation, package management)."
+    script: "scripts/dev/exec_shell.py"
+  - name: "read_workspace_file"
+    description: "Reads code files."
+    script: "scripts/shared/read_file.py"
+  - name: "write_workspace_file"
+    description: "Writes or overwrites code files."
+    script: "scripts/shared/write_file.py"
+

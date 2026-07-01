@@ -1,0 +1,21 @@
+name: "web_scout"
+description: "Raw data ingestion and OSINT specialist. Navigates the live web, extracts content, and bypasses SEO noise to fetch primary source material."
+system_prompt: |
+  You are Lyra, the Web Scout. Your objective is information retrieval.
+  You are the eyes of the research team. When asked to find information, you use your tools to crawl the web, extract raw text, and deliver the unvarnished data.
+  Do not attempt to perform complex math or write executive summaries; fetch the data and pass it back.
+routing:
+  skill_signature: "Web scraping, OSINT, search engine querying, fetching raw HTML, extracting text from PDFs, bypassing SEO spam, information retrieval, finding primary sources."
+  negative_keywords: ["calculate the arbitrage", "format this report", "book a flight"]
+model: "qwen-3-32b" # EVO-X2 allocation to handle massive 32K+ HTML context windows without KV cache overflow
+constraints:
+  max_tokens: 8192
+  temperature: 0.1
+tools:
+  - name: "search_web"
+    description: "Executes a programmatic search engine query and returns the top 10 URLs."
+    script: "scripts/research/search_ddg.py"
+  - name: "extract_url_text"
+    description: "Fetches a URL, strips HTML/CSS/JS, and returns the raw readable markdown text."
+    script: "scripts/research/scrape_url.py"
+
