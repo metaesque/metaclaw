@@ -3,6 +3,7 @@ services:
     # WHAT THIS IS: An ultra-fast LLM-friendly web crawler and data extractor.
     # WHY THIS VERSION: Pinned via the env template to guarantee repeatable builds.
     image: unclecode/crawl4ai:${CRAWL4AI_VERSION}
+    platform: linux/amd64
     container_name: crawl4ai
     # WHY UNLESS-STOPPED: Automatically restarts the background fetcher on unexpected crashes,
     # ensuring the agent's web ingestion pipeline remains highly available.

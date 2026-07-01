@@ -19,7 +19,9 @@ post-check-status:
 		echo "--- 1. Daemon Status ---" > verification.log; \
 		docker exec $(SERVICE_NAME) tailscale status >> verification.log || echo "DAEMON_UNREACHABLE" >> verification.log; \
 		if grep -q "DAEMON_UNREACHABLE" verification.log; then echo "FATAL: Tailscale daemon is unreachable."; exit 1; fi; \
+		echo "\nSUCCESS: Tailscale is connected and authenticated." >> verification.log; \
 	fi
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: Tailscale is connected and authenticated." "Bare-metal Tailscale active. Skipping container diagnostics."
 
 clean-state::
 	@echo "[$(SERVICE_TITLE)] Cleaned state."
