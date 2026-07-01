@@ -14,14 +14,17 @@ export
 post-check-status:
 	@echo "Running diagnostic suite..."
 	@if [ -f "$(CURDIR)/.metal" ]; then \
-		echo "Bare-metal Tailscale active. Skipping container diagnostics." > verification.log; \
+		echo "--- 1. Bare-metal Daemon Status ---" > verification.log; \
+		tailscale status >> verification.log || echo "DAEMON_UNREACHABLE" >> verification.log; \
+		if grep -q "DAEMON_UNREACHABLE" verification.log; then echo "FATAL: Bare-metal Tailscale daemon is unreachable."; exit 1; fi; \
+		echo "\nSUCCESS: Tailscale is connected and authenticated (Bare-Metal)." >> verification.log; \
 	else \
-		echo "--- 1. Daemon Status ---" > verification.log; \
+		echo "--- 1. Docker Daemon Status ---" > verification.log; \
 		docker exec $(SERVICE_NAME) tailscale status >> verification.log || echo "DAEMON_UNREACHABLE" >> verification.log; \
-		if grep -q "DAEMON_UNREACHABLE" verification.log; then echo "FATAL: Tailscale daemon is unreachable."; exit 1; fi; \
-		echo "\nSUCCESS: Tailscale is connected and authenticated." >> verification.log; \
+		if grep -q "DAEMON_UNREACHABLE" verification.log; then echo "FATAL: Docker Tailscale daemon is unreachable."; exit 1; fi; \
+		echo "\nSUCCESS: Tailscale is connected and authenticated (Docker)." >> verification.log; \
 	fi
-	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: Tailscale is connected and authenticated." "Bare-metal Tailscale active. Skipping container diagnostics."
+	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: Tailscale is connected and authenticated (Bare-Metal)." "SUCCESS: Tailscale is connected and authenticated (Docker)."
 
 clean-state::
 	@echo "[$(SERVICE_TITLE)] Cleaned state."

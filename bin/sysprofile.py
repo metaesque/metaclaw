@@ -143,6 +143,10 @@ def main():
     help="Require WAN access (y/n)."
   )
   parser.add_argument(
+    '-hl', '--headless', type=str, default="",
+    help="Is this node a headless server? (y/n)"
+  )
+  parser.add_argument(
     '-o', '--order', type=str, default="",
     help="Priority order for provider selection (e.g. safety,cost,resources)"
   )
@@ -194,6 +198,20 @@ def main():
   else:
     require_wan = wan_input in ['y', 'yes']
 
+  headless_input = args.headless.lower()
+  if headless_input not in ['y', 'n', 'yes', 'no']:
+    print("\nIs this machine running as a headless server (no monitor/GUI, accessed via SSH)?")
+    while True:
+      hl_choice = input("Headless server? [y/N]: ").strip().lower()
+      if hl_choice in ['y', 'yes']:
+        is_headless = True
+        break
+      elif hl_choice in ['n', 'no', '']:
+        is_headless = False
+        break
+  else:
+    is_headless = headless_input in ['y', 'yes']
+
   order_input = args.order
   valid_options = {'safety', 'cost', 'resources'}
   if not order_input:
@@ -238,17 +256,20 @@ def main():
   )
 
   # Override network to strictly treat Tailscale as a bare-metal lifeline
-  # This prevents docker compose teardowns from severing SSH connections
+  # This prevents docker compose teardowns from severing SSH connections on headless nodes
   if require_wan:
     for node in profile.get("nodes", []):
-      if "network" in node.get("providers", {}):
-        node["providers"]["network"]["metal"] = True
+      if node["hostname"] == hostname:
+        if "network" in node.get("providers", {}):
+          node["providers"]["network"]["metal"] = is_headless
+        # Track the headless state in the hardware dictionary for future reference
+        node["hardware"]["headless"] = is_headless
 
   with open(profile_path, 'w') as f:
     json.dump(profile, f, indent=2)
 
   print(f"\n[Profile] Node '{hostname}' registered as Tier {tier}.")
-  wan_str = 'Enabled (Lifeline Protected)' if require_wan else 'Disabled'
+  wan_str = 'Enabled (Bare-Metal Lifeline)' if require_wan and is_headless else ('Enabled (Dockerized)' if require_wan else 'Disabled')
   print(f"[Profile] Network mesh (Tailscale) set to: {wan_str}")
   prefs_str = ' > '.join([p.capitalize() for p in order_prefs])
   print(f"[Profile] Priorities set to: {prefs_str}")
