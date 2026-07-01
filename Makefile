@@ -83,10 +83,11 @@ setup: | $(PYTHON_BIN)
 	@$(PYTHON_BIN) ./bin/sysprofile.py
 	@echo "\n[Setup] Step 2: Orchestrating dynamic symlinks and cross-node routing..."
 	@$(MAKE) --no-print-directory symlinks
-	@echo "\n[Setup] Step 3: Compiling modular taxonomy into documentation..."
+	@echo "\n[Setup] Step 3: User Customization (Modules & Workspace)..."
+	@$(PYTHON_BIN) ./bin/customize.py
+	@echo "\n[Setup] Step 4: Compiling modular taxonomy into documentation..."
 	@$(PYTHON_BIN) ./bin/compile_md.py --setup
-	@$(MAKE) --no-print-directory docs
-	@echo "\n[Setup] Step 4: Instantiating global environment variables..."
+	@echo "\n[Setup] Step 5: Instantiating global environment variables..."
 	@$(MAKE) --no-print-directory .env
 	@echo "################################################################################"
 	@echo "# SETUP COMPLETE. Proceed by running: make wizard"
@@ -205,11 +206,13 @@ wizard-run: bootstrap docs
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
 		$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/index.html"; \
 	fi
-	@echo "ATTENTION: The setup wizard will now request several API keys."
-	@echo "If you require remote WAN access, please generate a Tailscale Auth Key at:"
-	@echo "https://login.tailscale.com/admin/settings/keys"
-	@echo "Press ENTER to continue when you are ready..."
-	@read dummy < /dev/tty
+	@if [ "$(INTERACTIVE)" = "1" ] || [ ! -f .env.json ] || grep -q "change_me" .env.json 2>/dev/null; then \
+		echo "ATTENTION: The setup wizard will now request several API keys."; \
+		echo "If you require remote WAN access, please generate a Tailscale Auth Key at:"; \
+		echo "https://login.tailscale.com/admin/settings/keys"; \
+		echo "Press ENTER to continue when you are ready..."; \
+		read dummy < /dev/tty; \
+	fi
 	@mkdir -p .logs
 	@echo "################################################################################"
 	@echo "# PRE-FLIGHT ENVIRONMENT CONFIGURATION"

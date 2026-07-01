@@ -1,6 +1,8 @@
 import os
 import sys
 import argparse
+import json
+import re
 import shutil
 
 # Ensure we can import metaclaw from the lib directory

@@ -16,7 +16,7 @@ EMAIL="wade@holst.ca"
 GIT_NAME="Wade Holst"
 SSH_KEY_PATH="$HOME/.ssh/id_ed25519_metaesque"
 REPO_URL="git@metaesque.ssh:metaesque/metaclaw.git"
-TARGET_DIR="$HOME/metaclaw"
+TARGET_DIR="$HOME/repo"
 
 # ------------------------------------------------------------------------------
 # 1. SSH Identity Generation
@@ -102,34 +102,10 @@ else
     git clone "$REPO_URL" "$TARGET_DIR"
 fi
 
-# ------------------------------------------------------------------------------
-# 6. Hydrate External Workspace State
-# ------------------------------------------------------------------------------
-echo -e "\n[6/6] External Workspace Provisioning..."
-
-cd "$TARGET_DIR"
-
-DEFAULT_WS="$HOME/openclaw"
-read -p "Enter path for your persistent OpenClaw workspace directory [$DEFAULT_WS]: " USER_WS
-WORKSPACE_PATH="${USER_WS:-$DEFAULT_WS}"
-
-if [[ -d "$WORKSPACE_PATH" ]]; then
-    echo "External workspace already exists at $WORKSPACE_PATH. Preserving user data."
-else
-    if [[ -d ".workspace.template" ]]; then
-        echo "Copying '.workspace.template' to '$WORKSPACE_PATH'..."
-        cp -r .workspace.template "$WORKSPACE_PATH"
-        echo "Template hydrated successfully."
-    else
-        echo "WARNING: '.workspace.template' not found in repo. Creating empty directory at $WORKSPACE_PATH."
-        mkdir -p "$WORKSPACE_PATH"
-    fi
-fi
-
 echo -e "\n################################################################################"
 echo "# Setup Complete."
 echo "#"
 echo "# NEXT STEPS:"
 echo "# 1. Manually transfer your private .env.json and profile.json to $TARGET_DIR"
-echo "# 2. Run 'make wizard' to initialize the MetaClaw environment."
+echo "# 2. cd $TARGET_DIR && make wizard"
 echo "################################################################################"

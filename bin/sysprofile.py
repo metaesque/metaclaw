@@ -136,7 +136,6 @@ def main():
   parser.add_argument('-w', '--wan', type=str, default="", help="Require WAN access (y/n).")
   parser.add_argument('-hl', '--headless', type=str, default="", help="Is this node a headless server? (y/n)")
   parser.add_argument('-o', '--order', type=str, default="", help="Priority order for provider selection.")
-  parser.add_argument('-r', '--routing', type=str, default="", help="OpenClaw prompt-to-model routing strategy.")
   args = parser.parse_args()
 
   tier = args.tier
@@ -241,24 +240,6 @@ def main():
 
   planes = planes_input.split(',')
 
-  routing_input = args.routing.lower()
-  if not routing_input and "control" in planes:
-    print("\nSelect Prompt Routing Strategy for OpenClaw:")
-    print("  [1] Lexical + Predictive (Uses local Judge Model to score complexity)")
-    print("  [2] Pass-Through (Rigid 1:1 mapping based entirely on YAML profiles)")
-    while True:
-      r_choice = input("Enter choice [1]: ").strip()
-      if not r_choice or r_choice == '1':
-        routing_strategy = "lexical_predictive"
-        break
-      elif r_choice == '2':
-        routing_strategy = "pass_through"
-        break
-      else:
-        print("Invalid choice.")
-  else:
-    routing_strategy = routing_input or "pass_through"
-
   wan_input = args.wan.lower()
   if wan_input not in ['y', 'n', 'yes', 'no']:
     print("\nDo you require remote WAN access to your cluster while traveling,")
@@ -334,15 +315,10 @@ def main():
     profile, hostname, tier, planes, hw_details, require_wan, is_headless, order_prefs
   )
 
-  if "control" in planes:
-    profile["routing_strategy"] = routing_strategy
-
   with open(profile_path, 'w') as f:
     json.dump(profile, f, indent=2)
 
   print(f"\n[Profile] Node '{hostname}' registered as Tier {tier} representing planes: {', '.join(planes)}.")
-  if "control" in planes:
-    print(f"[Profile] Routing Strategy set to: {routing_strategy}")
   wan_str = 'Enabled (Bare-Metal Lifeline)' if require_wan and is_headless else ('Enabled (Dockerized)' if require_wan else 'Disabled')
   print(f"[Profile] Network mesh (Tailscale) set to: {wan_str}")
   prefs_str = ' > '.join([p.capitalize() for p in order_prefs])

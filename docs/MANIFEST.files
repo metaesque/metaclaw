@@ -13,6 +13,7 @@ bin/browser.py
 bin/check_config.sh
 bin/compare_config.sh
 bin/compile_md.py
+bin/customize.py
 bin/demos/competitor_research.py
 bin/destruct.py
 bin/env_instantiate.py
