@@ -241,18 +241,22 @@ wizard-run: bootstrap docs
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"; \
 		echo "[Root] Deploying $$REAL_DIR..."; \
-		$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 		if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
+			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
+				$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#diagnostic-checks"; \
+			fi; \
+			$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 			$(MAKE) --no-print-directory -C $$REAL_DIR wait-healthy || true; \
 			$(MAKE) --no-print-directory -C $$REAL_DIR check-status || true; \
-			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.md" ]; then \
-				$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#diagnostic-checks"; \
+			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
 				printf "Verify diagnostics for $$REAL_DIR. Proceed? [Y/n] "; \
 				read answer < /dev/tty; \
 				if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
 					echo "Setup aborted by user."; exit 1; \
 				fi; \
 			fi; \
+		else \
+			$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 		fi; \
 	done
 	@echo "################################################################################"

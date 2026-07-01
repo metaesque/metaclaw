@@ -184,6 +184,7 @@ def main():
     print("If you only plan to use OpenClaw on your home Wi-Fi, answer No.")
     while True:
       wan_choice = input("Require WAN access? [Y/n]: ").strip().lower()
+      # Defaulting to 'yes' if empty string is provided
       if wan_choice in ['y', 'yes', '']:
         require_wan = True
         break

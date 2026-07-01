@@ -12,6 +12,7 @@
 /workspace/
 __pycache__/
 bin/.venv/
+/config
 external/
 index.html
 index.md
