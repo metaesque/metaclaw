@@ -45,6 +45,7 @@ docs/OC.md
 docs/PROFILES.md
 docs/ROADMAP.md
 docs/index.md
+docs/personal/Wade.md
 lib/metaclaw.py
 services/browsers/.service.json
 services/browsers/Makefile

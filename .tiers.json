@@ -2,8 +2,8 @@
   "tier-0": {
     "uid": "tier-0",
     "name": "Tier 0: The Day 1 Minilith",
-    "setup": "RAM is strictly budgeted (6GB-8GB). The framework uses lightweight alternatives (SQLite instead of Postgres, LiteLLM routing to Cloud APIs for heavy reasoning, Ollama strictly for local text embeddings).",
-    "benefit": "Zero financial cost to validate the framework's utility.",
+    "setup": "The entire cluster consists of a single, dual-use laptop. RAM is strictly budgeted (6GB-8GB). The framework uses lightweight alternatives (SQLite instead of Postgres, LiteLLM routing to Cloud APIs for heavy reasoning, Ollama strictly for local text embeddings).",
+    "benefit": "Zero financial cost to validate the framework's utility before purchasing dedicated hardware.",
     "resources": {
       "min": {
         "ram": "",
@@ -31,7 +31,7 @@
   "tier-1": {
     "uid": "tier-1",
     "name": "Tier 1: The Month 2 Monolith",
-    "setup": "All four Planes run on one machine. Heavy services are rate-limited via Docker to prevent crashes. the Compute Plane remains outsourced to Cloud APIs.",
+    "setup": "The cluster transitions to a single, dedicated machine. All four Planes run on this one Control Node. Heavy services are rate-limited via Docker to prevent crashes. The Compute Plane remains outsourced to Cloud APIs.",
     "benefit": "True 24/7 autonomous operation with robust relational memory and background web scraping.",
     "resources": {
       "min": {
@@ -50,7 +50,7 @@
       },
       "max": {
         "ram": "96GB DDR5 (or 64GB Unified Memory on Apple Silicon). Maximizes the caching capabilities of Redis and PostgreSQL, ensuring the agent has near-instantaneous recall of years of transcript data.",
-        "cpu": "14 to 16-Core Mobile/Efficient Desktop Processor (e.g., Intel Core i9 or AMD Ryzen 9). Provides total immunity to CPU starvation, allowing the Sandbox and Browser automation components (Exection Plane) to run highly volatile workloads without impacting the Gateway's routing latency.",
+        "cpu": "14 to 16-Core Mobile/Efficient Desktop Processor (e.g., Intel Core i9 or AMD Ryzen 9). Provides total immunity to CPU starvation, allowing the Sandbox and Browser automation components (Execution Plane) to run highly volatile workloads without impacting the Gateway's routing latency.",
         "gpu": "16GB Dedicated VRAM (e.g., mobile RTX 4080) or 64GB+ Unified Memory (Apple Silicon Max). This is the thermal and physical limit of the Mini-PC form factor. It permits running high-quality local reasoning models, pushing the boundaries of Tier 1 into pseudo-Tier 2 territory, though thermal throttling will eventually limit sustained 24/7 inference compared to a dedicated desktop tower.",
         "storage": "4TB NVMe SSD (PCIe Gen 4/5) or a dedicated high-IOPS external Thunderbolt enclosure. Guarantees zero disk contention between the observability stack, version control systems, and active memory databases.",
         "network": "10Gbps Ethernet. Provides datacenter-grade local bridging for future cluster expansion."
@@ -60,7 +60,7 @@
   "tier-2": {
     "uid": "tier-2",
     "name": "Tier 2: Data Sovereignty",
-    "setup": "Tier 2 (LLM Runner) is migrated to the GPU tower. The Proxy routes requests locally.",
+    "setup": "The cluster expands to two or more machines. The Compute Plane is migrated off the Monolith and onto a dedicated GPU tower. The Proxy routes requests locally across the LAN to the new Compute node(s).",
     "benefit": "Absolute data privacy and zero recurring API costs. Infinite agent loops can run overnight without accumulating massive bills.",
     "resources": {
       "min": {
@@ -68,14 +68,14 @@
         "cpu": "4-Core / 8-Thread (e.g., AMD Ryzen 5 or Intel Core i5). The CPU is largely idle during inference, so entry-level silicon is sufficient.",
         "gpu": "8GB to 12GB NVIDIA GPU (e.g., RTX 3060 or 4060). An 8B model quantized at Q4_K_M requires roughly 4.7GB to 5.4GB of VRAM, leaving 2\u20136GB available for the KV cache to handle standard conversational context windows.",
         "storage": "500GB NVMe SSD. GGUF model weights for 8B models average 4\u20136GB each, making 500GB more than enough for the OS and a curated local library.",
-        "network": "1Gbps Ethernet. Standard gigabit speeds are sufficient for linking back to the Tier 1 Control Plane via Tailscale."
+        "network": "1Gbps Ethernet. Standard gigabit speeds are sufficient for linking back to the Control Plane via Tailscale."
       },
       "median": {
         "ram": "64GB DDR5. High-speed DDR5 prevents bottlenecks when the CPU needs to shuttle large unquantized model weights from disk to the GPU during cold starts.",
         "cpu": "8-Core / 16-Thread (e.g., AMD Ryzen 7 or Intel Core i7). A mid-tier CPU provides enough PCIe Gen 4 lanes to maximize bandwidth to the GPU.",
         "gpu": "24GB NVIDIA GPU (e.g., RTX 3090 or RTX 4090). 24GB comfortably fits 32B-class models (like Qwen 2.5 32B) at 4-bit quantization, or it allows you to run smaller 8B models with massive 100k+ context windows during multi-agent swarm tasks.",
         "storage": "1TB to 2TB NVMe SSD. `vllm` often utilizes unquantized safetensors or heavier FP8/FP16 models, which consume significantly more disk space than standard GGUF files.",
-        "network": "2.5Gbps Ethernet. Prevents network-induced latency when the Tier 1 Gateway transmits massive context histories to the Compute node for evaluation."
+        "network": "2.5Gbps Ethernet. Prevents network-induced latency when the Gateway transmits massive context histories to the Compute node for evaluation."
       },
       "max": {
         "ram": "128GB+ DDR5. Necessary for caching massive datasets and preventing out-of-memory crashes when building or manipulating 140GB+ FP16 model files in the host OS.",
@@ -89,7 +89,7 @@
   "tier-3": {
     "uid": "tier-3",
     "name": "Tier 3: The Sandbox Extraction",
-    "setup": "Tier 4 (Execution Plane) is migrated.",
+    "setup": "The cluster expands to three or more machines. The Execution Plane is migrated off the Control Node and onto a dedicated Sandbox Node.",
     "benefit": "Safe execution of highly volatile workloads. Hallucinated code or memory-leaking browsers will not crash the core Gateway.",
     "resources": {
       "min": {
@@ -118,7 +118,7 @@
   "tier-4": {
     "uid": "tier-4",
     "name": "Tier 4: The Archive Expansion",
-    "setup": "The Archive Plane is migrated. The original Month 2 Monolith is stripped of heavy workloads, running strictly as the Control Plane.",
+    "setup": "The cluster expands to four or more machines. The Archive Plane is migrated off the Control Node onto a dedicated Context Node. The original Month 2 Monolith is now stripped of heavy workloads, running strictly as the Control Plane.",
     "benefit": "SRE-grade stability with near-infinite, lightning-fast semantic recall. No hardware is wasted; earlier machines are perfectly repurposed.",
     "resources": {
       "min": {

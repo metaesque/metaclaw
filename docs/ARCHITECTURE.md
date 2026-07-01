@@ -42,7 +42,7 @@ on their resource utilization profiles and security trust levels.
 
 **THE MESH INVARIANT (OPTIONAL):** If you require remote access outside of your
 home LAN, **Overlay Networks (e.g., Tailscale)** must run across ALL hardware
-tiers concurrently. They provide the foundational `100.x.y.z` zero-trust mesh
+nodes concurrently. They provide the foundational `100.x.y.z` zero-trust mesh
 network that allows these distinct tiers to securely discover and communicate
 with each other over the WAN, bypassing Carrier-Grade NAT (CGNAT) and firewalls.
 If you strictly operate on a single home LAN, this service is unnecessary.
@@ -57,26 +57,29 @@ delays before inference begins. For a fluid agent experience, the entire farm
 should reside on the same gigabit LAN.
 
 The planes are formalized in `./planes.json` and available in human-readable
-format in `./docs/STRUCTURE.md`.
+format in `./docs/SERVICES.md`.
 
 ### The 5 Tiers of the Hardware Journey
 
-Meta<Claw> identifies a 5-tier hardware journey that users may take.
+Meta<Claw> identifies a 5-tier hardware journey that a user's cluster may take.
+A "Tier" does not represent a single computer; rather, it represents a discrete
+stage in the growth of your overall local cluster.
 
 * Many users will start at **Tier 0**, some will jump right to **Tier 1**, and
-  many will decide not to go any further, content to use cloud-based LLMs and
-  surviving within the constrained footprints provided by Tiers 0 and 1.
+    many will decide not to go any further, content to use cloud-based LLMs and
+    surviving within the constrained footprints provided by Tiers 0 and 1.
 * Some users will explore Tiers 2, 3 and 4 (which can occur in any order and
-  independent of one another).
-  * **Tier 2** provides local LLM compute (avoiding cloud-based API Keys and bills)
-  * **Tier 3** moves the Execution Plane from the Tier 1 computer to a dedicated
-    computer whose hardware is especially suited to the services in the
-    Execution Plane.
-  * **Tier 4** moves the Archive Plane from the Tier 1 computer to a dedicated
-    computer whose hardware is especially suited to the services in the
-    Archive Plane.
+    independent of one another).
+* **Tier 2** advances the cluster by adding a dedicated Compute Node (or nodes)
+    for local LLM inference, moving that workload off the Control node to avoid
+    cloud-based API Keys and bills.
+* **Tier 3** advances the cluster by adding a dedicated Execution Node, whose
+    hardware is heavily optimized for sandboxing and volatile CI workloads.
+* **Tier 4** advances the cluster by adding a dedicated Archive Node, whose
+    hardware (ECC RAM, high-IOPS NVMe arrays) is explicitly optimized to host
+    massive vector databases and observability telemetry.
 * **Tier 5** introduces an edge computer for allowing a user to share some of
-  their compute resources with other users.
+    their compute resources with other users (Future Roadmap).
 
 ## Remote Access
 
@@ -84,15 +87,15 @@ Because most of the services must be co-located on a high-speed LAN, users who
 travel (e.g., via Starlink) face a connectivity challenge.
 
 * **The Zero-Trust Overlay (Tailscale):** Meta<Claw> relies on Tailscale (a
-  zero-configuration WireGuard mesh network) deployed directly on the host
-  operating systems of all cluster nodes.
+    zero-configuration WireGuard mesh network) deployed directly on the host
+    operating systems of all cluster nodes.
 * **Mechanics:** Tailscale assigns a static, private `100.x.y.z` IP to every
-  node in the homebase cluster and to the nomad's travel laptop.
+    node in the homebase cluster and to the nomad's travel laptop.
 * **Result:** The user accesses the OpenClaw Dashboard remotely via
-  `http://100.x.y.z:18789`. Furthermore, the user can utilize `tailscale ssh`
-  to securely jump into any node in the farm to execute `make` targets from
-  anywhere in the world, entirely bypassing the public internet without exposing
-  sensitive GUI ports.
+    `http://100.x.y.z:18789`. Furthermore, the user can utilize `tailscale ssh`
+    to securely jump into any node in the farm to execute `make` targets from
+    anywhere in the world, entirely bypassing the public internet without exposing
+    sensitive GUI ports.
 
 ## Software Design Decisions
 
@@ -103,21 +106,21 @@ breaking downstream dependencies, we enforce strict network aliasing and
 centralized configuration.
 
 * **State Synchronization & Distributed DNS:** Migration between hardware tiers
-  relies on a shared `profile.json` file. As you add new nodes to the cluster,
-  the `bin/orchestrate.py` script automatically generates a `.env.cluster` file
-  containing dynamic variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.50`). This
-  allows services on the Control Plane to seamlessly discover other services that
-  have migrated to Tier 2 or Tier 3 nodes.
+    relies on a shared `profile.json` file. As you add new nodes to the cluster,
+    the `bin/orchestrate.py` script automatically generates a `.env.cluster` file
+    containing dynamic variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.50`). This
+    allows services on the Control Plane to seamlessly discover other services that
+    have migrated to new hardware nodes.
 * **`active-proxy`:** Whether running LiteLLM, Helicone, or a custom router,
-  the proxy container MUST alias itself on the Docker network as `active-proxy`.
-  Downstream services connect blindly to `http://active-proxy:4000`.
+    the proxy container MUST alias itself on the Docker network as `active-proxy`.
+    Downstream services connect blindly to `http://active-proxy:4000`.
 * **`active-memory`:** The database container (PostgreSQL, Qdrant, etc.) MUST
-  alias itself as `active-memory`.
+    alias itself as `active-memory`.
 
 ### Service Segregation
 
 The framework is strictly delineated into modular services, each with their own
-directory hierachy (see `SERVICES.md`). Mixing concerns (e.g., placing
+directory hierarchy (see `SERVICES.md`). Mixing concerns (e.g., placing
 Observability tools inside the Sandbox service) is forbidden.
 
 ## Prompt-to-Model Routing
@@ -152,9 +155,9 @@ appending full file contents and history can push prompts past 20,000+ tokens,
 driving up costs and inducing extreme latency.
 
 * **The Invariant:** All agent default profiles MUST be patched with a strict
-  `compaction` threshold policy.
+    `compaction` threshold policy.
 * **The Mechanism:** When a session exceeds the `reserveTokensFloor` (e.g.,
-  24,000 tokens), the Gateway invokes a cheaper model (e.g.,
-  `litellm/medium-model`) to summarize the history and squash the context window
-  back down. This preserves the bandwidth of the expensive, high-tier models
-  strictly for reasoning tasks rather than reading ancient history.
+    24,000 tokens), the Gateway invokes a cheaper model (e.g.,
+    `litellm/medium-model`) to summarize the history and squash the context window
+    back down. This preserves the bandwidth of the expensive, high-tier models
+    strictly for reasoning tasks rather than reading ancient history.

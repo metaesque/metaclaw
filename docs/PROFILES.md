@@ -46,30 +46,32 @@ When you run `python bin/sysprofile.py` to add a new machine to the cluster,
 the script acts as an automated systems engineer. It applies **Cluster State
 Reconciliation**.
 
-If you add a Tier 2 (Compute) node, the script intelligently recognizes that
-the primary LLM `runner` should no longer exist on the Tier 1 Monolith. It
-mutates `profile.json`, stripping the `runner` responsibility from Tier 1 and
-assigning it to Tier 2.
+If you expand the cluster to Tier 2 by adding a Compute node, the script
+intelligently recognizes that the primary LLM `runner` should no longer exist
+on the original Tier 1 node. It mutates `profile.json`, stripping the `runner`
+responsibility from the Tier 1 node and assigning it to the newly profiled
+Tier 2 node.
 
-* **Eviction:** If you add a Tier 1: The Month 2 Monolith, the script marks
-  any existing Tier 0: The Day 1 Minilith machines for total teardown,
-  migrating the ecosystem off the constrained laptop.
+* **Eviction:** If you add a Tier 1: The Month 2 Monolith node, the script
+    marks any existing Tier 0: The Day 1 Minilith machines for total teardown,
+    migrating the ecosystem off the constrained laptop entirely.
 
 ## The State Enforcer (`bin/orchestrate.py`)
 
 Before `make` executes any deployment commands, the Makefile triggers
 `bin/orchestrate.py`. This Python script is the enforcer:
 
-1. **Teardown Resolution:** It compares the current symlinks in the
-   `services/` directory against the node's assigned providers in
-   `profile.json`. If it finds a symlink (e.g., `services/runner`) that is no
-   longer assigned to this machine, it autonomously executes
-   `make -C services/runner down` to gracefully shut down the containers,
-   and then deletes the symlink.
-2. **Dynamic Provisioning:** It creates fresh symlinks for the new
-   providers assigned to the machine.
-3. **Distributed DNS:** It scans the entire `profile.json` to find out which IP
-   addresses hold which services. It generates a `.env.cluster` file
-   containing routing variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.11`).
-   Downstream services (like the Gateway on Tier 1) read this file, instantly
-   discovering that they need to send API traffic to the new Tier 2 or Tier 3 nodes.
+1.  **Teardown Resolution:** It compares the current symlinks in the
+    `services/` directory against the node's assigned providers in
+    `profile.json`. If it finds a symlink (e.g., `services/runner`) that is no
+    longer assigned to this machine, it autonomously executes
+    `make -C services/runner down` to gracefully shut down the containers,
+    and then deletes the symlink.
+2.  **Dynamic Provisioning:** It creates fresh symlinks for the new
+    providers assigned to the machine.
+3.  **Distributed DNS:** It scans the entire `profile.json` to find out which IP
+    addresses hold which services. It generates a `.env.cluster` file
+    containing routing variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.11`).
+    Downstream services (like the Gateway on the Control Node) read this file,
+    instantly discovering that they need to send API traffic to the new remote
+    nodes.

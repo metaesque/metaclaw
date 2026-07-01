@@ -136,7 +136,7 @@ def main():
   )
   parser.add_argument(
     '-t', '--tier', type=int, default=-1,
-    help="The architectural tier (0-4) for this node."
+    help="The architectural tier (0-4) of the cluster this node joins/forms."
   )
   parser.add_argument(
     '-w', '--wan', type=str, default="",
@@ -154,12 +154,12 @@ def main():
     print(border)
     print(" Meta<Claw> Cluster Profiler")
     print(border)
-    print("Select the target architectural tier for this machine:")
+    print("Select the cluster architectural tier this machine represents/joins:")
     print("  [0] Tier 0: The Day 1 Minilith (Constrained dual-use laptop)")
     print("  [1] Tier 1: The Month 2 Monolith (Dedicated Mini-PC, all-in-one)")
-    print("  [2] Tier 2: Data Sovereignty (Dedicated GPU Compute Node)")
-    print("  [3] Tier 3: Sandbox Extraction (Dedicated Execution/CI Node)")
-    print("  [4] Tier 4: Archive Expansion (Dedicated Context Node)")
+    print("  [2] Compute Node (Advances cluster to Tier 2: Data Sovereignty)")
+    print("  [3] Execution Node (Advances cluster to Tier 3: Sandbox Extraction)")
+    print("  [4] Archive Node (Advances cluster to Tier 4: Archive Expansion)")
     default_tier = 0
     while True:
       try:
@@ -183,11 +183,11 @@ def main():
     print("or the ability to receive external webhooks (e.g., Telegram bots)?")
     print("If you only plan to use OpenClaw on your home Wi-Fi, answer No.")
     while True:
-      wan_choice = input("Require WAN access? [y/N]: ").strip().lower()
-      if wan_choice in ['y', 'yes']:
+      wan_choice = input("Require WAN access? [Y/n]: ").strip().lower()
+      if wan_choice in ['y', 'yes', '']:
         require_wan = True
         break
-      elif wan_choice in ['n', 'no', '']:
+      elif wan_choice in ['n', 'no']:
         require_wan = False
         break
   else:
