@@ -89,10 +89,16 @@ symlink:
 patch:
 	@echo "[$(SERVICE_TITLE)] Awaiting normal OpenClaw turnup before instrumentation..."
 	@$(MAKE) --no-print-directory wait-healthy
+	@echo "[$(SERVICE_TITLE)] Relaxing Linux permissions for host-based Python injection..."
+	@docker exec $(SERVICE_NAME) chown -R $(shell id -u):$(shell id -g) /root/.openclaw || true
+	@docker exec $(SERVICE_NAME) chmod -R 755 /root/.openclaw || true
 	@echo "[$(SERVICE_TITLE)] Executing non-destructive config patch and routing module injection..."
 	@$(PYTHON_BIN) patch_routing.py
-	@echo "[$(SERVICE_TITLE)] Adjusting Linux permissions to satisfy OpenClaw Plugin Security Policy..."
-	@docker exec $(SERVICE_NAME) chown root:root /root/.openclaw/openclaw.config.js || true
+	@echo "[$(SERVICE_TITLE)] Securing Linux permissions to satisfy OpenClaw Plugin Security Policy..."
+	@docker exec $(SERVICE_NAME) chown -R root:root /root/.openclaw || true
+	@docker exec $(SERVICE_NAME) chmod 700 /root/.openclaw || true
+	@docker exec $(SERVICE_NAME) chmod 600 /root/.openclaw/openclaw.json || true
+	@if [ -f config/openclaw.config.js ]; then docker exec $(SERVICE_NAME) chmod 600 /root/.openclaw/openclaw.config.js || true; fi
 	@echo "[$(SERVICE_TITLE)] Force-killing gateway to prevent config overwrite on shutdown..."
 	@docker kill $(SERVICE_NAME) >/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Starting gateway to apply patches and load config..."
