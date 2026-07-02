@@ -89,6 +89,8 @@ symlink:
 patch:
 	@echo "[$(SERVICE_TITLE)] Awaiting normal OpenClaw turnup before instrumentation..."
 	@$(MAKE) --no-print-directory wait-healthy
+	@echo "[$(SERVICE_TITLE)] Healing legacy permissions on workspace extensions..."
+	@docker run --rm -v $(abspath $(OPENCLAW_WORKSPACE)):/workspace alpine chown -R $(shell id -u):$(shell id -g) /workspace/.openclaw/extensions 2>/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Executing non-destructive config patch and Native Workspace Plugin deployment..."
 	@$(PYTHON_BIN) patch_routing.py
 	@echo "[$(SERVICE_TITLE)] Force-killing gateway to prevent config overwrite on shutdown..."
