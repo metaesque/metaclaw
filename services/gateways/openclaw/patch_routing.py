@@ -106,7 +106,7 @@ cui['allowInsecureAuth'] = True
 
 # 1b. Inject Tailscale IPs into Allowed Origins safely
 allowed_origins = set(cui.get('allowedOrigins', []))
-allowed_origins.add(f"http://127.0.0.1:{port}")
+allowed_origins.add(f"[http://127.0.0.1](http://127.0.0.1):{port}")
 allowed_origins.add(f"http://localhost:{port}")
 
 try:
@@ -183,6 +183,9 @@ if 'plugins' in data:
             paths = data['plugins']['load']['paths']
             if '/root/.openclaw/openclaw.config.js' in paths:
                 paths.remove('/root/.openclaw/openclaw.config.js')
+                data['plugins']['load']['paths'] = paths
+            if '/home/node/.openclaw/openclaw.config.js' in paths:
+                paths.remove('/home/node/.openclaw/openclaw.config.js')
                 data['plugins']['load']['paths'] = paths
         if not data['plugins']['load'].get('paths'):
             del data['plugins']['load']

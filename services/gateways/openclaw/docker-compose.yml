@@ -4,8 +4,14 @@ services:
     # WHY THIS VERSION: We strictly pin to ${OPENCLAW_VERSION} to ensure immutable infrastructure. Floating tags risk unverified, breaking updates.
     image: ghcr.io/openclaw/openclaw:${OPENCLAW_VERSION}
     container_name: openclaw-gateway
-    # WHY ROOT: OpenClaw requires raw access to the Docker socket to spawn sandboxes via DooD.
-    user: root
+    # WHY THIS USER: By aligning the container UID with the host UID (1000), we seamlessly pass OpenClaw's strict plugin ownership validation checks.
+    user: "${OPENCLAW_USER:-1000}"
+    group_add:
+      # WHY THESE GROUPS: Common Docker Socket GIDs to preserve Docker-out-of-Docker sandboxing without requiring root.
+      - "0"
+      - "999"
+      - "998"
+      - "131"
     # WHY UNLESS-STOPPED: Provides basic resilience.
     # If the Docker daemon restarts or the process crashes, the orchestrator handles recovery.
     restart: unless-stopped
@@ -19,13 +25,12 @@ services:
       # WHAT THIS DOES:
       #   Segregates ephemeral container data from persistent state.
       # WHY THIS DEFAULT:
-      #   Because the container runs as root, os.homedir() resolves to /root.
-      #   We explicitly map the host ./config directly to the internal root context.
-      - ./config:/root/.openclaw
+      #   We dynamically bind to OPENCLAW_INTERNAL_HOME to support non-root execution cleanly.
+      - ./config:${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw
       # WHAT THIS DOES:
       #   Mounts the agent workspace sandbox so agents can read/write files
       #   without accessing your entire hard drive.
-      - ${OPENCLAW_WORKSPACE}:/root/.openclaw/workspace
+      - ${OPENCLAW_WORKSPACE}:${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw/workspace
       # WHAT THIS DOES:
       #   Mounts the host's Docker socket and the dynamically downloaded static
       #   Docker CLI.
@@ -36,7 +41,7 @@ services:
       - ../../proxy/.env
     environment:
       # WHAT THIS DOES: Explicitly tells OpenClaw to load our custom predictive scoring hooks.
-      - OPENCLAW_CONFIG_FILE=/root/.openclaw/openclaw.config.js
+      - OPENCLAW_CONFIG_FILE=${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw/openclaw.config.js
       # WHAT THIS DOES: Satisfies the strict security requirement to authenticate an open 0.0.0.0 bind.
       # We reuse the ACTIVE_PROXY_KEY (which is guaranteed to be exported) as the gateway token.
       - OPENCLAW_GATEWAY_TOKEN=${ACTIVE_PROXY_KEY:-metaclaw_secure_bypass_token}
