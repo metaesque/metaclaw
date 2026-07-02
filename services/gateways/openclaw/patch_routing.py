@@ -24,7 +24,6 @@ os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
 port = os.environ.get('OPENCLAW_PORT', '18789')
 # Retrieve the exact proxy key injected by the orchestrator
 proxy_key = os.environ.get('ACTIVE_PROXY_KEY', 'metaclaw_secure_bypass_token')
-skip_bootstrap_env = os.environ.get('OPENCLAW_SKIP_BOOTSTRAP', 'true').lower() == 'true'
 
 # Find the workspace dir
 workspace_dir = None
@@ -216,6 +215,16 @@ if 'plugins' in data and 'entries' in data['plugins']:
         if not data['plugins']:
             del data['plugins']
 
+# 6. Register the MetaClaw JS hook file using the documented schema
+plugins = setdefault_path(data, ['plugins'])
+plugins['enabled'] = True
+load_dict = setdefault_path(plugins, ['load'])
+paths = load_dict.get('paths', [])
+target_path = f"{internal_home}/.openclaw/openclaw.config.js"
+if target_path not in paths:
+    paths.append(target_path)
+load_dict['paths'] = paths
+
 # Save openclaw.json
 with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
@@ -225,4 +234,5 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Enforced 'complex-model' fallback.")
+print(f"SUCCESS: Registered routing hook via plugins.load.paths: {target_path}.")
 print(f"SUCCESS: Auto-discovered and safely merged {len(agents_dict)} custom agents from external workspace.")
