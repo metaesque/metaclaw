@@ -24,6 +24,7 @@ os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
 port = os.environ.get('OPENCLAW_PORT', '18789')
 # Retrieve the exact proxy key injected by the orchestrator
 proxy_key = os.environ.get('ACTIVE_PROXY_KEY', 'metaclaw_secure_bypass_token')
+skip_bootstrap_env = os.environ.get('OPENCLAW_SKIP_BOOTSTRAP', 'true').lower() == 'true'
 
 # Find the workspace dir
 workspace_dir = None
@@ -56,35 +57,15 @@ module_path = os.path.join('modules', 'routing', f'{routing_strategy}.js')
 module_code = ""
 if os.path.exists(module_path):
     with open(module_path, 'r') as f:
-        # Strip the module.exports wrapper from the source template so we can inject just the object
-        raw_code = f.read()
-        match = re.search(r'module\.exports\s*=\s*\{([\s\S]*)\};', raw_code)
-        if match:
-            module_code = match.group(1).strip()
+        # We explicitly do not strip module.exports here anymore.
+        # OpenClaw natively requires this file as a standalone script.
+        module_code = f.read()
 
-START_MARKER = "// --- METACLAW ROUTING START ---"
-END_MARKER = "// --- METACLAW ROUTING END ---"
-injection_block = f"{START_MARKER}\n{module_code}\n{END_MARKER}"
-
-if os.path.exists(JS_CONFIG_PATH):
-    with open(JS_CONFIG_PATH, 'r') as f:
-        js_content = f.read()
-
-    if START_MARKER in js_content and END_MARKER in js_content:
-        # Safely regex replace only the MetaClaw block, preserving user custom plugins above/below
-        js_content = re.sub(f"{START_MARKER}.*?{END_MARKER}", injection_block, js_content, flags=re.DOTALL)
-        with open(JS_CONFIG_PATH, 'w') as f:
-            f.write(js_content)
-        print(f"SUCCESS: Non-destructively updated {routing_strategy} module in openclaw.config.js.")
-    else:
-        # User has a custom config but no MetaClaw markers. We must wrap their entire file safely to avoid destruction.
-        print("WARNING: Existing openclaw.config.js found without MetaClaw markers. Unable to perform safe regex injection.")
-        print("         Please manually insert the routing hooks if desired.")
-else:
-    # Write fresh templated file
+# Only inject if we actually found the module
+if module_code:
     with open(JS_CONFIG_PATH, 'w') as f:
-        f.write(f"module.exports = {{\n{injection_block}\n}};\n")
-    print(f"SUCCESS: Provisioned fresh openclaw.config.js with {routing_strategy} module.")
+        f.write(module_code)
+    print(f"SUCCESS: Provisioned openclaw.config.js with {routing_strategy} module.")
 
 
 # ==============================================================================
@@ -209,21 +190,13 @@ if 'plugins' in data and 'entries' in data['plugins']:
     if 'metaclaw-routing' in data['plugins']['entries']:
         del data['plugins']['entries']['metaclaw-routing']
         print("SUCCESS: Removed toxic 'metaclaw-routing' JSON injection to cure death loop.")
-    # Clean up empty dicts if we were the only entry
-    if not data['plugins']['entries']:
-        del data['plugins']['entries']
-        if not data['plugins']:
-            del data['plugins']
-
-# 6. Register the MetaClaw JS hook file using the documented schema
-plugins = setdefault_path(data, ['plugins'])
-plugins['enabled'] = True
-load_dict = setdefault_path(plugins, ['load'])
-paths = load_dict.get('paths', [])
-target_path = f"{internal_home}/.openclaw/openclaw.config.js"
-if target_path not in paths:
-    paths.append(target_path)
-load_dict['paths'] = paths
+    # Clean up empty load arrays from previous attempts
+    if 'load' in data['plugins'] and 'paths' in data['plugins']['load']:
+        paths = data['plugins']['load']['paths']
+        if '/root/.openclaw/openclaw.config.js' in paths:
+            paths.remove('/root/.openclaw/openclaw.config.js')
+            data['plugins']['load']['paths'] = paths
+            print("SUCCESS: Removed toxic load path injection.")
 
 # Save openclaw.json
 with open(CONFIG_PATH, 'w') as f:
@@ -234,5 +207,4 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Enforced 'complex-model' fallback.")
-print(f"SUCCESS: Registered routing hook via plugins.load.paths: {target_path}.")
 print(f"SUCCESS: Auto-discovered and safely merged {len(agents_dict)} custom agents from external workspace.")
