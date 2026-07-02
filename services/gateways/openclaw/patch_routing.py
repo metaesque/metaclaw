@@ -24,6 +24,7 @@ os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
 port = os.environ.get('OPENCLAW_PORT', '18789')
 # Retrieve the exact proxy key injected by the orchestrator
 proxy_key = os.environ.get('ACTIVE_PROXY_KEY', 'metaclaw_secure_bypass_token')
+skip_bootstrap_env = os.environ.get('OPENCLAW_SKIP_BOOTSTRAP', 'true').lower() == 'true'
 
 # Find the workspace dir
 workspace_dir = None
@@ -204,9 +205,16 @@ if not yaml_has_default and not existing_has_default:
 # Write the merged dictionary back to the list
 agents['list'] = list(agents_dict.values())
 
-# 5. Register the MetaClaw Routing Plugin
-plugins = setdefault_path(data, ['plugins', 'entries', 'metaclaw-routing'])
-plugins['path'] = f"{internal_home}/.openclaw/openclaw.config.js"
+# 5. Clean up toxic MetaClaw plugin injection that caused Zod validation death loop
+if 'plugins' in data and 'entries' in data['plugins']:
+    if 'metaclaw-routing' in data['plugins']['entries']:
+        del data['plugins']['entries']['metaclaw-routing']
+        print("SUCCESS: Removed toxic 'metaclaw-routing' JSON injection to cure death loop.")
+    # Clean up empty dicts if we were the only entry
+    if not data['plugins']['entries']:
+        del data['plugins']['entries']
+        if not data['plugins']:
+            del data['plugins']
 
 # Save openclaw.json
 with open(CONFIG_PATH, 'w') as f:
@@ -217,5 +225,4 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Enforced 'complex-model' fallback.")
-print(f"SUCCESS: Registered 'metaclaw-routing' plugin via {internal_home}/.openclaw/openclaw.config.js.")
 print(f"SUCCESS: Auto-discovered and safely merged {len(agents_dict)} custom agents from external workspace.")
