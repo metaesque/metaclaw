@@ -49,11 +49,30 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker
+.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize
 
 # ==============================================================================
-# ENVIRONMENT BOOTSTRAPPING
+# ENVIRONMENT BOOTSTRAPPING & UPDATES
 # ==============================================================================
+
+# WHAT IT DOES: Pulls the latest framework from GitHub and reconciles the containers.
+# WHY IT EXISTS: The standard update loop for non-technical users.
+mc-update:
+	@echo "################################################################################"
+	@echo "# UPDATING METACLAW FRAMEWORK"
+	@echo "################################################################################"
+	@git pull origin main
+	@$(MAKE) --no-print-directory apply
+
+# WHAT IT DOES: Allows the user to modify their dynamic configuration (routing, paths).
+# WHY IT EXISTS: Bypasses the full `setup` hardware profiler to quickly tweak settings.
+customize: | $(PYTHON_BIN)
+	@echo "################################################################################"
+	@echo "# MODIFYING METACLAW CONFIGURATION"
+	@echo "################################################################################"
+	@$(PYTHON_BIN) ./bin/customize.py
+	@$(MAKE) --no-print-directory .env
+	@echo "Run 'make apply' to enact any routing or path changes."
 
 # WHAT IT DOES: Analyzes the host OS and automatically installs Docker Engine or OrbStack.
 # WHY IT EXISTS: Streamlines bare-metal node provisioning before 'make setup'.

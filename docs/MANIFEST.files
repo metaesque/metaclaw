@@ -3,7 +3,6 @@
 .gitignore
 .planes.json
 .tiers.json
-.workspace.template/README.md
 LICENSE
 Makefile
 README.md

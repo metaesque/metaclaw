@@ -162,14 +162,11 @@ existing_list = agents.get('list', [])
 # Create a dictionary mapping by agent ID to preserve existing GUI-created configurations
 agents_dict = {agent.get('id'): agent for agent in existing_list if isinstance(agent, dict) and 'id' in agent}
 
-if 'main' not in agents_dict:
-    agents_dict['main'] = {"id": "main", "default": True}
-
 search_path = os.path.join(workspace_dir, 'agents', '**', '*.yaml')
 yaml_files = glob.glob(search_path, recursive=True)
-
-# Filter out template files
 yaml_files = [f for f in yaml_files if not f.endswith('.template')]
+
+yaml_has_default = False
 
 for yf in yaml_files:
   try:
@@ -177,16 +174,39 @@ for yf in yaml_files:
       agent_data = yaml.safe_load(f)
       agent_id = agent_data.get('name')
       if agent_id:
+        if agent_data.get('default') is True:
+            yaml_has_default = True
+
         # STRICT ZOD COMPLIANCE: Do not inject undocumented keys like "identity".
-        # OpenClaw natively scans the mounted workspace for metadata matching this ID.
         if agent_id not in agents_dict:
             agents_dict[agent_id] = {"id": agent_id}
-        # If it already exists, we leave it untouched, preserving GUI tweaks.
   except Exception as e:
     print(f"Warning: Could not parse {yf}: {e}")
 
+# Determine if we need to force a default agent to prevent OpenClaw from crashing
+existing_has_default = any(agent.get('default') is True for agent in agents_dict.values())
+
+if not yaml_has_default and not existing_has_default:
+    if 'orchestrator' in agents_dict:
+        agents_dict['orchestrator']['default'] = True
+        print("NOTICE: No default agent found. Set 'orchestrator' as default.")
+    elif 'main' in agents_dict:
+        agents_dict['main']['default'] = True
+        print("NOTICE: No default agent found. Set 'main' as default.")
+    elif len(agents_dict) > 0:
+        first_agent = list(agents_dict.keys())[0]
+        agents_dict[first_agent]['default'] = True
+        print(f"NOTICE: No default agent found. Set '{first_agent}' as default.")
+    else:
+        # Fallback if the workspace is completely empty
+        agents_dict['main'] = {"id": "main", "default": True}
+
 # Write the merged dictionary back to the list
 agents['list'] = list(agents_dict.values())
+
+# 5. Register the MetaClaw Routing Plugin
+plugins = setdefault_path(data, ['plugins', 'entries', 'metaclaw-routing'])
+plugins['path'] = f"{internal_home}/.openclaw/openclaw.config.js"
 
 # Save openclaw.json
 with open(CONFIG_PATH, 'w') as f:
@@ -196,5 +216,6 @@ print("SUCCESS: Patched baseline network routing and loopback binding.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print("SUCCESS: Enforced 'complex-model' fallback to prevent nonexistent model requests.")
-print(f"SUCCESS: Auto-discovered and safely merged {len(agents_dict) - 1} custom agents from external workspace.")
+print("SUCCESS: Enforced 'complex-model' fallback.")
+print(f"SUCCESS: Registered 'metaclaw-routing' plugin via {internal_home}/.openclaw/openclaw.config.js.")
+print(f"SUCCESS: Auto-discovered and safely merged {len(agents_dict)} custom agents from external workspace.")
