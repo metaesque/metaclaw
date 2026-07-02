@@ -91,6 +91,8 @@ patch:
 	@$(MAKE) --no-print-directory wait-healthy
 	@echo "[$(SERVICE_TITLE)] Executing non-destructive config patch and Native Workspace Plugin deployment..."
 	@$(PYTHON_BIN) patch_routing.py
+	@echo "[$(SERVICE_TITLE)] Securing Native Plugin permissions to satisfy OpenClaw Plugin Security Policy..."
+	@docker exec $(SERVICE_NAME) chown -R root:root /root/.openclaw/workspace/.openclaw/extensions || true
 	@echo "[$(SERVICE_TITLE)] Force-killing gateway to prevent config overwrite on shutdown..."
 	@docker kill $(SERVICE_NAME) >/dev/null || true
 	@echo "[$(SERVICE_TITLE)] Starting gateway to apply patches and load config..."

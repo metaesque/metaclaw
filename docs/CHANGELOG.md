@@ -2,6 +2,12 @@
 
 This document records significant changes and updates made to the MetaClaw framework.
 
+## 2026-07-02
+
+* **Native Workspace Routing Plugins**: Abandoned the legacy method of injecting JavaScript routing hooks via `openclaw.json` modification. This caused severe Zod validation death loops and Unix file permission conflicts. MetaClaw now compiles Prompt-to-Model routing logic (Lexical/Predictive) into an official Native OpenClaw Plugin package stored securely inside the user's workspace (`.openclaw/extensions/metaclaw-routing`).
+* **Interactive Bootstrapping (`bin/customize.py`)**: Migrated prompt-routing strategy selection and workspace directory generation out of the `.env` templating engine and into a dedicated Python CLI wizard, drastically improving UX for non-technical users.
+* **OpenClaw `BOOTSTRAP.md` Suppression**: Discovered that OpenClaw's onboarding ritual is triggered by cryptographic hashes of the default `.workspace.template/*.md` files. We successfully suppressed this unwanted behavior natively by injecting hidden HTML comments into the template files, breaking the hash match without requiring invasive JSON overwrites.
+
 ## 2026-07-01 (Part 3)
 
 * **Sibling Directory Architecture**: Officially formalized the `repo/`, `workspace/`, and `external/` sibling hierarchy. Nested Git repositories (placing the workspace inside MetaClaw) are strictly forbidden to prevent `git clean` operations from destroying personal data.

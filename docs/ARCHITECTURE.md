@@ -115,6 +115,14 @@ During a `factory-reset-soft`, the entire `config/openclaw.json` state is wiped.
 * **The Benefit:** Wiping the JSON guarantees zero configuration drift between framework updates, ensuring a sterile, perfect boot sequence. It enforces an "Immutable Infrastructure" mindset, forcing users to define their agents natively in `.yaml` workspace files rather than relying on brittle UI state.
 * **The Tradeoff:** Wiping the config deletes the browser's pairing state. To mitigate this, MetaClaw implements an `auto_approve.py` background worker that uses schema-aware JSON parsing to seamlessly intercept and approve new Device Identities the moment a user opens the GUI, ensuring the user experience remains frictionless.
 
+### The Plugin Security Invariant (UID Alignment)
+
+OpenClaw 2026 enforces strict UNIX ownership validations for executable plugins. If a plugin's directory is owned by a different user than the running process, the Gateway refuses to load it to prevent privilege escalation.
+
+Because MetaClaw relies on Docker-out-of-Docker (DooD), the OpenClaw container must run as `root` (`uid=0`). However, the `../workspace` directory mounted from the host is owned by the user (e.g., `metaclaw`, `uid=1000`).
+
+If MetaClaw injects a Native Workspace Plugin into `../workspace/.openclaw/extensions/`, the OpenClaw Gateway will crash with a `suspicious ownership` error. To solve this safely, the MetaClaw Makefile executes a `chown root:root` command exclusively on the `.openclaw/extensions/` directory inside the container after the Python script completes. This satisfies the security auditor while allowing the user to retain `uid=1000` ownership over their agent files and memory logs.
+
 ### Centralized Service Discovery & Network Aliasing
 
 To ensure services can be swapped instantly or migrated across hardware without
