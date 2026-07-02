@@ -39,7 +39,7 @@ pre-up: symlink
 		else echo "Unsupported architecture: $$ARCH"; exit 1; fi; \
 		echo "Downloading static Docker CLI for $$DOCKER_ARCH..."; \
 		mkdir -p bin/.tmp; \
-		curl -f -sSL "[https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz](https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz)" | tar xz -C bin/.tmp; \
+		curl -f -sSL "https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin/.tmp; \
 		cp bin/.tmp/docker/docker ./bin/docker; \
 		rm -rf bin/.tmp; \
 		chmod +x ./bin/docker; \
