@@ -4,9 +4,10 @@
 /**
  * Helper to force logs into the Docker stdout stream so they don't get
  * swallowed by OpenClaw's internal async log formatting.
+ * FIXED: Removed leading newline to prevent log spam.
  */
 function logToStdout(msg) {
-    process.stdout.write(`\n${msg}\n`);
+    process.stdout.write(`${msg}\n`);
 }
 
 function extractTextSafely(content) {
@@ -45,19 +46,18 @@ export default function register(api) {
             // Media Modality Overrides
             if (promptLower.startsWith("new sfw image")) {
                 logToStdout("[HOOK-DEBUG] LEXICAL MATCH: Routing to SFW Image model.");
-                return { modelOverride: "openai/flux-1-dev" };
+                return { providerOverride: "openai", modelOverride: "flux-1-dev" };
             }
             if (promptLower.startsWith("new nsfw image")) {
                 logToStdout("[HOOK-DEBUG] LEXICAL MATCH: Routing to NSFW Image model.");
-                return { modelOverride: "openai/pony-diffusion-v6-xl" };
+                return { providerOverride: "openai", modelOverride: "pony-diffusion-v6-xl" };
             }
 
             if (/\bheartbeat\b/.test(promptLower) || promptLower.includes("heartbeat.md")) {
                 logToStdout("[HOOK-DEBUG] >>> LEXICAL MATCH FOUND: heartbeat <<<");
-                logToStdout("[HOOK-DEBUG] Returning modelOverride: openai/simple-model");
+                logToStdout("[HOOK-DEBUG] Returning { providerOverride: 'openai', modelOverride: 'simple-model' }");
                 logToStdout("==================================================\n");
-                // OpenClaw API mandates returning the override object, not mutating the event
-                return { modelOverride: "openai/simple-model" };
+                return { providerOverride: "openai", modelOverride: "simple-model" };
             }
 
             logToStdout(`[HOOK-DEBUG] 4. No lexical match. Proceeding to Predictive Judge...`);
@@ -113,21 +113,22 @@ export default function register(api) {
                 const parsedOutput = JSON.parse(judgeOutput);
                 const complexity = parsedOutput.complexity || "medium";
 
+                // Mapping exclusively to the model string (no provider prefix)
                 const tierMapping = {
-                    "simple": "openai/simple-model",
-                    "medium": "openai/medium-model",
-                    "complex": "openai/complex-model"
+                    "simple": "simple-model",
+                    "medium": "medium-model",
+                    "complex": "complex-model"
                 };
 
-                const chosenModel = tierMapping[complexity] || "openai/medium-model";
-                logToStdout(`[HOOK-DEBUG] Predictive Routing returning modelOverride: ${chosenModel}`);
+                const chosenModel = tierMapping[complexity] || "medium-model";
+                logToStdout(`[HOOK-DEBUG] Predictive Routing returning: openai / ${chosenModel}`);
                 logToStdout("==================================================\n");
-                return { modelOverride: chosenModel };
+                return { providerOverride: "openai", modelOverride: chosenModel };
 
             } catch (err) {
-                logToStdout(`[HOOK-DEBUG] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex.`);
+                logToStdout(`[HOOK-DEBUG] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex-model.`);
                 logToStdout("==================================================\n");
-                return { modelOverride: "openai/complex-model" };
+                return { providerOverride: "openai", modelOverride: "complex-model" };
             }
         } catch (globalErr) {
             logToStdout(`\n[HOOK-DEBUG] !!! FATAL UNHANDLED ERROR IN HOOK !!!`);
