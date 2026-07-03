@@ -131,7 +131,7 @@ ensuring strict integration with:
 
 ## 8. Formatting and Output Protocol
 
-* You **MUST** use a 4-backtick code block (````) with the language identifier **`plaintext`** immediately following the backticks. This prevents web UI renderers from aggressively converting plain-text URLs within the block into clickable Markdown links, which corrupts Makefiles and scripts.
+* You **MUST** use a 4-backtick code block (````) with the language identifier **`plaintext`** immediately following the backticks.
 * If you output changes to the file structure, all such changes MUST be
   presented in a **SINGLE 4-backtick plaintext codeblock** that captures all
   changed files in their entirety.
