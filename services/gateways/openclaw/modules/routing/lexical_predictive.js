@@ -23,10 +23,18 @@ function extractTextSafely(content) {
     return JSON.stringify(content);
 }
 
+/**
+ * Helper to force logs into the Docker stdout stream so they don't get
+ * swallowed by OpenClaw's internal async log formatting.
+ */
+function logToStdout(msg) {
+    process.stdout.write(`\n${msg}\n`);
+}
+
 // Native OpenClaw Plugin API Entrypoint
 export default function register(api) {
     api.on('before_model_resolve', async (context) => {
-        console.error("[HOOK: lexical-predictive] Intercepting before model resolution...");
+        logToStdout("[HOOK: lexical-predictive] Intercepting before model resolution...");
         if (!context.messages || context.messages.length === 0) return context;
 
         // Extract the LAST ACTUAL USER MESSAGE to avoid evaluating tool_result JSON blobs during execution loops
@@ -34,7 +42,7 @@ export default function register(api) {
         const lastUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1] : null;
 
         if (!lastUserMessage) {
-            console.error("[HOOK: lexical-predictive] No user message found in context. Bypassing.");
+            logToStdout("[HOOK: lexical-predictive] No user message found in context. Bypassing.");
             return context;
         }
 
@@ -48,19 +56,19 @@ export default function register(api) {
 
         // Media Modality Overrides
         if (promptLower.startsWith("new sfw image")) {
-            console.error("[HOOK: lexical-predictive] LEXICAL MATCH: Routing to SFW Image model.");
+            logToStdout("[HOOK: lexical-predictive] LEXICAL MATCH: Routing to SFW Image model.");
             context.model = "litellm/flux-1-dev";
             return context;
         }
         if (promptLower.startsWith("new nsfw image")) {
-            console.error("[HOOK: lexical-predictive] LEXICAL MATCH: Routing to NSFW Image model.");
+            logToStdout("[HOOK: lexical-predictive] LEXICAL MATCH: Routing to NSFW Image model.");
             context.model = "litellm/pony-diffusion-v6-xl";
             return context;
         }
 
-        // Trivial Fast-Paths
-        if (promptLower.includes("heartbeat.md") || promptLower === "heartbeat") {
-            console.error("[HOOK: lexical-predictive] LEXICAL MATCH: Heartbeat pattern detected.");
+        // Trivial Fast-Paths (Regex boundary check for resilience)
+        if (/\bheartbeat\b/.test(promptLower) || promptLower.includes("heartbeat.md")) {
+            logToStdout("[HOOK: lexical-predictive] LEXICAL MATCH: Heartbeat pattern detected. Routing to litellm/simple-model");
             context.model = "litellm/simple-model";
             return context;
         }
@@ -69,11 +77,12 @@ export default function register(api) {
         // STAGE 2: PREDICTIVE ROUTING (LLM-as-a-Judge)
         // ==============================================================================
         const judgeModel = process.env.OPENCLAW_JUDGE_MODEL;
+        // Fix for Node 18+ fetch Docker DNS resolution: Force 127.0.0.1 mapping or explicit active-proxy
         const proxyUrl = process.env.OPENAI_BASE_URL || "http://active-proxy:4000/v1";
         const masterKey = process.env.ACTIVE_PROXY_KEY || "";
 
         if (!judgeModel || !masterKey) {
-            console.error("[HOOK: lexical-predictive] Infrastructure missing Judge Model or Master Key. Bypassing.");
+            logToStdout("[HOOK: lexical-predictive] Infrastructure missing Judge Model or Master Key. Bypassing.");
             return context;
         }
 
@@ -94,7 +103,7 @@ export default function register(api) {
             response_format: { type: "json_object" }
         };
 
-        console.error(`[HOOK: lexical-predictive] Invoking Predictive Judge (${judgeModel}) via ${proxyUrl}...`);
+        logToStdout(`[HOOK: lexical-predictive] Invoking Predictive Judge (${judgeModel}) via ${proxyUrl}...`);
 
         try {
             const controller = new AbortController();
@@ -118,7 +127,7 @@ export default function register(api) {
 
             const data = await response.json();
             const judgeOutput = data.choices[0].message.content;
-            console.error(`[HOOK: lexical-predictive] Judge Raw Output: ${judgeOutput}`);
+            logToStdout(`[HOOK: lexical-predictive] Judge Raw Output: ${judgeOutput}`);
 
             const parsedOutput = JSON.parse(judgeOutput);
             const complexity = parsedOutput.complexity || "medium";
@@ -130,10 +139,10 @@ export default function register(api) {
             };
 
             context.model = tierMapping[complexity] || "litellm/medium-model";
-            console.error(`[HOOK: lexical-predictive] Predictive Routing applied override: ${context.model}`);
+            logToStdout(`[HOOK: lexical-predictive] Predictive Routing applied override: ${context.model}`);
 
         } catch (err) {
-            console.error(`[HOOK: lexical-predictive] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex.`);
+            logToStdout(`[HOOK: lexical-predictive] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex.`);
             // Fail-safe to complex to ensure tasks complete even if the local judge node crashes
             context.model = "litellm/complex-model";
         }
