@@ -1,94 +1,71 @@
 // lexical_predictive.js
 // MetaClaw Native Workspace Plugin: Lexical + 3-Tier Predictive (INSTRUMENTED)
 
-function extractTextSafely(content) {
-    if (!content) return "";
-    if (typeof content === 'string') return content;
-    if (Array.isArray(content)) {
-        return content
-            .filter(item => item.type === 'text')
-            .map(item => item.text)
-            .join('\n');
-    }
-    return JSON.stringify(content);
+/**
+ * Helper to force logs into the Docker stdout stream so they don't get
+ * swallowed by OpenClaw's internal async log formatting.
+ */
+function logToStdout(msg) {
+    process.stdout.write(`\n${msg}\n`);
 }
 
 export default function register(api) {
-    api.on('before_model_resolve', async (context) => {
+    api.on('before_model_resolve', async (event) => {
         try {
-            console.error("\n==================================================");
-            console.error("[HOOK-DEBUG] 1. INVOCATION STARTED");
-            console.error(`[HOOK-DEBUG] Agent ID: ${context.agentId}`);
-            console.error(`[HOOK-DEBUG] Current Model Target: ${context.model}`);
+            logToStdout("==================================================");
+            logToStdout("[HOOK-DEBUG] 1. INVOCATION STARTED");
 
-            if (!context.messages || context.messages.length === 0) {
-                console.error("[HOOK-DEBUG] 2. No messages in context. Exiting.");
-                return context;
-            }
+            // Dump the absolute ground truth of the event structure
+            logToStdout("[HOOK-DEBUG] RAW EVENT STRUCTURE:");
+            logToStdout(JSON.stringify(event, null, 2));
 
-            console.error(`[HOOK-DEBUG] 3. Message chain length: ${context.messages.length}`);
-            const userMessages = context.messages.filter(m => m.role === 'user');
-            const lastUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1] : null;
-
-            if (!lastUserMessage) {
-                console.error("[HOOK-DEBUG] 4. No user message found. (Likely a tool-resolution loop). Exiting.");
-                return context;
-            }
-
-            console.error(`[HOOK-DEBUG] 5. Extracting text from last user message...`);
-            console.error(`[HOOK-DEBUG] Raw content type: ${typeof lastUserMessage.content}`);
-
-            let userPrompt = "";
-            try {
-                userPrompt = extractTextSafely(lastUserMessage.content).trim();
-                console.error(`[HOOK-DEBUG] 6. Extracted prompt: "${userPrompt.substring(0, 100).replace(/\n/g, ' ')}"`);
-            } catch (extractErr) {
-                console.error(`[HOOK-DEBUG] ERROR in extractTextSafely: ${extractErr.message}`);
-            }
+            // Extract the prompt using the official schema
+            const userPrompt = typeof event.prompt === 'string' ? event.prompt.trim() : JSON.stringify(event.prompt || "");
+            logToStdout(`[HOOK-DEBUG] 2. Extracted prompt: "${userPrompt}"`);
 
             const promptLower = userPrompt.toLowerCase();
 
-            console.error(`[HOOK-DEBUG] 7. Checking lexical rules...`);
+            // ==============================================================================
+            // STAGE 1: LEXICAL ROUTING (Fast-Path)
+            // ==============================================================================
+            logToStdout(`[HOOK-DEBUG] 3. Checking lexical rules...`);
             if (/\bheartbeat\b/.test(promptLower) || promptLower.includes("heartbeat.md")) {
-                console.error("[HOOK-DEBUG] >>> LEXICAL MATCH FOUND: heartbeat <<<");
-                context.model = "litellm/simple-model";
-                console.error(`[HOOK-DEBUG] 8. Model reassigned to: ${context.model}`);
-                console.error("==================================================\n");
-                return context;
+                logToStdout("[HOOK-DEBUG] >>> LEXICAL MATCH FOUND: heartbeat <<<");
+                logToStdout("[HOOK-DEBUG] Returning modelOverride: litellm/simple-model");
+                logToStdout("==================================================\n");
+                // OpenClaw API mandates returning the override object, not mutating the event
+                return { modelOverride: "litellm/simple-model" };
             }
 
-            console.error(`[HOOK-DEBUG] 9. No lexical match. Proceeding to Predictive Judge...`);
+            logToStdout(`[HOOK-DEBUG] 4. No lexical match. Proceeding to Predictive Judge...`);
 
             const judgeModel = process.env.OPENCLAW_JUDGE_MODEL;
             const proxyUrl = process.env.OPENAI_BASE_URL || "http://active-proxy:4000/v1";
             const masterKey = process.env.ACTIVE_PROXY_KEY || "";
 
             if (!judgeModel || !masterKey) {
-                console.error("[HOOK-DEBUG] Infrastructure missing Judge Model or Master Key. Bypassing.");
-                return context;
+                logToStdout("[HOOK-DEBUG] Infrastructure missing Judge Model or Master Key. Bypassing.");
+                return {};
             }
 
-            const recentContext = context.messages.slice(-4).map(msg => {
-                return `${msg.role.toUpperCase()}: ${extractTextSafely(msg.content)}`;
-            }).join('\n\n');
-
-            const judgeSystemPrompt = `You are an AI pipeline router. Analyze the complexity of the recent conversation and the latest user prompt.\nOutput ONLY valid JSON in the following format: {"complexity": "simple" | "medium" | "complex"}\n\nGuidelines:\n- "simple": Factual queries, basic translation, formatting, or trivial tool usage.\n- "medium": Summarization, standard business logic, drafting emails, moderate data parsing.\n- "complex": System architecture, advanced coding, mathematical proofs, multi-step data pipelines.`;
+            // Since before_model_resolve only receives the current prompt, we judge it directly.
+            const judgeSystemPrompt = `You are an AI pipeline router. Analyze the complexity of the user prompt.\nOutput ONLY valid JSON in the following format: {"complexity": "simple" | "medium" | "complex"}\n\nGuidelines:\n- "simple": Factual queries, basic translation, formatting, or trivial tool usage.\n- "medium": Summarization, standard business logic, drafting emails, moderate data parsing.\n- "complex": System architecture, advanced coding, mathematical proofs, multi-step data pipelines.`;
 
             const reqBody = {
                 model: judgeModel,
                 messages: [
                     { role: "system", content: judgeSystemPrompt },
-                    { role: "user", content: `Agent Domain: ${context.agentId || 'unknown'}\n\nRecent Conversation Context:\n${recentContext}\n\nAssess complexity.` }
+                    { role: "user", content: `Prompt:\n${userPrompt}\n\nAssess complexity.` }
                 ],
                 temperature: 0.0,
                 response_format: { type: "json_object" }
             };
 
-            console.error(`[HOOK-DEBUG] Invoking Predictive Judge (${judgeModel}) via ${proxyUrl}...`);
+            logToStdout(`[HOOK-DEBUG] Invoking Predictive Judge (${judgeModel}) via ${proxyUrl}...`);
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // Strict 8s timeout
 
                 const response = await fetch(`${proxyUrl}/chat/completions`, {
                     method: 'POST',
@@ -108,7 +85,7 @@ export default function register(api) {
 
                 const data = await response.json();
                 const judgeOutput = data.choices[0].message.content;
-                console.error(`[HOOK-DEBUG] Judge Raw Output: ${judgeOutput}`);
+                logToStdout(`[HOOK-DEBUG] Judge Raw Output: ${judgeOutput}`);
 
                 const parsedOutput = JSON.parse(judgeOutput);
                 const complexity = parsedOutput.complexity || "medium";
@@ -119,20 +96,21 @@ export default function register(api) {
                     "complex": "litellm/complex-model"
                 };
 
-                context.model = tierMapping[complexity] || "litellm/medium-model";
-                console.error(`[HOOK-DEBUG] Predictive Routing applied override: ${context.model}`);
+                const chosenModel = tierMapping[complexity] || "litellm/medium-model";
+                logToStdout(`[HOOK-DEBUG] Predictive Routing returning modelOverride: ${chosenModel}`);
+                logToStdout("==================================================\n");
+                return { modelOverride: chosenModel };
 
             } catch (err) {
-                console.error(`[HOOK-DEBUG] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex.`);
-                context.model = "litellm/complex-model";
+                logToStdout(`[HOOK-DEBUG] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex.`);
+                logToStdout("==================================================\n");
+                return { modelOverride: "litellm/complex-model" };
             }
-
-            console.error("==================================================\n");
         } catch (globalErr) {
-            console.error(`\n[HOOK-DEBUG] !!! FATAL UNHANDLED ERROR IN HOOK !!!`);
-            console.error(globalErr.stack || globalErr.message);
-            console.error("==================================================\n");
+            logToStdout(`\n[HOOK-DEBUG] !!! FATAL UNHANDLED ERROR IN HOOK !!!`);
+            logToStdout(globalErr.stack || globalErr.message);
+            logToStdout("==================================================\n");
+            return {};
         }
-        return context;
     });
 }
