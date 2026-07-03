@@ -39,7 +39,7 @@ up: .env ./bin/ollama docs
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
 		mkdir -p $(EXTERNAL_DRIVE_PATH)/ollama-models ; \
-		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama serve > $(LOG_FILE) 2>&1 & \
+		OLLAMA_HOST=0.0.0.0:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama serve > $(LOG_FILE) 2>&1 & \
 		echo $$! > $(PID_FILE) ; \
 	fi
 	@$(MAKE) --no-print-directory pull-judge

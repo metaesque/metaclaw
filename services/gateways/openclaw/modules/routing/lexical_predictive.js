@@ -9,6 +9,18 @@ function logToStdout(msg) {
     process.stdout.write(`\n${msg}\n`);
 }
 
+function extractTextSafely(content) {
+    if (!content) return "";
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+        return content
+            .filter(item => item.type === 'text')
+            .map(item => item.text)
+            .join('\n');
+    }
+    return JSON.stringify(content);
+}
+
 export default function register(api) {
     api.on('before_model_resolve', async (event) => {
         try {
@@ -29,12 +41,23 @@ export default function register(api) {
             // STAGE 1: LEXICAL ROUTING (Fast-Path)
             // ==============================================================================
             logToStdout(`[HOOK-DEBUG] 3. Checking lexical rules...`);
+
+            // Media Modality Overrides
+            if (promptLower.startsWith("new sfw image")) {
+                logToStdout("[HOOK-DEBUG] LEXICAL MATCH: Routing to SFW Image model.");
+                return { modelOverride: "openai/flux-1-dev" };
+            }
+            if (promptLower.startsWith("new nsfw image")) {
+                logToStdout("[HOOK-DEBUG] LEXICAL MATCH: Routing to NSFW Image model.");
+                return { modelOverride: "openai/pony-diffusion-v6-xl" };
+            }
+
             if (/\bheartbeat\b/.test(promptLower) || promptLower.includes("heartbeat.md")) {
                 logToStdout("[HOOK-DEBUG] >>> LEXICAL MATCH FOUND: heartbeat <<<");
-                logToStdout("[HOOK-DEBUG] Returning modelOverride: litellm/simple-model");
+                logToStdout("[HOOK-DEBUG] Returning modelOverride: openai/simple-model");
                 logToStdout("==================================================\n");
                 // OpenClaw API mandates returning the override object, not mutating the event
-                return { modelOverride: "litellm/simple-model" };
+                return { modelOverride: "openai/simple-model" };
             }
 
             logToStdout(`[HOOK-DEBUG] 4. No lexical match. Proceeding to Predictive Judge...`);
@@ -91,12 +114,12 @@ export default function register(api) {
                 const complexity = parsedOutput.complexity || "medium";
 
                 const tierMapping = {
-                    "simple": "litellm/simple-model",
-                    "medium": "litellm/medium-model",
-                    "complex": "litellm/complex-model"
+                    "simple": "openai/simple-model",
+                    "medium": "openai/medium-model",
+                    "complex": "openai/complex-model"
                 };
 
-                const chosenModel = tierMapping[complexity] || "litellm/medium-model";
+                const chosenModel = tierMapping[complexity] || "openai/medium-model";
                 logToStdout(`[HOOK-DEBUG] Predictive Routing returning modelOverride: ${chosenModel}`);
                 logToStdout("==================================================\n");
                 return { modelOverride: chosenModel };
@@ -104,7 +127,7 @@ export default function register(api) {
             } catch (err) {
                 logToStdout(`[HOOK-DEBUG] WARNING: Judge failed or timed out. Error: ${err.message}. Defaulting to complex.`);
                 logToStdout("==================================================\n");
-                return { modelOverride: "litellm/complex-model" };
+                return { modelOverride: "openai/complex-model" };
             }
         } catch (globalErr) {
             logToStdout(`\n[HOOK-DEBUG] !!! FATAL UNHANDLED ERROR IN HOOK !!!`);
