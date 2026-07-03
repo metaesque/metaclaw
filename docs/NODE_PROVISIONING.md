@@ -21,7 +21,7 @@ Currently, the node only has a local LAN IP (e.g., `192.168.1.50`). To safely ac
 1.  Log into the machine using the keyboard and monitor.
 2.  Install Tailscale using their single-line curl script:
     ```bash
-    curl -fsSL [https://tailscale.com/install.sh](https://tailscale.com/install.sh) | sh
+    curl -fsSL https://tailscale.com/install.sh | sh
     ```
 3.  Authenticate the node to your tailnet:
     ```bash

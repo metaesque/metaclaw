@@ -106,7 +106,7 @@ cui['allowInsecureAuth'] = True
 
 # 1b. Inject Tailscale IPs into Allowed Origins safely
 allowed_origins = set(cui.get('allowedOrigins', []))
-allowed_origins.add(f"[http://127.0.0.1](http://127.0.0.1):{port}")
+allowed_origins.add(f"http://127.0.0.1:{port}")
 allowed_origins.add(f"http://localhost:{port}")
 
 try:

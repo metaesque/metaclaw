@@ -40,7 +40,7 @@ pre-up: symlink
 		else echo "Unsupported architecture: $$ARCH"; exit 1; fi; \
 		echo "Downloading static Docker CLI for $$DOCKER_ARCH..."; \
 		mkdir -p bin/.tmp; \
-		curl -f -sSL "[https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz](https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz)" | tar xz -C bin/.tmp; \
+		curl -f -sSL "https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin/.tmp; \
 		cp bin/.tmp/docker/docker ./bin/docker; \
 		rm -rf bin/.tmp; \
 		chmod +x ./bin/docker; \
@@ -126,7 +126,7 @@ gui:
 	@TOKEN="$(OPENCLAW_GATEWAY_TOKEN)"; \
 	if [ -z "$$TOKEN" ]; then TOKEN="$(ACTIVE_PROXY_KEY)"; fi; \
 	if [ -z "$$TOKEN" ]; then TOKEN="metaclaw_secure_bypass_token"; fi; \
-	URL="[http://127.0.0.1](http://127.0.0.1):$(OPENCLAW_PORT)/?token=$$TOKEN"; \
+	URL="http://127.0.0.1:$(OPENCLAW_PORT)/?token=$$TOKEN"; \
 	if command -v tailscale >/dev/null 2>&1 && tailscale status >/dev/null 2>&1; then \
 		TS_DNS=$$(tailscale status --json | $(PYTHON_BIN) -c "import sys, json; print(json.load(sys.stdin).get('Self', {}).get('DNSName', '').rstrip('.'))"); \
 		if [ -n "$$TS_DNS" ]; then URL="https://$$TS_DNS/?token=$$TOKEN"; fi; \
@@ -147,7 +147,7 @@ gui:
 gui-setup:
 	@echo "[$(SERVICE_TITLE)] Initiating one-time GUI infrastructure setup..."
 	@$(MAKE) --no-print-directory wait-healthy
-	@if ! curl -fsS "[http://127.0.0.1](http://127.0.0.1):$(OPENCLAW_PORT)/healthz" > /dev/null 2>&1; then \
+	@if ! curl -fsS "http://127.0.0.1:$(OPENCLAW_PORT)/healthz" > /dev/null 2>&1; then \
 		echo "[$(SERVICE_TITLE)] Connection refused. Executing state reconciliation..."; \
 		$(MAKE) --no-print-directory patch; \
 		$(MAKE) --no-print-directory wait-healthy; \

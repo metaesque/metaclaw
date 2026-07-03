@@ -11,8 +11,6 @@ FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
 -include $(FRAMEWORK_ROOT)/services/gateway/.env
 export
 
-PYTHON_BIN ?= python3
-
 PID_FILE = .ollama.pid
 LOG_FILE = ollama.log
 
@@ -20,6 +18,12 @@ LOG_FILE = ollama.log
 JUDGE_MODEL_CLEAN = $(shell echo $(OPENCLAW_JUDGE_MODEL) | sed 's/ollama\///')
 
 .PHONY: up down status clean-state clobber-data check-status check-logs wait-healthy pull-judge apply docs
+
+docs: | $(PYTHON_BIN)
+	@if [ -f index.md ]; then \
+		echo "[$(SERVICE_TITLE)] Compiling markdown documentation..."; \
+		$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html; \
+	fi
 
 .env: .env.template $(wildcard .env.json)
 	@echo "Instantiating .env for $(SERVICE_TITLE)..."
@@ -67,7 +71,7 @@ check-status: status
 	@echo "================================================================================"
 	@echo "Running diagnostic suite..."
 	@echo "--- 1. API Responsiveness ---" > verification.log
-	@curl -s [http://127.0.0.1](http://127.0.0.1):$(OLLAMA_PORT)/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" 2>/dev/null >> verification.log || echo "API unreachable." >> verification.log
+	@curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" 2>/dev/null >> verification.log || echo "API unreachable." >> verification.log
 	@if grep -q "API unreachable" verification.log; then echo "FATAL: Ollama API unreachable."; exit 1; fi
 	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "Models Loaded:"
 
@@ -104,7 +108,7 @@ wait-healthy: status
 	@echo "[$(SERVICE_TITLE)] Awaiting healthy state..."
 	@attempt=1; \
 	while [ $$attempt -le 30 ]; do \
-		if curl -s [http://127.0.0.1](http://127.0.0.1):$(OLLAMA_PORT)/api/tags > /dev/null; then \
+		if curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags > /dev/null; then \
 			echo "[$(SERVICE_TITLE)] Status: HEALTHY."; \
 			exit 0; \
 		fi; \
