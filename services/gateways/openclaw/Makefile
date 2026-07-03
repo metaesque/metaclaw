@@ -25,6 +25,7 @@ update-env: .env
 
 pre-up: symlink
 	@echo "[$(SERVICE_TITLE)] Ensuring config directory exists on host..."
+	@mkdir -p config
 	@if [ -d config ]; then docker run --rm -v $(CURDIR):/mnt alpine chown -R $(shell id -u):$(shell id -g) /mnt/config 2>/dev/null || true; fi
 	@echo "[$(SERVICE_TITLE)] Ensuring static Docker CLI is available for DooD (Docker-out-of-Docker)..."
 	@mkdir -p bin
@@ -39,7 +40,7 @@ pre-up: symlink
 		else echo "Unsupported architecture: $$ARCH"; exit 1; fi; \
 		echo "Downloading static Docker CLI for $$DOCKER_ARCH..."; \
 		mkdir -p bin/.tmp; \
-		curl -f -sSL "https:""//download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin/.tmp; \
+		curl -f -sSL "https:""//[download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz](https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz)" | tar xz -C bin/.tmp; \
 		cp bin/.tmp/docker/docker ./bin/docker; \
 		rm -rf bin/.tmp; \
 		chmod +x ./bin/docker; \
