@@ -36,7 +36,7 @@ EXTERNAL_DRIVE_PATH := $(FRAMEWORK_ROOT)/external/metaclaw
 endif
 export EXTERNAL_DRIVE_PATH
 
-docs: | $(PYTHON_BIN)
+docs:
 	@if [ -f index.md ]; then \
 		echo "[$(SERVICE_NAME)] Compiling markdown documentation..."; \
 		$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html; \
