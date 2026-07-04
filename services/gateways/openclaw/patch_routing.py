@@ -140,13 +140,13 @@ defaults['model'] = "openai/complex-model"
 agents = setdefault_path(data, ['agents'])
 existing_list = agents.get('list', [])
 
-agents_dict = {agent.get('id'): agent for agent in existing_list if isinstance(agent, dict) and 'id' in agent}
-
 search_path = os.path.join(workspace_dir, 'agents', '**', '*.yaml')
 yaml_files = glob.glob(search_path, recursive=True)
 yaml_files = [f for f in yaml_files if not f.endswith('.template')]
 
 yaml_has_default = False
+yaml_ids = set()
+yaml_entries = []
 
 for yf in yaml_files:
   try:
@@ -154,27 +154,42 @@ for yf in yaml_files:
       agent_data = yaml.safe_load(f)
       agent_id = agent_data.get('name')
       if agent_id:
+        yaml_ids.add(agent_id)
         if agent_data.get('default') is True:
             yaml_has_default = True
-        if agent_id not in agents_dict:
-            agents_dict[agent_id] = {"id": agent_id}
+        # We explicitly pass the ID so the UI handles it cleanly, alongside the fromFile link.
+        yaml_entries.append({"id": agent_id, "fromFile": yf})
   except Exception as e:
     print(f"Warning: Could not parse {yf}: {e}")
 
-existing_has_default = any(agent.get('default') is True for agent in agents_dict.values())
+# Preserve existing entries that are not managed by our YAMLs
+new_list = []
+existing_has_default = False
+for agent in existing_list:
+    if 'fromFile' in agent and agent['fromFile'] in yaml_files:
+        continue # We will re-add it from our fresh scan
+    if 'id' in agent and agent['id'] in yaml_ids:
+        continue # YAML file overrides this explicit JSON definition
+    if agent.get('default') is True:
+        existing_has_default = True
+    new_list.append(agent)
 
 if not yaml_has_default and not existing_has_default:
-    if 'orchestrator' in agents_dict:
-        agents_dict['orchestrator']['default'] = True
-    elif 'main' in agents_dict:
-        agents_dict['main']['default'] = True
-    elif len(agents_dict) > 0:
-        first_agent = list(agents_dict.keys())[0]
-        agents_dict[first_agent]['default'] = True
-    else:
-        agents_dict['main'] = {"id": "main", "default": True}
+    # Try to make orchestrator default
+    made_default = False
+    for entry in yaml_entries:
+        if entry['id'] == 'orchestrator':
+            entry['default'] = True
+            made_default = True
+            break
+    if not made_default:
+        if len(yaml_entries) > 0:
+            yaml_entries[0]['default'] = True
+        else:
+            new_list.append({"id": "main", "default": True})
 
-agents['list'] = list(agents_dict.values())
+new_list.extend(yaml_entries)
+agents['list'] = new_list
 
 # 5. Clean up ALL previous toxic JSON injection attempts
 if 'plugins' in data:
@@ -218,4 +233,4 @@ print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print(f"SUCCESS: Auto-discovered and safely merged {len(agents_dict)} custom agents from external workspace.")
+print(f"SUCCESS: Auto-discovered and safely linked {len(yaml_ids)} custom agents via 'fromFile' references.")
