@@ -131,10 +131,9 @@ ensuring strict integration with:
 
 ## 8. Formatting and Output Protocol
 
-* You **MUST** use a 4-backtick code block (````) with the language identifier **`plaintext`** immediately following the backticks.
-* If you output changes to the file structure, all such changes MUST be
-  presented in a **SINGLE 4-backtick plaintext codeblock** that captures all
-  changed files in their entirety.
+* **Conditional Output:** ONLY output a code block if you are actively modifying, creating, or deleting files in response to the user's prompt. Do NOT output unchanged files just to fulfill the block requirement.
+* When modifying files, you **MUST** use a 4-backtick code block (````) with the language identifier **`plaintext`** immediately following the backticks.
+* All file modifications MUST be presented in a **SINGLE 4-backtick plaintext codeblock** that captures all changed files in their entirety.
 * Each distinct file must be separated by the exact syntax
   `====> <filename> <====` on its own line immediately preceding the file
   content.
