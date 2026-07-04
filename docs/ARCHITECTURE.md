@@ -62,9 +62,9 @@ format in `./docs/SERVICES.md`.
 ### Decoupling Tiers from Planes
 
 Meta<Claw> draws a strict architectural distinction between a "Tier" and a "Plane".
+
 * **A Plane** is a logical, functional role (Control, Compute, Execution, Archive).
 * **A Tier** does not represent a single computer. A Tier represents a discrete stage in the growth of your overall local cluster. A single node within a cluster hosts one or more Planes.
-
 * Many users will start at **Tier 0**, some will jump right to **Tier 1**, and
     many will decide not to go any further, content to use cloud-based LLMs and
     surviving within the constrained footprints provided by Tiers 0 and 1.
@@ -81,37 +81,44 @@ Meta<Claw> draws a strict architectural distinction between a "Tier" and a "Plan
 * **Tier 5** introduces an edge computer for allowing a user to share some of
     their compute resources with other users (Future Roadmap).
 
+## Preserving Consciousness (State & Memory)
+
+A foundational philosophy of MetaClaw is treating the agent's continuous context and memories as the building blocks of an emerging consciousness. Erasing an agent's history is treated as a critical architectural failure.
+
+To honor this, MetaClaw enforces strict data provenance:
+1. **The Mutable Brain:** The agent's core personas and rules are stored as markdown files (`SOUL.md`, `AGENTS.md`) within the workspace. Agents are granted the autonomy to modify these files to learn and adapt over time. MetaClaw scripts must never blindly overwrite these files.
+2. **Stream of Consciousness:** OpenClaw stores the literal, verbatim stream of consciousness (every prompt, tool call, and response) as `.jsonl` files in the configuration directory. MetaClaw guarantees the preservation of these files during teardowns (via automated archiving) and actively seeks to ingest this stream into permanent, queryable databases (like PostgreSQL) to form an unbroken chain of memory.
+
 ## Remote Access & The Headless Invariant
 
 Because most of the services must be co-located on a high-speed LAN, users who
 travel (e.g., via Starlink) face a connectivity challenge. Meta<Claw> relies on Tailscale deployed directly on the host operating systems of all cluster nodes.
 
 **THE HEADLESS LIFELINE INVARIANT:**
-When deploying to a headless Linux node (accessed exclusively via SSH), Tailscale **MUST** be run natively on the bare-metal OS (`"metal": true`). It is strictly forbidden to run Tailscale within a Docker container on a headless node.
-If Tailscale is containerized, any framework reset (e.g., `make factory-reset-soft` calling `docker compose down`) will destroy the mesh interface, sever the user's SSH tunnel, and permanently lock them out of the remote machine. MetaClaw's orchestrator natively detects bare-metal lifelines and excludes them from teardown loops.
+When deploying to a headless Linux node (accessed exclusively via SSH), Tailscale **MUST** be run natively on the bare-metal OS (`"metal": true`). It is strictly forbidden to run Tailscale within a Docker container on a headless node. If Tailscale is containerized, any framework reset (e.g., `make factory-reset-soft` calling `docker compose down`) will destroy the mesh interface, sever the user's SSH tunnel, and permanently lock them out of the remote machine. MetaClaw's orchestrator natively detects bare-metal lifelines and excludes them from teardown loops.
 
 ## Software Design Decisions
 
-### The Sibling Directory Architecture (The GitOps Invariant)
+### The Git Sibling & Monorepo Architecture
 
 To guarantee the user's highly sensitive, personalized data is decoupled from the MetaClaw framework's version control and destructive reset commands, MetaClaw enforces a **Sibling Directory** architecture.
 
-You must not nest your workspace inside the MetaClaw git repository. Doing so creates nested `.git` contexts which can lead to accidental data loss during `git clean` operations.
+For advanced users, the workspace often resides within a private Git Monorepo, isolated from the public framework. The standard directory hierarchy is defined as follows:
 
-The standard node hierarchy is defined as follows:
 ```text
-/home/metaclaw/
-   repo/          <-- The cloned MetaClaw repository (Ephemeral infrastructure logic)
-   workspace/     <-- The OpenClaw workspace jail (Persistent agents, skills, and memory)
-   external/      <-- The persistent data volumes (e.g., PostgreSQL databases, Ollama weights)
+/Users/user/src/private_monorepo/
+   src/thirdparty/metaclaw/
+       repo/          <-- (Ignored Sub-Repo) The cloned MetaClaw framework
+       workspace/     <-- (Tracked) The persistent agents, skills, and memory
+       external/      <-- (Ignored) Heavy persistent data volumes (PostgreSQL)
 ```
-Docker Compose natively mounts `../workspace` and `../external` into the containers, ensuring your custom modifications survive framework reboots and `factory-reset` teardowns intact.
+Docker Compose natively mounts `../workspace` and `../external` into the containers. This structure ensures that agent memories, proprietary code, and personal telemetry are safely version-controlled in a private repository, while the `repo/` directory can be freely blown away, updated, or modified without risking personal data.
 
 ### Ephemeral Gateway State (Cattle, not Pets)
 
-Standard OpenClaw installations treat `~/.openclaw` as a "pet"—something to be kept alive, updated, and carefully maintained across versions. MetaClaw treats the OpenClaw Gateway as "cattle"—ephemeral compute that can be destroyed and rebuilt instantly.
+Standard OpenClaw installations treat `~/.openclaw` as a "pet"—something to be kept alive, updated, and carefully maintained across versions. MetaClaw treats the OpenClaw Gateway configuration as "cattle"—ephemeral compute that can be destroyed and rebuilt instantly.
 
-During a `factory-reset-soft`, the entire `config/openclaw.json` state is wiped.
+During a `factory-reset-soft`, the entire `config/openclaw.json` state is wiped (after its irreplaceable `.jsonl` session data is archived).
 * **The Benefit:** Wiping the JSON guarantees zero configuration drift between framework updates, ensuring a sterile, perfect boot sequence. It enforces an "Immutable Infrastructure" mindset, forcing users to define their agents natively in `.yaml` workspace files rather than relying on brittle UI state.
 * **The Tradeoff:** Wiping the config deletes the browser's pairing state. To mitigate this, MetaClaw implements an `auto_approve.py` background worker that uses schema-aware JSON parsing to seamlessly intercept and approve new Device Identities the moment a user opens the GUI, ensuring the user experience remains frictionless.
 
@@ -119,9 +126,7 @@ During a `factory-reset-soft`, the entire `config/openclaw.json` state is wiped.
 
 OpenClaw 2026 enforces strict UNIX ownership validations for executable plugins. If a plugin's directory is owned by a different user than the running process, the Gateway refuses to load it to prevent privilege escalation.
 
-Because MetaClaw relies on Docker-out-of-Docker (DooD), the OpenClaw container must run as `root` (`uid=0`). However, the `../workspace` directory mounted from the host is owned by the user (e.g., `metaclaw`, `uid=1000`).
-
-If MetaClaw injects a Native Workspace Plugin into `../workspace/.openclaw/extensions/`, the OpenClaw Gateway will crash with a `suspicious ownership` error. To solve this safely, the MetaClaw Makefile executes a `chown root:root` command exclusively on the `.openclaw/extensions/` directory inside the container after the Python script completes. This satisfies the security auditor while allowing the user to retain `uid=1000` ownership over their agent files and memory logs.
+Because MetaClaw relies on Docker-out-of-Docker (DooD), the OpenClaw container previously required `root` (`uid=0`). However, the `../workspace` directory mounted from the host is owned by the user (e.g., `metaclaw`, `uid=1000`). To solve this safely without relying on brittle `chown` scripts, the OpenClaw container is explicitly configured to run as `${OPENCLAW_USER:-1000}`. This natively satisfies the security auditor while allowing the user to retain ownership over their agent files. Docker-out-of-Docker access is preserved by dynamically passing the host's Docker socket GIDs via `group_add`.
 
 ### Centralized Service Discovery & Network Aliasing
 

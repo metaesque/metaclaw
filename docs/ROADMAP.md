@@ -8,6 +8,20 @@ This document outlines the prioritized architectural strategy for integrating fu
 
 ---
 
+## 📋 PRIORITY ACTION BACKLOG (July 2026)
+
+The following tasks are prioritized for immediate execution to stabilize the Tier 2 architecture and resolve current configuration friction.
+
+1. **Extract `system_prompt` from `.yaml` files via OpenClaw:** Use the active OpenClaw agent to programmatically read all 52 `workspace/agents/**/*.yaml` files, delete the `system_prompt` key, and prepend that text into the corresponding `SOUL.md` files to honor the agent's mutable consciousness architecture.
+2. **Clean up `.yaml` Model Strings:** Refactor the 52 `.yaml` files to use generic, abstracted model names (e.g., `model: "complex-model"`) rather than hardcoding specific APIs. This allows LiteLLM to handle tier-specific fallback logic natively.
+3. **Refactor `patch_routing.py`:** Rewrite the script so that it strictly parses `.yaml` files for `id`, `default`, `tools`, and `workspace` paths to populate `openclaw.json`, explicitly abandoning any attempts to compile or overwrite `.md` files.
+4. **Build PostgreSQL Session Sync (ETL):** Replace the cumbersome `config` directory archiving process. Write a lightweight Python daemon/cron job to tail OpenClaw's `sessions.jsonl` files, parse the dictionaries, and `INSERT` the prompt/response pairs directly into a structured PostgreSQL schema, actively preserving the agent's stream of consciousness in a robust database.
+5. **Implement a `vcs` Provider:** Integrate a Local Version Control System (e.g., Gitea/Forgejo) to act as a secure, local scratchpad for agents to iteratively push and test code modifications before submitting final PRs to the main GitHub repository.
+6. **Implement a `ci` Provider:** Integrate a Continuous Integration pipeline (e.g., Woodpecker/Drone) triggered by the local `vcs` to mathematically test agent-generated code inside the Execution sandbox.
+7. **Extract `mcwksp` Git Repository:** Utilize `git filter-repo` to extract the `workspace` directory into an isolated, independent private Git repository (`mcwksp`) to cleanly separate personal data from the framework ecosystem.
+
+---
+
 ## 🟢 MILESTONE 1: The Tier 0 Foundation (Achieved)
 
 **Status: COMPLETED (`stable-v1`)**
@@ -96,7 +110,6 @@ Implement visual DOM interpretation (`Skyvern`), action-caching to save API cost
 * **Target Providers:** `Forgejo / Gitea`, `Woodpecker CI / Drone`
 * **Purpose:** As agents autonomously modify workspace files, we need absolute attribution.
 CI pipelines will mathematically prove the agent's code works against a test suite before it is deployed.
-Note: The `vcses` service currently has no providers implemented and needs initial integrations added.
 
 ## Phase 4: Decoupling & Debugging (Queues & Tracing)
 
