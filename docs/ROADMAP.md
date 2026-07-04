@@ -66,7 +66,12 @@ OpenClaw natively discovers and loads this plugin during boot, allowing the syst
 **Urgency: MEDIUM**
 **Status: PLANNED**
 
-**Purpose:** To firmly establish MetaClaw as a facilitator rather than a dictator, we must migrate away from direct programmatic modification of `openclaw.json`. Hacking JSON keys directly is brittle across point-releases and obscures the native mechanisms from the end-user. Instead, we will configure the Gateway using official OpenClaw CLI commands (e.g., `openclaw config set`, `openclaw agents add`). This strategy is more resilient, future-proof, and models best practices for users wanting to add agents themselves.
+**Purpose:** To firmly establish MetaClaw as a facilitator rather than a dictator, we must migrate away from direct programmatic modification of `openclaw.json`. Hacking JSON keys directly is brittle across point-releases, risks corrupting the configuration (causing crash loops), and obscures the native mechanisms from the end-user.
+
+Instead, we will configure the Gateway using official OpenClaw CLI commands (e.g., `openclaw config set`, `openclaw agents add`). This strategy is more resilient, future-proof, and models best practices for users wanting to add agents themselves.
+
+**The Role of YAML files in the Refactor:**
+OpenClaw natively reads Markdown files (`SOUL.md`, `AGENTS.md`) for system prompts, but it does NOT natively read YAML files or frontmatter for configuration metadata. Therefore, we will retain the custom agent `.yaml` files in the workspace purely as Infrastructure-as-Code manifests. A Python bootstrapping script will parse these `.yaml` files to extract the `model`, `tools`, and `workspace` metadata, and then execute the corresponding `openclaw agents add` CLI commands in bulk to dynamically populate the gateway configuration on a fresh installation.
 
 **Target Files for Cleanup:**
 * `services/gateways/openclaw/patch_routing.py` (Must be refactored to utilize `subprocess.run` wrapping `openclaw config set` rather than direct JSON object manipulation).
@@ -105,22 +110,3 @@ Provide deep visibility into latency spans to debug slow agent reasoning loops.
 * **Categories:** `services/proxies-reverse/`, `services/iam/`
 * **Target Providers:** `Traefik / Caddy`, `Authelia / Authentik`
 * **Purpose:** Expose specific agent endpoints (like a shared public webhook receiver) to external users via strict Multi-Factor Authentication and SSL termination.
-
----
-
-## Beyond Software: The Hardware Scaling Journey
-
-As users graduate from the entry-level "Tier 0" laptop footprint to distributed "Tier 1" monoliths and "Tier 2+" compute/archive planes, users must evaluate the following architectural challenges:
-
-### 1. Memory and Inference Constraints
-* **Unified Memory Allocation:** Given advanced APU architectures (like the Strix Halo in the GMKtec EVO-X2), does the BIOS allow you to explicitly pin a dedicated VRAM allocation for the iGPU?
-This is critical to prevent the Linux kernel from reclaiming memory during heavy LLM inference.
-* **Thermal Throttling:** Are there thermal or acoustic constraints for running high-TDP nodes 24/7 in a residential or nomadic environment?
-
-### 2. Network Topology & Latency
-* **Context Window Transfers:** How will you handle the physical network topology to ensure the 2.5GbE interfaces on the GMKtec nodes communicate with future 10GbE nodes without introducing switch latency during massive 100k+ context window transfers?
-(A Star Topology via a multi-gigabit core switch is mandatory).
-* **Subnet Routing:** How will Tailscale subnet routing be configured to ensure external webhooks reach the Gateway seamlessly when physical nodes change networks during travel?
-
-### 3. Distributed Storage & Persistence
-* **State Synchronization:** How will you manage distributed storage persistence and backups across multiple ephemeral nodes?

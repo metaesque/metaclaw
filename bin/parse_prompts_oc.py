@@ -16,13 +16,13 @@ def wrap_markdown(text, width=80):
     lines = text.split('\n')
     output = []
     in_code_block = False
-    
+
     for line in lines:
         if line.startswith('```'):
             in_code_block = not in_code_block
             output.append(line)
             continue
-            
+
         if in_code_block:
             output.append(line)
         else:
@@ -31,7 +31,7 @@ def wrap_markdown(text, width=80):
             else:
                 wrapped = textwrap.fill(line, width=width)
                 output.append(wrapped)
-                
+
     return '\n'.join(output)
 
 def main():
@@ -47,8 +47,8 @@ def main():
     bin_dir = os.path.dirname(script_path)
     framework_root = os.path.dirname(bin_dir)
     target_dir = os.path.join(
-        framework_root, 
-        "services", "gateways", "openclaw", "config", "agents", 
+        framework_root,
+        "services", "gateways", "openclaw", "config", "agents",
         agent_name, "sessions"
     )
 
@@ -83,7 +83,7 @@ def main():
                 msg = data.get("message", {})
                 role = msg.get("role")
                 timestamp = data.get("timestamp", "Unknown Time")
-                
+
                 if args.raw:
                     # Clean up the raw JSON
                     cleaned_content = []
@@ -105,7 +105,7 @@ def main():
                              for item in raw_content:
                                  if item.get("type") == "text":
                                      cleaned_content.append({"result": item.get("text")})
-                                 
+
                     cleaned_data = {
                         "role": role,
                         "timestamp": timestamp,
@@ -122,7 +122,7 @@ def main():
                     if isinstance(content, str):
                         wrapped_content = wrap_markdown(content)
                         print(f"{separator}\n{time_str} {COLOR_HUMAN}[HUMAN]{COLOR_RESET}\n{wrapped_content}")
-                
+
                 elif role == "assistant":
                     content = msg.get("content", [])
                     if isinstance(content, list):

@@ -136,7 +136,7 @@ openai_prov['apiKey'] = proxy_key
 defaults = setdefault_path(data, ['agents', 'defaults'])
 defaults['model'] = "openai/complex-model"
 
-# 4. Auto-Discover Custom YAML Agents & Non-Destructively Merge
+# 4. Auto-Discover Custom YAML Agents & Enforce Minimal IDs
 agents = setdefault_path(data, ['agents'])
 existing_list = agents.get('list', [])
 
@@ -153,26 +153,31 @@ for yf in yaml_files:
     with open(yf, 'r', encoding='utf-8') as f:
       agent_data = yaml.safe_load(f)
       agent_id = agent_data.get('name')
-      if agent_id:
-        yaml_ids.add(agent_id)
-        if agent_data.get('default') is True:
-            yaml_has_default = True
-        # We explicitly pass the ID so the UI handles it cleanly, alongside the fromFile link.
-        yaml_entries.append({"id": agent_id, "fromFile": yf})
-  except Exception as e:
-    print(f"Warning: Could not parse {yf}: {e}")
+      if not agent_id: continue
 
-# Preserve existing entries that are not managed by our YAMLs
+      yaml_ids.add(agent_id)
+      entry = {"id": agent_id}
+      if agent_data.get('default') is True:
+          entry['default'] = True
+          yaml_has_default = True
+
+      yaml_entries.append(entry)
+  except Exception as e:
+    print(f"Warning: Could not process {yf}: {e}")
+
+# Preserve existing entries that are not managed by our YAMLs, stripped to minimal state
 new_list = []
 existing_has_default = False
 for agent in existing_list:
-    if 'fromFile' in agent and agent['fromFile'] in yaml_files:
-        continue # We will re-add it from our fresh scan
     if 'id' in agent and agent['id'] in yaml_ids:
-        continue # YAML file overrides this explicit JSON definition
+        continue # YAML discovery overrides this explicit JSON definition
     if agent.get('default') is True:
         existing_has_default = True
-    new_list.append(agent)
+
+    minimal_agent = {"id": agent.get("id")}
+    if agent.get("default") is True:
+        minimal_agent["default"] = True
+    new_list.append(minimal_agent)
 
 if not yaml_has_default and not existing_has_default:
     # Try to make orchestrator default
@@ -191,7 +196,7 @@ if not yaml_has_default and not existing_has_default:
 new_list.extend(yaml_entries)
 agents['list'] = new_list
 
-# 5. Clean up ALL previous toxic JSON injection attempts
+# 5. Clean up ALL previous toxic JSON injection attempts (including fromFile)
 if 'plugins' in data:
     if 'load' in data['plugins']:
         if 'paths' in data['plugins']['load']:
@@ -233,4 +238,4 @@ print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print(f"SUCCESS: Auto-discovered and safely linked {len(yaml_ids)} custom agents via 'fromFile' references.")
+print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and stripped to minimal ID config.")
