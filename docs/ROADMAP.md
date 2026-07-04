@@ -1,6 +1,8 @@
 # OpenClaw Framework: Service Expansion Roadmap
 
-*Note: With the upgrade to OpenClaw 2026.6.8, Meta<Claw> has formally adopted an "un-opinionated" design goal. We aim to make it incredibly easy for non-technical users to get OpenClaw running, without placing them in a straight-jacket once the environment is operational. All future roadmap items are evaluated against this ethos.*
+*Note: With the upgrade to OpenClaw 2026.6.8, Meta<Claw> has formally adopted an "un-opinionated" design goal.
+We aim to make it incredibly easy for non-technical users to get OpenClaw running, without placing them in a straight-jacket once the environment is operational.
+All future roadmap items are evaluated against this ethos.*
 
 This document outlines the prioritized architectural strategy for integrating future software capabilities and migrating across hardware tiers.
 
@@ -11,7 +13,9 @@ This document outlines the prioritized architectural strategy for integrating fu
 **Status: COMPLETED (`stable-v1`)**
 **Public Repository:** [https://github.com/metaesque/metaclaw](https://github.com/metaesque/metaclaw)
 
-**The Accomplishment:** We have successfully built and verified a working Tier 0 environment. MetaClaw now reliably bootstraps OpenClaw alongside its essential caching and observability services. We have transitioned framework development natively into the local OpenClaw agent workflow, granting it read/write workspace access to iteratively improve the ecosystem.
+**The Accomplishment:** We have successfully built and verified a working Tier 0 environment.
+MetaClaw now reliably bootstraps OpenClaw alongside its essential caching and observability services.
+We have transitioned framework development natively into the local OpenClaw agent workflow, granting it read/write workspace access to iteratively improve the ecosystem.
 
 ---
 
@@ -21,12 +25,14 @@ This document outlines the prioritized architectural strategy for integrating fu
 **Status: IN PROGRESS**
 
 **Current Hardware State:**
-The dedicated edge hardware has been successfully physically provisioned. Both nodes are running headless Ubuntu Server, are accessible remotely via Tailscale, can be managed seamlessly via Emacs TRAMP, and have the `metaesque/metaclaw` repository cloned into the `metaclaw` user's `$HOME` directory.
+The dedicated edge hardware has been successfully physically provisioned.
+Both nodes are running headless Ubuntu Server, are accessible remotely via Tailscale, can be managed seamlessly via Emacs TRAMP, and have the `metaesque/metaclaw` repository cloned into the `metaclaw` user's `$HOME` directory.
 * **The Control Node:** GMKtec K8 Plus
 * **The Compute Node:** GMKtec EVO X2
 
 ### Step A: Evolve the Control Node (Tier 2 Control Plane)
-**Status: Mostly Complete (July 1, 2026).** The node successfully boots, handles remote Tailscale HTTPS UI access, and resolves basic prompts. Comprehensive testing of fetchers/searchers is pending.
+**Status: Mostly Complete (July 1, 2026).** The node successfully boots, handles remote Tailscale HTTPS UI access, and responds to prompts.
+Comprehensive testing of fetchers/searchers is pending.
 1. **Ubuntu Optimization:** Refactored Makefiles and deployment scripts to account for headless Ubuntu constraints (e.g., bare-metal Tailscale lifelines, WebCrypto HTTPS requirements).
 2. **Provider Diversification:** Expanded the `services` architecture to support robust, bare-metal or heavy-docker providers (PostgreSQL pgvector, VictoriaLogs, LiteLLM).
 
@@ -45,11 +51,25 @@ We must configure the EVO X2 to act as the dedicated **Tier 2 LLM Runner** to el
 **Status: COMPLETED (July 2, 2026)**
 
 As MetaClaw transitioned from an opinionated script into a general-purpose facilitator, we decoupled the rigid `openclaw.json` overwrites in favor of dynamic user customization.
-
 **The Accomplishments:**
-1. **The Sibling Directory Architecture:** We formally decoupled the user's data from the MetaClaw repository. The workspace now lives in `../workspace` and the databases in `../external`, completely isolating the user from destructive `git clean` operations.
+1. **The Sibling Directory Architecture:** We formally decoupled the user's data from the MetaClaw repository.
+The workspace now lives in `../workspace` and the databases in `../external`, completely isolating the user from destructive `git clean` operations.
 2. **Interactive Bootstrapping:** `bin/customize.py` now allows users to cleanly select their preferred Prompt Routing Strategy and automatically hydrates an empty workspace from a `.workspace.template` if requested.
-3. **Native Workspace Routing Plugins:** We abandoned the brittle JSON injection method for Prompt Routing. Instead of hacking `openclaw.json`, MetaClaw now compiles Lexical/Predictive JS logic into an official `openclaw.plugin.json` package directly inside the user's workspace (`.openclaw/extensions/metaclaw-routing`). OpenClaw natively discovers and loads this plugin during boot, allowing the system to use a local LLM Judge to intercept prompts and deflect them away from expensive Gemini API calls seamlessly.
+3. **Native Workspace Routing Plugins:** We abandoned the brittle JSON injection method for Prompt Routing.
+Instead of hacking `openclaw.json`, MetaClaw now compiles Lexical/Predictive JS logic into an official `openclaw.plugin.json` package directly inside the user's workspace (`.openclaw/extensions/metaclaw-routing`).
+OpenClaw natively discovers and loads this plugin during boot, allowing the system to use a local LLM Judge to intercept prompts and deflect them away from expensive Gemini API calls seamlessly.
+
+---
+
+## 🟡 MILESTONE 4: The CLI-First Configuration Refactor
+
+**Urgency: MEDIUM**
+**Status: PLANNED**
+
+**Purpose:** To firmly establish MetaClaw as a facilitator rather than a dictator, we must migrate away from direct programmatic modification of `openclaw.json`. Hacking JSON keys directly is brittle across point-releases and obscures the native mechanisms from the end-user. Instead, we will configure the Gateway using official OpenClaw CLI commands (e.g., `openclaw config set`, `openclaw agents add`). This strategy is more resilient, future-proof, and models best practices for users wanting to add agents themselves.
+
+**Target Files for Cleanup:**
+* `services/gateways/openclaw/patch_routing.py` (Must be refactored to utilize `subprocess.run` wrapping `openclaw config set` rather than direct JSON object manipulation).
 
 ---
 
@@ -62,20 +82,23 @@ As MetaClaw transitioned from an opinionated script into a general-purpose facil
 ## Phase 2: External Interaction (Browsers, Fetchers, and Searchers)
 
 * **Categories:** `services/browsers/`, `services/fetchers/`, `services/searchers/`
-* **Purpose:** Expand the Tier 0 demonstration capabilities into robust 24/7 background tasks. Implement visual DOM interpretation (`Skyvern`), action-caching to save API costs (`Stagehand`), and self-healing data extraction that doesn't break when CSS classes change.
+* **Purpose:** Expand the Tier 0 demonstration capabilities into robust 24/7 background tasks.
+Implement visual DOM interpretation (`Skyvern`), action-caching to save API costs (`Stagehand`), and self-healing data extraction that doesn't break when CSS classes change.
 
 ## Phase 3: Source Truth & Reliability (VCS & CI)
 
 * **Category:** `services/vcses/` & `services/ci/`
 * **Target Providers:** `Forgejo / Gitea`, `Woodpecker CI / Drone`
-* **Purpose:** As agents autonomously modify workspace files, we need absolute attribution. CI pipelines will mathematically prove the agent's code works against a test suite before it is deployed.
+* **Purpose:** As agents autonomously modify workspace files, we need absolute attribution.
+CI pipelines will mathematically prove the agent's code works against a test suite before it is deployed.
 Note: The `vcses` service currently has no providers implemented and needs initial integrations added.
 
 ## Phase 4: Decoupling & Debugging (Queues & Tracing)
 
 * **Category:** `services/queues/` & `services/tracers/`
 * **Target Providers:** `RabbitMQ`, `OpenTelemetry + Jaeger / SigNoz`
-* **Purpose:** Prevent timeouts during complex multi-agent swarms by decoupling synchronous HTTP calls. Provide deep visibility into latency spans to debug slow agent reasoning loops.
+* **Purpose:** Prevent timeouts during complex multi-agent swarms by decoupling synchronous HTTP calls.
+Provide deep visibility into latency spans to debug slow agent reasoning loops.
 
 ## Phase 5: Secure Public Ingress (Reverse Proxy & IAM)
 
@@ -90,11 +113,13 @@ Note: The `vcses` service currently has no providers implemented and needs initi
 As users graduate from the entry-level "Tier 0" laptop footprint to distributed "Tier 1" monoliths and "Tier 2+" compute/archive planes, users must evaluate the following architectural challenges:
 
 ### 1. Memory and Inference Constraints
-* **Unified Memory Allocation:** Given advanced APU architectures (like the Strix Halo in the GMKtec EVO-X2), does the BIOS allow you to explicitly pin a dedicated VRAM allocation for the iGPU? This is critical to prevent the Linux kernel from reclaiming memory during heavy LLM inference.
+* **Unified Memory Allocation:** Given advanced APU architectures (like the Strix Halo in the GMKtec EVO-X2), does the BIOS allow you to explicitly pin a dedicated VRAM allocation for the iGPU?
+This is critical to prevent the Linux kernel from reclaiming memory during heavy LLM inference.
 * **Thermal Throttling:** Are there thermal or acoustic constraints for running high-TDP nodes 24/7 in a residential or nomadic environment?
 
 ### 2. Network Topology & Latency
-* **Context Window Transfers:** How will you handle the physical network topology to ensure the 2.5GbE interfaces on the GMKtec nodes communicate with future 10GbE nodes without introducing switch latency during massive 100k+ context window transfers? (A Star Topology via a multi-gigabit core switch is mandatory).
+* **Context Window Transfers:** How will you handle the physical network topology to ensure the 2.5GbE interfaces on the GMKtec nodes communicate with future 10GbE nodes without introducing switch latency during massive 100k+ context window transfers?
+(A Star Topology via a multi-gigabit core switch is mandatory).
 * **Subnet Routing:** How will Tailscale subnet routing be configured to ensure external webhooks reach the Gateway seamlessly when physical nodes change networks during travel?
 
 ### 3. Distributed Storage & Persistence

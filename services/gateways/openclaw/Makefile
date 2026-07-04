@@ -4,7 +4,8 @@ SERVICE_NAME = openclaw-gateway
 FRAMEWORK_ROOT_REL = ../../..
 # WHAT IT DOES: Resolves the absolute path to the MetaClaw root using relative mathematics.
 # WHY THIS DEFAULT: Makefiles are frequently executed during destructive resets (e.g., `make factory-reset-hard`)
-# where the `.env` file (which exports `OPENCLAW_ROOT`) has been deleted. By utilizing `abspath ../../..`,
+# where the `.env` file (which exports `OPENCLAW_ROOT`) has been deleted.
+# By utilizing `abspath ../../..`,
 # the Makefile guarantees it can always find the root python scripts necessary to rebuild the environment,
 # regardless of whether the system state has been wiped.
 FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
@@ -59,17 +60,21 @@ post-check-status:
 clean-state:: clean-local-state
 
 clean-local-state:
-	@echo "[$(SERVICE_TITLE)] Wiping local application state..."
-	@if [ -d config ] && [ -f .start ]; then \
-		START_TIME=$$(cat .start); \
-		DEST="$(EXTERNAL_DRIVE_PATH)/openclaw-archive/$$START_TIME"; \
-		echo "[$(SERVICE_TITLE)] Archiving OpenClaw state to $$DEST..."; \
-		mkdir -p "$$DEST/sessions" "$$DEST/workspaces"; \
-		cp -R config/agents/*/sessions/* "$$DEST/sessions/" 2>/dev/null || true; \
-		cp -R config/workspace-* "$$DEST/workspaces/" 2>/dev/null || true; \
+	@echo "[$(SERVICE_TITLE)] Wiping and Archiving local application state..."
+	@if [ -d config ]; then \
+		START_TIME=$$(cat .start 2>/dev/null || date +%Y%m%d-%H%M%S); \
+		DEST="$(EXTERNAL_DRIVE_PATH)/metaclaw-archive/config-$$START_TIME"; \
+		if [ -d "$$DEST" ]; then \
+			echo "FATAL: Archive directory $$DEST already exists."; \
+			exit 1; \
+		fi; \
+		echo "[$(SERVICE_TITLE)] Archiving entire OpenClaw config directory to $$DEST..."; \
+		mkdir -p "$(EXTERNAL_DRIVE_PATH)/metaclaw-archive"; \
+		docker run --rm -v $(CURDIR):/mnt -v "$(EXTERNAL_DRIVE_PATH)/metaclaw-archive":/archive alpine sh -c "cp -a /mnt/config /archive/config-$$START_TIME && rm -rf /mnt/config" 2>/dev/null || \
+		(sudo cp -a config "$$DEST" && sudo rm -rf config) || true; \
 	fi
 	@echo "[$(SERVICE_TITLE)] Adjusting permissions to allow deletion of root-owned files..."
-	-@docker run --rm -v $(CURDIR):/mnt alpine sh -c "rm -rf /mnt/config /mnt/.openclaw_state /mnt/.start /mnt/seed-config.json /mnt/bin/docker" 2>/dev/null || sudo rm -rf config .openclaw_state .start seed-config.json ./bin/docker 2>/dev/null || true
+	-@docker run --rm -v $(CURDIR):/mnt alpine sh -c "rm -rf /mnt/.openclaw_state /mnt/.start /mnt/seed-config.json /mnt/bin/docker" 2>/dev/null || sudo rm -rf .openclaw_state .start seed-config.json ./bin/docker 2>/dev/null || true
 	@rm -f index.html index.md
 	@rm -f $(FRAMEWORK_ROOT)/config
 	@echo "[$(SERVICE_TITLE)] Purging dynamically generated sandbox artifacts..."
@@ -176,7 +181,4 @@ tui:
 	@docker exec -it $(SERVICE_NAME) openclaw tui
 
 tst:
-	@echo "- ./config:$${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw"
-	@echo "- $(OPENCLAW_WORKSPACE):$${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw/workspace"
-	@echo "- /var/run/docker.sock:/var/run/docker.sock"
-	@echo "- ./bin/docker:/usr/bin/docker:ro"
+	curl -f -sSL "https://download.docker.com/linux/static/stable/$$DOCKER_ARCH/docker-24.0.9.tgz" | tar xz -C bin/.tmp
