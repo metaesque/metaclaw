@@ -1,92 +1,10 @@
-# MetaClaw Service Ecosystem
+# MetaClaw Service Registry
 
-This document serves as the canonical registry for the critical infrastructure
-services that make up the MetaClaw framework.
+This document serves as the canonical registry categorizing and explaining the purpose of every infrastructure service supported by the framework.
 
-## Planes
+## Security & Containment
 
-### The Control Plane {#control}
-
-* **Aka**: The Ingress & Routing Hub
-* **Profile**: High network I/O, low CPU, low RAM.
-* **Justification**: This is the high-speed nervous system. It dictates traffic
-  flow and maintains ephemeral state, operating flawlessly on low-power devices.
-* **Services**: proxy-reverse, iam, proxy, gateway, secret, event, cache, queue
-
-### The Compute Plane {#compute}
-
-* **Aka**: The Intelligence Engine
-* **Profile**: Extreme GPU VRAM, maximum memory bandwidth, high power draw.
-* **Justification**: LLM inference requires dedicated PCIe acceleration. It must
-  be isolated to prevent VRAM starvation from impacting other critical services.
-* **Services**: runner
-
-### The Archive Plane {#archive}
-
-* **Aka**: Context & Telemetry
-* **Profile**: Massive RAM capacity, extreme disk IOPS (NVMe), heavy storage.
-* **Justification**: This plane manages all "Trusted Data." Vector databases
-  ingest massive streams of data and require enormous RAM. Keeping these safe
-  from untrusted execution workloads is a strict SRE requirement.
-* **Services**: memory, vcs, logger, tracer
-
-### The Execution Plane {#execution}
-
-* **Aka**: The Blast Zone
-* **Profile**: Heavy multi-core CPU, highly dynamic and unpredictable RAM usage.
-* **Justification**: This plane executes volatile, untrusted code. It is an
-  operational hazard physically isolated to ensure that a rogue task cannot
-  crash the Control Plane or corrupt the Data Plane.
-* **Services**: browser, fetcher, searcher, sandbox, ci
-
-## Tiers
-
-### Tier 0: The Day 1 Minilith {#tier-0}
-
-* **Setup**: The entire cluster consists of a single, dual-use laptop. RAM is
-  strictly budgeted (6GB-8GB). The framework uses lightweight alternatives
-  (SQLite instead of Postgres, LiteLLM routing to Cloud APIs for heavy
-  reasoning, Ollama strictly for local text embeddings).
-* **Benefit**: Zero financial cost to validate the framework's utility before
-  purchasing dedicated hardware.
-
-### Tier 1: The Month 2 Monolith {#tier-1}
-
-* **Setup**: The cluster transitions to a single, dedicated machine. All four
-  Planes run on this one Control Node. Heavy services are rate-limited via
-  Docker to prevent crashes. The Compute Plane remains outsourced to Cloud APIs.
-* **Benefit**: True 24/7 autonomous operation with robust relational memory and
-  background web scraping.
-
-### Tier 2: Data Sovereignty {#tier-2}
-
-* **Setup**: The cluster expands to two or more machines. The Compute Plane is
-  migrated off the Monolith and onto a dedicated GPU tower. The Proxy routes
-  requests locally across the LAN to the new Compute node(s).
-* **Benefit**: Absolute data privacy and zero recurring API costs. Infinite
-  agent loops can run overnight without accumulating massive bills.
-
-### Tier 3: The Sandbox Extraction {#tier-3}
-
-* **Setup**: The cluster expands to three or more machines. The Execution Plane
-  is migrated off the Control Node and onto a dedicated Sandbox Node.
-* **Benefit**: Safe execution of highly volatile workloads. Hallucinated code or
-  memory-leaking browsers will not crash the core Gateway.
-
-### Tier 4: The Archive Expansion {#tier-4}
-
-* **Setup**: The cluster expands to four or more machines. The Archive Plane is
-  migrated off the Control Node onto a dedicated Context Node. The original
-  Month 2 Monolith is now stripped of heavy workloads, running strictly as the
-  Control Plane.
-* **Benefit**: SRE-grade stability with near-infinite, lightning-fast semantic
-  recall. No hardware is wasted; earlier machines are perfectly repurposed.
-
-## Services
-
-### Security & Containment
-
-#### Execution Sandbox {#sandboxes}
+### Execution Sandbox {#sandboxes}
 
 * **Path**: `services/sandboxes/`
 * **Purpose**: Hardened execution environments designed to contain the blast
@@ -95,7 +13,7 @@ services that make up the MetaClaw framework.
   machine. (Standard Docker is insufficient here).
 * **Options**: Docker, gVisor, Hardened Docker DooD, Firecracker, E2B.
 
-#### Secrets Manager {#secrets}
+### Secrets Manager {#secrets}
 
 * **Path**: `services/secrets/`
 * **Purpose**: A centralized, encrypted vault. It securely stores and injects
@@ -104,7 +22,7 @@ services that make up the MetaClaw framework.
   configuration files.
 * **Options**: Doppler, Infisical, Bitwarden Secrets Manager, HashiCorp Vault.
 
-#### Overlay Network {#networks}
+### Overlay Network {#networks}
 
 * **Path**: `services/networks/`
 * **Purpose**: Provides zero-trust mesh networking and secure inbound routing.
@@ -113,7 +31,7 @@ services that make up the MetaClaw framework.
   POST data to your local gateway through CGNAT firewalls.
 * **Options**: Cloudflare Tunnels, Tailscale, ZeroTier.
 
-#### Identity & Access Management {#iam}
+### Identity & Access Management {#iam}
 
 * **Path**: `services/iam/`
 * **Purpose**: The authentication gatekeeper. Enforces Multi-Factor
@@ -122,9 +40,9 @@ services that make up the MetaClaw framework.
   internet.
 * **Options**: Authentik, Authelia, Keycloak.
 
-### Observability & Provenance
+## Observability & Provenance
 
-#### Log Aggregator {#loggers}
+### Log Aggregator {#loggers}
 
 * **Path**: `services/loggers/`
 * **Purpose**: The central repository for system logs. It provides the
@@ -134,7 +52,7 @@ services that make up the MetaClaw framework.
 * **Options**: Grafana Loki, SigNoz, Graylog, OpenSearch, Quickwit, ELK Stack,
   Fluent Bit, VictoriaLogs, Vector.
 
-#### Distributed Tracer {#tracers}
+### Distributed Tracer {#tracers}
 
 * **Path**: `services/tracers/`
 * **Purpose**: While logging tells you what happened, tracing tells you how long
@@ -142,9 +60,9 @@ services that make up the MetaClaw framework.
   LLM Runner) to debug latency bottlenecks in complex multi-step trajectories.
 * **Options**: Langfuse, SigNoz, OpenTelemetry Collector + Jaeger, Phoenix.
 
-### Intelligence Execution
+## Intelligence Execution
 
-#### Web Fetcher {#fetchers}
+### Web Fetcher {#fetchers}
 
 * **Path**: `services/fetchers/`
 * **Purpose**: Bypasses anti-bot measures to fetch, render, and extract clean,
@@ -152,7 +70,7 @@ services that make up the MetaClaw framework.
 * **Options**: Crawl4AI, Firecrawl, Browse AI, Jina AI Reader, Zyte, Octoparse,
   ScrapeGraphAI.
 
-#### Web Search API {#searchers}
+### Web Search API {#searchers}
 
 * **Path**: `services/searchers/`
 * **Purpose**: Executes high-speed, lightweight HTTP searches to return
@@ -160,7 +78,7 @@ services that make up the MetaClaw framework.
 * **Options**: Exa, SearXNG, Brave Search API, Linkup, Parallel AI Search,
   Tavily.
 
-#### Browser Automation {#browsers}
+### Browser Automation {#browsers}
 
 * **Path**: `services/browsers/`
 * **Purpose**: Provides advanced, AI-driven DOM interaction, visual
@@ -168,7 +86,7 @@ services that make up the MetaClaw framework.
 * **Options**: Steel Browser, Browser Use, Agent Browser, LaVague, Stagehand,
   Hyperbrowser, Skyvern.
 
-#### LLM Runner {#runners}
+### LLM Runner {#runners}
 
 * **Path**: `services/runners/`
 * **Purpose**: Manages and executes local Large Language Models (LLMs) and
@@ -178,9 +96,9 @@ services that make up the MetaClaw framework.
 * **Options**: LM Studio, Text-Gen-WebUI, llama.cpp, LocalAI, Jan.ai, KoboldCPP,
   vLLM, Msty, Ollama, GPT4All.
 
-### Decoupling & Workflow
+## Decoupling & Workflow
 
-#### Continuous Integration {#ci}
+### Continuous Integration {#ci}
 
 * **Path**: `services/ci/`
 * **Purpose**: The automated testing pipeline. It triggers automated builds and
@@ -189,7 +107,7 @@ services that make up the MetaClaw framework.
 * **Options**: GitLab CI/CD, Gitea/Drone, Woodpecker CI, Jenkins, BitBucket
   Pipelines, Buildkite, GitHub Actions.
 
-#### Message Queue {#queues}
+### Message Queue {#queues}
 
 * **Path**: `services/queues/`
 * **Purpose**: The asynchronous task broker. It decouples the Gateway from the
@@ -198,7 +116,7 @@ services that make up the MetaClaw framework.
   queue for worker nodes to consume at their own pace.
 * **Options**: Redis Streams, RabbitMQ, NATS, Apache Kafka.
 
-#### Event Gateway {#events}
+### Event Gateway {#events}
 
 * **Path**: `services/events/`
 * **Purpose**: The external signal receiver. It securely ingests, queues, and
@@ -207,9 +125,9 @@ services that make up the MetaClaw framework.
   asynchronously.
 * **Options**: Custom ngrok endpoints, Svix, Hookdeck.
 
-### Orchestration & Routing
+## Orchestration & Routing
 
-#### Reverse Proxy {#proxies-reverse}
+### Reverse Proxy {#proxies-reverse}
 
 * **Path**: `services/proxies-reverse/`
 * **Purpose**: The network front door. It handles SSL termination, load
@@ -217,7 +135,7 @@ services that make up the MetaClaw framework.
   your local AI ecosystem to the internet for remote access.
 * **Options**: Nginx, Caddy, Traefik, HAProxy.
 
-#### AI Gateway {#gateways}
+### AI Gateway {#gateways}
 
 * **Path**: `services/gateways/`
 * **Purpose**: The core intelligence layer. This is the user-facing agent
@@ -226,7 +144,7 @@ services that make up the MetaClaw framework.
 * **Options**: Moltis, NanoClaw, OpenClaw, TrustClaw, Knolli AI, Claude Code,
   Nanobot, NullClaw, ZeroClaw, n8n + AI, PicoClaw, Manis AI.
 
-#### AI Proxy {#proxies}
+### AI Proxy {#proxies}
 
 * **Path**: `services/proxies/`
 * **Purpose**: The middleware sitting between the Gateway and external LLM
@@ -235,9 +153,9 @@ services that make up the MetaClaw framework.
 * **Options**: Portkey, OpenRouter, Helicone, Manifest, TrueFoundry, Bifrost,
   LiteLLM.
 
-### Source Truth & Reliability
+## Source Truth & Reliability
 
-#### Version Control System {#vcses}
+### Version Control System {#vcses}
 
 * **Path**: `services/vcses/`
 * **Purpose**: The immutable state capture layer. Tracks all code modifications,
@@ -245,9 +163,9 @@ services that make up the MetaClaw framework.
   locally before review.
 * **Options**: None currently defined.
 
-### Data & State Management
+## Data & State Management
 
-#### Long-Term Memory {#memories}
+### Long-Term Memory {#memories}
 
 * **Path**: `services/memories/`
 * **Purpose**: The permanent, space-efficient archive for the agent. This
@@ -255,7 +173,7 @@ services that make up the MetaClaw framework.
   (associative recall) alongside standard relational data (configs, logs).
 * **Options**: SQLite, PostgreSQL + pgvector, Qdrant, Weaviate, Milvus.
 
-#### Real-Time Cache {#caches}
+### Real-Time Cache {#caches}
 
 * **Path**: `services/caches/`
 * **Purpose**: Ultra-low latency, ephemeral storage. It is used for semantic
