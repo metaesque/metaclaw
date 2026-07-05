@@ -16,9 +16,9 @@ bin/legacy
 bk/
 config/
 docs/.MANIFEST.files.ignore
-docs/INFO.md
-docs/INSTALL.md
-docs/TODO.org
+docs/legacy/INFO.md
+docs/legacy/INSTALL.md
+docs/legacy/TODO.org
 docs/WORKSPACE.files
 docs/index.html
 external/
