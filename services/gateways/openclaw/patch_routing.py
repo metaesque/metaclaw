@@ -137,7 +137,7 @@ openai_prov['apiKey'] = proxy_key
 defaults = setdefault_path(data, ['agents', 'defaults'])
 defaults['model'] = "openai/complex-model"
 
-# 4. Auto-Discover Custom YAML Agents & Enforce Minimal IDs
+# 4. Auto-Discover Custom YAML Agents & Link Workspaces
 agents = setdefault_path(data, ['agents'])
 existing_list = agents.get('list', [])
 
@@ -154,15 +154,29 @@ for yf in yaml_files:
   try:
     with open(yf, 'r', encoding='utf-8') as f:
       agent_data = yaml.safe_load(f)
-      agent_id = agent_data.get('name')
-      if not agent_id: continue
+
+      # --- FIX: Derive ID and Workspace strictly from Filepath ---
+      rel_path = os.path.relpath(yf, os.path.join(workspace_dir, 'agents'))
+      parts = rel_path.replace('\\', '/').split('/')
+      name = os.path.splitext(parts[-1])[0]
+
+      if len(parts) > 1:
+          team_path = "/".join(parts[:-1])
+          team_id = "_".join(parts[:-1])
+          agent_id = f"{team_id}_{name}"
+          agent_workspace_path = f"~/.openclaw/workspace/agents/{team_path}/{name}"
+          abs_agent_workspace = os.path.join(workspace_dir, 'agents', team_path, name)
+      else:
+          agent_id = name
+          agent_workspace_path = f"~/.openclaw/workspace/agents/{name}"
+          abs_agent_workspace = os.path.join(workspace_dir, 'agents', name)
 
       yaml_ids.add(agent_id)
 
-      # Determine workspace path
-      rel_dir = os.path.dirname(os.path.relpath(yf, workspace_dir)).replace('\\', '/')
-      agent_workspace_path = f"~/.openclaw/workspace/{rel_dir}/{agent_id}"
+      # Ensure the agent's physical workspace directory exists for OpenClaw to read .md files from
+      os.makedirs(abs_agent_workspace, exist_ok=True)
 
+      # Construct the valid, schema-compliant JSON entry mapping infrastructure rules
       entry = {
           "id": agent_id,
           "workspace": agent_workspace_path
@@ -204,7 +218,7 @@ for yf in yaml_files:
       if yaml_routing:
           routing_meta[agent_id] = yaml_routing
 
-      # Track unhandled keys to warn the user
+      # Track unhandled keys to warn the user (ignoring 'name' since we now derive it)
       handled_keys = {'name', 'description', 'default', 'model', 'tools', 'constraints', 'routing', 'system_prompt'}
       unhandled = set(agent_data.keys()) - handled_keys
       if unhandled:
@@ -219,7 +233,7 @@ for yf in yaml_files:
   except Exception as e:
     print(f"Warning: Could not process {yf}: {e}")
 
-# Preserve existing entries that are not managed by our YAMLs, stripped to minimal state
+# Preserve existing entries that are not managed by our YAMLs
 new_list = []
 existing_has_default = False
 for agent in existing_list:
@@ -227,11 +241,7 @@ for agent in existing_list:
         continue # YAML discovery overrides this explicit JSON definition
     if agent.get('default') is True:
         existing_has_default = True
-
-    minimal_agent = {"id": agent.get("id")}
-    if agent.get("default") is True:
-        minimal_agent["default"] = True
-    new_list.append(minimal_agent)
+    new_list.append(agent)
 
 if not yaml_has_default and not existing_has_default:
     # Try to make orchestrator default
