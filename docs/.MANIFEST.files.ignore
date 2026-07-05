@@ -18,7 +18,6 @@ config/
 docs/.MANIFEST.files.ignore
 docs/INFO.md
 docs/INSTALL.md
-docs/SERVICES.md
 docs/TODO.org
 docs/WORKSPACE.files
 docs/index.html

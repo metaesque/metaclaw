@@ -1,6 +1,5 @@
 Meta<Claw> is an installation framework designed to deploy and manage a secure, cost-effective, and capable personal AI ecosystem. It provides an automated, modular infrastructure that allows non-technical individuals to instantly deploy a swarm of sibling technologies that give their AI agents vastly more capability, reliability, and security.
 
-
 # Meta<Claw>: Your Personal AI Installation Framework
 
 ## Overview
@@ -16,7 +15,6 @@ Meta<Claw> removes the immense technical complexity of configuring this
 ecosystem. It provides an automated, modular infrastructure that allows
 non-technical individuals to instantly deploy a swarm of sibling technologies
 that give their AI agents vastly more capability, reliability, and security.
-
 
 ### Vocabulary: Services, Providers, and Skills
 
@@ -41,19 +39,19 @@ on building your agents and defining their skills.
 ## Table Of Contents
 
 * **[ARCHITECTURE.md](ARCHITECTURE.md)**: Details the framework's core
-  engineering philosophy, hardware scaling strategies, and routing intelligence.
+  engineering philosophy, cluster orchestration, networking standards, and hardware provisioning.
+* **[PLANES.md](PLANES.md)**: Details the 4 functional hardware planes (Control, Compute, Execution, Archive) and provides exact hardware recommendations.
+* **[TIERS.md](TIERS.md)**: Explains the architectural scale stages (Tier 0 to Tier 4) and how the cluster expands over time.
 * **[SERVICES.md](SERVICES.md)**: The canonical registry categorizing and
   explaining the purpose of every infrastructure service supported by the
   framework.
 * **[HOWTO.md](HOWTO.md)**: Standard Operating Procedures (SOPs) for end-users.
   Guides on resetting state, upgrading, and day-to-day management.
-* **[PROFILES.md](PROFILES.md)**: Explains the distributed cluster
-  orchestration and how providers are assigned to specific hardware nodes.
 * **[ROADMAP.md](ROADMAP.md)**: The prioritized strategy for future framework
   expansion and capability integration.
 * **[LLM.md](LLM.md)**: Strict operational rules, epistemic boundaries, and
-  formatting protocols for AI agents contributing to this codebase. *(For LLM
-  Contributors Only).*
+  formatting protocols for AI agents contributing to this codebase.
+  *(For LLM Contributors Only).*
 
 ## Useful URLs
 
