@@ -53,9 +53,10 @@ if os.path.exists(profile_path):
         profile_data = json.load(f)
         routing_strategy = profile_data.get('routing_strategy', 'lexical_predictive')
 
+plugin_dir = os.path.join(workspace_dir, '.openclaw', 'extensions', 'metaclaw-routing')
+
 module_path = os.path.join('modules', 'routing', f'{routing_strategy}.js')
 if os.path.exists(module_path):
-    plugin_dir = os.path.join(workspace_dir, '.openclaw', 'extensions', 'metaclaw-routing')
     os.makedirs(plugin_dir, exist_ok=True)
 
     # 1. Write the mandatory plugin manifest
@@ -147,6 +148,7 @@ yaml_files = [f for f in yaml_files if not f.endswith('.template')]
 yaml_has_default = False
 yaml_ids = set()
 yaml_entries = []
+routing_meta = {}
 
 for yf in yaml_files:
   try:
@@ -156,12 +158,64 @@ for yf in yaml_files:
       if not agent_id: continue
 
       yaml_ids.add(agent_id)
-      entry = {"id": agent_id}
+
+      # Determine workspace path
+      rel_dir = os.path.dirname(os.path.relpath(yf, workspace_dir)).replace('\\', '/')
+      agent_workspace_path = f"~/.openclaw/workspace/{rel_dir}/{agent_id}"
+
+      entry = {
+          "id": agent_id,
+          "workspace": agent_workspace_path
+      }
+
       if agent_data.get('default') is True:
           entry['default'] = True
           yaml_has_default = True
 
+      if agent_data.get('model'):
+          entry['model'] = agent_data.get('model')
+
+      # Map YAML constraints to OpenClaw's params schema
+      yaml_constraints = agent_data.get('constraints', {})
+      if yaml_constraints:
+          entry['params'] = {}
+          if 'max_tokens' in yaml_constraints:
+              entry['params']['maxTokens'] = yaml_constraints['max_tokens']
+          if 'temperature' in yaml_constraints:
+              entry['params']['temperature'] = yaml_constraints['temperature']
+
+      # Map YAML tools array to OpenClaw's tools.allow array schema
+      yaml_tools = agent_data.get('tools', [])
+      if yaml_tools:
+          allowed_tools = []
+          for t in yaml_tools:
+              if isinstance(t, str):
+                  allowed_tools.append(t)
+              elif isinstance(t, dict) and 'name' in t:
+                  allowed_tools.append(t['name'])
+
+          if allowed_tools:
+              entry['tools'] = {"allow": allowed_tools}
+
       yaml_entries.append(entry)
+
+      # Extract routing metadata for the Predictive Router plugin
+      yaml_routing = agent_data.get('routing')
+      if yaml_routing:
+          routing_meta[agent_id] = yaml_routing
+
+      # Track unhandled keys to warn the user
+      handled_keys = {'name', 'description', 'default', 'model', 'tools', 'constraints', 'routing', 'system_prompt'}
+      unhandled = set(agent_data.keys()) - handled_keys
+      if unhandled:
+          with open(yf, 'r', encoding='utf-8') as f_lines:
+              lines = f_lines.readlines()
+              for k in unhandled:
+                  for i, line in enumerate(lines, 1):
+                      if line.strip().startswith(k + ':'):
+                          print(f"[Warning] {os.path.basename(yf)}:{i} - Unhandled key '{k}' will be ignored by OpenClaw.")
+                          break
+
   except Exception as e:
     print(f"Warning: Could not process {yf}: {e}")
 
@@ -196,6 +250,13 @@ if not yaml_has_default and not existing_has_default:
 new_list.extend(yaml_entries)
 agents['list'] = new_list
 
+# Write out the routing metadata file for the JS plugin to consume
+if os.path.exists(plugin_dir):
+    routing_meta_path = os.path.join(plugin_dir, 'routing_meta.json')
+    with open(routing_meta_path, 'w', encoding='utf-8') as f:
+        json.dump(routing_meta, f, indent=2)
+    print(f"SUCCESS: Generated routing_meta.json for {len(routing_meta)} agents.")
+
 # 5. Clean up ALL previous toxic JSON injection attempts (including fromFile)
 if 'plugins' in data:
     if 'load' in data['plugins']:
@@ -213,6 +274,11 @@ if 'plugins' in data:
         del data['plugins']['entries']['metaclaw-routing']
         if not data['plugins']['entries']:
             del data['plugins']['entries']
+
+# Strip legacy 'fromFile' artifacts
+for agent in agents['list']:
+    if 'fromFile' in agent:
+        del agent['fromFile']
 
 # 6. Enable the new Native Workspace Plugin explicitly
 plugins = setdefault_path(data, ['plugins'])
@@ -238,4 +304,4 @@ print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and stripped to minimal ID config.")
+print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")

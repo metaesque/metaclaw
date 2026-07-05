@@ -114,6 +114,16 @@ For advanced users, the workspace often resides within a private Git Monorepo, i
 ```
 Docker Compose natively mounts `../workspace` and `../external` into the containers. This structure ensures that agent memories, proprietary code, and personal telemetry are safely version-controlled in a private repository, while the `repo/` directory can be freely blown away, updated, or modified without risking personal data.
 
+### Configuration Separation: YAML vs. Markdown (The Mutable Brain)
+
+OpenClaw natively reads Markdown files (`SOUL.md`, `AGENTS.md`, `TOOLS.md`) as the agent's mutable brain. This design is critical: it grants agents the autonomy to update their own personas, log local notes, and internalize learned rules dynamically.
+
+OpenClaw **does not** natively understand `.yaml` files. MetaClaw introduces agent-specific `.yaml` files purely as a home-grown Infrastructure-as-Code (IaC) mechanism. These YAML files cleanly populate the rigid `openclaw.json` configuration array (which dictates system-level bounds like the chosen `model`, execution `constraints`, and strict `tools` boundaries).
+
+This enforces a strict separation of concerns:
+* **`.yaml` Files:** Manage immutable system infrastructure and hard limits (compiled to JSON by MetaClaw).
+* **`.md` Files:** Manage autonomous consciousness, prompts, and memory (read and written natively by OpenClaw).
+
 ### Ephemeral Gateway State (Cattle, not Pets)
 
 Standard OpenClaw installations treat `~/.openclaw` as a "pet"—something to be kept alive, updated, and carefully maintained across versions. MetaClaw treats the OpenClaw Gateway configuration as "cattle"—ephemeral compute that can be destroyed and rebuilt instantly.
