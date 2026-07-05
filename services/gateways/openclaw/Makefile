@@ -62,7 +62,7 @@ clean-state:: clean-local-state
 clean-local-state:
 	@echo "[$(SERVICE_TITLE)] Wiping and Archiving local application state..."
 	@if [ -d config ]; then \
-		START_TIME=$$(cat .start 2>/dev/null || date +%Y%m%d-%H%M%S); \
+		if [ -f .start ]; then START_TIME=$$(cat .start); else START_TIME=$$(date +%Y%m%d-%H%M%S); fi; \
 		DEST="$(EXTERNAL_DRIVE_PATH)/metaclaw-archive/config-$$START_TIME"; \
 		if [ -d "$$DEST" ]; then \
 			echo "FATAL: Archive directory $$DEST already exists."; \
@@ -122,12 +122,9 @@ prep-instructions:
 # ==============================================================================
 # USER INTERFACE TARGETS
 # ==============================================================================
-# MANDATE: Do NOT use bin/browser.py for these GUI targets.
-# The Dashboard must ALWAYS open in the user's personal native browser via $(OPEN_CMD).
-# ==============================================================================
 
 gui:
-	@echo "[$(SERVICE_TITLE)] Launching Dashboard with injected token..."
+	@echo "[$(SERVICE_TITLE)] Resolving access token and network layer..."
 	@TOKEN="$(OPENCLAW_GATEWAY_TOKEN)"; \
 	if [ -z "$$TOKEN" ]; then TOKEN="$(ACTIVE_PROXY_KEY)"; fi; \
 	if [ -z "$$TOKEN" ]; then TOKEN="metaclaw_secure_bypass_token"; fi; \
@@ -136,18 +133,7 @@ gui:
 		TS_DNS=$$(tailscale status --json | $(PYTHON_BIN) -c "import sys, json; print(json.load(sys.stdin).get('Self', {}).get('DNSName', '').rstrip('.'))"); \
 		if [ -n "$$TS_DNS" ]; then URL="https://$$TS_DNS/?token=$$TOKEN"; fi; \
 	fi; \
-	echo "[$(SERVICE_TITLE)] Access URL: $$URL"; \
-	echo "[$(SERVICE_TITLE)] Watching for pending device pairing requests in the background..."; \
-	$(PYTHON_BIN) auto_approve.py & \
-	if [ -n "$(OPEN_CMD)" ] && command -v $(OPEN_CMD) >/dev/null 2>&1; then \
-		$(OPEN_CMD) "$$URL"; \
-	else \
-		echo ""; \
-		echo "================================================================================"; \
-		echo "PLEASE MANUALLY NAVIGATE TO: $$URL"; \
-		echo "================================================================================"; \
-		echo ""; \
-	fi
+	$(PYTHON_BIN) auto_approve.py "$$URL"
 
 gui-setup:
 	@echo "[$(SERVICE_TITLE)] Initiating one-time GUI infrastructure setup..."
