@@ -6,3 +6,4 @@ txt: ../tmp/workspace.txt
 	cd ..; bin/.venv/bin/python bin/newcode.py --setup=docs/WORKSPACE.files > tmp/workspace.txt
 
 .FORCE:
+

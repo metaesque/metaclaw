@@ -34,18 +34,15 @@ if os.path.exists(env_path):
 if not workspace_dir:
   workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'workspace'))
 else:
-  # Resolve ~ if the user provided it
   workspace_dir = os.path.expanduser(workspace_dir)
 
 # ==============================================================================
 # NATIVE WORKSPACE PLUGIN GENERATION (Auto-Discovered by OpenClaw)
 # ==============================================================================
 
-# Cleanup the old toxic configuration file that caused validation errors
 if os.path.exists(JS_CONFIG_PATH):
     os.remove(JS_CONFIG_PATH)
 
-# Fetch chosen routing strategy from profile.json
 profile_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'profile.json'))
 routing_strategy = "lexical_predictive"
 if os.path.exists(profile_path):
@@ -59,7 +56,6 @@ module_path = os.path.join('modules', 'routing', f'{routing_strategy}.js')
 if os.path.exists(module_path):
     os.makedirs(plugin_dir, exist_ok=True)
 
-    # 1. Write the mandatory plugin manifest
     manifest = {
         "id": "metaclaw-routing",
         "name": "MetaClaw Routing Hook",
@@ -73,7 +69,6 @@ if os.path.exists(module_path):
     with open(os.path.join(plugin_dir, 'openclaw.plugin.json'), 'w') as f:
         json.dump(manifest, f, indent=2)
 
-    # 2. Write the executable TypeScript module (Node/Jiti handles .js syntax natively)
     with open(module_path, 'r') as f_in, open(os.path.join(plugin_dir, 'index.ts'), 'w') as f_out:
         f_out.write(f_in.read())
 
@@ -98,14 +93,12 @@ def setdefault_path(d, path_keys):
         current = current.setdefault(key, {})
     return current
 
-# 1. Patch the Operating Mode and UI Auth
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
 cui = setdefault_path(data, ['gateway', 'controlUi'])
 cui['allowInsecureAuth'] = True
 
-# 1b. Inject Tailscale IPs into Allowed Origins safely
 allowed_origins = set(cui.get('allowedOrigins', []))
 allowed_origins.add(f"http://127.0.0.1:{port}")
 allowed_origins.add(f"http://localhost:{port}")
@@ -124,20 +117,16 @@ except Exception:
 
 cui['allowedOrigins'] = list(allowed_origins)
 
-# 1c. Forcefully Synchronize the Authentication Token
 auth = setdefault_path(data, ['gateway', 'auth'])
 auth['token'] = proxy_key
 
-# 2. Hijack the Default OpenAI Provider
 openai_prov = setdefault_path(data, ['models', 'providers', 'openai'])
 openai_prov['baseUrl'] = "http://active-proxy:4000/v1"
 openai_prov['apiKey'] = proxy_key
 
-# 3. Default Agent Model Override
 defaults = setdefault_path(data, ['agents', 'defaults'])
-defaults['model'] = "openai/complex-model"
+defaults['model'] = "openai/medium-model"
 
-# 4. Auto-Discover Custom YAML Agents & Link Workspaces
 agents = setdefault_path(data, ['agents'])
 existing_list = agents.get('list', [])
 
@@ -155,7 +144,6 @@ for yf in yaml_files:
     with open(yf, 'r', encoding='utf-8') as f:
       agent_data = yaml.safe_load(f)
 
-      # --- FIX: Derive ID and Workspace strictly from Filepath ---
       rel_path = os.path.relpath(yf, os.path.join(workspace_dir, 'agents'))
       parts = rel_path.replace('\\', '/').split('/')
       name = os.path.splitext(parts[-1])[0]
@@ -172,11 +160,8 @@ for yf in yaml_files:
           abs_agent_workspace = os.path.join(workspace_dir, 'agents', name)
 
       yaml_ids.add(agent_id)
-
-      # Ensure the agent's physical workspace directory exists for OpenClaw to read .md files from
       os.makedirs(abs_agent_workspace, exist_ok=True)
 
-      # Construct the valid, schema-compliant JSON entry mapping infrastructure rules
       entry = {
           "id": agent_id,
           "workspace": agent_workspace_path
@@ -189,7 +174,6 @@ for yf in yaml_files:
       if agent_data.get('model'):
           entry['model'] = agent_data.get('model')
 
-      # Map YAML constraints to OpenClaw's params schema
       yaml_constraints = agent_data.get('constraints', {})
       if yaml_constraints:
           entry['params'] = {}
@@ -198,7 +182,6 @@ for yf in yaml_files:
           if 'temperature' in yaml_constraints:
               entry['params']['temperature'] = yaml_constraints['temperature']
 
-      # Map YAML tools array to OpenClaw's tools.allow array schema
       yaml_tools = agent_data.get('tools', [])
       if yaml_tools:
           allowed_tools = []
@@ -213,12 +196,11 @@ for yf in yaml_files:
 
       yaml_entries.append(entry)
 
-      # Extract routing metadata for the Predictive Router plugin
+      # Extract routing metadata (including is_lead) for the JS plugin
       yaml_routing = agent_data.get('routing')
       if yaml_routing:
           routing_meta[agent_id] = yaml_routing
 
-      # Track unhandled keys to warn the user (ignoring 'name' since we now derive it)
       handled_keys = {'name', 'description', 'default', 'model', 'tools', 'constraints', 'routing', 'system_prompt'}
       unhandled = set(agent_data.keys()) - handled_keys
       if unhandled:
@@ -228,23 +210,21 @@ for yf in yaml_files:
                   for i, line in enumerate(lines, 1):
                       if line.strip().startswith(k + ':'):
                           print(f"[Warning] {os.path.basename(yf)}:{i} - Unhandled key '{k}' will be ignored by OpenClaw.")
-                          break
+                      break
 
   except Exception as e:
     print(f"Warning: Could not process {yf}: {e}")
 
-# Preserve existing entries that are not managed by our YAMLs
 new_list = []
 existing_has_default = False
 for agent in existing_list:
     if 'id' in agent and agent['id'] in yaml_ids:
-        continue # YAML discovery overrides this explicit JSON definition
+        continue
     if agent.get('default') is True:
         existing_has_default = True
     new_list.append(agent)
 
 if not yaml_has_default and not existing_has_default:
-    # Try to make orchestrator default
     made_default = False
     for entry in yaml_entries:
         if entry['id'] == 'orchestrator':
@@ -260,14 +240,12 @@ if not yaml_has_default and not existing_has_default:
 new_list.extend(yaml_entries)
 agents['list'] = new_list
 
-# Write out the routing metadata file for the JS plugin to consume
 if os.path.exists(plugin_dir):
     routing_meta_path = os.path.join(plugin_dir, 'routing_meta.json')
     with open(routing_meta_path, 'w', encoding='utf-8') as f:
         json.dump(routing_meta, f, indent=2)
     print(f"SUCCESS: Generated routing_meta.json for {len(routing_meta)} agents.")
 
-# 5. Clean up ALL previous toxic JSON injection attempts (including fromFile)
 if 'plugins' in data:
     if 'load' in data['plugins']:
         if 'paths' in data['plugins']['load']:
@@ -285,12 +263,10 @@ if 'plugins' in data:
         if not data['plugins']['entries']:
             del data['plugins']['entries']
 
-# Strip legacy 'fromFile' artifacts
 for agent in agents['list']:
     if 'fromFile' in agent:
         del agent['fromFile']
 
-# 6. Enable the new Native Workspace Plugin explicitly
 plugins = setdefault_path(data, ['plugins'])
 plugins['enabled'] = True
 
@@ -305,7 +281,6 @@ mc_routing['enabled'] = True
 hooks = setdefault_path(mc_routing, ['hooks'])
 hooks['allowConversationAccess'] = True
 
-# Save openclaw.json
 with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
 
@@ -315,3 +290,4 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")
+

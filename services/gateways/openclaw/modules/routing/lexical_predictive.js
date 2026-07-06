@@ -1,11 +1,10 @@
 // lexical_predictive.js
 // MetaClaw Native Workspace Plugin: Lexical + 3-Tier Predictive (INSTRUMENTED)
 
-/**
- * Helper to force logs into the Docker stdout stream so they don't get
- * swallowed by OpenClaw's internal async log formatting.
- * FIXED: Removed leading newline to prevent log spam.
- */
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 function logToStdout(msg) {
     process.stdout.write(`${msg}\n`);
 }
@@ -28,31 +27,35 @@ export default function register(api) {
             logToStdout("==================================================");
             logToStdout("[HOOK-DEBUG] 1. INVOCATION STARTED");
 
-            // Dump the absolute ground truth of the event structure
-            logToStdout("[HOOK-DEBUG] RAW EVENT STRUCTURE:");
-            logToStdout(JSON.stringify(event, null, 2));
+            // --- TIER 1 SPECIALTY MODEL BYPASS ---
+            // Load routing metadata to determine if agent is a Team Lead
+            const __dirname = path.dirname(fileURLToPath(import.meta.url));
+            const metaPath = path.join(__dirname, 'routing_meta.json');
+            let routingMeta = {};
+            try {
+                routingMeta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+            } catch (e) {
+                logToStdout(`[HOOK-DEBUG] Warning: Could not read routing_meta.json`);
+            }
 
-            // Extract the prompt using the official schema
+            // Extract agent ID safely based on OpenClaw's event schema
+            const agentId = event.agentId || (event.session && event.session.agentId) || 'unknown';
+            const isLead = routingMeta[agentId]?.is_lead;
+
+            if (!isLead && agentId !== 'orchestrator' && agentId !== 'generalist') {
+                logToStdout(`[HOOK-DEBUG] Agent '${agentId}' is a leaf node. Bypassing Predictive Judge to preserve specialty models.`);
+                logToStdout("==================================================\n");
+                return {};
+            }
+
             const userPrompt = typeof event.prompt === 'string' ? event.prompt.trim() : JSON.stringify(event.prompt || "");
             logToStdout(`[HOOK-DEBUG] 2. Extracted prompt: "${userPrompt}"`);
-
             const promptLower = userPrompt.toLowerCase();
 
             // ==============================================================================
             // STAGE 1: LEXICAL ROUTING (Fast-Path)
             // ==============================================================================
             logToStdout(`[HOOK-DEBUG] 3. Checking lexical rules...`);
-
-            // Media Modality Overrides
-            if (promptLower.startsWith("new sfw image")) {
-                logToStdout("[HOOK-DEBUG] LEXICAL MATCH: Routing to SFW Image model.");
-                return { providerOverride: "openai", modelOverride: "flux-1-dev" };
-            }
-            if (promptLower.startsWith("new nsfw image")) {
-                logToStdout("[HOOK-DEBUG] LEXICAL MATCH: Routing to NSFW Image model.");
-                return { providerOverride: "openai", modelOverride: "pony-diffusion-v6-xl" };
-            }
-
             if (/\bheartbeat\b/.test(promptLower) || promptLower.includes("heartbeat.md")) {
                 logToStdout("[HOOK-DEBUG] >>> LEXICAL MATCH FOUND: heartbeat <<<");
                 logToStdout("[HOOK-DEBUG] Returning { providerOverride: 'openai', modelOverride: 'simple-model' }");
@@ -61,7 +64,6 @@ export default function register(api) {
             }
 
             logToStdout(`[HOOK-DEBUG] 4. No lexical match. Proceeding to Predictive Judge...`);
-
             const judgeModel = process.env.OPENCLAW_JUDGE_MODEL;
             const proxyUrl = process.env.OPENAI_BASE_URL || "http://active-proxy:4000/v1";
             const masterKey = process.env.ACTIVE_PROXY_KEY || "";
@@ -71,8 +73,7 @@ export default function register(api) {
                 return {};
             }
 
-            // Since before_model_resolve only receives the current prompt, we judge it directly.
-            const judgeSystemPrompt = `You are an AI pipeline router. Analyze the complexity of the user prompt.\nOutput ONLY valid JSON in the following format: {"complexity": "simple" | "medium" | "complex"}\n\nGuidelines:\n- "simple": Factual queries, basic translation, formatting, or trivial tool usage.\n- "medium": Summarization, standard business logic, drafting emails, moderate data parsing.\n- "complex": System architecture, advanced coding, mathematical proofs, multi-step data pipelines.`;
+            const judgeSystemPrompt = `You are an AI pipeline router. Analyze the complexity of the user prompt.\nOutput ONLY valid JSON in the following format: {"complexity": "simple" | "medium" | "complex" | "frontier"}\n\nGuidelines:\n- "simple": Factual queries, basic translation, formatting, or trivial tool usage.\n- "medium": Summarization, standard business logic, drafting emails, moderate data parsing.\n- "complex": System architecture, advanced coding, mathematical proofs, multi-step data pipelines.\n- "frontier": Extreme context, zero-shot DAG generation, or advanced abstract reasoning.`;
 
             const reqBody = {
                 model: judgeModel,
@@ -88,7 +89,7 @@ export default function register(api) {
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // Strict 8s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
 
                 const response = await fetch(`${proxyUrl}/chat/completions`, {
                     method: 'POST',
@@ -113,11 +114,11 @@ export default function register(api) {
                 const parsedOutput = JSON.parse(judgeOutput);
                 const complexity = parsedOutput.complexity || "medium";
 
-                // Mapping exclusively to the model string (no provider prefix)
                 const tierMapping = {
                     "simple": "simple-model",
                     "medium": "medium-model",
-                    "complex": "complex-model"
+                    "complex": "complex-model",
+                    "frontier": "frontier-model"
                 };
 
                 const chosenModel = tierMapping[complexity] || "medium-model";
@@ -138,3 +139,4 @@ export default function register(api) {
         }
     });
 }
+
