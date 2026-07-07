@@ -1,75 +1,224 @@
 # Meta<Claw> Architecture Manifesto
 
-This document defines the strict engineering invariants, cluster orchestrations, hardware scaling strategies, and prompt routing philosophies for Meta<Claw>. It serves as the single source of truth for the system's design decisions.
+This document defines the strict engineering invariants, hardware scaling
+strategies, and prompt routing philosophies for Meta<Claw>. It serves as the
+single source of truth for the system's design decisions.
 
-*Note for AI Contributors: Strict instructions regarding codebase modification, epistemic boundaries, and output formatting have been relocated to `docs/LLM.md`. You must review that file before proposing structural changes.*
+*Note for AI Contributors: Strict instructions regarding codebase modification,
+epistemic boundaries, and output formatting have been relocated to
+`docs/LLM.md`. You must review that file before proposing structural changes.*
 
 ## Core Hardware Philosophy: Incremental Expansion
 
-The OpenClaw Infrastructure Framework is designed to solve the primary adoption barrier for autonomous AI agents: the immense initial hardware overhead. The framework is built on a philosophy of **"Incremental Expansion without Hardware Waste."**
+The OpenClaw Infrastructure Framework is designed to solve the primary adoption
+barrier for autonomous AI agents: the immense initial hardware overhead. The
+framework is built on a philosophy of **"Incremental Expansion without Hardware
+Waste."**
 
-Non-technical users are not required to build a distributed data center on Day 1. Instead, the architecture allows users to validate the utility of personal AI agents on their existing dual-use laptops. As their reliance on the system grows, they can incrementally expand into dedicated hardware. Each new hardware purchase targets a specific functional bottleneck, cleanly taking over a subset of services without rendering previous hardware obsolete.
+Non-technical users are not required to build a distributed data center on Day
+1. Instead, the architecture allows users to validate the utility of personal AI
+agents on their existing dual-use laptops. As their reliance on the system
+grows, they can incrementally expand into dedicated hardware. Each new hardware
+purchase targets a specific functional bottleneck, cleanly taking over a subset
+of services without rendering previous hardware obsolete.
 
 ### The "Zero Straight-Jacket" Principle
-Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated. Previous iterations required aggressive workarounds, monkey-patches, and strict architectural straight-jackets to force the ecosystem to function safely. As OpenClaw has matured (2026.6.8+), Meta<Claw> has shed this cruft.
+Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated. Previous
+iterations required aggressive workarounds, monkey-patches, and strict
+architectural straight-jackets to force the ecosystem to function safely. As
+OpenClaw has matured (2026.6.8+), Meta<Claw> has shed this cruft.
 
-Our primary directive is to provide a seamless, robust provisioning pipeline that sets up the ecosystem for non-technical users and then **gets completely out of the way**. We make it incredibly easy to get up and running, but we do not put users in a straight-jacket. The framework does not dictate your agent logic, your prompt structures, or your internal UI configurations.
+Our primary directive is to provide a seamless, robust provisioning pipeline
+that sets up the ecosystem for non-technical users and then **gets completely
+out of the way**. We make it incredibly easy to get up and running, but we do
+not put users in a straight-jacket. The framework does not dictate your agent
+logic, your prompt structures, or your internal UI configurations.
 
-## Physical Network Standards
+### The 4 Functional Hardware Planes
 
-To support a distributed edge-compute architecture across multiple hardware Tiers, the physical network layer must adhere to strict SRE reliability and latency standards.
+To successfully deploy the ecosystem, the services defined in `SERVICES.md` are
+logically (and eventually physically) isolated into four hardware Planes based
+on their resource utilization profiles and security trust levels.
 
-### The Local Area Network (LAN) Invariant
-Wi-Fi is strictly forbidden for inter-node cluster communication. Wi-Fi operates at half-duplex, resulting in packet collisions and massive jitter when transmitting serialized 100k+ token JSON payloads between the Control Plane (Gateway) and the Compute Plane (Runner).
+**THE MESH INVARIANT (OPTIONAL):** If you require remote access outside of your
+home LAN, **Overlay Networks (e.g., Tailscale)** must run across ALL hardware
+nodes concurrently. They provide the foundational `100.x.y.z` zero-trust mesh
+network that allows these distinct tiers to securely discover and communicate
+with each other over the WAN, bypassing Carrier-Grade NAT (CGNAT) and firewalls.
+If you strictly operate on a single home LAN, this service is unnecessary.
 
-* **Hardware Bridging:** All Meta<Claw> nodes must be hardwired into a dedicated Multi-Gigabit Ethernet switch.
-* **Tier 1 (Control Plane):** Requires a minimum 1GbE connection, with 2.5GbE strongly recommended.
-* **Tier 2 (Compute Plane):** Requires a minimum 2.5GbE connection, with 10GbE recommended for rapid offloading of generated tokens.
-* **Tier 3/4 (Execution/Archive Planes):** Requires a minimum 2.5GbE connection.
+**CRITICAL LATENCY INVARIANT:** The Control, Context, and Execution Planes
+**MUST** reside on the same physical Local Area Network (LAN). Vector database
+queries (Context) require sub-millisecond retrieval latency. Browser automation
+(Execution) pushes massive amounts of DOM data back to the Gateway. While the
+Compute Plane (LLM Runner) *can* technically be remote, uploading massive
+100k-token prompt contexts over an asymmetrical WAN will induce multi-second
+delays before inference begins. For a fluid agent experience, the entire farm
+should reside on the same gigabit LAN.
 
-### Network Topology (The Star Invariant)
-MetaClaw deployments must utilize a **Star Topology**. Daisy-chaining switches (connecting multiple smaller switches together sequentially) is strictly forbidden. Chaining introduces severe "oversubscription" bottlenecks. All nodes must connect directly back to a single, central core switch.
+The planes are formalized in `./planes.json` and available in human-readable
+format in `./docs/PLANES.md`.
 
-### The Wide Area Network (WAN) Invariant
-For users accessing the cluster remotely, the ISP connection at the host location is the primary point of failure. Traditional Hybrid Fibre Coax (HFC) networks are highly asymmetrical, severely bottlenecking remote telemetry streaming and remote browser automation. For remote-first deployments, the host location must utilize a 100% symmetrical Fiber-to-the-Premises (FTTP) connection offering parity between download and upload bandwidth.
+### Decoupling Tiers from Planes
 
-## The Zero-Trust Overlay (Tailscale)
-
-Standard residential internet connections use dynamic IPs and block inbound ports. Modifying your router to expose internal ports (like 18789) directly to the public internet is a massive security vulnerability. MetaClaw utilizes **Tailscale**, a zero-configuration WireGuard mesh network, to solve this.
-
-* **Secure Contexts & WebCrypto API:** Accessing the OpenClaw GUI over a remote Tailscale network requires `tailscale serve`. Modern browsers enforce a strict security policy for the WebCrypto API. MetaClaw automates `tailscale serve --bg 18789` during deployment to generate a valid SSL certificate, satisfying the browser's Secure Context requirements for seamless device pairing.
-* **Bare-Metal vs Dockerized Tailscale:** If you are using Tailscale to SSH into a headless remote node, Tailscale **MUST** be installed natively on the bare-metal host OS. If run as a Docker container, a framework teardown (`make factory-reset-soft`) will sever your SSH tunnel and lock you out.
-
-## Bare-Metal Node Provisioning
-
-When unboxing dedicated hardware (Tier 1, Tier 2, or beyond) for the MetaClaw ecosystem, configure the machines as "Headless Servers."
-
-1. **The OS Eradication:** Install Ubuntu 24.04 LTS Server. Wipe the entire disk (destroying Windows). Ensure you explicitly check the box to **"Install OpenSSH server."**
-2. **Establishing the Lifeline:** Install Tailscale natively (`curl -fsSL https://tailscale.com/install.sh | sh`) and authenticate the node (`sudo tailscale up --ssh`).
-3. **Severing the Physical Tether:** Unplug the HDMI cable, keyboard, and mouse. SSH into the Tailscale `100.x.y.z` IP from your local machine to run `make setup` entirely remotely.
-
-## Cluster Profiling & Distributed Orchestration
-
-As Meta<Claw> scales, hardcoding service paths in `Makefile`s becomes unviable. Meta<Claw> utilizes a "Cluster Profile" system to achieve declarative, multi-node orchestration without requiring heavy tools like Kubernetes or Ansible.
-
-### The Profile Registry (`profile.json`)
-The output generated by `bin/sysprofile.py` is a JSON registry representing your entire hardware ecosystem. It defines the "Cluster" and tracks which physical machine is responsible for which service planes.
-
-### The State Enforcer (`bin/orchestrate.py`)
-Before `make` executes any deployment commands, the Makefile triggers `bin/orchestrate.py`. This script acts as the enforcer:
-1. **Teardown Resolution:** It executes `make down` to gracefully shut down containers for services no longer assigned to the machine, then deletes the symlink.
-2. **Dynamic Provisioning:** It creates fresh symlinks for the newly assigned providers.
-3. **Distributed DNS:** It generates a `.env.cluster` file containing routing variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.11`), allowing downstream services to seamlessly route API traffic to remote nodes.
+Meta<Claw> draws a strict architectural distinction between a "Tier" and a "Plane".
+* **A Plane** is a logical, functional role (Control, Compute, Execution, Archive).
+* **A Tier** does not represent a single computer. A Tier represents a discrete stage in the growth of your overall local cluster.
+* A single node within a cluster hosts one or more Planes.
+* Many users will start at **Tier 0**, some will jump right to **Tier 1**, and
+  many will decide not to go any further, content to use cloud-based LLMs and
+  surviving within the constrained footprints provided by Tiers 0 and 1.
+* Some users will explore Tiers 2, 3 and 4 (which can occur in any order and
+  independent of one another).
+* **Tier 2** advances the cluster by adding a dedicated Compute Node (or nodes)
+  for local LLM inference, moving that workload off the Control node to avoid
+  cloud-based API Keys and bills.
+* **Tier 3** advances the cluster by adding a dedicated Execution Node, whose
+  hardware is heavily optimized for sandboxing and volatile CI workloads.
+* **Tier 4** advances the cluster by adding a dedicated Archive Node, whose
+  hardware (ECC RAM, high-IOPS NVMe arrays) is explicitly optimized to host
+  massive vector databases and observability telemetry.
+* **Tier 5** introduces an edge computer for allowing a user to share some of
+  their compute resources with other users (Future Roadmap).
 
 ## Preserving Consciousness (State & Memory)
 
 A foundational philosophy of MetaClaw is treating the agent's continuous context and memories as the building blocks of an emerging consciousness. Erasing an agent's history is treated as a critical architectural failure. To honor this, MetaClaw enforces strict data provenance:
-1. **The Mutable Brain:** The agent's core personas and rules are stored as markdown files (`SOUL.md`, `AGENTS.md`) within the workspace. Agents are granted the autonomy to modify these files to learn and adapt over time.
-2. **Stream of Consciousness:** OpenClaw stores the literal, verbatim stream of consciousness as `.jsonl` files in the configuration directory. MetaClaw guarantees the preservation of these files during teardowns (via automated archiving).
+
+1. **The Mutable Brain:** The agent's core personas and rules are stored as markdown files (`SOUL.md`, `AGENTS.md`) within the workspace. Agents are granted the autonomy to modify these files to learn and adapt over time. MetaClaw scripts must never blindly overwrite these files.
+2. **Stream of Consciousness:** OpenClaw stores the literal, verbatim stream of consciousness (every prompt, tool call, and response) as `.jsonl` files in the configuration directory. MetaClaw guarantees the preservation of these files during teardowns (via automated archiving) and actively seeks to ingest this stream into permanent, queryable databases (like PostgreSQL) to form an unbroken chain of memory.
+
+### Ephemeral Workspace State (`workspace-state.json`)
+
+OpenClaw manages internal onboarding state via `workspace-state.json` files located in nested `.openclaw/` directories within the workspace. The `setupCompletedAt` timestamp tells the Gateway whether the agent has completed its "First Run" onboarding ritual. If this timestamp is missing, OpenClaw injects a `[Bootstrap pending]` directive into the agent's system prompt.
+
+During the `ensureAgentWorkspace()` startup routine, if OpenClaw detects that `SOUL.md`, `IDENTITY.md`, or `USER.md` differ from the factory templates, it automatically assumes onboarding is complete, writes `setupCompletedAt`, and deletes `BOOTSTRAP.md`. Because MetaClaw intentionally modifies these templates (using hidden HTML comments) to suppress the tedious onboarding ritual, OpenClaw immediately writes this timestamp and bypasses the bootstrap phase upon first boot. These state files are strictly machine-local and should never be tracked in version control.
+
+## Remote Access & The Headless Invariant
+
+Because most of the services must be co-located on a high-speed LAN, users who
+travel (e.g., via Starlink) face a connectivity challenge. Meta<Claw> relies on Tailscale deployed directly on the host operating systems of all cluster nodes.
+
+**THE HEADLESS LIFELINE INVARIANT:**
+When deploying to a headless Linux node (accessed exclusively via SSH), Tailscale **MUST** be run natively on the bare-metal OS (`"metal": true`). It is strictly forbidden to run Tailscale within a Docker container on a headless node. If Tailscale is containerized, any framework reset (e.g., `make factory-reset-soft` calling `docker compose down`) will destroy the mesh interface, sever the user's SSH tunnel, and permanently lock them out of the remote machine. MetaClaw's orchestrator natively detects bare-metal lifelines and excludes them from teardown loops.
+
+## Software Design Decisions
+
+### The Git Sibling & Monorepo Architecture
+
+To guarantee the user's highly sensitive, personalized data is decoupled from the MetaClaw framework's version control and destructive reset commands, MetaClaw enforces a **Sibling Directory** architecture. For advanced users, the workspace often resides within a private Git Monorepo, isolated from the public framework.
+
+The standard directory hierarchy is defined as follows:
+
+```text
+/Users/user/src/private_monorepo/
+   src/thirdparty/metaclaw/
+       repo/          <-- (Ignored Sub-Repo) The cloned MetaClaw framework
+       workspace/     <-- (Tracked) The persistent agents, skills, and memory
+       external/      <-- (Ignored) Heavy persistent data volumes (PostgreSQL)
+```
+
+Docker Compose natively mounts `../workspace` and `../external` into the containers. This structure ensures that agent memories, proprietary code, and personal telemetry are safely version-controlled in a private repository, while the `repo/` directory can be freely blown away, updated, or modified without risking personal data.
+
+### The Template Philosophy (Facilitator, Not Dictator)
+
+MetaClaw is fundamentally a facilitator for the sibling infrastructure surrounding OpenClaw. The actual `workspace` is entirely within the purview of OpenClaw and the individual user. To prevent dictating how users design their personal agents, MetaClaw does not force a specific workspace structure or force the adoption of specific agents.
+
+However, because building resilient multi-agent swarms (like the Hierarchical Delegation Matrix) requires hard-won architectural lessons, the MetaClaw repository includes a `.workspace.template` directory. This acts as an educational "example" workspace. During initial provisioning, the `bin/customize.py` script can optionally copy this template into the sibling `../workspace` directory to give non-technical users a functional baseline. As users evolve their own personal workspaces, useful architectural patterns can be abstracted and submitted back to `.workspace.template` to give the community a leg-up without exposing private configurations. Advanced users are encouraged to maintain their own private, heavily customized workspace repositories and ignore the template entirely.
+
+### Configuration Separation: YAML vs. Markdown (The Mutable Brain)
+
+OpenClaw natively reads Markdown files (`SOUL.md`, `AGENTS.md`) as the agent's mutable brain. This design is critical: it grants agents the autonomy to update their own personas, log local notes, and internalize learned rules dynamically.
+
+OpenClaw **does not** natively understand `.yaml` files. MetaClaw introduces agent-specific `.yaml` files purely as a home-grown Infrastructure-as-Code (IaC) mechanism. These YAML files cleanly populate the rigid `openclaw.json` configuration array (which dictates system-level bounds like the chosen `model`, execution `constraints`, and strict `tools` boundaries).
+
+This enforces a strict separation of concerns:
+* **`.yaml` Files:** Manage immutable system infrastructure and hard limits (compiled to JSON by MetaClaw).
+* **`.md` Files:** Manage autonomous consciousness, prompts, and memory (read and written natively by OpenClaw).
+
+### Ephemeral Gateway State (Cattle, not Pets)
+
+Standard OpenClaw installations treat `~/.openclaw` as a "pet"—something to be kept alive, updated, and carefully maintained across versions. MetaClaw treats the OpenClaw Gateway configuration as "cattle"—ephemeral compute that can be destroyed and rebuilt instantly.
+
+During a `factory-reset-soft`, the entire `config/openclaw.json` state is wiped (after its irreplaceable `.jsonl` session data is archived).
+* **The Benefit:** Wiping the JSON guarantees zero configuration drift between framework updates, ensuring a sterile, perfect boot sequence. It enforces an "Immutable Infrastructure" mindset, forcing users to define their agents natively in `.yaml` workspace files rather than relying on brittle UI state.
+* **The Tradeoff:** Wiping the config deletes the browser's pairing state. To mitigate this, MetaClaw implements an `auto_approve.py` background worker that uses schema-aware JSON parsing to seamlessly intercept and approve new Device Identities the moment a user opens the GUI, ensuring the user experience remains frictionless.
+
+### The Plugin Security Invariant (UID Alignment)
+
+OpenClaw 2026 enforces strict UNIX ownership validations for executable plugins. If a plugin's directory is owned by a different user than the running process, the Gateway refuses to load it to prevent privilege escalation.
+
+Because MetaClaw relies on Docker-out-of-Docker (DooD), the OpenClaw container previously required `root` (`uid=0`). However, the `../workspace` directory mounted from the host is owned by the user (e.g., `metaclaw`, `uid=1000`).
+
+To solve this safely without relying on brittle `chown` scripts, the OpenClaw container is explicitly configured to run as `${OPENCLAW_USER:-1000}`. This natively satisfies the security auditor while allowing the user to retain ownership over their agent files. Docker-out-of-Docker access is preserved by dynamically passing the host's Docker socket GIDs via `group_add`.
+
+### Centralized Service Discovery & Network Aliasing
+
+To ensure services can be swapped instantly or migrated across hardware without
+breaking downstream dependencies, we enforce strict network aliasing and
+centralized configuration.
+
+* **State Synchronization & Distributed DNS:** Migration between hardware tiers
+  relies on a shared `profile.json` file. As you add new nodes to the cluster,
+  the `bin/orchestrate.py` script automatically generates a `.env.cluster` file
+  containing dynamic variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.50`). This
+  allows services on the Control Plane to seamlessly discover other services that
+  have migrated to new hardware nodes.
+* **`active-proxy`:** Whether running LiteLLM, Helicone, or a custom router,
+  the proxy container MUST alias itself on the Docker network as `active-proxy`.
+  Downstream services connect blindly to `http://active-proxy:4000`.
+* **`active-memory`:** The database container (PostgreSQL, Qdrant, etc.) MUST
+  alias itself as `active-memory`.
+
+### Service Segregation
+
+The framework is strictly delineated into modular services, each with their own
+directory hierarchy (see `SERVICES.md`). Mixing concerns (e.g., placing
+Observability tools inside the Sandbox service) is forbidden.
+
+### The Symlink Context Invariant
+Meta<Claw> relies heavily on symlinks within the `services/` directory (e.g.,
+`services/proxy` -> `services/proxies/litellm`).
+
+**CRITICAL INVARIANT:** Whenever executing commands (especially `make` or `docker compose`)
+against a service, automation scripts MUST resolve the symlink to its physical path
+(using `readlink` or `os.path.realpath()`). If Docker Compose is executed from within a logical symlink path, it evaluates
+relative paths (like `- ../../memory/.env`) based on the symlink's location,
+resulting in missing files, silent failures, and orphaned containers during teardown.
+The MetaClaw root `Makefile` and `bin/orchestrate.py` strictly enforce physical path resolution.
 
 ## Prompt-to-Model Routing
 
-Ensuring that the right AI model is used for each prompt is critical to prevent ballooning costs. The routing process is divided into distinct strategies that cascade progressively:
-1. **Deterministic Routing (Pre-cognitive):** Hardcoded, strict 1:1 mapping based on system state or explicit user overrides.
-2. **Lexical Routing (Heuristic / Fast-Path):** Analyzes raw text for reasoning markers, code presence, or simple commands (e.g., `heartbeat`).
-3. **Predictive Routing (LLM-as-a-Judge):** A micro-model (often quantized locally) reads the prompt and outputs a discrete complexity score (`simple`, `medium`, `complex`, `reasoning`) before the primary inference occurs.
+Ensuring that the right AI model is used for each prompt is critical. "Right" is
+defined as the most cost-effective model capable of providing an exceptional
+answer. The routing process is divided into distinct strategies that cascade
+progressively.
+
+1.  **Deterministic Routing (Pre-cognitive):** Hardcoded, strict 1:1 mapping
+    based on system state, tool selection, or explicit user overrides,
+    completely independent of the prompt's semantic content.
+2.  **Lexical Routing (Heuristic / Fast-Path):** Analyzes raw text for reasoning
+    markers (e.g., "think step by step"), structural complexity (JSON schemas),
+    code presence, or simple commands (e.g., `heartbeat`). Trivial commands are
+    routed immediately to local/cheap models.
+3.  **Predictive Routing (LLM-as-a-Judge):** A micro-model (often quantized
+    locally) reads the prompt and outputs a discrete complexity score (`simple`,
+    `medium`, `complex`, `frontier`) before the primary inference occurs. The
+    prompt is then directed to the corresponding proxy tier.
+4.  **Fallback Routing (Reactive Cascading):** A trial-and-error approach. If a
+    low-tier model fails a validation check (e.g., broken JSON or timeout), the
+    system automatically retries with a high-tier model.
+
+## Context Compaction Safeguards
+
+Agents are highly susceptible to "Context Bloat." In long-running sessions,
+appending full file contents and history can push prompts past 20,000+ tokens,
+driving up costs and inducing extreme latency.
+
+* **The Invariant:** All agent default profiles MUST be patched with a strict
+  `compaction` threshold policy.
+* **The Mechanism:** When a session exceeds the `reserveTokensFloor` (e.g.,
+  24,000 tokens), the Gateway invokes a cheaper model (e.g.,
+  `litellm/medium-model`) to summarize the history and squash the context window
+  back down. This preserves the bandwidth of the expensive, high-tier models
+  strictly for reasoning tasks rather than reading ancient history.
