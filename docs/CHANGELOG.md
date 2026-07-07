@@ -2,6 +2,13 @@
 
 This document records significant changes and updates made to the MetaClaw framework.
 
+## 2026-07-07
+* **Workspace GitOps Decoupling:** Successfully isolated the user `workspace` directory into an independent, private repository (`mcwksp`) using `git-filter-repo`. Removed all workspace tracking from the MetaClaw monorepo to ensure destructive infrastructure resets never risk lobotomizing the agents' mutable `.md` brains.
+* **4-Tier Predictive Routing:** Upgraded the `lexical_predictive.js` hook to support a 4-tier mechanical complexity scale (`simple`, `medium`, `complex`, `frontier`). Added a bypass mechanism leveraging an `is_lead: true` YAML flag to ensure the Judge does not override specialty models (like `flux-1-dev`) on leaf-node workers.
+* **Middle Reasoning Topology:** Refactored agent architecture to strictly enforce a Hierarchical Task Network (HTN). Removed execution tools (`read_file`, `search_web`) from Team Leads, forcing them to use `frontier/complex` models exclusively for DAG generation and downward delegation (`sessions_send`), drastically reducing API token burn on trivial tool calls.
+* **Unmatched Prompt Resolution:** Deployed a `generalist` agent and an `sre_sysadmin` agent. The Orchestrator's `SOUL.md` was updated with an "Unmatched Prompts" directive, preventing routing failures when a user's prompt falls outside the strict domain matrix.
+* **Documentation Restructuring:** Split the monolithic `SERVICES.md` into `PLANES.md`, `TIERS.md`, and `SERVICES.md` to protect OpenClaw's context window during `read_file` operations. Updated `OC.md` to act as a lazy-loading index.
+
 ## 2026-07-04
 * **Configuration State Archiving:** Overhauled the `clean-local-state` Makefile target. Instead of destructively deleting the OpenClaw `config` directory (which contains irreplaceable `.jsonl` session data), it now safely copies the entire directory to a timestamped archive within the external drive (`metaclaw-archive/config-<TIMESTAMP>`) before wiping the active deployment.
 * **YAML and Markdown Decoupling:** Reverted a flawed design pattern that attempted to use Python to compile Markdown files from YAML frontmatter. OpenClaw agents possess the autonomy to modify their own Markdown files (`SOUL.md`, `AGENTS.md`) to learn over time. Overwriting them via an infrastructure script destroys this emerging consciousness. Going forward, `.yaml` files strictly manage infrastructure metadata (`model`, `tools`), while `.md` files natively act as the mutable brain.
@@ -35,3 +42,4 @@ This document records significant changes and updates made to the MetaClaw frame
 
 ## 2026-06-20
 * **Milestone Achieved**: Successfully transitioned MetaClaw framework development out of external browser-based LLM chats (e.g., gemini.google.com) and moved it natively into the user's local OpenClaw deployment. The OpenClaw software agent now has read/write access to the MetaClaw repository via a mounted workspace and can actively develop the framework.
+
