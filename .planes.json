@@ -17,15 +17,15 @@
     "justification": "This is the high-speed nervous system. It dictates traffic flow and maintains ephemeral state, operating flawlessly on low-power devices.",
     "hardware_recommendations": [
       {
-        "name": "GMKtec Gaming Mini PC K8 Plus",
+        "name": "Example: GMKtec Gaming Mini PC K8 Plus",
         "price": "~$399.99 - $519.00",
-        "specs": "AMD Ryzen 7 8845HS, 32GB DDR5, 1TB SSD, Dual 2.5GbE",
-        "url": "https://www.gmktec.com/products/amd-ryzen-7-8845hs-mini-pc-nucbox-k8",
+        "specs": "AMD Ryzen 7 8845HS (8C/16T, up to 5.1GHz), 32GB DDR5 RAM, 1TB PCIe 4.0 M.2 SSD, Dual NIC 2.5G, HDMI 2.1, USB4, Oculink.",
+        "url": "https://www.amazon.com/dp/B0DHNTW3H6",
         "strengths": "Excellent network bridging with dual 2.5GbE; incredible price-to-performance ratio for a gateway node.",
         "weaknesses": "The 32GB RAM ceiling is extremely tight if attempting to run memory-heavy background tasks on the same node."
       },
       {
-        "name": "Minisforum MS-01",
+        "name": "Example: Minisforum MS-01",
         "price": "~$649.00 (Barebones Base) - $869.00",
         "specs": "Intel Core i9-13900H, up to 64GB RAM, Dual 10GbE SFP+, Dual 2.5GbE",
         "url": "https://www.newegg.com/minisforum-barebone-systems-mini-pc-intel-core-i9-13900h/p/2SW-002G-000K7",
@@ -33,7 +33,7 @@
         "weaknesses": "Intel H-series chips can run hot in tiny chassis, potentially leading to thermal throttling under sustained load."
       },
       {
-        "name": "Protectli Vault VP4670",
+        "name": "Example: Protectli Vault VP4670",
         "price": "~$600.00 - $800.00 (Configuration dependent)",
         "specs": "Intel Core i7, 6x 2.5GbE Ports, Fanless Design",
         "url": "https://protectli.com/vault-6-port/",
@@ -41,7 +41,7 @@
         "weaknesses": "Older generation CPU provides lower raw compute for non-routing tasks; RAM capacity is generally more limited."
       },
       {
-        "name": "Supermicro SYS-E300-9D",
+        "name": "Example: Supermicro SYS-E300-9D",
         "price": "~$1,066.00 (Barebones)",
         "specs": "Intel Xeon D-2123IT, ECC Memory Support, Quad 1GbE, Dual 10GbE, IPMI",
         "url": "https://www.walmart.com/ip/SUPERMICRO-SYS-E300-9D-4CN8TP-Compact-Server-Barebone/290133537",
@@ -61,7 +61,7 @@
     "justification": "LLM inference requires dedicated PCIe acceleration. It must be isolated to prevent VRAM starvation from impacting other critical services.",
     "hardware_recommendations": [
       {
-        "name": "Apple Mac Studio M5 Ultra",
+        "name": "Example: Apple Mac Studio M5 Ultra",
         "price": "~$3,999.00+ (Projected)",
         "specs": "Projected up to 36-core CPU, 80-core GPU, ~1.2 TB/s Memory Bandwidth, 128GB+ Unified Memory.",
         "url": "https://www.apple.com/mac-studio/",
@@ -69,7 +69,7 @@
         "weaknesses": "Entirely locked ecosystem; no possibility of internal hardware expansion or VRAM upgrades after purchase."
       },
       {
-        "name": "Custom Multi-GPU Workstation",
+        "name": "Example: Custom Multi-GPU Workstation",
         "price": "~$10,000.00 - $15,000.00+",
         "specs": "AMD Threadripper PRO, 4x NVIDIA RTX 4090 (96GB total VRAM), 256GB ECC RAM",
         "url": "https://www.pugetsystems.com/workstations/",
@@ -77,7 +77,7 @@
         "weaknesses": "Extremely high power draw, massive physical footprint, and complex cooling requirements."
       },
       {
-        "name": "Apple Mac Pro (M-Series Ultra)",
+        "name": "Example: Apple Mac Pro (M-Series Ultra)",
         "price": "~$6,999.00+",
         "specs": "M2/M3 Ultra (up to 192GB Unified Memory), 800 GB/s bandwidth, PCIe expansion slots.",
         "url": "https://www.apple.com/mac-pro/",
@@ -85,7 +85,7 @@
         "weaknesses": "Severe Apple Tax for the enclosure; internal PCIe slots cannot be used to add discrete NVIDIA GPUs for inference."
       },
       {
-        "name": "Lambda Tensorbook",
+        "name": "Example: Lambda Tensorbook",
         "price": "~$3,007.49 - $3,499.00",
         "specs": "Intel Core i7, NVIDIA RTX 3080/4080 (16GB), 64GB RAM, 1TB NVMe",
         "url": "https://lambdalabs.com/deep-learning/laptops/tensorbook",
@@ -108,15 +108,15 @@
     "justification": "This plane manages all 'Trusted Data'. Vector databases ingest massive streams of data and require enormous RAM. Keeping these safe from untrusted execution workloads is a strict SRE requirement.",
     "hardware_recommendations": [
       {
-        "name": "GMKtec EVO-X2",
-        "price": "~$1,999.99 (Base) - $2,666.99 (128GB/2TB spec)",
-        "specs": "AMD Ryzen AI Max+ 395, 128GB LPDDR5X, 2TB PCIe 4.0 SSD",
-        "url": "https://www.gmktec.com/products/gmktec-evo-x2-ai-mini-pc-amd-ryzen%E2%84%A2-ai-max-395-1",
+        "name": "Example: GMKtec EVO-X2 AI Mini PC",
+        "price": "~$1,999.99 - $2,666.99",
+        "specs": "AMD Ryzen AI Max+ 395 (16C/32T, up to 5.1GHz, Radeon 8060S 40 Cores iGPU), 128GB LPDDR5X 8000MHz Quad Channel RAM, 2TB PCIe 4.0 SSD, Dual 2.5G LAN, WiFi 7, BT 5.4, USB4.",
+        "url": "https://www.amazon.ca/dp/B0F53MLYQ6",
         "strengths": "128GB RAM provides a massive `shared_buffers` cache, allowing PostgreSQL to keep entire vector indexes in memory for sub-millisecond semantic recall.",
         "weaknesses": "Lacks ECC memory, making it vulnerable to silent bit-flips corrupting the HNSW index graph over long uptimes."
       },
       {
-        "name": "System76 Thelio Major",
+        "name": "Example: System76 Thelio Major",
         "price": "~$3,800.00 (Used) - $6,661.00+ (New)",
         "specs": "AMD Threadripper PRO, up to 512GB ECC DDR5, multiple U.2/NVMe slots",
         "url": "https://system76.com/desktops/thelio-major",
@@ -124,7 +124,7 @@
         "weaknesses": "High upfront cost and large physical footprint compared to mini-PCs."
       },
       {
-        "name": "Dell Precision 7960 Tower",
+        "name": "Example: Dell Precision 7960 Tower",
         "price": "~$9,999.00+",
         "specs": "Intel Xeon W-3400/3500 series, up to 4TB ECC RAM, front-accessible NVMe flex-bays",
         "url": "https://www.dell.com/en-hk/shop/pcs-desktop-computers/precision-7960-tower/spd/precision-t7960-workstation",
@@ -132,7 +132,7 @@
         "weaknesses": "Extremely expensive enterprise markup; proprietary motherboard/PSU form factors limit future DIY upgrades."
       },
       {
-        "name": "Custom Asrock Rack EPYC 8004 'Siena' Server",
+        "name": "Example: Custom Asrock Rack EPYC 8004 'Siena' Server",
         "price": "~$1,046.00 (Barebones Motherboard/CPU Combo)",
         "specs": "AMD EPYC 8004/4004 series, 96 PCIe Gen 5 lanes",
         "url": "https://www.newegg.com/",
@@ -156,15 +156,15 @@
     "justification": "This plane executes volatile, untrusted code. It is an operational hazard physically isolated to ensure that a rogue task cannot crash the Control Plane or corrupt the Data Plane.",
     "hardware_recommendations": [
       {
-        "name": "GMKtec EVO-X2",
-        "price": "~$1,999.99 (Base) - $2,666.99 (128GB/2TB spec)",
-        "specs": "AMD Ryzen AI Max+ 395 (16C), 128GB LPDDR5X, 2TB PCIe 4.0 SSD",
-        "url": "https://www.gmktec.com/products/gmktec-evo-x2-ai-mini-pc-amd-ryzen%E2%84%A2-ai-max-395-1",
+        "name": "Example: GMKtec EVO-X2 AI Mini PC",
+        "price": "~$1,999.99 - $2,666.99",
+        "specs": "AMD Ryzen AI Max+ 395 (16C/32T, up to 5.1GHz, Radeon 8060S 40 Cores iGPU), 128GB LPDDR5X 8000MHz Quad Channel RAM, 2TB PCIe 4.0 SSD, Dual 2.5G LAN, WiFi 7, BT 5.4, USB4.",
+        "url": "https://www.amazon.ca/dp/B0F53MLYQ6",
         "strengths": "16 cores and 128GB RAM securely isolate dozens of concurrent `gVisor` sandboxes without starving the host OS.",
         "weaknesses": "Mobile processor cooling constraints may cause it to temporarily throttle under massive, sustained CI/CD parallel compilation workloads."
       },
       {
-        "name": "Lenovo ThinkStation P360 Ultra",
+        "name": "Example: Lenovo ThinkStation P360 Ultra",
         "price": "~$639.00 - $1,826.00",
         "specs": "Intel Core i5/i9 (desktop class), up to 128GB ECC RAM, 4-liter chassis",
         "url": "https://www.lenovo.com/us/outletus/en/p/workstations/thinkstation-p-series/thinkstation-p360-ultra-intel/30g1000lus",
@@ -172,7 +172,7 @@
         "weaknesses": "Custom form factor makes part replacement difficult; active cooling can get extremely loud under load."
       },
       {
-        "name": "Minisforum BD790i",
+        "name": "Example: Minisforum BD790i",
         "price": "~$599.00 (Motherboard/CPU Combo)",
         "specs": "AMD Ryzen 9 7945HX3D (16C/32T with 3D V-Cache), Mini-ITX",
         "url": "https://www.ebay.com/itm/257253513621",
@@ -180,7 +180,7 @@
         "weaknesses": "It is only a motherboard/CPU combo, requiring the user to build a custom ITX chassis, source RAM, storage, and a power supply."
       },
       {
-        "name": "System76 Thelio Mega",
+        "name": "Example: System76 Thelio Mega",
         "price": "~$5,999.00+",
         "specs": "AMD Ryzen Threadripper 7000 (up to 64+ cores), up to 256GB ECC RAM",
         "url": "https://system76.com/desktops/thelio-mega",
@@ -190,3 +190,4 @@
     ]
   }
 }
+

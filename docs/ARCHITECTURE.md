@@ -1,19 +1,85 @@
 # Meta<Claw> Architecture Manifesto
 
-This document defines the strict engineering invariants, cluster orchestrations, hardware scaling strategies, and prompt routing philosophies for Meta<Claw>. It serves as the single source of truth for the system's design decisions.
+This document defines the strict engineering invariants, hardware scaling
+strategies, and prompt routing philosophies for Meta<Claw>. It serves as the
+single source of truth for the system's design decisions.
 
-*Note for AI Contributors: Strict instructions regarding codebase modification, epistemic boundaries, and output formatting have been relocated to `docs/LLM.md`. You must review that file before proposing structural changes.*
+*Note for AI Contributors: Strict instructions regarding codebase modification,
+epistemic boundaries, and output formatting have been relocated to
+`docs/LLM.md`. You must review that file before proposing structural changes.*
 
 ## Core Hardware Philosophy: Incremental Expansion
 
-The OpenClaw Infrastructure Framework is designed to solve the primary adoption barrier for autonomous AI agents: the immense initial hardware overhead. The framework is built on a philosophy of **"Incremental Expansion without Hardware Waste."**
+The OpenClaw Infrastructure Framework is designed to solve the primary adoption
+barrier for autonomous AI agents: the immense initial hardware overhead. The
+framework is built on a philosophy of **"Incremental Expansion without Hardware
+Waste."**
 
-Non-technical users are not required to build a distributed data center on Day 1. Instead, the architecture allows users to validate the utility of personal AI agents on their existing dual-use laptops. As their reliance on the system grows, they can incrementally expand into dedicated hardware. Each new hardware purchase targets a specific functional bottleneck, cleanly taking over a subset of services without rendering previous hardware obsolete.
+Non-technical users are not required to build a distributed data center on Day
+1. Instead, the architecture allows users to validate the utility of personal AI
+agents on their existing dual-use laptops. As their reliance on the system
+grows, they can incrementally expand into dedicated hardware. Each new hardware
+purchase targets a specific functional bottleneck, cleanly taking over a subset
+of services without rendering previous hardware obsolete.
 
 ### The "Zero Straight-Jacket" Principle
-Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated. Previous iterations required aggressive workarounds, monkey-patches, and strict architectural straight-jackets to force the ecosystem to function safely. As OpenClaw has matured (2026.6.8+), Meta<Claw> has shed this cruft.
+Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated. Previous
+iterations required aggressive workarounds, monkey-patches, and strict
+architectural straight-jackets to force the ecosystem to function safely. As
+OpenClaw has matured (2026.6.8+), Meta<Claw> has shed this cruft.
 
-Our primary directive is to provide a seamless, robust provisioning pipeline that sets up the ecosystem for non-technical users and then **gets completely out of the way**. We make it incredibly easy to get up and running, but we do not put users in a straight-jacket. The framework does not dictate your agent logic, your prompt structures, or your internal UI configurations.
+Our primary directive is to provide a seamless, robust provisioning pipeline
+that sets up the ecosystem for non-technical users and then **gets completely
+out of the way**. We make it incredibly easy to get up and running, but we do
+not put users in a straight-jacket. The framework does not dictate your agent
+logic, your prompt structures, or your internal UI configurations.
+
+### The 4 Functional Hardware Planes
+
+To successfully deploy the ecosystem, the services defined in `SERVICES.md` are
+logically (and eventually physically) isolated into four hardware Planes based
+on their resource utilization profiles and security trust levels.
+
+**THE MESH INVARIANT (OPTIONAL):** If you require remote access outside of your
+home LAN, **Overlay Networks (e.g., Tailscale)** must run across ALL hardware
+nodes concurrently. They provide the foundational `100.x.y.z` zero-trust mesh
+network that allows these distinct tiers to securely discover and communicate
+with each other over the WAN, bypassing Carrier-Grade NAT (CGNAT) and firewalls.
+If you strictly operate on a single home LAN, this service is unnecessary.
+
+**CRITICAL LATENCY INVARIANT:** The Control, Context, and Execution Planes
+**MUST** reside on the same physical Local Area Network (LAN). Vector database
+queries (Context) require sub-millisecond retrieval latency. Browser automation
+(Execution) pushes massive amounts of DOM data back to the Gateway. While the
+Compute Plane (LLM Runner) *can* technically be remote, uploading massive
+100k-token prompt contexts over an asymmetrical WAN will induce multi-second
+delays before inference begins. For a fluid agent experience, the entire farm
+should reside on the same gigabit LAN.
+
+The planes are formalized in `./planes.json` and available in human-readable
+format in `./docs/PLANES.md`.
+
+### Decoupling Tiers from Planes
+
+Meta<Claw> draws a strict architectural distinction between a "Tier" and a "Plane".
+* **A Plane** is a logical, functional role (Control, Compute, Execution, Archive).
+* **A Tier** does not represent a single computer. A Tier represents a discrete stage in the growth of your overall local cluster.
+* A single node within a cluster hosts one or more Planes.
+* Many users will start at **Tier 0**, some will jump right to **Tier 1**, and
+  many will decide not to go any further, content to use cloud-based LLMs and
+  surviving within the constrained footprints provided by Tiers 0 and 1.
+* Some users will explore Tiers 2, 3 and 4 (which can occur in any order and
+  independent of one another).
+* **Tier 2** advances the cluster by adding a dedicated Compute Node (or nodes)
+  for local LLM inference, moving that workload off the Control node to avoid
+  cloud-based API Keys and bills.
+* **Tier 3** advances the cluster by adding a dedicated Execution Node, whose
+  hardware is heavily optimized for sandboxing and volatile CI workloads.
+* **Tier 4** advances the cluster by adding a dedicated Archive Node, whose
+  hardware (ECC RAM, high-IOPS NVMe arrays) is explicitly optimized to host
+  massive vector databases and observability telemetry.
+* **Tier 5** introduces an edge computer for allowing a user to share some of
+  their compute resources with other users (Future Roadmap).
 
 ## Physical Network Standards
 
@@ -23,15 +89,18 @@ To support a distributed edge-compute architecture across multiple hardware Tier
 Wi-Fi is strictly forbidden for inter-node cluster communication. Wi-Fi operates at half-duplex, resulting in packet collisions and massive jitter when transmitting serialized 100k+ token JSON payloads between the Control Plane (Gateway) and the Compute Plane (Runner).
 
 * **Hardware Bridging:** All Meta<Claw> nodes must be hardwired into a dedicated Multi-Gigabit Ethernet switch.
-* **Tier 1 (Control Plane):** Requires a minimum 1GbE connection, with 2.5GbE strongly recommended.
-* **Tier 2 (Compute Plane):** Requires a minimum 2.5GbE connection, with 10GbE recommended for rapid offloading of generated tokens.
-* **Tier 3/4 (Execution/Archive Planes):** Requires a minimum 2.5GbE connection.
+* **Tier 1 (Control Plane):** Requires a minimum 1GbE connection, with 2.5GbE strongly recommended to prevent bottlenecks when acting as the Tailscale subnet router.
+* **Tier 2 (Compute Plane):** Requires a minimum 2.5GbE connection, with 10GbE recommended for rapid offloading of generated tokens and ingestion of massive RAG payloads.
+* **Tier 3/4 (Execution/Archive Planes):** Requires a minimum 2.5GbE connection to support heavy Docker image shuffling and continuous vector database ingestion without saturating the port.
 
 ### Network Topology (The Star Invariant)
-MetaClaw deployments must utilize a **Star Topology**. Daisy-chaining switches (connecting multiple smaller switches together sequentially) is strictly forbidden. Chaining introduces severe "oversubscription" bottlenecks. All nodes must connect directly back to a single, central core switch.
+MetaClaw deployments must utilize a **Star Topology**. Daisy-chaining switches (connecting multiple smaller switches together sequentially) is strictly forbidden. Chaining introduces severe "oversubscription" bottlenecks. All nodes must connect directly back to a single, central core switch (e.g., a managed 10G switch).
 
-### The Wide Area Network (WAN) Invariant
-For users accessing the cluster remotely, the ISP connection at the host location is the primary point of failure. Traditional Hybrid Fibre Coax (HFC) networks are highly asymmetrical, severely bottlenecking remote telemetry streaming and remote browser automation. For remote-first deployments, the host location must utilize a 100% symmetrical Fiber-to-the-Premises (FTTP) connection offering parity between download and upload bandwidth.
+### The Wide Area Network (WAN) & Nomadic Clients
+For users operating a split-location topology (accessing a residential cluster remotely from a nomadic setup), the ISP connections at both the host location and the client location dictate system latency.
+
+* **The Host Architecture (AI Farm):** The MetaClaw cluster (Control and Compute planes) typically resides on a high-speed residential connection. Traditional Hybrid Fibre Coax (HFC) networks are highly asymmetrical (e.g., 600 Mbps down / 200 Mbps up). When the nomadic user requests a large asset, the cluster's **upload** speed dictates the transfer time.
+* **The Client Architecture (Nomadic):** The human operator accesses the cluster remotely via a satellite or cellular uplink (e.g., Starlink). Because these connections utilize Carrier-Grade NAT (CGNAT), the client device lacks a public IP. The connection to the AI Farm is facilitated entirely through Tailscale's encrypted mesh, which effortlessly punches through both the CGNAT and the residential firewall.
 
 ## The Zero-Trust Overlay (Tailscale)
 
@@ -74,19 +143,22 @@ OpenClaw manages internal onboarding state via `workspace-state.json` files loca
 
 Because MetaClaw intentionally modifies the factory templates (using hidden HTML comments) to suppress the tedious onboarding ritual, OpenClaw immediately writes this timestamp and bypasses the bootstrap phase upon first boot. These state files are strictly machine-local and should never be tracked in version control.
 
-## Workspace Agent Schema
+## Workspace Agent Schema & The Template Philosophy
 
-The MetaClaw framework facilitates OpenClaw by compiling agent configurations. The user's workspace repository MUST follow a strict schema separating infrastructure from consciousness.
+The MetaClaw framework facilitates OpenClaw by compiling agent configurations. MetaClaw is fundamentally a facilitator for the sibling infrastructure surrounding OpenClaw. The actual `workspace` is entirely within the purview of OpenClaw and the individual user. To prevent dictating how users design their personal agents, MetaClaw does not force a specific workspace structure.
+
+The user's workspace repository MUST follow a strict schema separating infrastructure from consciousness.
 
 1. **The YAML Manifest (Infrastructure):** Every agent must have a `workspace/agents/<team>/<name>.yaml` file. This file defines the `model`, `constraints` (tokens/temperature), allowed `tools`, and `routing` metadata (including `skill_signature` and `is_lead: true`). OpenClaw does not read this file. MetaClaw parses it to populate the `openclaw.json` system configuration.
 2. **The Markdown Brain (Consciousness):** Every agent possesses a directory matching its name (`workspace/agents/<team>/<name>/`). This contains `SOUL.md` (core directives), `IDENTITY.md` (persona), `SECURITY.md` (guardrails), and `MEMORY.md` (state). OpenClaw reads and modifies these files natively.
 3. **Conceptual Models:** Agents must request models using conceptual abstraction (e.g., `simple-model`, `medium-model`, `complex-model`, `frontier-model`) or explicit specialty models (e.g., `flux-1-dev`). They must NOT hardcode hardware-specific parameters (e.g., `qwen-3-32b`). The LiteLLM proxy handles the physical mapping based on the active hardware Tier.
 
+Because building resilient multi-agent swarms requires hard-won architectural lessons, the MetaClaw repository includes a `.workspace.template` directory acting as an educational "example" workspace. During initial provisioning, the `bin/customize.py` script can optionally copy this template into the sibling `../workspace` directory to give non-technical users a functional baseline. Advanced users are encouraged to maintain their own private, heavily customized workspace repositories and ignore the template entirely.
+
 ## Prompt-to-Model Routing & "Middle Reasoning"
 
-Ensuring that the right AI model is used for each prompt is critical to prevent ballooning costs (Context Drag).
+Ensuring that the right AI model is used for each prompt is critical to prevent ballooning costs (Context Drag). MetaClaw enforces a **Hierarchical Task Network (HTN)** topology known as "Middle Reasoning."
 
-MetaClaw enforces a **Hierarchical Task Network (HTN)** topology known as "Middle Reasoning."
 1. **The Orchestrator:** Uses a `medium-model` to act as a switchboard, mapping user intents to specific Team Leads.
 2. **Team Leads (Middle Reasoning):** Use `complex-model` or `frontier-model`. They receive intents, synthesize constraints, and output a Directed Acyclic Graph (DAG) of sub-tasks. Team Leads are strictly stripped of execution tools (like `read_file` or `search_web`); they MUST delegate downwards using `sessions_send`.
 3. **Leaf Nodes (Execution):** Workers (like `lead_developer`) use `medium-model` or `simple-model` to execute discrete tools.
