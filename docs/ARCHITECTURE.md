@@ -117,6 +117,9 @@ When unboxing dedicated hardware (Tier 1, Tier 2, or beyond) for the MetaClaw ec
 2. **Establishing the Lifeline:** Install Tailscale natively (`curl -fsSL https://tailscale.com/install.sh | sh`) and authenticate the node (`sudo tailscale up --ssh`).
 3. **Severing the Physical Tether:** Unplug the HDMI cable, keyboard, and mouse. SSH into the Tailscale `100.x.y.z` IP from your local machine to run `make setup` entirely remotely.
 
+**CRITICAL INVARIANT (The Docker Baseline):**
+Even if a node is designated to run exclusively "bare-metal" services (e.g., Ollama or Tailscale marked as `"metal": true` in `profile.json`), the Docker Engine remains a strict prerequisite. MetaClaw's global orchestrator relies on Docker to manage the universal `openclaw-network` mesh and to future-proof the node for dynamic workload reassignment (such as observability agents). **You must run `make install-docker` and log out/log back in to refresh your user session permissions before executing `make wizard-batch` or `make apply`.**
+
 ## Cluster Profiling & Distributed Orchestration
 
 As Meta<Claw> scales, hardcoding service paths in `Makefile`s becomes unviable. Meta<Claw> utilizes a "Cluster Profile" system to achieve declarative, multi-node orchestration without requiring heavy tools like Kubernetes or Ansible.
@@ -171,4 +174,3 @@ The `lexical_predictive.js` hook intercepts prompts sent to Team Leads and asks 
 4. `frontier`: Extreme context, zero-shot DAG generation.
 
 *Crucially*, if the target agent is a Leaf Node (lacking the `is_lead: true` flag in its YAML), the JS hook bypasses the Judge entirely, allowing the agent to use its designated specialty model without interference.
-
