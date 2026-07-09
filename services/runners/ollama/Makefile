@@ -122,9 +122,7 @@ wait-healthy: status
 
 # Instructs the running Ollama process to pull the specific weights defined in your Gateway config
 pull-judge: wait-healthy
-	@if [ -z "$(JUDGE_MODEL_CLEAN)" ]; then \
-		echo "WARNING: OPENCLAW_JUDGE_MODEL is undefined (Gateway .env not instantiated?). Skipping judge pull."; \
-	else \
+	@if [ -n "$(JUDGE_MODEL_CLEAN)" ]; then \
 		echo "Pulling local judge model ($(JUDGE_MODEL_CLEAN))..."; \
 		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $(JUDGE_MODEL_CLEAN) || { echo "\nWARNING: Failed to pull $(JUDGE_MODEL_CLEAN). TLS error detected (SecPolicyCreateSSL). The OpenClaw Gateway will gracefully fallback to the cloud 'medium-model'."; exit 0; }; \
 	fi
