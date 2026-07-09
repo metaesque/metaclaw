@@ -89,9 +89,9 @@ To support a distributed edge-compute architecture across multiple hardware Tier
 Wi-Fi is strictly forbidden for inter-node cluster communication. Wi-Fi operates at half-duplex, resulting in packet collisions and massive jitter when transmitting serialized 100k+ token JSON payloads between the Control Plane (Gateway) and the Compute Plane (Runner).
 
 * **Hardware Bridging:** All Meta<Claw> nodes must be hardwired into a dedicated Multi-Gigabit Ethernet switch.
-* **Tier 1 (Control Plane):** Requires a minimum 1GbE connection, with 2.5GbE strongly recommended to prevent bottlenecks when acting as the Tailscale subnet router.
-* **Tier 2 (Compute Plane):** Requires a minimum 2.5GbE connection, with 10GbE recommended for rapid offloading of generated tokens and ingestion of massive RAG payloads.
-* **Tier 3/4 (Execution/Archive Planes):** Requires a minimum 2.5GbE connection to support heavy Docker image shuffling and continuous vector database ingestion without saturating the port.
+* **Control Nodes:** Requires a minimum 1GbE connection, with 2.5GbE strongly recommended to prevent bottlenecks when acting as the Tailscale subnet router.
+* **Compute Nodes:** Requires a minimum 2.5GbE connection, with 10GbE recommended for rapid offloading of generated tokens and ingestion of massive RAG payloads.
+* **Execution/Archive Nodes:** Requires a minimum 2.5GbE connection to support heavy Docker image shuffling and continuous vector database ingestion without saturating the port.
 
 ### Network Topology (The Star Invariant)
 MetaClaw deployments must utilize a **Star Topology**. Daisy-chaining switches (connecting multiple smaller switches together sequentially) is strictly forbidden. Chaining introduces severe "oversubscription" bottlenecks. All nodes must connect directly back to a single, central core switch (e.g., a managed 10G switch).
