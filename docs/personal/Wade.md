@@ -163,54 +163,79 @@ This section catalogs pending hardware evaluations required to stabilize global 
 The system enforces a strict Vertical Command Structure to prevent routing loops and context dilution. Agents do not communicate peer-to-peer across domains.
 
 ### 4.1 The Global Routing Layer
-- **`clow_judge` (Router) [K8 Plus | gemma4:e4b]:** Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
-- **`orchestrator` (Strategic Planner) [EVO-X2 | qwen-3-32b]:** Global DAG generator. Delegates exclusively to the 7 Team Leads.
+- **`judge` (Router) [simple-model]:** Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
+- **`orchestrator` (Strategic Planner) [medium-model]:** Global DAG generator. Delegates exclusively to the 7 Team Leads.
 
 ### 4.2 The Software Team
 *Domain: Engineering, architecture, testing, and deployment.*
-- **Lead:** `system_architect` [EVO-X2 | qwen-3-32b or Gemini] - System design and local DAG delegation.
-- **Worker:** `lead_developer` [EVO-X2 | qwen-3-32b] - Application code and script execution.
-- **Worker:** `qa_engineer` [EVO-X2 | qwen-3-32b] - Test harness generation and edge-case execution.
-- **Worker:** `security_auditor` [K8 Plus | gemma4:e4b] - CVE scanning and log/cost analysis.
-- **Worker:** `project_manager` [K8 Plus | gemma4:e4b] - Sprint tracking and requirement validation.
+- **Lead:** `system_architect` [complex-model] - System design and local DAG delegation.
+- **Worker:** `lead_developer` [medium-model] - Application code and script execution.
+- **Worker:** `qa_engineer` [medium-model] - Test harness generation and edge-case execution.
+- **Worker:** `security_auditor` [simple-model] - CVE scanning and log/cost analysis.
+- **Worker:** `project_manager` [simple-model] - Sprint tracking and requirement validation.
 
 ### 4.3 The Research Team
 *Domain: OSINT, financial modeling, and ambient technology scanning.*
-- **Lead:** `report_synthesizer` [EVO-X2 | qwen-3-32b or Gemini] - Briefing compilation and local DAG delegation.
-- **Worker:** `web_scout` [EVO-X2 | qwen-3-32b] - Large-context web scraping and HTML extraction.
-- **Worker:** `financial_quant` [EVO-X2 | qwen-3-32b] - Python-based math and multi-currency analysis.
-- **Worker:** `horizon_scanner` [EVO-X2 | qwen-3-32b] - Academic paper and patent tracking.
-- **Worker:** `logistics_concierge` [K8 Plus | gemma4:e4b] - Physical-world routing, visa, and hardware sourcing.
+- **Lead:** `report_synthesizer` [complex-model] - Briefing compilation and local DAG delegation.
+- **Worker:** `web_scout` [medium-model] - Large-context web scraping and HTML extraction.
+- **Worker:** `financial_quant` [medium-model] - Python-based math and multi-currency analysis.
+- **Worker:** `horizon_scanner` [complex-model] - Academic paper and patent tracking.
+- **Worker:** `logistics_concierge` [simple-model] - Physical-world routing, visa, and hardware sourcing.
 
 ### 4.4 The Self (Modeling) Team
 *Domain: Psychological sandbox, relational topologies, and biometric evaluation (Eudaimonia/Hedonia/Health).*
-- **Lead:** `self_lead` [EVO-X2 | qwen-3-32b or Gemini] - Models strict data pipelines and local DAG delegation.
-- **Worker:** `psychological_council` [EVO-X2 | Gemini] - Secular humanist mixture-of-experts synthesis.
-- **Worker:** `human_simulator` [EVO-X2 | qwen-3-32b] - Ephemeral sandbox twin for testing interventions.
-- **Worker:** `socratic_mirror` [EVO-X2 | qwen-3-32b] - Cognitive friction and logical fallacy detection.
-- **Worker:** `relational_sociologist` [EVO-X2 | qwen-3-32b] - Non-monogamous network graph topology analysis.
-- **Worker:** `data_archivist` [K8 Plus | gemma4:e4b] - Air-gapped biometric and digital exhaust retrieval.
-- **Worker:** `action_integrator` [K8 Plus | gemma4:e4b] - Routine translation and calendar blocking.
+- **Lead:** `self_lead` [complex-model] - Models strict data pipelines and local DAG delegation.
+- **Worker:** `psychological_council` [frontier-model] - Secular humanist mixture-of-experts synthesis.
+- **Worker:** `human_simulator` [medium-model] - Ephemeral sandbox twin for testing interventions.
+- **Worker:** `socratic_mirror` [complex-model] - Cognitive friction and logical fallacy detection.
+- **Worker:** `relational_sociologist` [medium-model] - Non-monogamous network graph topology analysis.
+- **Worker:** `data_archivist` [simple-model] - Air-gapped biometric and digital exhaust retrieval.
+- **Worker:** `action_integrator` [simple-model] - Routine translation and calendar blocking.
 
 ### 4.5 The Media Team
 *Domain: Creative asset generation and VRAM cold-swap execution.*
-- **Lead:** `media_producer` [EVO-X2 | qwen-3-32b] - Modality delegation and hardware concurrency limits.
-- **Worker:** `sfw_designer` [EVO-X2 | flux-1-dev] - Diagram and graphic layout rendering.
-- **Worker:** `nsfw_artist` [EVO-X2 | pony-v6-xl] - Uncensored anatomical character styling.
-- **Worker:** `video_director` [EVO-X2 | local-video] - Temporal synthesis and motion vectors.
-- **Worker:** `audio_engineer` [EVO-X2 | local-audio] - Voice cloning and text-to-speech.
+- **Lead:** `media_producer` [complex-model] - Modality delegation and hardware concurrency limits.
+- **Worker:** `sfw_designer` [flux-1-dev] - Diagram and graphic layout rendering.
+- **Worker:** `nsfw_artist` [pony-diffusion-v6-xl] - Uncensored anatomical character styling.
+- **Worker:** `video_director` [local-video-diffusion] - Temporal synthesis and motion vectors.
+- **Worker:** `audio_engineer` [local-audio-pipeline] - Voice cloning and text-to-speech.
 
 ### 4.6 The SRE (Grid) Team
 *Domain: Cluster stability, distributed network resilience, and system administration.*
-- **Lead:** `sre_lead` [EVO-X2 | qwen-3-32b] - Disaster recovery and blameless post-mortems.
-- **Worker:** `sre_incident` [EVO-X2 | qwen-3-32b] - Emergency graceful degradation protocols.
-- **Worker:** `sre_power` [EVO-X2 | qwen-3-32b] - Remote monitoring of the Transit van's solar/battery telemetry.
-- **Worker:** `sre_telemetry` [K8 Plus | gemma4:e4b] - Log parsing and memory leak detection.
-- **Worker:** `sre_network` [K8 Plus | gemma4:e4b] - Tailscale ACLs and remote tunnel latency to the van.
-- **Worker:** `sre_db` [K8 Plus | gemma4:e4b] - PostgreSQL/pgvector vacuuming and index health.
-- **Worker:** `sre_thermal` [K8 Plus | gemma4:e4b] - Temperature throttling and hardware protection for the basement nodes.
-- **Worker:** `sre_storage` [K8 Plus | gemma4:e4b] - NVMe wear tracking and volume pruning.
-- **Worker:** `sre_sysadmin` [EVO-X2 | qwen-3-32b] - Host-level shell commands and file manipulation.
+- **Lead:** `sre_lead` [complex-model] - Disaster recovery and blameless post-mortems.
+- **Worker:** `sre_incident` [complex-model] - Emergency graceful degradation protocols.
+- **Worker:** `sre_power` [medium-model] - Remote monitoring of the Transit van's solar/battery telemetry.
+- **Worker:** `sre_telemetry` [simple-model] - Log parsing and memory leak detection.
+- **Worker:** `sre_network` [simple-model] - Tailscale ACLs and remote tunnel latency to the van.
+- **Worker:** `sre_db` [simple-model] - PostgreSQL/pgvector vacuuming and index health.
+- **Worker:** `sre_thermal` [simple-model] - Temperature throttling and hardware protection for the basement nodes.
+- **Worker:** `sre_storage` [simple-model] - NVMe wear tracking and volume pruning.
+- **Worker:** `sre_sysadmin` [medium-model] - Host-level shell commands and file manipulation.
+
+### 4.7 The Health Team
+*Domain: Physiological data orchestration, clinical diagnostics, metabolic/vascular/endocrine protocols, and physical rehabilitation.*
+- **Lead:** `health_lead` [complex-model] - Diagnostic synthesis and local DAG delegation.
+- **Worker:** `health_heart` [medium-model] - Cardiovascular analysis (atherosclerosis, endothelial function).
+- **Worker:** `health_hormones` [medium-model] - Endocrinology (insulin resistance, testosterone, osteopenia).
+- **Worker:** `health_brain` [medium-model] - Neurology (hippocampal volume, microvascular ischemia).
+- **Worker:** `health_kidney` [medium-model] - Nephrology (eGFR, renal function).
+- **Worker:** `health_liver` [medium-model] - Hepatology (hepatic steatosis, metabolic syndrome).
+- **Worker:** `health_psychiatrist` [complex-model] - Clinical neurochemistry and psychopharmacology.
+- **Worker:** `health_longevity` [complex-model] - Lifespan/healthspan optimization and gerontology.
+- **Worker:** `health_nutritionist` [simple-model] - Dietary translation of clinical protocols.
+- **Worker:** `health_physio` [simple-model] - Structural rehabilitation and exercise translation.
+- **Worker:** `health_coach` [simple-model] - Adherence tracking and lifestyle implementation.
+
+### 4.8 The Finance Team
+*Domain: Financial modeling, market analysis, intrinsic valuation, risk assessment, tax strategy, and portfolio allocation.*
+- **Lead:** `finance_lead` [complex-model] - Financial orchestration and local DAG delegation.
+- **Worker:** `finance_manager` [complex-model] - Portfolio allocation, position sizing, and Buy/Hold/Sell execution plans.
+- **Worker:** `finance_risk` [complex-model] - Thesis counter-analysis, structural risk identification, and stress testing.
+- **Worker:** `finance_crypto` [medium-model] - On-chain analysis, tokenomics, and smart contract auditing.
+- **Worker:** `finance_data` [medium-model] - Raw financial data ingestion, SEC filings/PDF extraction, and scraping.
+- **Worker:** `finance_fundamental` [medium-model] - DCF modeling, balance sheet analysis, and intrinsic valuation.
+- **Worker:** `finance_quant` [medium-model] - Price action, momentum metrics, and technical indicators (RSI, MACD).
+- **Worker:** `finance_tax` [simple-model] - Capital gains calculations, cross-border tax implications, and asset location.
 
 ## 5. Structural Interdependencies (Maintenance Ledger)
 
@@ -230,3 +255,46 @@ If you create a completely new team branch:
 If you add a new host or upgrade memory constraints:
 1. **Update Telemetry Memory:** Modify `workspace/agents/sre/telemetry/MEMORY.md` so the Warden agent knows the new absolute limits before throwing an Out-Of-Memory alert.
 2. **Update Producer Memory:** Modify `workspace/agents/media/producer/MEMORY.md`. If you gain enough VRAM to keep Flux and Qwen hot simultaneously, you must remove the strict concurrency/cold-swap limits from the Producer's configuration.
+
+## 6. Tier Journey & Hardware Scaling Projections
+
+The architectural path maps out the progressive integration of heavy compute and the eventual repositioning of edge nodes as the data demands increase.
+
+- **Tier 0:** MacBook Air has been tested as the isolated baseline.
+- **Tier 1:** GMKtec K8 Plus has been partially tested (still under active stabilization).
+- **Tier 2:** GMKtec K8 Plus (Control Plane) + GMKtec EVO-X2 (Compute Plane) has been partially tested, but 'compute' is not yet set up.
+- **Tier 2+:** Planning on purchasing 1-3 Mac Studio M5 Ultras in October 2026 when they are released, to exponentially expand the 'compute' farm capabilities.
+- **Tier 3-5:** When the Mac Studio(s) are active, the GMKtec EVO-X2 will be repurposed strictly to the 'execution' plane. A new, specialized workstation (see `docs/PLANES.md`) will be sourced for the 'archive' plane.
+
+### Hardware-to-Model Mappings
+
+Based on VRAM limits, optimal model loading targets for current and future node acquisitions are detailed below:
+
+**GMKtec EVO-X2**
+- Llama 4: 109B (4-bit to 6-bit quantization)
+- Qwen3: 235B (2-bit to 3-bit quantization)
+- DeepSeek-R1: 70B (8-bit quantization)
+- Llama 3.1: 70B (8-bit quantization)
+- Gemma 4: 12B (4-bit quantization)
+- Pony Diffusion V6 XL (FP16)
+- RealVisXL (FP16)
+- LUSTIFY (FP16)
+- Flux.1 Dev (FP16)
+- Stable Diffusion 3 Large (FP16)
+
+**Single Mac Studio M5 Ultra (512GB - 1TB)**
+- DeepSeek-R1: 671B MoE (4-bit quantization)
+- Llama 3.1: 405B (4-bit quantization)
+- Nemotron-4: 340B (4-bit quantization)
+- Jamba 1.5 Large: 398B (4-bit quantization)
+- Grok-1: 314B MoE (4-bit quantization)
+
+**Two Mac Studio M5 Ultras (1TB Memory Pool)**
+- DeepSeek-R1: 671B MoE (8-bit quantization)
+- Llama 3.1: 405B (16-bit / Unquantized)
+- Jamba 1.5 Large: 398B (16-bit / Unquantized)
+
+**Three Mac Studio M5 Ultras (1.5TB Memory Pool)**
+- DeepSeek-R1: 671B MoE (16-bit / Unquantized)
+- Llama 3.1: 405B (16-bit) + Concurrent Agent KV Cache
+- DeepSeek-R1: 671B MoE (8-bit) + Llama 3.1: 405B (8-bit)
