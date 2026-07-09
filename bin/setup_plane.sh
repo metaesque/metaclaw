@@ -1,111 +1,76 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# ==============================================================================
+# MetaClaw: Headless Node Bootstrapper
+# ==============================================================================
+# This script initializes a sterile, headless Ubuntu Server node. It installs
+# critical OS dependencies, generates GitHub deployment keys, and clones the
+# framework repository so that `make setup` can take over.
 
-# Enforce strict error handling
-# -e: exit on command failure
-# -u: exit on unbound variable
-# -o pipefail: exit if any command in a pipeline fails
-set -euo pipefail
+set -e
 
 echo "################################################################################"
-echo "# MetaClaw Node Bootstrapper"
-echo "# Target: Headless Control/Compute Planes"
+echo "# METACLAW HEADLESS NODE BOOTSTRAPPER"
 echo "################################################################################"
 
-# Define core variables
-EMAIL="wade@holst.ca"
-GIT_NAME="Wade Holst"
-SSH_KEY_PATH="$HOME/.ssh/id_ed25519_metaesque"
-REPO_URL="git@metaesque.ssh:metaesque/metaclaw.git"
-TARGET_DIR="$HOME/repo"
+# 1. System Dependencies
+# Ubuntu Server Minimal strips make and python3-venv to reduce attack surface.
+# We must inject them before we can execute any Makefile targets.
+echo "[*] Installing core system dependencies..."
+sudo apt-get update
+sudo apt-get install -y make python3-venv python3-pip git curl netcat-openbsd
 
-# ------------------------------------------------------------------------------
-# 1. SSH Identity Generation
-# ------------------------------------------------------------------------------
-echo -e "\n[1/6] Validating SSH Identity..."
+# 2. SSH Identity Generation
+KEY_PATH="$HOME/.ssh/id_ed25519_metaesque"
 
-mkdir -p "$HOME/.ssh"
-chmod 700 "$HOME/.ssh"
+if [ ! -f "$KEY_PATH" ]; then
+    echo "[*] Generating dedicated SSH deployment key for MetaClaw..."
+    ssh-keygen -t ed25519 -C "headless-node@metaclaw.cluster" -f "$KEY_PATH" -N ""
 
-if [[ -f "$SSH_KEY_PATH" ]]; then
-    echo "SSH key already exists at $SSH_KEY_PATH. Skipping generation."
+    echo "================================================================================"
+    echo "ACTION REQUIRED: Add the following public key to your GitHub account."
+    echo "Settings -> SSH and GPG keys -> New SSH key"
+    echo "================================================================================"
+    cat "${KEY_PATH}.pub"
+    echo "================================================================================"
+    read -p "Press Enter to continue AFTER you have added the key to GitHub..."
 else
-    echo "Generating new Ed25519 SSH key..."
-    ssh-keygen -t ed25519 -C "$EMAIL" -f "$SSH_KEY_PATH" -N ""
-    echo "SSH key generated successfully."
+    echo "[*] SSH key already exists at $KEY_PATH. Skipping generation."
 fi
 
-# ------------------------------------------------------------------------------
-# 2. GitHub Public Key Registration (Interactive)
-# ------------------------------------------------------------------------------
-echo -e "\n[2/6] GitHub Authentication Setup"
-echo "================================================================================"
-echo "ACTION REQUIRED: You must register this node's public key with your GitHub account."
-echo "1. Copy the entirety of the SSH key printed below."
-echo "2. Open a browser on your local machine and go to: https://github.com/settings/ssh/new"
-echo "3. Title the key appropriately (e.g., 'K8 Plus Control Node' or 'EVO-X2 Compute')."
-echo "4. Paste the key into the 'Key' field and click 'Add SSH key'."
-echo "================================================================================"
-echo ""
-cat "${SSH_KEY_PATH}.pub"
-echo ""
-echo "================================================================================"
-
-read -p "Press [Enter] ONLY AFTER you have successfully added the key to GitHub... "
-
-# ------------------------------------------------------------------------------
-# 3. SSH Configuration Routing
-# ------------------------------------------------------------------------------
-echo -e "\n[3/6] Configuring SSH Host Routing..."
-
+# 3. SSH Config Routing
 SSH_CONFIG="$HOME/.ssh/config"
-touch "$SSH_CONFIG"
-chmod 600 "$SSH_CONFIG"
-
-if grep -q "Host metaesque.ssh" "$SSH_CONFIG"; then
-    echo "Host alias 'metaesque.ssh' already exists in $SSH_CONFIG. Skipping."
-else
-    echo "Injecting 'metaesque.ssh' alias into $SSH_CONFIG..."
+if ! grep -q "Host metaesque.ssh" "$SSH_CONFIG" 2>/dev/null; then
+    echo "[*] Injecting metaesque.ssh routing into ~/.ssh/config..."
+    mkdir -p "$HOME/.ssh"
     cat <<EOF >> "$SSH_CONFIG"
 
 # MetaClaw Public Repository Routing
 Host metaesque.ssh
     HostName github.com
     User git
-    IdentityFile $SSH_KEY_PATH
+    IdentityFile $KEY_PATH
     IdentitiesOnly yes
 EOF
-    echo "SSH routing configured."
-fi
-
-# ------------------------------------------------------------------------------
-# 4. Git Global Configuration
-# ------------------------------------------------------------------------------
-echo -e "\n[4/6] Setting Global Git Parameters..."
-
-git config --global user.name "$GIT_NAME"
-git config --global user.email "$EMAIL"
-git config --global init.defaultBranch main
-
-echo "Git identity set to: $GIT_NAME <$EMAIL>"
-
-# ------------------------------------------------------------------------------
-# 5. Clone Repository
-# ------------------------------------------------------------------------------
-echo -e "\n[5/6] Cloning MetaClaw Repository..."
-
-if [[ -d "$TARGET_DIR" ]]; then
-    echo "Directory $TARGET_DIR already exists. Pulling latest..."
-    cd "$TARGET_DIR"
-    git pull origin main
+    chmod 600 "$SSH_CONFIG"
 else
-    echo "Cloning from $REPO_URL to $TARGET_DIR..."
-    git clone "$REPO_URL" "$TARGET_DIR"
+    echo "[*] SSH routing block already exists. Skipping."
 fi
 
-echo -e "\n################################################################################"
-echo "# Setup Complete."
-echo "#"
-echo "# NEXT STEPS:"
-echo "# 1. Manually transfer your private .env.json and profile.json to $TARGET_DIR"
-echo "# 2. cd $TARGET_DIR && make wizard"
+# 4. Clone Repository
+REPO_DIR="$HOME/repo"
+if [ ! -d "$REPO_DIR" ]; then
+    echo "[*] Cloning MetaClaw repository..."
+    # Force GitHub's host key into known_hosts to prevent interactive prompts breaking the script
+    ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+    git clone git@metaesque.ssh:metaesque/metaclaw.git "$REPO_DIR"
+else
+    echo "[*] Repository directory already exists at $REPO_DIR. Skipping clone."
+fi
+
 echo "################################################################################"
+echo "# BOOTSTRAP COMPLETE"
+echo "################################################################################"
+echo "Next Steps:"
+echo "1. cd ~/repo"
+echo "2. make install-docker (Remember to log out and log back in after!)"
+echo "3. make setup"
