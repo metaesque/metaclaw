@@ -10,21 +10,19 @@ The current environment operates on a remote, split-location architecture. The h
 - **Environment:** Ford Transit van traversing North America (Alberta/BC/Nevada).
 - **Power:** LiFePO4 battery bank, legacy AGM, and solar array yield.
 - **Uplink:** Starlink Satellite (approx. 160 Mbps down / 20 Mbps up).
-- **Hardware:** 15-inch Apple MacBook Air (M4 chip), 16 GB RAM, 256GB SSD, running macOS Sequoia Version 15.7.5 (24G624). Purchased in Buenos Aires, Argentina in April 2026 (~$1750 USD).
+- **Hardware:** 15-inch Apple MacBook Air (M4 chip).
 - **Role:** The primary client interface. Accesses the cluster remotely via Tailscale.
 
 ### Location B: The AI Farm (Parent's Basement)
 - **Environment:** Climate-controlled residential basement in Lethbridge, Alberta. AC grid power.
-- **Uplink:** Shaw HFC Broadband (approx. 600 Mbps down / 200 Mbps up).
-- **Networking:** Shaw Router -> Binardat 8-Port 10G Managed Switch (4x 10G RJ45, 4x 10G SFP+, 160Gbps Bandwidth, L3 Web Managed) -> Compute/Control Nodes.
+- **Uplink:** Shaw HFC Broadband (approx. 600 Mbps down / 200 Mbps up) via Arris SURFboard SB8200.
+- **Networking:** Shaw Router -> Binardat 8-Port 10G Managed Switch -> Compute/Control Nodes.
 
 **Node 01: GMKtec K8 Plus (The Edge Gateway)**
-- **Specs:** AMD Ryzen 7 8845HS (8C/16T, up to 5.1GHz), 32GB DDR5 RAM, 1TB PCIe 4.0 M.2 SSD. Features Dual 2.5G NICs, HDMI 2.1, USB4, and Oculink. (Purchased via Amazon US).
 - **Role:** The Control Plane. Handles core infrastructure (PostgreSQL/pgvector, Redis, LiteLLM, VictoriaLogs) and the OpenClaw Gateway.
 - **Resident LLM:** `gemma4:e4b` (acting as the fast-path Predictive Judge and simple-model executor).
 
 **Node 02: GMKtec EVO-X2 (The Inference Engine)**
-- **Specs:** AMD Ryzen AI Max+ 395 (16C/32T, up to 5.1GHz) with AMD Radeon 8060S (40 Cores) iGPU. 128GB LPDDR5X 8000MHz Quad Channel RAM, 2TB PCIe 4.0 SSD. Features Dual 2.5G LAN, WiFi 7, BT 5.4, USB4, and Quad Screen 8K Display support. (Purchased via Amazon Canada).
 - **Role:** The Compute Plane. Handles deep reasoning, DAG generation, complex coding, and heavy creative asset generation.
 - **Resident LLMs (Hot):**
   - `qwen-3-32b` (4-bit, ~20GB VRAM). The primary Orchestrator, coding, and `medium-model` / `complex-model` engine.
@@ -46,31 +44,38 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 ### 2.1 Host & Compute Assets
 
 #### Nomadic Client Laptop
-* **Date Bought:** April 2026
+* **Date Bought:** 2026-02-26
 * **Price Spent:** $1,750.00 USD
 * **Title/Description:** 15-inch Apple MacBook Air M4
 * **Source URL:** N/A (Purchased retail in Buenos Aires, Argentina)
 * **Detailed Specifications:** Apple M4 Architecture, 16GB Unified Memory, 256GB NVMe SSD, running macOS Sequoia Version 15.7.5 (24G624).
 
 #### Node 01 (Control Plane Server)
-* **Date Bought:** Mid-2026
-* **Price Spent:** ~$399.99 - $519.00 USD
+* **Date Bought:** 2026-04-05
+* **Price Spent:** $797.42 USD ($738.99 + $58.43)
 * **Title/Description:** GMKtec Gaming Mini PC K8 Plus AMD Ryzen 7 8845HS Desktop Computer Dual NIC 2.5G
 * **Source URL:** https://www.amazon.com/dp/B0DHNTW3H6
 * **Detailed Specifications:** AMD Ryzen 7 8845HS (8 Cores, 16 Threads, Base 3.8GHz, Boost up to 5.1GHz, 16MB L3 Cache, 45W TDP). 32GB DDR5 Dual-Channel RAM. 1TB PCIe 4.0 M.2 2280 NVMe SSD. Dual 2.5 Gbps Ethernet RJ45 ports. 1x USB4 (40Gbps/PD/DP), 2x HDMI 2.1, 1x Oculink port (PCIe 4.0 x4), Wi-Fi 6E, Bluetooth 5.2.
 
 #### Node 02 (Compute Plane Inference Server)
-* **Date Bought:** Mid-2026
-* **Price Spent:** ~$1,999.99 - $2,666.99 CAD
+* **Date Bought:** 2026-04-17
+* **Price Spent:** $4,744.95 CAD
 * **Title/Description:** GMKtec EVO-X2 AI Mini PC Ryzen Al Max+ 395 Mini Gaming Computer
 * **Source URL:** https://www.amazon.ca/dp/B0F53MLYQ6
 * **Detailed Specifications:** AMD Ryzen AI Max+ 395 (16 Cores, 32 Threads, up to 5.1GHz). Integrated AMD Radeon 8060S GPU (40 Compute Units). 128GB LPDDR5X 8000MHz (16GB x 8 configuration) Unified Memory layout. 2TB PCIe 4.0 NVMe SSD. Dual 2.5G LAN ports, WiFi 7, Bluetooth 5.4, USB4 interfaces, SD Card Reader 4.0, support for Quad Screen 8K Displays.
 
 ### 2.2 Network & Uplink Assets
 
+#### ISP Core Modem
+* **Date Bought:** N/A (Provided by ISP - Shaw)
+* **Price Spent:** N/A (Potential monthly rental fee)
+* **Title/Description:** Arris SURFboard SB8200 Cable Modem
+* **Source URL:** N/A
+* **Detailed Specifications:** DOCSIS 3.1 cable modem (Backward compatible with DOCSIS 3.0). 2x2 OFDM/ OFDMA DOCSIS 3.1 channels and/or 32x8 SCQAM. Dual Gigabit Ethernet Ports with Link Aggregation support. Serial Number: 18G4H7FHEA00798. CM MAC: C0943571CE53. Max Theoretical Download: 10 Gbps. Max Theoretical Upload: 2 Gbps.
+
 #### Core Farm Network Switch
 * **Date Bought:** Mid-2026
-* **Price Spent:** ~$270.00 CAD
+* **Price Spent:** Unknown
 * **Title/Description:** Binardat 8 Port 10 Gigabit Managed Switch Metal Small Network Switch
 * **Source URL:** https://www.amazon.ca/dp/B0DQ77BS64
 * **Detailed Specifications:** Layer 3 Web Managed engine. 160Gbps total backplane switching bandwidth. Physical layout: 4x 10G RJ45 Copper Ethernet ports + 4x 10G SFP+ Fiber interface cages. Native NBASE-T auto-negotiation support (10G/5G/2.5G/1G/100M).
@@ -79,7 +84,7 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 * **Date Bought:** 2022-07-19
 * **Price Spent:** $650.92 USD (All-in, including initial $100 deposit)
 * **Title/Description:** Starlink Standard Actuated Kit
-* **Source URL:** https://starlink.com/account/orders
+* **Source URL:** https://starlink.com/account/order/ORD-5713955-55547-56
 * **Detailed Specifications:** Circular parabolic antenna array with motorized mechanical actuation alignment. Operational power consumption range: 50W - 75W continuous draw. Dual-band 3x3 MIMO Wi-Fi 5 router base. Outdoor rated (IP54).
 
 ### 2.3 Mobile Power & Storage Assets (Van Footprint)
@@ -88,8 +93,8 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 * **Date Bought:** 2026-06-03
 * **Price Spent:** $499.09 USD
 * **Title/Description:** Renogy 12V 100Ah Lithium LiFePO4 Deep Cycle Battery with Bluetooth
-* **Source URL:** https://www.amazon.com/dp/B00S1QCK94
-* **Detailed Specifications:** 12.8V Nominal Voltage, 100Ah Rated Capacity (1280Wh total energy). Integrated Bluetooth 5.0 module for local app readout. 2000+ deep cycles at 80% DOD execution boundaries. Built-in smart Battery Management System (BMS) protection loops. Weight: ~26 lbs.
+* **Source URL:** https://www.amazon.com/dp/B09F9NNGN8
+* **Detailed Specifications:** 12.8V Nominal Voltage, 100Ah Rated Capacity (1280Wh total energy). Integrated Bluetooth 5.0 module for local app readout. 2000+ deep cycles. Built-in smart Battery Management System (BMS) protection loops. Weight: ~26 lbs.
 
 #### Legacy AGM Battery Bank
 * **Date Bought:** 2020-11-30
@@ -107,7 +112,7 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 
 #### DC-to-AC Vehicle Power Inverter
 * **Date Bought:** 2023-09-10
-* **Price Spent:** $60.00 USD
+* **Price Spent:** $59.99 USD
 * **Title/Description:** POTEK 750W Power Inverter 12V DC to 110V AC Car Adapter
 * **Source URL:** https://www.amazon.com/dp/B01FEUD9OO
 * **Detailed Specifications:** 750 Watts continuous power allocation (1500 Watts peak surge boundary). Translates 12V DC input to 110V AC output. 2x standard AC outlets, 2x USB charging ports (5V/2A). Built-in cooling fans and high/low voltage protection gates. Used exclusively to charge client laptop, communications gear, and drive a daily 30-second blender run.
@@ -149,10 +154,79 @@ This section catalogs pending hardware evaluations required to stabilize global 
 
 ### 3.3 Nomadic Satellite Uplink Optimization
 * **Target Equipment:** Next-Generation Flat/Starlink Mini Array Hardware.
-* **Functional Mandate:** Under evaluation by the `sre_bandwidth` and `sre_power` agents to reduce setup times, minimize power profiles, and remove the mechanical failure vectors of the legacy 2022 Actuated dish while tracking WAN performance across varying geographical terrains.
+* **Functional Mandate:** Under evaluation by the `sre_power` agents to reduce setup times, minimize power profiles, and remove the mechanical failure vectors of the legacy 2022 Actuated dish while tracking WAN performance across varying geographical terrains.
 
 ---
 
 ## 4. Agent Hierarchy & Topologies
-*(Historical records andvertical structures continue exactly as parsed in preceding turns...)*
 
+The system enforces a strict Vertical Command Structure to prevent routing loops and context dilution. Agents do not communicate peer-to-peer across domains.
+
+### 4.1 The Global Routing Layer
+- **`clow_judge` (Router) [K8 Plus | gemma4:e4b]:** Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
+- **`orchestrator` (Strategic Planner) [EVO-X2 | qwen-3-32b]:** Global DAG generator. Delegates exclusively to the 7 Team Leads.
+
+### 4.2 The Software Team
+*Domain: Engineering, architecture, testing, and deployment.*
+- **Lead:** `system_architect` [EVO-X2 | qwen-3-32b or Gemini] - System design and local DAG delegation.
+- **Worker:** `lead_developer` [EVO-X2 | qwen-3-32b] - Application code and script execution.
+- **Worker:** `qa_engineer` [EVO-X2 | qwen-3-32b] - Test harness generation and edge-case execution.
+- **Worker:** `security_auditor` [K8 Plus | gemma4:e4b] - CVE scanning and log/cost analysis.
+- **Worker:** `project_manager` [K8 Plus | gemma4:e4b] - Sprint tracking and requirement validation.
+
+### 4.3 The Research Team
+*Domain: OSINT, financial modeling, and ambient technology scanning.*
+- **Lead:** `report_synthesizer` [EVO-X2 | qwen-3-32b or Gemini] - Briefing compilation and local DAG delegation.
+- **Worker:** `web_scout` [EVO-X2 | qwen-3-32b] - Large-context web scraping and HTML extraction.
+- **Worker:** `financial_quant` [EVO-X2 | qwen-3-32b] - Python-based math and multi-currency analysis.
+- **Worker:** `horizon_scanner` [EVO-X2 | qwen-3-32b] - Academic paper and patent tracking.
+- **Worker:** `logistics_concierge` [K8 Plus | gemma4:e4b] - Physical-world routing, visa, and hardware sourcing.
+
+### 4.4 The Self (Modeling) Team
+*Domain: Psychological sandbox, relational topologies, and biometric evaluation (Eudaimonia/Hedonia/Health).*
+- **Lead:** `self_lead` [EVO-X2 | qwen-3-32b or Gemini] - Models strict data pipelines and local DAG delegation.
+- **Worker:** `psychological_council` [EVO-X2 | Gemini] - Secular humanist mixture-of-experts synthesis.
+- **Worker:** `human_simulator` [EVO-X2 | qwen-3-32b] - Ephemeral sandbox twin for testing interventions.
+- **Worker:** `socratic_mirror` [EVO-X2 | qwen-3-32b] - Cognitive friction and logical fallacy detection.
+- **Worker:** `relational_sociologist` [EVO-X2 | qwen-3-32b] - Non-monogamous network graph topology analysis.
+- **Worker:** `data_archivist` [K8 Plus | gemma4:e4b] - Air-gapped biometric and digital exhaust retrieval.
+- **Worker:** `action_integrator` [K8 Plus | gemma4:e4b] - Routine translation and calendar blocking.
+
+### 4.5 The Media Team
+*Domain: Creative asset generation and VRAM cold-swap execution.*
+- **Lead:** `media_producer` [EVO-X2 | qwen-3-32b] - Modality delegation and hardware concurrency limits.
+- **Worker:** `sfw_designer` [EVO-X2 | flux-1-dev] - Diagram and graphic layout rendering.
+- **Worker:** `nsfw_artist` [EVO-X2 | pony-v6-xl] - Uncensored anatomical character styling.
+- **Worker:** `video_director` [EVO-X2 | local-video] - Temporal synthesis and motion vectors.
+- **Worker:** `audio_engineer` [EVO-X2 | local-audio] - Voice cloning and text-to-speech.
+
+### 4.6 The SRE (Grid) Team
+*Domain: Cluster stability, distributed network resilience, and system administration.*
+- **Lead:** `sre_lead` [EVO-X2 | qwen-3-32b] - Disaster recovery and blameless post-mortems.
+- **Worker:** `sre_incident` [EVO-X2 | qwen-3-32b] - Emergency graceful degradation protocols.
+- **Worker:** `sre_power` [EVO-X2 | qwen-3-32b] - Remote monitoring of the Transit van's solar/battery telemetry.
+- **Worker:** `sre_telemetry` [K8 Plus | gemma4:e4b] - Log parsing and memory leak detection.
+- **Worker:** `sre_network` [K8 Plus | gemma4:e4b] - Tailscale ACLs and remote tunnel latency to the van.
+- **Worker:** `sre_db` [K8 Plus | gemma4:e4b] - PostgreSQL/pgvector vacuuming and index health.
+- **Worker:** `sre_thermal` [K8 Plus | gemma4:e4b] - Temperature throttling and hardware protection for the basement nodes.
+- **Worker:** `sre_storage` [K8 Plus | gemma4:e4b] - NVMe wear tracking and volume pruning.
+- **Worker:** `sre_sysadmin` [EVO-X2 | qwen-3-32b] - Host-level shell commands and file manipulation.
+
+## 5. Structural Interdependencies (Maintenance Ledger)
+
+As the OpenClaw environment evolves, failing to update paired files will result in architectural breakdown, routing loops, or VRAM exhaustion. Adhere to the following cascade rules:
+
+### 5.1 Adding or Removing a Subordinate Agent
+If you add a new worker (e.g., `sre_security`) to an existing team:
+1. **Update the Team Lead's System Prompt:** Modify `workspace/agents/<team>/<lead>/SOUL.md`. You must explicitly add the new agent to the `LOCAL DELEGATION MATRIX` section. The Team Lead cannot route to agents it does not know exist.
+2. **Update YAML & LiteLLM:** Ensure the `model:` specified in the new agent's YAML utilizes a conceptual tier (`simple-model`, etc.) registered in the Gateway proxy.
+
+### 5.2 Adding a New Team (Domain)
+If you create a completely new team branch:
+1. **Update the Global Orchestrator:** Modify `workspace/agents/orchestrator/SOUL.md`. You must append the new Team Lead to the `HIERARCHICAL DELEGATION MATRIX`.
+2. **Update the Escalation Protocol:** You must update the `THE ESCALATION PROTOCOL` section inside the `SOUL.md` of **every existing Team Lead** so they know they can escalate tasks requiring the new team's specific capabilities.
+
+### 5.3 Upgrading Hardware (Changing VRAM/RAM capacity)
+If you add a new host or upgrade memory constraints:
+1. **Update Telemetry Memory:** Modify `workspace/agents/sre/telemetry/MEMORY.md` so the Warden agent knows the new absolute limits before throwing an Out-Of-Memory alert.
+2. **Update Producer Memory:** Modify `workspace/agents/media/producer/MEMORY.md`. If you gain enough VRAM to keep Flux and Qwen hot simultaneously, you must remove the strict concurrency/cold-swap limits from the Producer's configuration.
