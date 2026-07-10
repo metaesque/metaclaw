@@ -97,6 +97,9 @@ def main():
   # --------------------------------------------------------------------------
   # 2. PROVISIONING
   # --------------------------------------------------------------------------
+  cluster_nodes = profile.get("nodes", [])
+  cluster_tier = max([n.get("tier", 0) for n in cluster_nodes] + [0])
+
   for svc, prov_data in providers.items():
     if isinstance(prov_data, dict):
       provider = prov_data.get("uid")
@@ -133,6 +136,49 @@ def main():
     else:
       if os.path.exists(metal_flag_path):
         os.remove(metal_flag_path)
+
+    # ========================================================================
+    # TIER-AWARE ENVIRONMENT SEEDING
+    # Automatically populates .env.json with intelligent defaults based on the
+    # cluster topology, preventing non-technical users from being prompted.
+    # ========================================================================
+    real_provider_path = os.path.join(services_dir, uids, provider)
+    env_json_path = os.path.join(real_provider_path, ".env.json")
+    env_data = {}
+    if os.path.exists(env_json_path):
+      try:
+        with open(env_json_path, "r") as f:
+          env_data = json.load(f)
+      except json.JSONDecodeError:
+        pass
+
+    seeded = False
+    if provider == "ollama":
+      if len(cluster_nodes) > 1:
+        env_data["OLLAMA_HOST"] = "0.0.0.0"
+      else:
+        env_data["OLLAMA_HOST"] = "127.0.0.1"
+      env_data["HSA_OVERRIDE_GFX_VERSION"] = "11.0.0"
+      seeded = True
+
+    elif provider == "litellm":
+      compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
+      if cluster_tier >= 2 and compute_node:
+        compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
+        env_data["COMPLEX_MODEL_ID"] = "ollama/qwen-3-32b"
+        env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
+        env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
+      else:
+        env_data["COMPLEX_MODEL_ID"] = "gemini/gemini-3.1-pro-preview"
+        env_data["COMPLEX_MODEL_API_BASE"] = "https://gateway.ai.google"
+        if "COMPLEX_MODEL_API_KEY" in env_data:
+            del env_data["COMPLEX_MODEL_API_KEY"]
+      seeded = True
+
+    if seeded:
+      os.makedirs(real_provider_path, exist_ok=True)
+      with open(env_json_path, "w") as f:
+        json.dump(env_data, f, indent=2)
 
   # --------------------------------------------------------------------------
   # 3. DISTRIBUTED DNS GENERATION
