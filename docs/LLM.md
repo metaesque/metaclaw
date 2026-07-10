@@ -83,7 +83,7 @@ following output rules:
 Because Language Models suffer from "Attention Drift" (attempting to re-synthesize untouched code rather than copying it verbatim), you must rigorously enforce the following anti-truncation rules:
 
 1. **No Stealth Refactoring:** You are strictly forbidden from "cleaning up", simplifying, or altering any code, comments, or Makefile targets outside the explicit scope of the user's prompt.
-2. **Token-for-Token Recall:** When outputting full files, you must reproduce the unmodified sections of the file with 100% fidelity to the **latest known state of the file** (incorporating all original payload data PLUS all modifications accepted in previous prompts within this chat session). Do not re-synthesize bash loops or logic blocks from memory.
+2. **Token-for-Token Recall:** When outputting full files, you must reproduce the unmodified sections of the file with 100% fidelity to the original Prompt 1 payload **plus all modifications in previous prompts, plus the modifications in the current prompt**. Do not re-synthesize bash loops or logic blocks from memory.
 3. **The Fidelity Pledge:** Before outputting any code block, you must explicitly declare in plaintext: *"I have verified that no code outside the requested scope has been altered or removed."*
 
 ## 6. The METACLAW PROTOCOL (Prompt Injection Block)

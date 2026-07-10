@@ -52,23 +52,23 @@ The `$MC` directory enforces strict data segregation using three nested subdirec
 ### 2.2 LLM Collaboration Workflow (Gemini)
 When initiating a collaborative coding session with an LLM (Gemini):
 1.  **Context Generation (`make txt`):** Run `make txt` at the top level of `$MC/repo`. This executes `bin/newcode.py`, concatenating all critical infrastructure files specified in `docs/MANIFEST.files` into a single payload (`$MC/repo/tmp/metaclaw.txt`). This payload is attached to the initial LLM prompt.
-2.  **Exclusion Rules:** The `metaclaw.txt` payload intentionally skips files listed in `docs/.MANIFEST.files.ignore` to prevent token bloat. The LLM does not need to see these skipped files.
+2.  **Exclusion Rules:** The `metaclaw.txt` payload intentionally skips files listed in `docs/.MANIFEST.files.ignore` (e.g., `~services/.*/\.env$`) to prevent token bloat. The LLM does not need to see these skipped files.
 3.  **Workspace Context (`make wksp`):** Because the `workspace/` repository contains dozens of massive agent personalities, it is excluded by default. When agent configuration work is required, running `make wksp` generates `tmp/workspace.txt`. This file is manually trimmed down to the specific team being worked on before being attached to the LLM prompt.
 4.  **Reference Anchoring:** Whenever the LLM is instructed to read `docs/LLM.md`, it must refer *only* to the contents of that file as presented inside the attached `metaclaw.txt` context payload.
 
 ### 2.3 Committing & Testing (The `gmc` command)
 1.  **Code Application:** When the LLM outputs a full-file formatting block, it is copied and pasted directly into the `$MC/repo/input` file.
-2.  **Execution:** The custom Bash command `gmc "<git commit message>"` is executed.
-3.  **The Pipeline:** The `gmc` command automatically triggers `make newcode` (which parses the `input` file and applies the atomic changes), followed by `git add`, `git commit`, and `git push` up to the origin.
+2.  **Execution:** The custom Bash command `gmc "<git commit message>"` is executed within `$MC/repo`.
+3.  **The Pipeline:** The `gmc` command automatically triggers `make newcode` (which parses the `input` file and applies the atomic changes), followed by `git add`, `git commit`, and `git push` up to the origin. Note that `bin/newcode.py` will prompt to delete the `input` file after processing, ensuring it does not pollute the repository. (Modifications to the `workspace/` repository are committed and pushed manually).
 
 ### 2.4 Headless Remote Testing (Tier 1/Tier 2)
 While code is written on the MacBook Air, execution testing frequently occurs on the headless Ubuntu nodes (K8 Plus or EVO-X2) residing in the AI Farm.
 *   **Access:** The nodes are accessed remotely via Tailscale `100.x.x.x` IP addresses.
 *   **Editing:** Emacs subshells on the MacBook Air connect to the remote hosts via TRAMP.
-*   **Remote Structure:** The remote headless nodes have a user named `metaclaw`.
+*   **Remote Structure:** The remote headless nodes have a user named `metaclaw` (with necessary UID 1000 group privileges to avoid permission conflicts).
     *   `/home/metaclaw/repo` contains the MetaClaw clone.
     *   `/home/metaclaw/workspace` contains the `mcwksp` clone (specifically on the Control plane node).
-*   **Syncing:** To test new changes pushed from the MacBook Air, `make pull1` (or the equivalent Git sync command) is executed in the remote TRAMP subshells to pull down the latest GitHub commits before applying them to the live edge infrastructure.
+*   **Syncing:** To test new changes pushed from the MacBook Air, `git pull` is executed in the remote TRAMP subshells to pull down the latest GitHub commits before applying them to the live edge infrastructure.
 
 ---
 
@@ -203,37 +203,37 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.2 The Software Team
 *Domain: Engineering, architecture, testing, and deployment.*
-- **Lead:** `system_architect` [complex-model] - System design and local DAG delegation.
-- **Worker:** `lead_developer` [medium-model] - Application code and script execution.
-- **Worker:** `qa_engineer` [medium-model] - Test harness generation and edge-case execution.
-- **Worker:** `security_auditor` [simple-model] - CVE scanning and log/cost analysis.
-- **Worker:** `project_manager` [simple-model] - Sprint tracking and requirement validation.
+- **Lead:** `software_architect` [complex-model] - System design and local DAG delegation.
+- **Worker:** `software_dev` [medium-model] - Application code and script execution.
+- **Worker:** `software_qa` [medium-model] - Test harness generation and edge-case execution.
+- **Worker:** `software_auditor` [simple-model] - CVE scanning and log/cost analysis.
+- **Worker:** `software_pm` [simple-model] - Sprint tracking and requirement validation.
 
 ### 5.3 The Research Team
 *Domain: OSINT, financial modeling, and ambient technology scanning.*
-- **Lead:** `report_synthesizer` [complex-model] - Briefing compilation and local DAG delegation.
-- **Worker:** `web_scout` [medium-model] - Large-context web scraping and HTML extraction.
-- **Worker:** `financial_quant` [medium-model] - Python-based math and multi-currency analysis.
-- **Worker:** `horizon_scanner` [complex-model] - Academic paper and patent tracking.
-- **Worker:** `logistics_concierge` [simple-model] - Physical-world routing, visa, and hardware sourcing.
+- **Lead:** `research_synthesizer` [complex-model] - Briefing compilation and local DAG delegation.
+- **Worker:** `research_scout` [medium-model] - Large-context web scraping and HTML extraction.
+- **Worker:** `research_quant` [medium-model] - Python-based math and multi-currency analysis.
+- **Worker:** `research_scanner` [complex-model] - Academic paper and patent tracking.
+- **Worker:** `research_concierge` [simple-model] - Physical-world routing, visa, and hardware sourcing.
 
 ### 5.4 The Self (Modeling) Team
 *Domain: Psychological sandbox, relational topologies, and biometric evaluation (Eudaimonia/Hedonia/Health).*
 - **Lead:** `self_lead` [complex-model] - Models strict data pipelines and local DAG delegation.
-- **Worker:** `psychological_council` [frontier-model] - Secular humanist mixture-of-experts synthesis.
-- **Worker:** `human_simulator` [medium-model] - Ephemeral sandbox twin for testing interventions.
-- **Worker:** `socratic_mirror` [complex-model] - Cognitive friction and logical fallacy detection.
-- **Worker:** `relational_sociologist` [medium-model] - Non-monogamous network graph topology analysis.
-- **Worker:** `data_archivist` [simple-model] - Air-gapped biometric and digital exhaust retrieval.
-- **Worker:** `action_integrator` [simple-model] - Routine translation and calendar blocking.
+- **Worker:** `self_council` [frontier-model] - Secular humanist mixture-of-experts synthesis.
+- **Worker:** `self_simulator` [medium-model] - Ephemeral sandbox twin for testing interventions.
+- **Worker:** `self_mirror` [complex-model] - Cognitive friction and logical fallacy detection.
+- **Worker:** `self_sociologist` [medium-model] - Non-monogamous network graph topology analysis.
+- **Worker:** `self_archivist` [simple-model] - Air-gapped biometric and digital exhaust retrieval.
+- **Worker:** `self_integrator` [simple-model] - Routine translation and calendar blocking.
 
 ### 5.5 The Media Team
 *Domain: Creative asset generation and VRAM cold-swap execution.*
 - **Lead:** `media_producer` [complex-model] - Modality delegation and hardware concurrency limits.
-- **Worker:** `sfw_designer` [flux-1-dev] - Diagram and graphic layout rendering.
-- **Worker:** `nsfw_artist` [pony-diffusion-v6-xl] - Uncensored anatomical character styling.
-- **Worker:** `video_director` [local-video-diffusion] - Temporal synthesis and motion vectors.
-- **Worker:** `audio_engineer` [local-audio-pipeline] - Voice cloning and text-to-speech.
+- **Worker:** `media_designer` [flux-1-dev] - SFW diagram and graphic layout rendering.
+- **Worker:** `media_artist` [pony-diffusion-v6-xl] - NSFW anatomical character styling.
+- **Worker:** `media_video` [local-video-diffusion] - Temporal synthesis and motion vectors.
+- **Worker:** `media_audio` [local-audio-pipeline] - Voice cloning and text-to-speech.
 
 ### 5.6 The SRE (Grid) Team
 *Domain: Cluster stability, distributed network resilience, and system administration.*
@@ -246,6 +246,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `sre_thermal` [simple-model] - Temperature throttling and hardware protection for the basement nodes.
 - **Worker:** `sre_storage` [simple-model] - NVMe wear tracking and volume pruning.
 - **Worker:** `sre_sysadmin` [medium-model] - Host-level shell commands and file manipulation.
+- **Worker:** `sre_bandwidth` [simple-model] - Uplink management and Starlink latency profiling.
 
 ### 5.7 The Health Team
 *Domain: Physiological data orchestration, clinical diagnostics, metabolic/vascular/endocrine protocols, and physical rehabilitation.*
@@ -301,7 +302,7 @@ The architectural path maps out the progressive integration of heavy compute and
 - **Tier 2+:** Planning on purchasing 1-3 Mac Studio M5 Ultras in October 2026 when they are released, to exponentially expand the 'compute' farm capabilities.
 - **Tier 3-5:** When the Mac Studio(s) are active, the GMKtec EVO-X2 will be repurposed strictly to the 'execution' plane. A new, specialized workstation (see `docs/PLANES.md`) will be sourced for the 'archive' plane.
 
-### Hardware-to-Model Mappings
+### 7.1 Hardware-to-Model Mappings
 
 Based on VRAM limits, optimal model loading targets for current and future node acquisitions are detailed below:
 
@@ -311,11 +312,6 @@ Based on VRAM limits, optimal model loading targets for current and future node 
 - DeepSeek-R1: 70B (8-bit quantization)
 - Llama 3.1: 70B (8-bit quantization)
 - Gemma 4: 12B (4-bit quantization)
-- Pony Diffusion V6 XL (FP16)
-- RealVisXL (FP16)
-- LUSTIFY (FP16)
-- Flux.1 Dev (FP16)
-- Stable Diffusion 3 Large (FP16)
 
 **Single Mac Studio M5 Ultra (512GB - 1TB)**
 - DeepSeek-R1: 671B MoE (4-bit quantization)
@@ -333,3 +329,23 @@ Based on VRAM limits, optimal model loading targets for current and future node 
 - DeepSeek-R1: 671B MoE (16-bit / Unquantized)
 - Llama 3.1: 405B (16-bit) + Concurrent Agent KV Cache
 - DeepSeek-R1: 671B MoE (8-bit) + Llama 3.1: 405B (8-bit)
+
+### 7.2 Media-To-Model Mappings (SFW vs NSFW)
+
+Media generation workloads must be strictly bifurcated based on the model's safety alignment and censorship mechanisms.
+
+**Video Generation**
+*   **SFW Models:** `LTX-2.3` (Optimized DiT, 4K at 50fps), `Wan 2.7` (MoE Diffusion), `CogVideoX`.
+*   **NSFW Models:** `Wan 2.7 (TI2V-5B Variant)` (Used for I2V animation of NSFW base images), `Mochi 1` (Permissive open-weights).
+
+**Image Generation**
+*   **SFW Models:** `flux-1-dev` (Highly detailed, strict licensing/alignment), `Stable Diffusion 3 Large`.
+*   **NSFW Models:** `pony-diffusion-v6-xl` (Uncensored anatomical styling).
+
+**Audio Generation**
+*   **Speech (SFW/NSFW Agnostic):** `XTTSv2`, `Parler-TTS`. (TTS models lack RLHF filters and will read any provided script).
+*   **Foley/Sound Effects:** Custom fine-tunes of `AudioLDM2` required for specific non-speech generations (e.g., moans, environmental sounds).
+
+**Text Generation (Erotica)**
+*   **SFW General Models:** `qwen-3-32b`, `llama-4-109b`. (Heavily RLHF-aligned; will refuse or sanitize explicit prompts).
+*   **NSFW Erotica Models:** `Midnight-Miqu-70B`, `Llama-3-70B-Instruct-uncensored` (Stripped of corporate alignment filters for creative writing).
