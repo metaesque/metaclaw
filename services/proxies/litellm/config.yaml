@@ -24,12 +24,12 @@ model_list:
   - model_name: simple-model
     litellm_params:
       model: gemini/gemini-2.5-flash-lite
-      api_key: "os.environ/GEMINI_API_KEY_SIMPLE"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   - model_name: medium-model
     litellm_params:
       model: gemini/gemini-2.5-flash
-      api_key: "os.environ/GEMINI_API_KEY_MEDIUM"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   - model_name: complex-model
     litellm_params:
@@ -53,7 +53,7 @@ model_list:
   - model_name: prompt-embedding-model
     litellm_params:
       model: gemini/gemini-embedding-001
-      api_key: "os.environ/GEMINI_API_KEY_EMBEDDING"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   # --------------------------------------------------------------------------
   # FALLBACK CHAIN (Resilience against API downtime or rate limits)
@@ -64,12 +64,12 @@ model_list:
   - model_name: complex-model-fallback
     litellm_params:
       model: gemini/gemini-2.5-pro
-      api_key: "os.environ/GEMINI_API_KEY_MEDIUM"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   - model_name: reasoning-model-fallback
     litellm_params:
       model: gemini/gemini-3.1-pro-preview
-      api_key: "os.environ/GEMINI_API_KEY_COMPLEX"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   # --------------------------------------------------------------------------
   # ROUTER BINDINGS (System components)
@@ -78,12 +78,12 @@ model_list:
   - model_name: semantic-router
     litellm_params:
       model: gemini/gemini-embedding-001
-      api_key: "os.environ/GEMINI_API_KEY_EMBEDDING"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   - model_name: complexity-router
     litellm_params:
       model: gemini/gemini-3.1-flash-lite-preview
-      api_key: "os.environ/GEMINI_API_KEY_EMBEDDING"
+      api_key: "os.environ/GEMINI_API_KEY"
 
   # --------------------------------------------------------------------------
   # LOCAL LLM-AS-A-JUDGE (Air-gapped execution for privacy)

@@ -18,6 +18,9 @@ The following tasks are prioritized for immediate execution to stabilize the Tie
 6. **Build PostgreSQL Session Sync (ETL):** Replace the cumbersome `config` directory archiving process. Write a lightweight Python daemon/cron job to tail OpenClaw's `sessions.jsonl` files, parse the dictionaries, and `INSERT` the prompt/response pairs directly into a structured PostgreSQL schema, actively preserving the agent's stream of consciousness in a robust database.
 7. **Implement a `vcs` Provider:** Integrate a Local Version Control System (e.g., Gitea/Forgejo) to act as a secure, local scratchpad for agents to iteratively push and test code modifications before submitting final PRs to the main GitHub repository.
 8. **Implement a `ci` Provider:** Integrate a Continuous Integration pipeline (e.g., Woodpecker/Drone) triggered by the local `vcs` to mathematically test agent-generated code inside the Execution sandbox.
+9. **Automated CLI Output Redaction Script:** Write a Python utility to pipe and filter standard output from `make` and `docker` commands. The script should strip redundant lines and token-heavy delimiters (e.g., 80-character `===` blocks) to optimize pasted context windows for LLM interaction.
+10. **Enhance `parse_prompts_oc.py`:** Add `--start` and `--end` flags for time-bounded queries, and an `--llm` flag to strip unneeded whitespace and human-readable formatting, delivering hyper-dense context directly to LLM agents.
+11. **Profile-Driven Conceptual Model Mapping:** Update `bin/sysprofile.py` to interrogate the user (or automatically profile VRAM) to define the actual physical model strings (e.g., `ingu627/llama4-scout-q4:109b`) mapped to conceptual tiers. Store this in `profile.json` so `orchestrate.py` can automatically inject it into the proxy layer.
 
 ---
 

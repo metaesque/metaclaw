@@ -162,6 +162,11 @@ def main():
       seeded = True
 
     elif provider == "litellm":
+      # Clean up legacy TIER keys if present
+      for legacy_key in ["TIER_0_APIKEY", "TIER_1_APIKEY", "GEMINI_API_KEY_SIMPLE", "GEMINI_API_KEY_MEDIUM", "GEMINI_API_KEY_COMPLEX", "GEMINI_API_KEY_REASONING", "GEMINI_API_KEY_EMBEDDING"]:
+          if legacy_key in env_data:
+              del env_data[legacy_key]
+
       compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
       if cluster_tier >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
@@ -170,7 +175,8 @@ def main():
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
       else:
         env_data["COMPLEX_MODEL_ID"] = "gemini/gemini-3.1-pro-preview"
-        env_data["COMPLEX_MODEL_API_BASE"] = "https://gateway.ai.google"
+        if "COMPLEX_MODEL_API_BASE" in env_data:
+            del env_data["COMPLEX_MODEL_API_BASE"]
         if "COMPLEX_MODEL_API_KEY" in env_data:
             del env_data["COMPLEX_MODEL_API_KEY"]
       seeded = True
