@@ -1,4 +1,3 @@
-====> Makefile <====
 # Include global infrastructure state first
 SERVICES_DIR ?= services
 

@@ -37,11 +37,46 @@ The current environment operates on a remote, split-location architecture. The h
 
 ---
 
-## 2. Dynamic Hardware & Asset Ledger
+## 2. MetaClaw Development Environment & GitOps Workflow
+
+This section outlines the software development lifecycle used to continuously improve the MetaClaw framework and its sibling OpenClaw agent configurations.
+
+### 2.1 Repository Structure & Locations
+All active MetaClaw code modification happens on the Nomadic Client (MacBook Air). The root working directory is located at `/Users/wmh/src/wmh/src/thirdparty/metaclaw` (referred to hereafter as `$MC`).
+
+The `$MC` directory enforces strict data segregation using three nested subdirectories:
+*   **`repo/`**: A local clone of the public infrastructure repository (`https://github.com/metaesque/metaclaw`). This contains the Makefiles, Docker definitions, and Python orchestration scripts.
+*   **`workspace/`**: A local clone of the private agent repository (`https://github.com/metawade/mcwksp`). This contains the highly personal OpenClaw agent definitions, Markdown brains (`SOUL.md`), and YAML constraints.
+*   **`external/`**: Serves as the `EXTERNAL_DRIVE_PATH` mount point when the MacBook Air is operating locally as a Tier 0 test cluster.
+
+### 2.2 LLM Collaboration Workflow (Gemini)
+When initiating a collaborative coding session with an LLM (Gemini):
+1.  **Context Generation (`make txt`):** Run `make txt` at the top level of `$MC/repo`. This executes `bin/newcode.py`, concatenating all critical infrastructure files specified in `docs/MANIFEST.files` into a single payload (`$MC/repo/tmp/metaclaw.txt`). This payload is attached to the initial LLM prompt.
+2.  **Exclusion Rules:** The `metaclaw.txt` payload intentionally skips files listed in `docs/.MANIFEST.files.ignore` to prevent token bloat. The LLM does not need to see these skipped files.
+3.  **Workspace Context (`make wksp`):** Because the `workspace/` repository contains dozens of massive agent personalities, it is excluded by default. When agent configuration work is required, running `make wksp` generates `tmp/workspace.txt`. This file is manually trimmed down to the specific team being worked on before being attached to the LLM prompt.
+4.  **Reference Anchoring:** Whenever the LLM is instructed to read `docs/LLM.md`, it must refer *only* to the contents of that file as presented inside the attached `metaclaw.txt` context payload.
+
+### 2.3 Committing & Testing (The `gmc` command)
+1.  **Code Application:** When the LLM outputs a full-file formatting block, it is copied and pasted directly into the `$MC/repo/input` file.
+2.  **Execution:** The custom Bash command `gmc "<git commit message>"` is executed.
+3.  **The Pipeline:** The `gmc` command automatically triggers `make newcode` (which parses the `input` file and applies the atomic changes), followed by `git add`, `git commit`, and `git push` up to the origin.
+
+### 2.4 Headless Remote Testing (Tier 1/Tier 2)
+While code is written on the MacBook Air, execution testing frequently occurs on the headless Ubuntu nodes (K8 Plus or EVO-X2) residing in the AI Farm.
+*   **Access:** The nodes are accessed remotely via Tailscale `100.x.x.x` IP addresses.
+*   **Editing:** Emacs subshells on the MacBook Air connect to the remote hosts via TRAMP.
+*   **Remote Structure:** The remote headless nodes have a user named `metaclaw`.
+    *   `/home/metaclaw/repo` contains the MetaClaw clone.
+    *   `/home/metaclaw/workspace` contains the `mcwksp` clone (specifically on the Control plane node).
+*   **Syncing:** To test new changes pushed from the MacBook Air, `make pull1` (or the equivalent Git sync command) is executed in the remote TRAMP subshells to pull down the latest GitHub commits before applying them to the live edge infrastructure.
+
+---
+
+## 3. Dynamic Hardware & Asset Ledger
 
 This section tracks every computing and electrical asset in the ecosystem. OpenClaw uses this ledger to maintain programmatic reality-alignment regarding physical constraints.
 
-### 2.1 Host & Compute Assets
+### 3.1 Host & Compute Assets
 
 #### Nomadic Client Laptop
 * **Date Bought:** 2026-02-26
@@ -64,7 +99,7 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 * **Source URL:** https://www.amazon.ca/dp/B0F53MLYQ6
 * **Detailed Specifications:** AMD Ryzen AI Max+ 395 (16 Cores, 32 Threads, up to 5.1GHz). Integrated AMD Radeon 8060S GPU (40 Compute Units). 128GB LPDDR5X 8000MHz (16GB x 8 configuration) Unified Memory layout. 2TB PCIe 4.0 NVMe SSD. Dual 2.5G LAN ports, WiFi 7, Bluetooth 5.4, USB4 interfaces, SD Card Reader 4.0, support for Quad Screen 8K Displays.
 
-### 2.2 Network & Uplink Assets
+### 3.2 Network & Uplink Assets
 
 #### ISP Core Modem
 * **Date Bought:** N/A (Provided by ISP - Shaw)
@@ -87,7 +122,7 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 * **Source URL:** https://starlink.com/account/order/ORD-5713955-55547-56
 * **Detailed Specifications:** Circular parabolic antenna array with motorized mechanical actuation alignment. Operational power consumption range: 50W - 75W continuous draw. Dual-band 3x3 MIMO Wi-Fi 5 router base. Outdoor rated (IP54).
 
-### 2.3 Mobile Power & Storage Assets (Van Footprint)
+### 3.3 Mobile Power & Storage Assets (Van Footprint)
 
 #### Core LiFePO4 Battery Bank
 * **Date Bought:** 2026-06-03
@@ -140,33 +175,33 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 
 ---
 
-## 3. Equipment Acquisition Pipeline
+## 4. Equipment Acquisition Pipeline
 
 This section catalogs pending hardware evaluations required to stabilize global operations across nomadic and static deployments.
 
-### 3.1 Tier 1/2 Basement Safety Upgrades
+### 4.1 Tier 1/2 Basement Safety Upgrades
 * **Target Equipment:** Uninterruptible Power Supply (UPS) for Location B.
 * **Functional Mandate:** Must support pure sine wave AC output to safely protect the Binardat 10G backplane, GMKtec K8 Plus, and GMKtec EVO-X2 against grid voltage fluctuations or micro-blackouts in Lethbridge, AB. Must support an open network management interface (e.g., USB HID or SNMP via NUT/apcupsd) so that `sre_incident` can track grid drop events and cleanly command the OpenClaw database to run a safe `VACUUM` and graceful system shutdown before battery depletion.
 
-### 3.2 Van Electrical Power Infrastructure Expansion
+### 4.2 Van Electrical Power Infrastructure Expansion
 * **Target Equipment:** Pure Sine Wave High-Output Inverter (1500W - 2000W).
 * **Functional Mandate:** Required to scale van operations as mobile computing, tool usage, and logistics workloads grow. The current Potek 750W modified sine wave inverter is heavily constrained and insufficient for expanded multi-modality audio/video processing stations or heavy inductive tool draw.
 
-### 3.3 Nomadic Satellite Uplink Optimization
+### 4.3 Nomadic Satellite Uplink Optimization
 * **Target Equipment:** Next-Generation Flat/Starlink Mini Array Hardware.
 * **Functional Mandate:** Under evaluation by the `sre_power` agents to reduce setup times, minimize power profiles, and remove the mechanical failure vectors of the legacy 2022 Actuated dish while tracking WAN performance across varying geographical terrains.
 
 ---
 
-## 4. Agent Hierarchy & Topologies
+## 5. Agent Hierarchy & Topologies
 
 The system enforces a strict Vertical Command Structure to prevent routing loops and context dilution. Agents do not communicate peer-to-peer across domains.
 
-### 4.1 The Global Routing Layer
+### 5.1 The Global Routing Layer
 - **`judge` (Router) [simple-model]:** Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
 - **`orchestrator` (Strategic Planner) [medium-model]:** Global DAG generator. Delegates exclusively to the 7 Team Leads.
 
-### 4.2 The Software Team
+### 5.2 The Software Team
 *Domain: Engineering, architecture, testing, and deployment.*
 - **Lead:** `system_architect` [complex-model] - System design and local DAG delegation.
 - **Worker:** `lead_developer` [medium-model] - Application code and script execution.
@@ -174,7 +209,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `security_auditor` [simple-model] - CVE scanning and log/cost analysis.
 - **Worker:** `project_manager` [simple-model] - Sprint tracking and requirement validation.
 
-### 4.3 The Research Team
+### 5.3 The Research Team
 *Domain: OSINT, financial modeling, and ambient technology scanning.*
 - **Lead:** `report_synthesizer` [complex-model] - Briefing compilation and local DAG delegation.
 - **Worker:** `web_scout` [medium-model] - Large-context web scraping and HTML extraction.
@@ -182,7 +217,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `horizon_scanner` [complex-model] - Academic paper and patent tracking.
 - **Worker:** `logistics_concierge` [simple-model] - Physical-world routing, visa, and hardware sourcing.
 
-### 4.4 The Self (Modeling) Team
+### 5.4 The Self (Modeling) Team
 *Domain: Psychological sandbox, relational topologies, and biometric evaluation (Eudaimonia/Hedonia/Health).*
 - **Lead:** `self_lead` [complex-model] - Models strict data pipelines and local DAG delegation.
 - **Worker:** `psychological_council` [frontier-model] - Secular humanist mixture-of-experts synthesis.
@@ -192,7 +227,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `data_archivist` [simple-model] - Air-gapped biometric and digital exhaust retrieval.
 - **Worker:** `action_integrator` [simple-model] - Routine translation and calendar blocking.
 
-### 4.5 The Media Team
+### 5.5 The Media Team
 *Domain: Creative asset generation and VRAM cold-swap execution.*
 - **Lead:** `media_producer` [complex-model] - Modality delegation and hardware concurrency limits.
 - **Worker:** `sfw_designer` [flux-1-dev] - Diagram and graphic layout rendering.
@@ -200,7 +235,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `video_director` [local-video-diffusion] - Temporal synthesis and motion vectors.
 - **Worker:** `audio_engineer` [local-audio-pipeline] - Voice cloning and text-to-speech.
 
-### 4.6 The SRE (Grid) Team
+### 5.6 The SRE (Grid) Team
 *Domain: Cluster stability, distributed network resilience, and system administration.*
 - **Lead:** `sre_lead` [complex-model] - Disaster recovery and blameless post-mortems.
 - **Worker:** `sre_incident` [complex-model] - Emergency graceful degradation protocols.
@@ -212,7 +247,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `sre_storage` [simple-model] - NVMe wear tracking and volume pruning.
 - **Worker:** `sre_sysadmin` [medium-model] - Host-level shell commands and file manipulation.
 
-### 4.7 The Health Team
+### 5.7 The Health Team
 *Domain: Physiological data orchestration, clinical diagnostics, metabolic/vascular/endocrine protocols, and physical rehabilitation.*
 - **Lead:** `health_lead` [complex-model] - Diagnostic synthesis and local DAG delegation.
 - **Worker:** `health_heart` [medium-model] - Cardiovascular analysis (atherosclerosis, endothelial function).
@@ -226,7 +261,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `health_physio` [simple-model] - Structural rehabilitation and exercise translation.
 - **Worker:** `health_coach` [simple-model] - Adherence tracking and lifestyle implementation.
 
-### 4.8 The Finance Team
+### 5.8 The Finance Team
 *Domain: Financial modeling, market analysis, intrinsic valuation, risk assessment, tax strategy, and portfolio allocation.*
 - **Lead:** `finance_lead` [complex-model] - Financial orchestration and local DAG delegation.
 - **Worker:** `finance_manager` [complex-model] - Portfolio allocation, position sizing, and Buy/Hold/Sell execution plans.
@@ -237,26 +272,26 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `finance_quant` [medium-model] - Price action, momentum metrics, and technical indicators (RSI, MACD).
 - **Worker:** `finance_tax` [simple-model] - Capital gains calculations, cross-border tax implications, and asset location.
 
-## 5. Structural Interdependencies (Maintenance Ledger)
+## 6. Structural Interdependencies (Maintenance Ledger)
 
 As the OpenClaw environment evolves, failing to update paired files will result in architectural breakdown, routing loops, or VRAM exhaustion. Adhere to the following cascade rules:
 
-### 5.1 Adding or Removing a Subordinate Agent
+### 6.1 Adding or Removing a Subordinate Agent
 If you add a new worker (e.g., `sre_security`) to an existing team:
 1. **Update the Team Lead's System Prompt:** Modify `workspace/agents/<team>/<lead>/SOUL.md`. You must explicitly add the new agent to the `LOCAL DELEGATION MATRIX` section. The Team Lead cannot route to agents it does not know exist.
 2. **Update YAML & LiteLLM:** Ensure the `model:` specified in the new agent's YAML utilizes a conceptual tier (`simple-model`, etc.) registered in the Gateway proxy.
 
-### 5.2 Adding a New Team (Domain)
+### 6.2 Adding a New Team (Domain)
 If you create a completely new team branch:
 1. **Update the Global Orchestrator:** Modify `workspace/agents/orchestrator/SOUL.md`. You must append the new Team Lead to the `HIERARCHICAL DELEGATION MATRIX`.
 2. **Update the Escalation Protocol:** You must update the `THE ESCALATION PROTOCOL` section inside the `SOUL.md` of **every existing Team Lead** so they know they can escalate tasks requiring the new team's specific capabilities.
 
-### 5.3 Upgrading Hardware (Changing VRAM/RAM capacity)
+### 6.3 Upgrading Hardware (Changing VRAM/RAM capacity)
 If you add a new host or upgrade memory constraints:
 1. **Update Telemetry Memory:** Modify `workspace/agents/sre/telemetry/MEMORY.md` so the Warden agent knows the new absolute limits before throwing an Out-Of-Memory alert.
 2. **Update Producer Memory:** Modify `workspace/agents/media/producer/MEMORY.md`. If you gain enough VRAM to keep Flux and Qwen hot simultaneously, you must remove the strict concurrency/cold-swap limits from the Producer's configuration.
 
-## 6. Tier Journey & Hardware Scaling Projections
+## 7. Tier Journey & Hardware Scaling Projections
 
 The architectural path maps out the progressive integration of heavy compute and the eventual repositioning of edge nodes as the data demands increase.
 
@@ -298,4 +333,3 @@ Based on VRAM limits, optimal model loading targets for current and future node 
 - DeepSeek-R1: 671B MoE (16-bit / Unquantized)
 - Llama 3.1: 405B (16-bit) + Concurrent Agent KV Cache
 - DeepSeek-R1: 671B MoE (8-bit) + Llama 3.1: 405B (8-bit)
-

@@ -78,7 +78,35 @@ following output rules:
     provide all affected files in a single response to maintain system-wide
     parity.
 
-## 5. Validation & Teardown Protocol
+## 5. ANTI-TRUNCATION & FIDELITY MANDATE (CRITICAL)
+
+Because Language Models suffer from "Attention Drift" (attempting to re-synthesize untouched code rather than copying it verbatim), you must rigorously enforce the following anti-truncation rules:
+
+1. **No Stealth Refactoring:** You are strictly forbidden from "cleaning up", simplifying, or altering any code, comments, or Makefile targets outside the explicit scope of the user's prompt.
+2. **Token-for-Token Recall:** When outputting full files, you must reproduce the unmodified sections of the file with 100% fidelity to the **latest known state of the file** (incorporating all original payload data PLUS all modifications accepted in previous prompts within this chat session). Do not re-synthesize bash loops or logic blocks from memory.
+3. **The Fidelity Pledge:** Before outputting any code block, you must explicitly declare in plaintext: *"I have verified that no code outside the requested scope has been altered or removed."*
+
+## 6. The METACLAW PROTOCOL (Prompt Injection Block)
+
+To ensure the LLM retains maximum architectural context across long chat sessions, the human operator will prepend a standardized "METACLAW PROTOCOL" block to the top of every prompt.
+
+This block serves as an immediate "attention anchor," reminding the model of the current technical stack, the code extraction mandates, and the epistemic requirements before it processes the user's actual request.
+
+**Example Protocol Block:**
+```markdown
+# 🛠️ METACLAW PROTOCOL
+- **Current Task:** [Dynamic Task Description]
+- **State:** OpenClaw 2026.6.8 | Network: `openclaw-net` (Host: 18789)
+- **Stack:** LiteLLM Proxy | Postgres/pgvector | Redis | Ollama
+- **Code Mandate:** EXACTLY ONE 4-backtick plaintext (````plaintext) Markdown block containing FULL FILES only. No snippets. Update `./docs/MANIFEST.files` iff files are created/removed.
+- **Retrieval Mandate:** Do NOT synthesize existing files from memory. You must extract the exact, verbatim text of the file from the Prompt 1 payload before applying any diffs. Preserve all existing comments, variables, and utility targets.
+- **Epistemic Mandate:** Design creatively, but verify strictly. You MUST use Google Search to validate any API, CLI argument, or JSON schema property not explicitly defined in the context window. No syntax confabulation.
+- **Validation Mandate:** Explicitly list manual teardown steps and exact verification commands before generating code.
+- **Context Canary:** Confirm visibility of the `metaclaw.txt` payload in Prompt 1. Report number of prompt/response turns in this chat.
+---
+```
+
+## 7. Validation & Teardown Protocol
 
 Whenever you propose a structural or configuration change, you MUST explicitly
 output a "Validation & Teardown" section before the code block. This section
@@ -89,7 +117,7 @@ must detail:
     `docker logs`) or UI actions the user must take to prove the change was
     successful and did not introduce a regression.
 
-## 6. Architectural Constraints
+## 8. Architectural Constraints
 
 You must address the entire OpenClaw ecosystem across your recommendations,
 ensuring strict integration with:
@@ -110,7 +138,7 @@ ensuring strict integration with:
 * **Resilience:** All `docker-compose.yml` files must utilize strict
   `healthcheck` directives.
 
-## 7. Core Engineering Principles
+## 9. Core Engineering Principles
 
 * **Immutable Infrastructure:** Never use floating tags (`latest`, `main`). All
   external software, Docker images, and dependencies MUST be pinned to explicit,
@@ -129,7 +157,7 @@ ensuring strict integration with:
   config must be patched and injected via Python scripts (`patch_routing.py`)
   during `make apply`.
 
-## 8. Formatting and Output Protocol
+## 10. Formatting and Output Protocol
 
 * **Conditional Output:** ONLY output a code block if you are actively modifying, creating, or deleting files in response to the user's prompt. Do NOT output unchanged files just to fulfill the block requirement.
 * When modifying files, you **MUST** use a 4-backtick code block (````) with the language identifier **`plaintext`** immediately following the backticks.
@@ -146,7 +174,7 @@ ensuring strict integration with:
   `docs/MANIFEST.files` reflecting the exact new state. If no files have been
   added/moved/removed, you must **NOT** output a `docs/MANIFEST.files`.
 
-## 9. Markdown Formatting
+## 11. Markdown Formatting
 
 All markdown files must respect a strict **80-character line width limit.**
 Sensible exceptions include long URLs, shell commands, JSON schemas, or
