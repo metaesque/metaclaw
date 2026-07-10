@@ -305,7 +305,7 @@ ballooning costs (Context Drag). MetaClaw enforces a **Hierarchical Task Network
    (like `read_file` or `search_web`); they MUST delegate downwards using
    `sessions_send`.
 
-3. **Leaf Nodes (Execution):** Workers (like `lead_developer`) use
+3. **Leaf Nodes (Execution):** Workers (like `software_dev`) use
    `medium-model` or `simple-model` to execute discrete tools.
 
 ### The 4-Tier Judge

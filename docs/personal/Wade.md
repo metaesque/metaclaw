@@ -198,8 +198,9 @@ This section catalogs pending hardware evaluations required to stabilize global 
 The system enforces a strict Vertical Command Structure to prevent routing loops and context dilution. Agents do not communicate peer-to-peer across domains.
 
 ### 5.1 The Global Routing Layer
-- **`judge` (Router) [simple-model]:** Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
-- **`orchestrator` (Strategic Planner) [medium-model]:** Global DAG generator. Delegates exclusively to the 7 Team Leads.
+- **`judge`** [simple-model]: Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
+- **`orchestrator`** [medium-model]: Global DAG generator. Delegates exclusively to the 7 Team Leads.
+- **`generalist`** [complex-model]: Handles unmatched general-knowledge queries.
 
 ### 5.2 The Software Team
 *Domain: Engineering, architecture, testing, and deployment.*
@@ -232,12 +233,12 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Lead:** `media_producer` [complex-model] - Modality delegation and hardware concurrency limits.
 - **Worker:** `media_image` [flux-1-dev] - SFW diagram and graphic layout rendering.
 - **Worker:** `media_imagex` [pony-diffusion-v6-xl] - NSFW anatomical character styling.
-- **Worker:** `media_video` [ltx-2-3] - SFW temporal synthesis and motion vectors.
-- **Worker:** `media_videox` [wan-2-7-i2v] - NSFW temporal synthesis via Image-to-Video.
-- **Worker:** `media_audio` [xttsv2] - SFW voice cloning and text-to-speech.
-- **Worker:** `media_audiox` [audioldm2-custom] - NSFW sound effects and foley generation.
+- **Worker:** `media_video` [complex-model] - SFW temporal synthesis and motion vectors.
+- **Worker:** `media_videox` [complex-model] - NSFW temporal synthesis via Image-to-Video.
+- **Worker:** `media_audio` [complex-model] - SFW voice cloning and text-to-speech.
+- **Worker:** `media_audiox` [complex-model] - NSFW sound effects and foley generation.
 - **Worker:** `media_text` [complex-model] - SFW creative story writing and script generation.
-- **Worker:** `media_textx` [midnight-miqu-70b] - NSFW explicit creative writing and prose.
+- **Worker:** `media_textx` [frontier-model] - NSFW explicit creative writing and prose.
 
 ### 5.6 The SRE (Grid) Team
 *Domain: Cluster stability, distributed network resilience, and system administration.*
@@ -340,7 +341,7 @@ Media generation workloads must be strictly bifurcated based on the model's safe
 
 **Video Generation**
 *   **SFW Models:** `LTX-2.3` (Optimized DiT, 4K at 50fps), `Wan 2.7` (MoE Diffusion), `CogVideoX`.
-*   **NSFW Models:** `Wan 2.7 (TI2V-5B Variant)` (Used for I2V animation of NSFW base images), `Mochi 1` (Permissive open-weights).
+*   **NSFW Models:** `Wan 2.7 (TI2V-5B Variant)` (Used for I2V animation of NSFW base images), `Mochi 1` (Permissive open-weights), `LTX-2.3 (IC-LoRA Workflows)`.
 
 **Image Generation**
 *   **SFW Models:** `flux-1-dev` (Highly detailed, strict licensing/alignment), `Stable Diffusion 3 Large`.
