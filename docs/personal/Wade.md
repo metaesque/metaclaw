@@ -262,7 +262,7 @@ The architectural path maps out the progressive integration of heavy compute and
 
 - **Tier 0:** MacBook Air has been tested as the isolated baseline.
 - **Tier 1:** GMKtec K8 Plus has been partially tested (still under active stabilization).
-- **Tier 2:** GMKtec K8 Plus (Control Plane) + GMKtec EVO-X2 (Compute Plane) has been partially tested, but 'compute' is not yet set up.
+- **Tier 2:** GMKtec K8 Plus (Control Plane) + GMKtec EVO-X2 (Compute Plane) is fully active and operational. The compute plane successfully handles bare-metal Ollama inference.
 - **Tier 2+:** Planning on purchasing 1-3 Mac Studio M5 Ultras in October 2026 when they are released, to exponentially expand the 'compute' farm capabilities.
 - **Tier 3-5:** When the Mac Studio(s) are active, the GMKtec EVO-X2 will be repurposed strictly to the 'execution' plane. A new, specialized workstation (see `docs/PLANES.md`) will be sourced for the 'archive' plane.
 
@@ -298,3 +298,4 @@ Based on VRAM limits, optimal model loading targets for current and future node 
 - DeepSeek-R1: 671B MoE (16-bit / Unquantized)
 - Llama 3.1: 405B (16-bit) + Concurrent Agent KV Cache
 - DeepSeek-R1: 671B MoE (8-bit) + Llama 3.1: 405B (8-bit)
+

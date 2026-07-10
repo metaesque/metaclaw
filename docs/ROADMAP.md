@@ -47,9 +47,9 @@ The dedicated edge hardware has been successfully physically provisioned. Both n
 3. **Workspace Decoupling:** Safely extracted the agent definitions into the `mcwksp` repository to protect the mutable markdown brains during infrastructure resets.
 
 ### Step B: Evolve the Compute Node (Tier 2 Compute Plane)
-**Status: PENDING (Next Immediate Step).**
-We must configure the EVO X2 to act as the dedicated **Tier 2 LLM Runner** to eliminate expensive API costs for trivial agent actions.
-1. **Local Model Hosting:** Configure the LLM Runner (Ollama or vLLM) to utilize the EVO X2's Strix Halo APU and unified memory for high-speed local inference.
+**Status: COMPLETED.** The EVO X2 is actively running Ollama and Tailscale on bare-metal.
+We have successfully configured the EVO X2 to act as the dedicated **Tier 2 LLM Runner** to eliminate expensive API costs for agent actions.
+1. **Local Model Hosting:** (Completed) The LLM Runner (Ollama) is utilizing the EVO X2's Strix Halo APU and unified memory for high-speed local inference.
 2. **Proxy Routing Matrix:** Update LiteLLM's `config.yaml` on the Control Node to route `medium-model` tasks (e.g., tool execution) to fast models on the K8 Plus, while routing `complex-model` tasks to massive reasoning models (e.g., Llama 4 109B) over the LAN to the EVO-X2.
 3. **Hot/Cold Swapping:** Establish logic/timeout protocols within the runners to seamlessly swap specialized models (vision, video) into VRAM when required and evict them when idle.
 

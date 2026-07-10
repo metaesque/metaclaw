@@ -46,6 +46,11 @@
 ../workspace/agents/finance/tax/SECURITY.md
 ../workspace/agents/finance/tax/SOUL.md
 ../workspace/agents/finance/tax/TOOLS.md
+../workspace/agents/generalist.yaml
+../workspace/agents/generalist/IDENTITY.md
+../workspace/agents/generalist/MEMORY.md
+../workspace/agents/generalist/SECURITY.md
+../workspace/agents/generalist/SOUL.md
 ../workspace/agents/health/brain.yaml
 ../workspace/agents/health/brain/IDENTITY.md
 ../workspace/agents/health/brain/MEMORY.md
@@ -308,6 +313,11 @@
 ../workspace/agents/sre/storage/SECURITY.md
 ../workspace/agents/sre/storage/SOUL.md
 ../workspace/agents/sre/storage/TOOLS.md
+../workspace/agents/sre/sysadmin.yaml
+../workspace/agents/sre/sysadmin/IDENTITY.md
+../workspace/agents/sre/sysadmin/MEMORY.md
+../workspace/agents/sre/sysadmin/SECURITY.md
+../workspace/agents/sre/sysadmin/SOUL.md
 ../workspace/agents/sre/telemetry.yaml
 ../workspace/agents/sre/telemetry/IDENTITY.md
 ../workspace/agents/sre/telemetry/MEMORY.md
