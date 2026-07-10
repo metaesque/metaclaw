@@ -33,19 +33,22 @@ model_list:
 
   - model_name: complex-model
     litellm_params:
-      model: gemini/gemini-3.1-pro-preview
-      api_key: "os.environ/GEMINI_API_KEY_COMPLEX"
+      model: "os.environ/COMPLEX_MODEL_ID"
+      api_base: "os.environ/COMPLEX_MODEL_API_BASE"
+      api_key: "os.environ/COMPLEX_MODEL_API_KEY"
 
   # The critical alias to catch OpenClaw's literal provider string
   - model_name: litellm/complex-model
     litellm_params:
-      model: gemini/gemini-3.1-pro-preview
-      api_key: "os.environ/GEMINI_API_KEY_COMPLEX"
+      model: "os.environ/COMPLEX_MODEL_ID"
+      api_base: "os.environ/COMPLEX_MODEL_API_BASE"
+      api_key: "os.environ/COMPLEX_MODEL_API_KEY"
 
   - model_name: reasoning-model
     litellm_params:
-      model: gemini/gemini-3-deep-think
-      api_key: "os.environ/GEMINI_API_KEY_REASONING"
+      model: "os.environ/COMPLEX_MODEL_ID"
+      api_base: "os.environ/COMPLEX_MODEL_API_BASE"
+      api_key: "os.environ/COMPLEX_MODEL_API_KEY"
 
   - model_name: prompt-embedding-model
     litellm_params:
