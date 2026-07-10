@@ -41,12 +41,16 @@ To successfully deploy the ecosystem, the services defined in `SERVICES.md` are
 logically (and eventually physically) isolated into four hardware Planes based
 on their resource utilization profiles and security trust levels.
 
+**1. Shared Hardware Assumptions:** A single physical computer can run one or more planes. Planes are abstract functional boundaries, not strict hardware boundaries. This flexibility is what allows Tier 0 and Tier 1 deployments to function on a single machine.
+**2. The Singular Control Plane:** Only one computer in the cluster may implement the Control Plane. Running multiple OpenClaw gateways on different nodes attempting to share the same workspace creates race conditions and database locks. The Control Plane is the undisputed master node of the cluster.
+**3. Execution and Archive Fluidity:** The Execution Plane (Sandboxes, CI) and Archive Plane (Vector DBs, Logging) frequently run on the same computer (Tier 2). However, they can be split across multiple computers (Tier 3A/3E). They are bundled based on complementary resource needs, not low-level binary coupling.
+**4. Compute Plane Expansion:** Unlike the Control plane, the Compute plane is inherently expandable. It starts on shared hardware, moves to a dedicated GPU node, and can infinitely expand to an array of multiple distinct nodes to run parallel inference or shard massive LLMs.
+
 **THE MESH INVARIANT (OPTIONAL):** If you require remote access outside of your
 home LAN, **Overlay Networks (e.g., Tailscale)** must run across ALL hardware
 nodes concurrently. They provide the foundational `100.x.y.z` zero-trust mesh
 network that allows these distinct tiers to securely discover and communicate
 with each other over the WAN, bypassing Carrier-Grade NAT (CGNAT) and firewalls.
-If you strictly operate on a single home LAN, this service is unnecessary.
 
 **CRITICAL LATENCY INVARIANT:** The Control, Context, and Execution Planes
 **MUST** reside on the same physical Local Area Network (LAN). Vector database
@@ -84,15 +88,14 @@ Meta<Claw> draws a strict architectural distinction between a "Tier" and a
   for local LLM inference, moving that workload off the Control node to avoid
   cloud-based API Keys and bills.
 
-* **Tier 3** advances the cluster by adding a dedicated Execution Node, whose
-  hardware is heavily optimized for sandboxing and volatile CI workloads.
-
-* **Tier 4** advances the cluster by adding a dedicated Archive Node, whose
+* **Tier 3A** advances the cluster by adding a dedicated Archive Node, whose
   hardware (ECC RAM, high-IOPS NVMe arrays) is explicitly optimized to host
   massive vector databases and observability telemetry.
 
-* **Tier 5** introduces an edge computer for allowing a user to share some of
-  their compute resources with other users (Future Roadmap).
+* **Tier 3E** advances the cluster by adding a dedicated Execution Node, whose
+  hardware is heavily optimized for sandboxing and volatile CI workloads.
+
+* **Tier 4** represents the fully Distributed Farm, with at least 4 independent nodes natively handling their respective planes.
 
 ## Physical Network Standards
 

@@ -126,8 +126,8 @@ if 'tools' in data.get('gateway', {}):
     del data['gateway']['tools']
 
 tools_cfg = setdefault_path(data, ['tools'])
-sessions_cfg = setdefault_path(tools_cfg, ['sessions'])
-sessions_cfg['visibility'] = 'all'
+agent2agent_cfg = setdefault_path(tools_cfg, ['agentToAgent'])
+agent2agent_cfg['enabled'] = True
 
 openai_prov = setdefault_path(data, ['models', 'providers', 'openai'])
 openai_prov['baseUrl'] = "http://active-proxy:4000/v1"
@@ -298,5 +298,5 @@ print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print("SUCCESS: Unlocked tools.sessions.visibility to enable hierarchical agent communication.")
+print("SUCCESS: Unlocked tools.agentToAgent.enabled to permit cross-agent messaging.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")

@@ -3,7 +3,7 @@
 We are beginning a new development session for the MetaClaw framework.
 
 ## Working Directory
-- Your target repository is located at: `/root/.openclaw/workspace/src/metaclaw`
+- Your target repository is located at: `/home/node/.openclaw/workspace/src/metaclaw`
 - You must prepend this absolute path to all relative file paths cited during this session.
 
 ## The Staging vs. Root Boundary
@@ -13,7 +13,7 @@ We are beginning a new development session for the MetaClaw framework.
 
 ## MetaClaw Documentation Topology
 
-To optimize your context window and prevent token bloat, MetaClaw documentation is distributed hierarchically. Use your `read_file` or `search` tools to retrieve deeper context based on this index:
+To optimize your context window and prevent token bloat, MetaClaw documentation is distributed hierarchically. Use your `read_file` or `execute_shell_command` tools to retrieve deeper context based on this index:
 
 * **Level 1: System Invariants & Topography**
   * `docs/ARCHITECTURE.md`: Read this for deep operational rules, networking standards, cluster provisioning steps, and routing philosophy.
@@ -25,6 +25,9 @@ To optimize your context window and prevent token bloat, MetaClaw documentation 
   * `docs/HOWTO.md`: Read this for Standard Operating Procedures (SOPs) like remote Tailscale access, Git recovery, and cluster restarts.
   * `docs/ROADMAP.md`: Read this to understand current development priorities and the strategic roadmap.
 
+**CRITICAL OPTIMIZATION: BATCH FILE READING**
+To conserve API tokens and reduce latency, do NOT issue separate sequential tool calls to read individual files. Instead, use the `execute_shell_command` tool to batch read multiple files in a single pass (e.g., `cat docs/PLANES.md docs/TIERS.md`).
+
 ## Environment Variables & Secrets
 - Because the staging directory is populated by `make meta-push`, some files are missing. Notably, instantiated `services/*/*/.env` files may not exist in staging.
 - Do *not* attempt to globally instantiate all secrets in the staging directory via `bin/env_instantiate.py`.
@@ -33,7 +36,7 @@ To optimize your context window and prevent token bloat, MetaClaw documentation 
 ## Operational Rules & Safety for this Session
 
 1. **Never Execute Destructive Host Lifecycle Targets:** Do NOT run `make factory-reset`, `make factory-reset-soft`, `make factory-reset-hard`, `make clean-state`, `make meta-down`, or any target that completely tears down the Gateway or the network. Doing so destroys the OpenClaw container you are currently running in (suicide).
-2. **Container Restarts & The Human-in-the-Loop Loop:** Modifying files inside a running container via `docker exec` does not persist those changes to the MetaClaw codebase. Update the source files in the staging directory, then instruct the human to execute `make meta-pull` followed by the appropriate `make apply` target.
+2. **Container Restarts & The Human-in-the-Loop Loop:** Modifying files inside a running container via `execute_shell_command` does not persist those changes to the MetaClaw codebase. Update the source files in the staging directory, then instruct the human to execute `make meta-pull` followed by the appropriate `make apply` target.
 3. **Docker in Docker:** When using your `execute_shell_command` tool, you are calling Docker from within the OpenClaw Sandbox container (which mounts the host's Docker socket). You can use `docker ps` and `docker exec` normally to troubleshoot.
 4. **Test Your Work:** Before telling me a task is complete, use your shell execution tool to run syntax checks or test your code inside the sandbox.
 
