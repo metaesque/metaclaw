@@ -25,7 +25,7 @@ The current environment operates on a remote, split-location architecture. The h
 **Node 02: GMKtec EVO-X2 (The Inference Engine)**
 - **Role:** The Compute Plane. Handles deep reasoning, DAG generation, complex coding, and heavy creative asset generation.
 - **Resident LLMs (Hot):**
-  - `qwen-3-32b` (4-bit, ~20GB VRAM). The primary Orchestrator, coding, and `medium-model` / `complex-model` engine.
+  - `ingu627/llama4-scout-q4:109b` (4-bit, ~65GB footprint). The primary text orchestration, coding, and `complex-model` / `reasoning-model` engine.
 - **Resident LLMs (Cold-Swappable):**
   - `flux-1-dev` (FP16, ~24GB VRAM) for SFW imagery.
   - `pony-diffusion-v6-xl` (FP16, ~12GB VRAM) for NSFW imagery.
@@ -354,7 +354,7 @@ Based on VRAM limits, optimal model loading targets for current and future node 
 
 Media generation workloads must be strictly bifurcated based on the model's safety alignment and censorship mechanisms.
 
-**Video Generation**
+**Video Generation
 *   **SFW Models:** `LTX-2.3` (Optimized DiT, 4K at 50fps), `Wan 2.7` (MoE Diffusion), `CogVideoX`.
 *   **NSFW Models:** `Wan 2.7 (TI2V-5B Variant)` (Used for I2V animation of NSFW base images), `Mochi 1` (Permissive open-weights), `LTX-2.3 (IC-LoRA Workflows)`.
 

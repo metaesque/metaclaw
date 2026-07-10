@@ -165,7 +165,7 @@ def main():
       compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
       if cluster_tier >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
-        env_data["COMPLEX_MODEL_ID"] = "ollama/qwen-3-32b"
+        env_data["COMPLEX_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
       else:
