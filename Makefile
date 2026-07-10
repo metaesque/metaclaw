@@ -1,3 +1,4 @@
+====> Makefile <====
 # Include global infrastructure state first
 SERVICES_DIR ?= services
 
@@ -49,7 +50,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize
+.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
 
 # ==============================================================================
 # ENVIRONMENT BOOTSTRAPPING & UPDATES
@@ -289,26 +290,17 @@ wizard-run: bootstrap docs
 	@echo "################################################################################"
 	@echo "# APPLYING GATEWAY CONFIGURATION"
 	@echo "################################################################################"
-	@if [ -L "$(GATEWAY_SUBDIR)" ] || [ -d "$(GATEWAY_SUBDIR)" ]; then \
-		echo "Applying routing patch..."; \
-		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch; \
-	else \
-		echo "Gateway service not active on this node. Skipping routing patch."; \
-	fi
+	@echo "Applying routing patch..."
+	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch
 	@echo "################################################################################"
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
 		echo "# WIZARD COMPLETE. LAUNCHING WEB GUI..."; \
 		echo "################################################################################"; \
 		echo ""; \
-		if [ -L "$(GATEWAY_SUBDIR)" ] || [ -d "$(GATEWAY_SUBDIR)" ]; then \
-			echo "Waiting for OpenClaw Gateway to finish booting..."; \
-			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
-			$(PYTHON_BIN) ./bin/browser.py --close; \
-			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui-setup; \
-		else \
-			echo "Gateway service not active on this node. GUI launch skipped."; \
-			$(PYTHON_BIN) ./bin/browser.py --close; \
-		fi; \
+		echo "Waiting for OpenClaw Gateway to finish booting..."; \
+		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
+		$(PYTHON_BIN) ./bin/browser.py --close; \
+		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui-setup; \
 	else \
 		echo "# BATCH WIZARD COMPLETE. ALL SYSTEMS ONLINE."; \
 		echo "################################################################################"; \
@@ -469,3 +461,10 @@ FORCE:
 
 tst:
 	echo "PYTHON_BIN=$(PYTHON_BIN)"
+
+# WHAT IT DOES: Concatenates the workspace agents into a single `.txt` payload for injection into an LLM context window.
+wksp: tmp/workspace.txt
+tmp/workspace.txt: FORCE | $(PYTHON_BIN)
+	@mkdir -p tmp
+	$(PYTHON_BIN) ./bin/newcode.py -s docs/WORKSPACE.files > tmp/workspace.txt
+	@echo "Workspace manifest generated at: tmp/workspace.txt"

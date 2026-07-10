@@ -45,6 +45,9 @@ services/sandboxes/docker-dood/index.md.fixme
 services/vcs
 tmp/metaclaw.zip
 tmp/mc
+tmp/metaclaw.txt
+tmp/metaclaw2.txt
+tmp/workspace.txt
 tosort/
 workspace/
 .workspace.template/
