@@ -10,6 +10,14 @@ sys.path.insert(
 )
 import metaclaw
 
+def get_tier_weight(t):
+    """Safely translates string tiers (e.g., '3E') into integer weights for logic evaluation."""
+    if isinstance(t, int): return t
+    t = str(t).upper()
+    if t.startswith('3'): return 3
+    if t == '4': return 4
+    return int(t) if t.isdigit() else 0
+
 def main():
   """
   The MetaClaw State Enforcer.
@@ -98,7 +106,7 @@ def main():
   # 2. PROVISIONING
   # --------------------------------------------------------------------------
   cluster_nodes = profile.get("nodes", [])
-  cluster_tier = max([n.get("tier", 0) for n in cluster_nodes] + [0])
+  cluster_tier_value = max([get_tier_weight(n.get("tier", 0)) for n in cluster_nodes] + [0])
 
   for svc, prov_data in providers.items():
     if isinstance(prov_data, dict):
@@ -168,17 +176,15 @@ def main():
               del env_data[legacy_key]
 
       compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
-      if cluster_tier >= 2 and compute_node:
+      if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
         env_data["COMPLEX_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
       else:
         env_data["COMPLEX_MODEL_ID"] = "gemini/gemini-3.1-pro-preview"
-        if "COMPLEX_MODEL_API_BASE" in env_data:
-            del env_data["COMPLEX_MODEL_API_BASE"]
-        if "COMPLEX_MODEL_API_KEY" in env_data:
-            del env_data["COMPLEX_MODEL_API_KEY"]
+        env_data["COMPLEX_MODEL_API_BASE"] = ""
+        env_data["COMPLEX_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
       seeded = True
 
     if seeded:

@@ -121,7 +121,11 @@ auth = setdefault_path(data, ['gateway', 'auth'])
 auth['token'] = proxy_key
 
 # Fix cross-agent delegation visibility error
-tools_cfg = setdefault_path(data, ['gateway', 'tools'])
+# Remove the invalid 'gateway' nesting for 'tools' created in a previous turn
+if 'tools' in data.get('gateway', {}):
+    del data['gateway']['tools']
+
+tools_cfg = setdefault_path(data, ['tools'])
 sessions_cfg = setdefault_path(tools_cfg, ['sessions'])
 sessions_cfg['visibility'] = 'all'
 
@@ -294,5 +298,5 @@ print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print("SUCCESS: Unlocked gateway.tools.sessions.visibility to enable hierarchical agent communication.")
+print("SUCCESS: Unlocked tools.sessions.visibility to enable hierarchical agent communication.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")

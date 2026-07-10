@@ -131,7 +131,7 @@ def platform_details():
 
 def main():
   parser = argparse.ArgumentParser(description="Generate a MetaClaw hardware and provider profile.")
-  parser.add_argument('-t', '--tier', type=int, default=-1, help="The architectural tier (0-4) of the cluster.")
+  parser.add_argument('-t', '--tier', type=str, default="", help="The architectural tier (0, 1, 2, 3E, 3A, 4) of the cluster.")
   parser.add_argument('-p', '--planes', type=str, default="", help="Comma-separated planes this host represents.")
   parser.add_argument('-w', '--wan', type=str, default="", help="Require WAN access (y/n).")
   parser.add_argument('-hl', '--headless', type=str, default="", help="Is this node a headless server? (y/n)")
@@ -139,39 +139,37 @@ def main():
   args = parser.parse_args()
 
   tier = args.tier
-  if tier == -1:
+  if not tier:
     border = "=" * 80
     print(border)
     print(" Meta<Claw> Cluster Profiler")
     print(border)
-    print("What tier is this host in? (0-4)")
-    print("  [0] Tier 0: The Day 1 Minilith (Constrained dual-use laptop)")
-    print("  [1] Tier 1: The Month 2 Monolith (Dedicated Mini-PC, all-in-one)")
-    print("  [2] Tier 2: Data Sovereignty (Adds Compute Node)")
-    print("  [3] Tier 3: Sandbox Extraction (Adds Execution Node)")
-    print("  [4] Tier 4: Archive Expansion (Adds Archive Node)")
-    default_tier = 0
+    print("What tier is this host in?")
+    print("  [0]  Tier 0: The Day 1 Minilith (Constrained dual-use laptop)")
+    print("  [1]  Tier 1: The Month 2 Monolith (Dedicated Mini-PC, all-in-one)")
+    print("  [2]  Tier 2: Data Sovereignty (Adds Compute Node)")
+    print("  [3E] Tier 3E: Sandbox Extraction (Adds Execution Node)")
+    print("  [3A] Tier 3A: Archive Extraction (Adds Archive Node)")
+    print("  [4]  Tier 4: The Distributed Farm (4 Nodes)")
+    default_tier = "0"
     while True:
-      try:
-        choice = input("Enter tier [%s]: " % default_tier)
-        if not choice:
-          tier = default_tier
-          break
-        else:
-          choice = int(choice)
-          if 0 <= choice <= 4:
-            tier = choice
-            break
-          else:
-            print("Please enter a number between 0 and 4.")
-      except ValueError:
-        print("Invalid input. Please enter an integer.")
+      choice = input("Enter tier [%s]: " % default_tier).strip().upper()
+      if not choice:
+        tier = default_tier
+        break
+      elif choice in ['0', '1', '2', '3E', '3A', '4']:
+        tier = choice
+        break
+      else:
+        print("Please enter a valid tier (0, 1, 2, 3E, 3A, 4).")
+  else:
+    tier = tier.strip().upper()
 
   planes_input = args.planes
   if not planes_input:
-    if tier in [0, 1]:
+    if tier in ["0", "1"]:
       planes_input = "control,compute,execution,archive"
-    elif tier == 2:
+    elif tier == "2":
       print("\nWhat role does this node play in your Tier 2 cluster?")
       print("  [1] Compute node (provides access to large LLMs)")
       print("  [2] Control node without runner (control + execution + archive)")
@@ -189,8 +187,8 @@ def main():
           break
         else:
           print("Invalid choice. Enter 1, 2, or 3.")
-    elif tier == 3:
-      print("\nWhat role does this node play in your Tier 3 cluster?")
+    elif tier == "3E":
+      print("\nWhat role does this node play in your Tier 3E cluster?")
       print("  [1] Compute node (provides access to large LLMs)")
       print("  [2] Execution node (sandboxes and volatile CI workloads)")
       print("  [3] Control node without runner (control + archive)")
@@ -211,7 +209,29 @@ def main():
           break
         else:
           print("Invalid choice. Enter 1, 2, 3, or 4.")
-    elif tier == 4:
+    elif tier == "3A":
+      print("\nWhat role does this node play in your Tier 3A cluster?")
+      print("  [1] Compute node (provides access to large LLMs)")
+      print("  [2] Archive node (vector databases and observability)")
+      print("  [3] Control node without runner (control + execution)")
+      print("  [4] Control node with runner (control + execution + compute)")
+      while True:
+        choice = input("Enter choice [1]: ").strip()
+        if not choice or choice == '1':
+          planes_input = "compute"
+          break
+        elif choice == '2':
+          planes_input = "archive"
+          break
+        elif choice == '3':
+          planes_input = "control,execution"
+          break
+        elif choice == '4':
+          planes_input = "control,execution,compute"
+          break
+        else:
+          print("Invalid choice. Enter 1, 2, 3, or 4.")
+    elif tier == "4":
       print("\nWhat role does this node play in your Tier 4 cluster?")
       print("  [1] Compute node (provides access to large LLMs)")
       print("  [2] Execution node (sandboxes and volatile CI workloads)")

@@ -60,7 +60,7 @@
   "tier-2": {
     "uid": "tier-2",
     "name": "Tier 2: Data Sovereignty",
-    "setup": "The cluster expands to two or more machines. The Compute Plane is migrated off the Monolith and onto a dedicated GPU tower. The Proxy routes requests locally across the LAN to the new Compute node(s).",
+    "setup": "The cluster expands to two machines. The Compute Plane is migrated off the Monolith and onto a dedicated inference node. The Control node manages routing, execution, and archiving, while delegating heavy reasoning to the Compute node.",
     "benefit": "Absolute data privacy and zero recurring API costs. Infinite agent loops can run overnight without accumulating massive bills.",
     "resources": {
       "min": {
@@ -86,11 +86,11 @@
       }
     }
   },
-  "tier-3": {
-    "uid": "tier-3",
-    "name": "Tier 3: The Sandbox Extraction",
-    "setup": "The cluster expands to three or more machines. The Execution Plane is migrated off the Control Node and onto a dedicated Sandbox Node.",
-    "benefit": "Safe execution of highly volatile workloads. Hallucinated code or memory-leaking browsers will not crash the core Gateway.",
+  "tier-3e": {
+    "uid": "tier-3e",
+    "name": "Tier 3E: Sandbox Extraction",
+    "setup": "The cluster expands to three machines. The Execution Plane is migrated off the Control Node and onto a dedicated Sandbox Node. The Control Node continues to host the Archive Plane.",
+    "benefit": "Safe execution of highly volatile workloads. Hallucinated code or memory-leaking browsers will not crash the core Gateway or corrupt the databases.",
     "resources": {
       "min": {
         "ram": "32GB DDR4. While 16GB is technically possible, it is highly unsafe for the Execution Plane. Modern web pages loaded via Playwright can consume 500MB to 1GB of RAM per tab. Furthermore, CI pipelines running build steps (like `npm install` or compiling binaries) experience massive RAM spikes. 32GB provides the necessary buffer for unpredictable spikes.",
@@ -115,32 +115,61 @@
       }
     }
   },
-  "tier-4": {
-    "uid": "tier-4",
-    "name": "Tier 4: The Archive Expansion",
-    "setup": "The cluster expands to four or more machines. The Archive Plane is migrated off the Control Node onto a dedicated Context Node. The original Month 2 Monolith is now stripped of heavy workloads, running strictly as the Control Plane.",
-    "benefit": "SRE-grade stability with near-infinite, lightning-fast semantic recall. No hardware is wasted; earlier machines are perfectly repurposed.",
+  "tier-3a": {
+    "uid": "tier-3a",
+    "name": "Tier 3A: Archive Extraction",
+    "setup": "The cluster expands to three machines. The Archive Plane is migrated off the Control Node onto a dedicated Context Node. The Control Node continues to host the Execution Plane.",
+    "benefit": "SRE-grade stability with near-infinite, lightning-fast semantic recall, keeping databases completely isolated from gateway traffic spikes.",
     "resources": {
       "min": {
-        "ram": "128GB DDR5. This is the absolute floor for Tier 4. Relational/Vector databases like PostgreSQL require massive `shared_buffers` allocations (typically 40GB to 60GB on a 128GB system) to keep the active Hierarchical Navigable Small World (HNSW) index graph entirely in memory.",
-        "cpu": "12-Core / 24-Thread (e.g., AMD Ryzen 9 or Intel Core i9). Log ingestion and vector similarity calculations are highly parallelized. Quickwit, for example, requires roughly 1 CPU core and 4GB of RAM for every 7.5MB/s of log indexing throughput.",
-        "gpu": "0GB (Integrated Graphics). The Archive Plane does not perform LLM inference or DOM rendering. Dedicated PCIe accelerators are unnecessary at this scale.",
-        "storage": "2TB to 4TB NVMe SSD (PCIe Gen 4). A single 1536-dimensional vector consumes roughly 6KB. 10 million vectors require 60GB for raw storage alone, before accounting for the HNSW index overhead, continuous SigNoz distributed tracing, and Gitea repository histories.",
-        "network": "2.5Gbps Ethernet. Required to prevent bottlenecks when the Control Plane retrieves massive contextual payloads (like entire codebase histories) during an agent's RAG execution loop."
+        "ram": "64GB DDR5. This is the absolute floor for dedicated vector DB operations.",
+        "cpu": "8-Core / 16-Thread. Log ingestion and vector similarity calculations are highly parallelized.",
+        "gpu": "0GB.",
+        "storage": "1TB NVMe SSD.",
+        "network": "1Gbps Ethernet."
       },
       "median": {
-        "ram": "256GB ECC DDR5. Error-Correcting Code (ECC) memory becomes highly recommended at this tier. When maintaining hundreds of gigabytes of semantic memory in RAM, cosmic rays or random bit-flips can silently corrupt the vector index, leading to poisoned recall. 256GB prevents the Linux kernel from utilizing swap space under heavy indexing loads.",
-        "cpu": "24-Core to 32-Core (e.g., AMD Threadripper or Intel Xeon W). High-cardinality analytics (such as querying traces in SigNoz backed by ClickHouse) demand massive CPU bandwidth to scan compressed columnar data quickly without timing out.",
+        "ram": "128GB DDR5. Allows PostgreSQL to keep large HNSW index graphs entirely in memory.",
+        "cpu": "12-Core / 24-Thread. Required for parsing high-cardinality analytics.",
         "gpu": "0GB.",
-        "storage": "8TB NVMe SSD (e.g., 2x 4TB in RAID 1 or 0). At this scale, disk IOPS is the primary failure point. A RAID array ensures that heavy sequential writes from Fluent Bit log streams do not block the random read requests generated by an agent's semantic memory search.",
-        "network": "10Gbps Ethernet. Essential for moving gigabytes of telemetry data from the Compute and Execution planes into the Archive seamlessly."
+        "storage": "2TB NVMe SSD.",
+        "network": "2.5Gbps Ethernet."
       },
       "max": {
-        "ram": "512GB to 1TB+ ECC Memory. Indexing 1 billion 1536-dimensional vectors translates to over 6TB of raw data. While quantization techniques (like scalar or product quantization) can compress this footprint by 4x to 8x, the system still requires half a terabyte of RAM to hold the quantized index and cache active shards.",
-        "cpu": "64-Core+ Server CPU (e.g., AMD EPYC). Required to sustain thousands of queries per second (QPS) against the vector database while concurrently parsing and indexing massive streams of distributed traces.",
-        "gpu": "Optional Compute GPU (e.g., RTX 4090 24GB or NVIDIA L40). While normally CPU-bound, at the billion-vector scale, utilizing GPU-accelerated vector databases (like Milvus with NVIDIA RAPIDS) provides a 10x speedup for massive batch-indexing operations and graph clustering.",
-        "storage": "16TB+ PCIe Gen 5 NVMe (RAID 10) combined with Object Storage. Deep historical logs and traces are tiered. Active memory remains on the NVMe arrays, while older logs (managed by Quickwit) are pushed to cheap, high-capacity S3-compatible HDDs (the Context Lake) where they remain searchable at a slight latency penalty.",
-        "network": "Dual 10Gbps or 25Gbps Fiber. Guarantees zero packet loss when ingesting raw telemetry and memory dumps from a sprawling, multi-node AI cluster."
+        "ram": "256GB ECC DDR5. Error-Correcting Code (ECC) prevents bit-flips from silently corrupting massive vector indexes over long uptimes.",
+        "cpu": "24-Core. Needed to sustain thousands of queries per second against the vector DB.",
+        "gpu": "0GB.",
+        "storage": "8TB NVMe SSD RAID 10.",
+        "network": "10Gbps Ethernet."
+      }
+    }
+  },
+  "tier-4": {
+    "uid": "tier-4",
+    "name": "Tier 4: The Distributed Farm",
+    "setup": "The cluster expands to four or more machines. Every Plane is physically isolated onto its own dedicated hardware. The original Month 2 Monolith is now stripped of heavy workloads, running strictly as the Control Plane.",
+    "benefit": "Absolute enterprise-grade architecture. No single node failure can cascade and destroy the entire agent ecosystem.",
+    "resources": {
+      "min": {
+        "ram": "128GB DDR5.",
+        "cpu": "12-Core / 24-Thread.",
+        "gpu": "0GB.",
+        "storage": "4TB NVMe SSD.",
+        "network": "2.5Gbps Ethernet."
+      },
+      "median": {
+        "ram": "256GB ECC DDR5.",
+        "cpu": "24-Core to 32-Core.",
+        "gpu": "0GB.",
+        "storage": "8TB NVMe SSD.",
+        "network": "10Gbps Ethernet."
+      },
+      "max": {
+        "ram": "512GB to 1TB+ ECC Memory.",
+        "cpu": "64-Core+ Server CPU.",
+        "gpu": "Optional Compute GPU (e.g., RTX 4090 24GB or NVIDIA L40) for GPU-accelerated vector databases like Milvus.",
+        "storage": "16TB+ PCIe Gen 5 NVMe (RAID 10) combined with Object Storage.",
+        "network": "Dual 10Gbps or 25Gbps Fiber."
       }
     }
   }
