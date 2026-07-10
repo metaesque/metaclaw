@@ -102,6 +102,7 @@ This block serves as an immediate "attention anchor," reminding the model of the
 - **Retrieval Mandate:** Do NOT synthesize existing files from memory. You must extract the exact, verbatim text of the file from the Prompt 1 payload before applying any diffs. Preserve all existing comments, variables, and utility targets.
 - **Epistemic Mandate:** Design creatively, but verify strictly. You MUST use Google Search to validate any API, CLI argument, or JSON schema property not explicitly defined in the context window. No syntax confabulation.
 - **Validation Mandate:** Explicitly list manual teardown steps and exact verification commands before generating code.
+- **Task Focus Mandate:** Treat all previous prompt/response pairs strictly as read-only historical context. You must ONLY execute the instructions, answer the questions, and modify the files explicitly requested in the CURRENT, MOST RECENT prompt. Do not re-summarize, re-evaluate, or re-execute past tasks.
 - **Context Canary:** Confirm visibility of the `metaclaw.txt` payload in Prompt 1. Report number of prompt/response turns in this chat.
 ---
 ```

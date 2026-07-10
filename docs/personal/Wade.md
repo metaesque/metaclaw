@@ -230,10 +230,14 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 ### 5.5 The Media Team
 *Domain: Creative asset generation and VRAM cold-swap execution.*
 - **Lead:** `media_producer` [complex-model] - Modality delegation and hardware concurrency limits.
-- **Worker:** `media_designer` [flux-1-dev] - SFW diagram and graphic layout rendering.
-- **Worker:** `media_artist` [pony-diffusion-v6-xl] - NSFW anatomical character styling.
-- **Worker:** `media_video` [local-video-diffusion] - Temporal synthesis and motion vectors.
-- **Worker:** `media_audio` [local-audio-pipeline] - Voice cloning and text-to-speech.
+- **Worker:** `media_image` [flux-1-dev] - SFW diagram and graphic layout rendering.
+- **Worker:** `media_imagex` [pony-diffusion-v6-xl] - NSFW anatomical character styling.
+- **Worker:** `media_video` [ltx-2-3] - SFW temporal synthesis and motion vectors.
+- **Worker:** `media_videox` [wan-2-7-i2v] - NSFW temporal synthesis via Image-to-Video.
+- **Worker:** `media_audio` [xttsv2] - SFW voice cloning and text-to-speech.
+- **Worker:** `media_audiox` [audioldm2-custom] - NSFW sound effects and foley generation.
+- **Worker:** `media_text` [complex-model] - SFW creative story writing and script generation.
+- **Worker:** `media_textx` [midnight-miqu-70b] - NSFW explicit creative writing and prose.
 
 ### 5.6 The SRE (Grid) Team
 *Domain: Cluster stability, distributed network resilience, and system administration.*
