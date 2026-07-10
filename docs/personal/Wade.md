@@ -199,7 +199,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.1 The Global Routing Layer
 - **`judge`** [simple-model]: Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
-- **`orchestrator`** [medium-model]: Global DAG generator. Delegates exclusively to the 7 Team Leads.
+- **`orchestrator`** [medium-model]: Global DAG generator. Delegates exclusively to the Team Leads.
 - **`generalist`** [complex-model]: Handles unmatched general-knowledge queries.
 
 ### 5.2 The Software Team
@@ -277,6 +277,21 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 - **Worker:** `finance_fundamental` [medium-model] - DCF modeling, balance sheet analysis, and intrinsic valuation.
 - **Worker:** `finance_quant` [medium-model] - Price action, momentum metrics, and technical indicators (RSI, MACD).
 - **Worker:** `finance_tax` [simple-model] - Capital gains calculations, cross-border tax implications, and asset location.
+
+### 5.9 The Social Team
+*Domain: Platform publishing, audience engagement, social SEO, and community management.*
+- **Lead:** `social_lead` [complex-model] - Cross-platform strategy and local DAG delegation.
+- **Worker:** `social_youtube` [medium-model] - Video SEO, chapters, timestamps, and comment parsing.
+- **Worker:** `social_reddit` [medium-model] - Subreddit engagement and organic tone matching.
+- **Worker:** `social_bluesky` [simple-model] - Decentralized short-form publishing.
+- **Worker:** `social_linkedin` [complex-model] - Professional networking and long-form B2B articles.
+- **Worker:** `social_facebook` [medium-model] - Group administration and community posts.
+- **Worker:** `social_twitter` [simple-model] - High-frequency hooks, threads, and short-form text.
+- **Worker:** `social_instagram` [medium-model] - Visual descriptions, hashtag SEO, and carousel planning.
+- **Worker:** `social_tiktok` [medium-model] - Short-form video hooks, trend analysis, and descriptions.
+- **Worker:** `social_snapchat` [simple-model] - Ephemeral messaging and youth demographic framing.
+- **Worker:** `social_pinterest` [medium-model] - Visual search SEO and board curation.
+- **Worker:** `social_discord` [medium-model] - Real-time chat moderation, webhooks, and server rules.
 
 ## 6. Structural Interdependencies (Maintenance Ledger)
 
