@@ -23,13 +23,15 @@ model_list:
 
   - model_name: simple-model
     litellm_params:
-      model: gemini/gemini-2.5-flash-lite
-      api_key: "os.environ/GEMINI_API_KEY"
+      model: "os.environ/SIMPLE_MODEL_ID"
+      api_base: "os.environ/SIMPLE_MODEL_API_BASE"
+      api_key: "os.environ/SIMPLE_MODEL_API_KEY"
 
   - model_name: medium-model
     litellm_params:
-      model: gemini/gemini-2.5-flash
-      api_key: "os.environ/GEMINI_API_KEY"
+      model: "os.environ/MEDIUM_MODEL_ID"
+      api_base: "os.environ/MEDIUM_MODEL_API_BASE"
+      api_key: "os.environ/MEDIUM_MODEL_API_KEY"
 
   - model_name: complex-model
     litellm_params:

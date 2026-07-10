@@ -178,13 +178,33 @@ def main():
       compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
+
+        # Route logic for Compute Farm
+        env_data["SIMPLE_MODEL_ID"] = "ollama/gemma4:e4b"
+        env_data["SIMPLE_MODEL_API_BASE"] = "http://127.0.0.1:11434"
+        env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
+
+        env_data["MEDIUM_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
+        env_data["MEDIUM_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
+        env_data["MEDIUM_MODEL_API_KEY"] = "sk-local-ollama-key"
+
         env_data["COMPLEX_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
       else:
+        # Route logic for Cloud Fallback (Tier 1)
+        env_data["SIMPLE_MODEL_ID"] = "gemini/gemini-2.5-flash-lite"
+        env_data["SIMPLE_MODEL_API_BASE"] = ""
+        env_data["SIMPLE_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
+
+        env_data["MEDIUM_MODEL_ID"] = "gemini/gemini-2.5-flash"
+        env_data["MEDIUM_MODEL_API_BASE"] = ""
+        env_data["MEDIUM_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
+
         env_data["COMPLEX_MODEL_ID"] = "gemini/gemini-3.1-pro-preview"
         env_data["COMPLEX_MODEL_API_BASE"] = ""
         env_data["COMPLEX_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
+
       seeded = True
 
     if seeded:
