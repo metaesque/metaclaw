@@ -27,6 +27,7 @@ bin/orchestrate.py
 bin/parse_prompts_gem.py
 bin/parse_prompts_oc.py
 bin/postgres_analysis.py
+bin/power_kasa.py
 bin/requirements.txt
 bin/setup_plane.sh
 bin/sync_cluster.py
@@ -239,4 +240,3 @@ services/tracers/phoenix/.provider.json
 services/tracers/signoz/.provider.json
 services/vcses/.service.json
 services/vcses/Makefile
-
