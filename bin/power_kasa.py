@@ -4,14 +4,14 @@ import json
 from datetime import datetime
 from kasa import Discover, DeviceType, Module
 
-# Best-guess mapping based on baseline telemetry and vague human memory.
-# Update this dictionary after executing the 'stress' CPU tests on the hosts.
+# Empirically verified mapping for compute/control nodes.
+# Best-guess mapping for router/switch based on baseline power draws.
 DEVICE_MAPPING = {
-    0: "compute (EVO-X2)",
+    0: "Shaw Router",
     1: "Unknown",
     2: "Empty",
-    3: "control (K8 Plus)",
-    4: "Shaw Router",
+    3: "compute (EVO-X2)",
+    4: "control (K8 Plus)",
     5: "Binardat Switch"
 }
 
