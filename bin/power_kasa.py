@@ -1,5 +1,5 @@
 import asyncio
-from kasa import Discover
+from kasa import Discover, DeviceType, Module
 
 async def discover_kasa_devices():
     """
@@ -34,22 +34,27 @@ async def discover_kasa_devices():
             print(f"Model      : {device.model}")
             print(f"MAC Address: {device.mac}")
 
-            # Check if the device supports real-time energy monitoring
-            if device.has_emeter:
+            # Check if the device supports real-time energy monitoring via the new Module system
+            if Module.Energy in device.modules:
                 print("Emeter     : Supported")
 
                 # If it's a strip (like the HS300), iterate through its children (outlets)
-                if device.is_strip:
+                if device.device_type == DeviceType.Strip:
                     print("Type       : Power Strip")
                     for plug in device.children:
+                        energy = plug.modules[Module.Energy]
+                        # Use getattr to safely handle 'current_consumption' or 'power' depending on the library version
+                        power = getattr(energy, 'current_consumption', getattr(energy, 'power', 0.0))
                         print(f"  -> Outlet '{plug.alias}':")
-                        print(f"     Power  : {plug.emeter_realtime.power} W")
-                        print(f"     Voltage: {plug.emeter_realtime.voltage} V")
-                        print(f"     Current: {plug.emeter_realtime.current} A")
+                        print(f"     Power  : {power} W")
+                        print(f"     Voltage: {energy.voltage} V")
+                        print(f"     Current: {energy.current} A")
                 else:
-                    print(f"Power      : {device.emeter_realtime.power} W")
-                    print(f"Voltage    : {device.emeter_realtime.voltage} V")
-                    print(f"Current    : {device.emeter_realtime.current} A")
+                    energy = device.modules[Module.Energy]
+                    power = getattr(energy, 'current_consumption', getattr(energy, 'power', 0.0))
+                    print(f"Power      : {power} W")
+                    print(f"Voltage    : {energy.voltage} V")
+                    print(f"Current    : {energy.current} A")
             else:
                 print("Emeter     : Not Supported")
 
