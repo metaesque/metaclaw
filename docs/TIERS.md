@@ -21,24 +21,35 @@ A Tier represents a discrete stage in the growth of your overall local cluster. 
 
 ## Tier 2: Data Sovereignty {#tier-2}
 
-* **Setup**: The cluster expands to two or more machines. The Compute Plane is
-  migrated off the Monolith and onto a dedicated GPU tower. The Proxy routes
-  requests locally across the LAN to the new Compute node(s).
+* **Setup**: The cluster expands to two machines. The Compute Plane is migrated
+  off the Monolith and onto a dedicated inference node. The Control node manages
+  routing, execution, and archiving, while delegating heavy reasoning to the
+  Compute node.
 * **Benefit**: Absolute data privacy and zero recurring API costs. Infinite
   agent loops can run overnight without accumulating massive bills.
 
-## Tier 3: The Sandbox Extraction {#tier-3}
+## Tier 3E: Sandbox Extraction {#tier-3e}
 
-* **Setup**: The cluster expands to three or more machines. The Execution Plane
-  is migrated off the Control Node and onto a dedicated Sandbox Node.
+* **Setup**: The cluster expands to three machines. The Execution Plane is
+  migrated off the Control Node and onto a dedicated Sandbox Node. The Control
+  Node continues to host the Archive Plane.
 * **Benefit**: Safe execution of highly volatile workloads. Hallucinated code or
-  memory-leaking browsers will not crash the core Gateway.
+  memory-leaking browsers will not crash the core Gateway or corrupt the
+  databases.
 
-## Tier 4: The Archive Expansion {#tier-4}
+## Tier 3A: Archive Extraction {#tier-3a}
 
-* **Setup**: The cluster expands to four or more machines. The Archive Plane is
-  migrated off the Control Node onto a dedicated Context Node. The original
-  Month 2 Monolith is now stripped of heavy workloads, running strictly as the
-  Control Plane.
+* **Setup**: The cluster expands to three machines. The Archive Plane is
+  migrated off the Control Node onto a dedicated Context Node. The Control Node
+  continues to host the Execution Plane.
 * **Benefit**: SRE-grade stability with near-infinite, lightning-fast semantic
-  recall. No hardware is wasted; earlier machines are perfectly repurposed.
+  recall, keeping databases completely isolated from gateway traffic spikes.
+
+## Tier 4: The Distributed Farm {#tier-4}
+
+* **Setup**: The cluster expands to four or more machines. Every Plane is
+  physically isolated onto its own dedicated hardware. The original Month 2
+  Monolith is now stripped of heavy workloads, running strictly as the Control
+  Plane.
+* **Benefit**: Absolute enterprise-grade architecture. No single node failure
+  can cascade and destroy the entire agent ecosystem.

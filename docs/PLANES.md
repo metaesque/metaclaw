@@ -12,16 +12,16 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 
 ### Hardware Recommendations for The Control Plane
 
-#### GMKtec Gaming Mini PC K8 Plus
+#### Example: GMKtec Gaming Mini PC K8 Plus
 * **Price**: ~$399.99 - $519.00
-* **Specs**: AMD Ryzen 7 8845HS, 32GB DDR5, 1TB SSD, Dual 2.5GbE
-* **URL**: [Link](https://www.gmktec.com/products/amd-ryzen-7-8845hs-mini-pc-nucbox-k8)
+* **Specs**: AMD Ryzen 7 8845HS (8C/16T, up to 5.1GHz), 32GB DDR5 RAM, 1TB PCIe 4.0 M.2 SSD, Dual NIC 2.5G, HDMI 2.1, USB4, Oculink.
+* **URL**: [Link](https://www.amazon.com/dp/B0DHNTW3H6)
 * **Strengths**: Excellent network bridging with dual 2.5GbE; incredible price-
   to-performance ratio for a gateway node.
 * **Weaknesses**: The 32GB RAM ceiling is extremely tight if attempting to run
   memory-heavy background tasks on the same node.
 
-#### Minisforum MS-01
+#### Example: Minisforum MS-01
 * **Price**: ~$649.00 (Barebones Base) - $869.00
 * **Specs**: Intel Core i9-13900H, up to 64GB RAM, Dual 10GbE SFP+, Dual 2.5GbE
 * **URL**: [Link](https://www.newegg.com/minisforum-barebone-systems-mini-pc-intel-core-i9-13900h/p/2SW-002G-000K7)
@@ -30,7 +30,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Intel H-series chips can run hot in tiny chassis, potentially
   leading to thermal throttling under sustained load.
 
-#### Protectli Vault VP4670
+#### Example: Protectli Vault VP4670
 * **Price**: ~$600.00 - $800.00 (Configuration dependent)
 * **Specs**: Intel Core i7, 6x 2.5GbE Ports, Fanless Design
 * **URL**: [Link](https://protectli.com/vault-6-port/)
@@ -39,7 +39,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Older generation CPU provides lower raw compute for non-
   routing tasks; RAM capacity is generally more limited.
 
-#### Supermicro SYS-E300-9D
+#### Example: Supermicro SYS-E300-9D
 * **Price**: ~$1,066.00 (Barebones)
 * **Specs**: Intel Xeon D-2123IT, ECC Memory Support, Quad 1GbE, Dual 10GbE, IPMI
 * **URL**: [Link](https://www.walmart.com/ip/SUPERMICRO-SYS-E300-9D-4CN8TP-Compact-Server-Barebone/290133537)
@@ -58,7 +58,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 
 ### Hardware Recommendations for The Compute Plane
 
-#### Apple Mac Studio M5 Ultra
+#### Example: Apple Mac Studio M5 Ultra
 * **Price**: ~$3,999.00+ (Projected)
 * **Specs**: Projected up to 36-core CPU, 80-core GPU, ~1.2 TB/s Memory Bandwidth, 128GB+ Unified Memory.
 * **URL**: [Link](https://www.apple.com/mac-studio/)
@@ -68,7 +68,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Entirely locked ecosystem; no possibility of internal hardware
   expansion or VRAM upgrades after purchase.
 
-#### Custom Multi-GPU Workstation
+#### Example: Custom Multi-GPU Workstation
 * **Price**: ~$10,000.00 - $15,000.00+
 * **Specs**: AMD Threadripper PRO, 4x NVIDIA RTX 4090 (96GB total VRAM), 256GB ECC RAM
 * **URL**: [Link](https://www.pugetsystems.com/workstations/)
@@ -78,7 +78,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Extremely high power draw, massive physical footprint, and
   complex cooling requirements.
 
-#### Apple Mac Pro (M-Series Ultra)
+#### Example: Apple Mac Pro (M-Series Ultra)
 * **Price**: ~$6,999.00+
 * **Specs**: M2/M3 Ultra (up to 192GB Unified Memory), 800 GB/s bandwidth, PCIe expansion slots.
 * **URL**: [Link](https://www.apple.com/mac-pro/)
@@ -87,7 +87,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Severe Apple Tax for the enclosure; internal PCIe slots cannot
   be used to add discrete NVIDIA GPUs for inference.
 
-#### Lambda Tensorbook
+#### Example: Lambda Tensorbook
 * **Price**: ~$3,007.49 - $3,499.00
 * **Specs**: Intel Core i7, NVIDIA RTX 3080/4080 (16GB), 64GB RAM, 1TB NVMe
 * **URL**: [Link](https://lambdalabs.com/deep-learning/laptops/tensorbook)
@@ -107,17 +107,17 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 
 ### Hardware Recommendations for The Archive Plane
 
-#### GMKtec EVO-X2
-* **Price**: ~$1,999.99 (Base) - $2,666.99 (128GB/2TB spec)
-* **Specs**: AMD Ryzen AI Max+ 395, 128GB LPDDR5X, 2TB PCIe 4.0 SSD
-* **URL**: [Link](https://www.gmktec.com/products/gmktec-evo-x2-ai-mini-pc-amd-ryzen%E2%84%A2-ai-max-395-1)
+#### Example: GMKtec EVO-X2 AI Mini PC
+* **Price**: ~$1,999.99 - $2,666.99
+* **Specs**: AMD Ryzen AI Max+ 395 (16C/32T, up to 5.1GHz, Radeon 8060S 40 Cores iGPU), 128GB LPDDR5X 8000MHz Quad Channel RAM, 2TB PCIe 4.0 SSD, Dual 2.5G LAN, WiFi 7, BT 5.4, USB4.
+* **URL**: [Link](https://www.amazon.ca/dp/B0F53MLYQ6)
 * **Strengths**: 128GB RAM provides a massive `shared_buffers` cache, allowing
   PostgreSQL to keep entire vector indexes in memory for sub-millisecond
   semantic recall.
 * **Weaknesses**: Lacks ECC memory, making it vulnerable to silent bit-flips
   corrupting the HNSW index graph over long uptimes.
 
-#### System76 Thelio Major
+#### Example: System76 Thelio Major
 * **Price**: ~$3,800.00 (Used) - $6,661.00+ (New)
 * **Specs**: AMD Threadripper PRO, up to 512GB ECC DDR5, multiple U.2/NVMe slots
 * **URL**: [Link](https://system76.com/desktops/thelio-major)
@@ -127,7 +127,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: High upfront cost and large physical footprint compared to
   mini-PCs.
 
-#### Dell Precision 7960 Tower
+#### Example: Dell Precision 7960 Tower
 * **Price**: ~$9,999.00+
 * **Specs**: Intel Xeon W-3400/3500 series, up to 4TB ECC RAM, front-accessible NVMe flex-bays
 * **URL**: [Link](https://www.dell.com/en-hk/shop/pcs-desktop-computers/precision-7960-tower/spd/precision-t7960-workstation)
@@ -136,7 +136,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Extremely expensive enterprise markup; proprietary
   motherboard/PSU form factors limit future DIY upgrades.
 
-#### Custom Asrock Rack EPYC 8004 'Siena' Server
+#### Example: Custom Asrock Rack EPYC 8004 'Siena' Server
 * **Price**: ~$1,046.00 (Barebones Motherboard/CPU Combo)
 * **Specs**: AMD EPYC 8004/4004 series, 96 PCIe Gen 5 lanes
 * **URL**: [Link](https://www.newegg.com/)
@@ -157,17 +157,17 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 
 ### Hardware Recommendations for The Execution Plane
 
-#### GMKtec EVO-X2
-* **Price**: ~$1,999.99 (Base) - $2,666.99 (128GB/2TB spec)
-* **Specs**: AMD Ryzen AI Max+ 395 (16C), 128GB LPDDR5X, 2TB PCIe 4.0 SSD
-* **URL**: [Link](https://www.gmktec.com/products/gmktec-evo-x2-ai-mini-pc-amd-ryzen%E2%84%A2-ai-max-395-1)
+#### Example: GMKtec EVO-X2 AI Mini PC
+* **Price**: ~$1,999.99 - $2,666.99
+* **Specs**: AMD Ryzen AI Max+ 395 (16C/32T, up to 5.1GHz, Radeon 8060S 40 Cores iGPU), 128GB LPDDR5X 8000MHz Quad Channel RAM, 2TB PCIe 4.0 SSD, Dual 2.5G LAN, WiFi 7, BT 5.4, USB4.
+* **URL**: [Link](https://www.amazon.ca/dp/B0F53MLYQ6)
 * **Strengths**: 16 cores and 128GB RAM securely isolate dozens of concurrent
   `gVisor` sandboxes without starving the host OS.
 * **Weaknesses**: Mobile processor cooling constraints may cause it to
   temporarily throttle under massive, sustained CI/CD parallel compilation
   workloads.
 
-#### Lenovo ThinkStation P360 Ultra
+#### Example: Lenovo ThinkStation P360 Ultra
 * **Price**: ~$639.00 - $1,826.00
 * **Specs**: Intel Core i5/i9 (desktop class), up to 128GB ECC RAM, 4-liter chassis
 * **URL**: [Link](https://www.lenovo.com/us/outletus/en/p/workstations/thinkstation-p-series/thinkstation-p360-ultra-intel/30g1000lus)
@@ -177,7 +177,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: Custom form factor makes part replacement difficult; active
   cooling can get extremely loud under load.
 
-#### Minisforum BD790i
+#### Example: Minisforum BD790i
 * **Price**: ~$599.00 (Motherboard/CPU Combo)
 * **Specs**: AMD Ryzen 9 7945HX3D (16C/32T with 3D V-Cache), Mini-ITX
 * **URL**: [Link](https://www.ebay.com/itm/257253513621)
@@ -187,7 +187,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Weaknesses**: It is only a motherboard/CPU combo, requiring the user to
   build a custom ITX chassis, source RAM, storage, and a power supply.
 
-#### System76 Thelio Mega
+#### Example: System76 Thelio Mega
 * **Price**: ~$5,999.00+
 * **Specs**: AMD Ryzen Threadripper 7000 (up to 64+ cores), up to 256GB ECC RAM
 * **URL**: [Link](https://system76.com/desktops/thelio-mega)
