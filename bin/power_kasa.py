@@ -2,7 +2,8 @@ import asyncio
 import os
 import json
 import argparse
-from datetime import datetime
+import warnings
+from datetime import datetime, timedelta
 from kasa import Discover, DeviceType, Module
 
 # Empirically verified mapping for compute/control nodes.
@@ -34,7 +35,7 @@ async def discover_kasa_devices(fetch_summary=False):
     Discovers TP-Link Kasa devices on the local network.
     Renders telemetry data for Power Strips (like the HS300) in a concise table
     and appends a JSON state object to the historical data log.
-    If fetch_summary is True, retrieves historical daily data.
+    If fetch_summary is True, retrieves historical daily data up to yesterday.
     """
     print("Initiating Kasa device discovery...\n")
 
@@ -113,26 +114,42 @@ async def discover_kasa_devices(fetch_summary=False):
 
                 if fetch_summary:
                     print("\n" + "=" * 90)
-                    print("Fetching historical summary data from Jan 2020 to present...")
-                    start_year, start_month = 2020, 1
-                    now_year, now_month = datetime.now().year, datetime.now().month
+                    print("Fetching historical summary data from Jan 2020 to yesterday...")
+                    summary_file = os.path.join(data_dir, "metaclaw_power.json")
 
+                    # Load existing data to avoid overwriting
                     all_history = {}
+                    if os.path.exists(summary_file):
+                        try:
+                            with open(summary_file, 'r') as f:
+                                all_history = json.load(f)
+                        except json.JSONDecodeError:
+                            pass
+
+                    start_year, start_month = 2020, 1
+                    yesterday = datetime.now() - timedelta(days=1)
+                    end_year, end_month = yesterday.year, yesterday.month
+
                     for idx, plug in enumerate(device.children):
                         device_name = DEVICE_MAPPING.get(idx, "Unmapped")
                         curr_y, curr_m = start_year, start_month
 
-                        energy_module = plug.modules.get(Module.Energy)
-                        if not energy_module:
-                            continue
-
-                        while curr_y < now_year or (curr_y == now_year and curr_m <= now_month):
+                        while curr_y < end_year or (curr_y == end_year and curr_m <= end_month):
                             try:
-                                # Direct API call via new Energy Module to avoid DeprecationWarning
-                                res = await energy_module.get_daily(year=curr_y, month=curr_m)
+                                # Suppress the deprecation warning and use the known-working API
+                                with warnings.catch_warnings():
+                                    warnings.simplefilter("ignore", DeprecationWarning)
+                                    if hasattr(plug, 'get_emeter_daily'):
+                                        res = await plug.get_emeter_daily(year=curr_y, month=curr_m)
+                                    else:
+                                        res = {}
 
                                 if res:
                                     for day, kwh in res.items():
+                                        # Only add days up to yesterday
+                                        if curr_y == end_year and curr_m == end_month and int(day) > yesterday.day:
+                                            continue
+
                                         date_str = f"{curr_y:04d}-{curr_m:02d}-{int(day):02d}"
                                         if date_str not in all_history:
                                             all_history[date_str] = {}
@@ -148,7 +165,6 @@ async def discover_kasa_devices(fetch_summary=False):
                                 curr_m = 1
                                 curr_y += 1
 
-                    summary_file = os.path.join(data_dir, "metaclaw_power.json")
                     with open(summary_file, 'w') as f:
                         json.dump(all_history, f, indent=2, sort_keys=True)
 
@@ -188,6 +204,6 @@ async def discover_kasa_devices(fetch_summary=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kasa Power Discovery and Telemetry")
-    parser.add_argument('-s', '--summary', action='store_true', help="Fetch historical daily summaries from Jan 2020 to present.")
+    parser.add_argument('-s', '--summary', action='store_true', help="Fetch historical daily summaries from Jan 2020 to yesterday.")
     args = parser.parse_args()
     asyncio.run(discover_kasa_devices(args.summary))
