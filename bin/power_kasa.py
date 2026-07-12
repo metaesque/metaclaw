@@ -1,6 +1,7 @@
 import asyncio
 import os
 import json
+import argparse
 from datetime import datetime
 from kasa import Discover, DeviceType, Module
 
@@ -28,11 +29,12 @@ def get_last_record(filepath):
         return None
     return None
 
-async def discover_kasa_devices():
+async def discover_kasa_devices(fetch_summary=False):
     """
     Discovers TP-Link Kasa devices on the local network.
     Renders telemetry data for Power Strips (like the HS300) in a concise table
     and appends a JSON state object to the historical data log.
+    If fetch_summary is True, retrieves historical daily data.
     """
     print("Initiating Kasa device discovery...\n")
 
@@ -109,6 +111,52 @@ async def discover_kasa_devices():
                 with open(data_file, 'a') as f:
                     f.write(json.dumps(current_json_record) + "\n")
 
+                if fetch_summary:
+                    print("\n" + "=" * 105)
+                    print("Fetching historical summary data from Jan 2020 to present...")
+                    start_year, start_month = 2020, 1
+                    now_year, now_month = datetime.now().year, datetime.now().month
+
+                    all_history = {}
+                    for idx, plug in enumerate(device.children):
+                        device_name = DEVICE_MAPPING.get(idx, "Unmapped")
+                        curr_y, curr_m = start_year, start_month
+
+                        while curr_y < now_year or (curr_y == now_year and curr_m <= now_month):
+                            try:
+                                # Ensure cross-compatibility with various python-kasa backend versions
+                                if hasattr(plug, 'get_emeter_daily'):
+                                    res = await plug.get_emeter_daily(year=curr_y, month=curr_m)
+                                elif Module.Energy in plug.modules and hasattr(plug.modules[Module.Energy], 'get_daily'):
+                                    res = await plug.modules[Module.Energy].get_daily(year=curr_y, month=curr_m)
+                                else:
+                                    res = {}
+
+                                if res:
+                                    for day, kwh in res.items():
+                                        date_str = f"{curr_y:04d}-{curr_m:02d}-{int(day):02d}"
+                                        if date_str not in all_history:
+                                            all_history[date_str] = {}
+                                        all_history[date_str][str(idx)] = {
+                                            "kwh": float(kwh),
+                                            "device": device_name
+                                        }
+                            except Exception:
+                                pass # Silently skip exceptions for missing data ranges
+
+                            curr_m += 1
+                            if curr_m > 12:
+                                curr_m = 1
+                                curr_y += 1
+
+                    summary_file = os.path.join(data_dir, "metaclaw_power.json")
+                    with open(summary_file, 'w') as f:
+                        json.dump(all_history, f, indent=2, sort_keys=True)
+
+                    print(json.dumps(all_history, indent=2, sort_keys=True))
+                    print(f"\n[+] Historical summary saved to {summary_file}")
+                    print("=" * 105 + "\n")
+
             else:
                 print(f"\n[!] Device {device.alias} is not a power strip or does not support energy monitoring.")
 
@@ -116,4 +164,7 @@ async def discover_kasa_devices():
         print(f"An error occurred during discovery: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(discover_kasa_devices())
+    parser = argparse.ArgumentParser(description="Kasa Power Discovery and Telemetry")
+    parser.add_argument('-s', '--summary', action='store_true', help="Fetch historical daily summaries from Jan 2020 to present.")
+    args = parser.parse_args()
+    asyncio.run(discover_kasa_devices(args.summary))
