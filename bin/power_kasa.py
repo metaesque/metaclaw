@@ -112,7 +112,7 @@ async def discover_kasa_devices(fetch_summary=False):
                     f.write(json.dumps(current_json_record) + "\n")
 
                 if fetch_summary:
-                    print("\n" + "=" * 105)
+                    print("\n" + "=" * 90)
                     print("Fetching historical summary data from Jan 2020 to present...")
                     start_year, start_month = 2020, 1
                     now_year, now_month = datetime.now().year, datetime.now().month
@@ -122,15 +122,14 @@ async def discover_kasa_devices(fetch_summary=False):
                         device_name = DEVICE_MAPPING.get(idx, "Unmapped")
                         curr_y, curr_m = start_year, start_month
 
+                        energy_module = plug.modules.get(Module.Energy)
+                        if not energy_module:
+                            continue
+
                         while curr_y < now_year or (curr_y == now_year and curr_m <= now_month):
                             try:
-                                # Ensure cross-compatibility with various python-kasa backend versions
-                                if hasattr(plug, 'get_emeter_daily'):
-                                    res = await plug.get_emeter_daily(year=curr_y, month=curr_m)
-                                elif Module.Energy in plug.modules and hasattr(plug.modules[Module.Energy], 'get_daily'):
-                                    res = await plug.modules[Module.Energy].get_daily(year=curr_y, month=curr_m)
-                                else:
-                                    res = {}
+                                # Direct API call via new Energy Module to avoid DeprecationWarning
+                                res = await energy_module.get_daily(year=curr_y, month=curr_m)
 
                                 if res:
                                     for day, kwh in res.items():
@@ -153,9 +152,33 @@ async def discover_kasa_devices(fetch_summary=False):
                     with open(summary_file, 'w') as f:
                         json.dump(all_history, f, indent=2, sort_keys=True)
 
-                    print(json.dumps(all_history, indent=2, sort_keys=True))
+                    print("-" * 90)
+                    print(f"{'Year':<4} | {'Month':<5} | {'Day':<3} | {'router':>7} | {'switch':>7} | {'compute':>7} | {'control':>7} | {'Total':>7}")
+                    print("-" * 90)
+
+                    prev_y, prev_m = None, None
+                    for date_str in sorted(all_history.keys()):
+                        y, m, d = date_str.split('-')
+
+                        # Transitive blanking
+                        disp_y = y if y != prev_y else ""
+                        disp_m = m if (m != prev_m or y != prev_y) else ""
+                        prev_y, prev_m = y, m
+
+                        day_data = all_history[date_str]
+
+                        router = day_data.get("0", {}).get("kwh", 0.0)
+                        compute = day_data.get("3", {}).get("kwh", 0.0)
+                        control = day_data.get("4", {}).get("kwh", 0.0)
+                        switch = day_data.get("5", {}).get("kwh", 0.0)
+
+                        total = router + switch + compute + control
+
+                        print(f"{disp_y:<4} | {disp_m:<5} | {d:<3} | {router:>7.3f} | {switch:>7.3f} | {compute:>7.3f} | {control:>7.3f} | {total:>7.3f}")
+
+                    print("-" * 90)
                     print(f"\n[+] Historical summary saved to {summary_file}")
-                    print("=" * 105 + "\n")
+                    print("=" * 90 + "\n")
 
             else:
                 print(f"\n[!] Device {device.alias} is not a power strip or does not support energy monitoring.")
