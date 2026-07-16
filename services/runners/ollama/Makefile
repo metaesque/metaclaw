@@ -5,6 +5,8 @@ SERVICE_NAME = ollama-runner
 FRAMEWORK_ROOT_REL = ../../..
 FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
 
+include $(FRAMEWORK_ROOT)/.Makefile.inherit
+
 -include $(FRAMEWORK_ROOT)/.env
 -include .env
 # ARCHITECTURAL SHIFT: Depend on the abstracted gateway symlink instead of hardcoding openclaw-gateway
