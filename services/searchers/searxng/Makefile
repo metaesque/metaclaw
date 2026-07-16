@@ -13,8 +13,6 @@ export
 
 LOG_READY_SIGNAL = listen on 0.0.0.0:8080
 
-PYTHON_BIN ?= python3
-
 pre-up:
 	@$(PYTHON_BIN) -c "import os, yaml; d=os.environ.get('EXTERNAL_DRIVE_PATH') or '/tmp'; d=os.path.join(d, 'searxng-data'); os.makedirs(d, exist_ok=True); open(os.path.join(d, 'limiter.toml'), 'a').close(); f=os.path.join(d, 'settings.yml'); data=yaml.safe_load(open(f)) if os.path.exists(f) else {}; data=data or {}; data.setdefault('server', {})['forwarded_for']=True; data.setdefault('server', {})['bind_address']='0.0.0.0'; data.setdefault('search', {})['formats']=['html', 'json']; data['limiter']=False; engines=data.setdefault('engines', []); [(e.update({'disabled': True}) if e.get('name') in ['wikidata', 'ahmia', 'torch'] else None) for e in engines]; yaml.dump(data, open(f, 'w'))"
 
