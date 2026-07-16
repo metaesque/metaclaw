@@ -168,9 +168,10 @@ async def discover_kasa_devices(fetch_summary=False):
                     with open(summary_file, 'w') as f:
                         json.dump(all_history, f, indent=2, sort_keys=True)
 
-                    print("-" * 69)
+                    twid = 68
+                    print("-" * twid)
                     print(f"{'Year':<4} | {'Mon':<3} | {'Day':<3} | {'router':>7} | {'switch':>7} | {'compute':>7} | {'control':>7} | {'Total':>7} |")
-                    print("-" * 69)
+                    print("-" * twid)
 
                     prev_y, prev_m = None, None
                     for date_str in sorted(all_history.keys()):
@@ -190,11 +191,11 @@ async def discover_kasa_devices(fetch_summary=False):
 
                         total = router + switch + compute + control
 
-                        print(f"{disp_y:<4} | {disp_m:<3} | {d:<3} | {router:>7.3f} | {switch:>7.3f} | {compute:>7.3f} | {control:>7.3f} | {total:>7.3f}")
+                        print(f"{disp_y:<4} | {disp_m:<3} | {d:<3} | {router:>7.3f} | {switch:>7.3f} | {compute:>7.3f} | {control:>7.3f} | {total:>7.3f} |")
 
-                    print("-" * 90)
-                    print(f"\n[+] Historical summary saved to {summary_file}")
-                    print("=" * 90 + "\n")
+                    print("-" * twid)
+                    print(f"[+] Historical summary saved to {summary_file}")
+                    print("=" * twid + "\n")
 
             else:
                 print(f"\n[!] Device {device.alias} is not a power strip or does not support energy monitoring.")
