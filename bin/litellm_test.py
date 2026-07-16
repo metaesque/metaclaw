@@ -6,18 +6,44 @@ import sys
 
 def load_local_env():
     """
-    Manually parses the .env file in the current working directory.
-    This ensures scripts can find keys even if they haven't been 'exported'
-    to the shell environment.
+    Dynamically finds and loads the ACTIVE_PROXY_KEY from the repository config,
+    regardless of where the script is invoked from.
     """
-    env_path = '.env'
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(script_dir)
+
+    # 1. Try to parse the service's .env.json (Highest Priority)
+    env_json_path = os.path.join(repo_root, 'services', 'proxies', 'litellm', '.env.json')
+    if os.path.exists(env_json_path):
+        try:
+            with open(env_json_path, 'r') as f:
+                data = json.load(f)
+                for k, v in data.items():
+                    os.environ[k] = str(v)
+        except Exception:
+            pass
+
+    # 2. Try to parse the service's .env file
+    litellm_env_path = os.path.join(repo_root, 'services', 'proxies', 'litellm', '.env')
+    if os.path.exists(litellm_env_path):
+        with open(litellm_env_path, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
-                    os.environ[key] = value
+                    if key not in os.environ:
+                        os.environ[key] = value.strip('"\' ')
+
+    # 3. Fallback to global .env file
+    root_env_path = os.path.join(repo_root, '.env')
+    if os.path.exists(root_env_path):
+        with open(root_env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    if key not in os.environ:
+                        os.environ[key] = value.strip('"\' ')
 
 def main():
     load_local_env()
@@ -32,7 +58,7 @@ def main():
     port = os.getenv("LITELLM_PORT", "4000")
 
     if not master_key:
-        print(f"FATAL: ACTIVE_PROXY_KEY not found in environment or .env file.")
+        print(f"FATAL: ACTIVE_PROXY_KEY not found in environment or .env files.")
         print(f"Current Directory: {os.getcwd()}")
         sys.exit(1)
 

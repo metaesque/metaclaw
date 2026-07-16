@@ -289,17 +289,26 @@ wizard-run: bootstrap docs
 	@echo "################################################################################"
 	@echo "# APPLYING GATEWAY CONFIGURATION"
 	@echo "################################################################################"
-	@echo "Applying routing patch..."
-	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch
+	@if [ -d $(GATEWAY_SUBDIR) ]; then \
+		echo "Applying routing patch..."; \
+		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch; \
+	else \
+		echo "No Gateway plane detected on this node. Skipping routing patch."; \
+	fi
 	@echo "################################################################################"
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
 		echo "# WIZARD COMPLETE. LAUNCHING WEB GUI..."; \
 		echo "################################################################################"; \
 		echo ""; \
-		echo "Waiting for OpenClaw Gateway to finish booting..."; \
-		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
-		$(PYTHON_BIN) ./bin/browser.py --close; \
-		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui-setup; \
+		if [ -d $(GATEWAY_SUBDIR) ]; then \
+			echo "Waiting for OpenClaw Gateway to finish booting..."; \
+			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
+			$(PYTHON_BIN) ./bin/browser.py --close; \
+			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) gui-setup; \
+		else \
+			echo "Node deployed successfully. (No Gateway UI present on this node)."; \
+			$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true; \
+		fi; \
 	else \
 		echo "# BATCH WIZARD COMPLETE. ALL SYSTEMS ONLINE."; \
 		echo "################################################################################"; \

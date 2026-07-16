@@ -181,7 +181,7 @@ def main():
 
         # Route logic for Compute Farm
         env_data["SIMPLE_MODEL_ID"] = "ollama/gemma4:e4b"
-        env_data["SIMPLE_MODEL_API_BASE"] = "http://127.0.0.1:11434"
+        env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
         env_data["MEDIUM_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
