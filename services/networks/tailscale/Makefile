@@ -3,7 +3,8 @@
 # ==============================================================================
 # The targets in this Makefile MUST NEVER execute in a manner that disrupts or
 # tears down the host OS Tailscale daemon if one is running natively.
-# Doing so will immediately sever the user's remote SSH session to the server.
+# Doing so will immediately sever the user's remote SSH session to the server,
+# locking them out of headless nodes.
 # The .metal flag is utilized specifically to skip Docker Compose commands
 # when native infrastructure is detected.
 
