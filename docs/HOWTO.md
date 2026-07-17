@@ -94,6 +94,13 @@ or your session memory becomes bloated beyond repair, the fastest path to
 stability is to reset the system. We offer two levels of reset depending on
 severity.
 
+### The Cluster Bring-Up Sequence
+To properly tear down and rebuild your cluster, always follow this strict sequence:
+1.  `make factory-reset-soft`: Clears old state gracefully. (Only used when a reset is strictly necessary. Otherwise, prefer `make apply` for in-place configuration changes).
+2.  `make setup`: Re-profiles your local hardware and assigns architectural planes.
+3.  `make wizard-batch` (or `make wizard`): Sequentially bootstraps the environment, applies network routing, and verifies health.
+4.  `make gui`: Opens the OpenClaw interface with your secure access token.
+
 ### The "Soft Reset" (Recommended)
 This is the standard troubleshooting step. It cleanly shuts down all containers,
 deletes the internal network, and scrubs ephemeral runtime files. **Crucially,

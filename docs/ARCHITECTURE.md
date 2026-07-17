@@ -255,6 +255,8 @@ comments) to suppress the tedious onboarding ritual, OpenClaw immediately writes
 this timestamp and bypasses the bootstrap phase upon first boot. These state
 files are strictly machine-local and should never be tracked in version control.
 
+To ensure state preservation, users must never manually execute internal teardown targets (such as `make __undock` or `docker compose down`). The framework dictates the use of `make factory-reset-soft`. This target safely orchestrates a `clean-state` hook that archives the OpenClaw configuration directory (including memory and agent state) to the `EXTERNAL_DRIVE_PATH` before tearing down the containers. Even `make factory-reset-hard` inherits this protection, ensuring your agent's core identity is captured before the databases are wiped.
+
 ## Workspace Agent Schema & The Template Philosophy
 
 The MetaClaw framework facilitates OpenClaw by compiling agent configurations.

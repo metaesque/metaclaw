@@ -24,6 +24,13 @@ SERVICES_DIR ?= services
 -include $(SERVICES_DIR)/queue/.env
 export
 
+.DEFAULT_GOAL := no_default
+
+.PHONY: no_default
+no_default:
+	@echo "ERROR: Provide explicit target (e.g., make setup, make wizard-batch, make apply)."
+	@exit 1
+
 # OS-Agnostic Open Command
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -49,7 +56,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
+.PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
 
 # ==============================================================================
 # ENVIRONMENT BOOTSTRAPPING & UPDATES
@@ -90,7 +97,7 @@ $(PYTHON_BIN):
 # WHAT IT DOES: Instantiates `.env` files across the framework from `.env.template` files.
 # WHY IT EXISTS: Required for injecting host-specific configurations (ports, keys) safely into containers.
 .env: .env.template $(wildcard .env.json) | $(PYTHON_BIN)
-	$(PYTHON_BIN) ./bin/env_instantiate.py $(if $(filter factory-reset% clean% undock,$(MAKECMDGOALS)),--teardown)
+	$(PYTHON_BIN) ./bin/env_instantiate.py $(if $(filter factory-reset% clean% __undock,$(MAKECMDGOALS)),--teardown)
 
 # WHAT IT DOES: Analyzes the hardware footprint, assigns a Tier (0-5), and generates `profile.json`.
 # WHY IT EXISTS: This is the core cluster-state generator required before deploying services.
@@ -156,7 +163,7 @@ clean-network:
 
 # WHAT IT DOES: Gracefully shuts down all Docker containers defined in the framework in reverse-dependency order.
 # WHY IT EXISTS: Prevents orphan containers or locked resources during a system halt.
-undock:
+__undock:
 	@for dir in $(DOCKER_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping 'down'."; continue; fi; \
@@ -289,7 +296,7 @@ wizard-run: bootstrap docs
 	@echo "################################################################################"
 	@echo "# APPLYING GATEWAY CONFIGURATION"
 	@echo "################################################################################"
-	@if [ -d $(GATEWAY_SUBDIR) ]; then \
+	@if [ -d "$(GATEWAY_SUBDIR)" ] && [ -f "$(GATEWAY_SUBDIR)/Makefile" ]; then \
 		echo "Applying routing patch..."; \
 		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch; \
 	else \
@@ -300,7 +307,7 @@ wizard-run: bootstrap docs
 		echo "# WIZARD COMPLETE. LAUNCHING WEB GUI..."; \
 		echo "################################################################################"; \
 		echo ""; \
-		if [ -d $(GATEWAY_SUBDIR) ]; then \
+		if [ -d "$(GATEWAY_SUBDIR)" ] && [ -f "$(GATEWAY_SUBDIR)/Makefile" ]; then \
 			echo "Waiting for OpenClaw Gateway to finish booting..."; \
 			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
 			$(PYTHON_BIN) ./bin/browser.py --close; \
@@ -336,7 +343,7 @@ factory-reset: factory-reset-soft
 # WHAT IT DOES: Tears down all containers, destroys the network, and wipes `.env` text files.
 # WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data.
 #   This is the safest way to bounce a broken framework.
-factory-reset-soft: undock clean-network
+factory-reset-soft: __undock clean-network
 	@echo "################################################################################"
 	@echo "# INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)"
 	@echo "################################################################################"
