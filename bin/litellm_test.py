@@ -94,7 +94,7 @@ def main():
     print(f"Prompt:   '{prompts[args.type]}'\n")
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response = requests.post(url, headers=headers, json=payload, timeout=300)
         if response.status_code == 200:
             result = response.json()
             content = result['choices'][0]['message']['content']

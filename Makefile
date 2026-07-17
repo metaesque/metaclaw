@@ -167,12 +167,15 @@ clean-network:
 # WHY IT EXISTS: Prevents orphan containers or locked resources during a system halt.
 __undock:
 	@for dir in $(DOCKER_SUBDIRS); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping 'down'."; continue; fi; \
-		echo "################################################################################"; \
-		echo "# Executing teardown in $$REAL_DIR..."; \
-		echo "################################################################################"; \
-		OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR down || true; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				echo "################################################################################"; \
+				echo "# Executing teardown in $$REAL_DIR..."; \
+				echo "################################################################################"; \
+				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR down || true; \
+			fi; \
+		fi; \
 	done
 
 # WHAT IT DOES: Compares running container configurations against physical `.env` files and restarts/rebuilds them if mismatched.
@@ -182,10 +185,13 @@ apply: symlinks
 	@echo "# RECONCILING GLOBAL INFRASTRUCTURE STATE"
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping 'apply'."; continue; fi; \
-		echo "[Root] Evaluating state in $$REAL_DIR..."; \
-		$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				echo "[Root] Evaluating state in $$REAL_DIR..."; \
+				$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
+			fi; \
+		fi; \
 	done
 
 # WHAT IT DOES: Triggers the Python script to iterate through the cluster and report status across all nodes.
@@ -198,11 +204,14 @@ status-local:
 	@echo "# LOCAL INFRASTRUCTURE STATUS"
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
-		echo "--------------------------------------------------------------------------------"; \
-		echo "[Root] Checking status of $$REAL_DIR..."; \
-		$(MAKE) --no-print-directory -C $$REAL_DIR status || true; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				echo "--------------------------------------------------------------------------------"; \
+				echo "[Root] Checking status of $$REAL_DIR..."; \
+				$(MAKE) --no-print-directory -C $$REAL_DIR status || true; \
+			fi; \
+		fi; \
 	done
 
 # WHAT IT DOES: Injects the secure access token and opens the OpenClaw Dashboard in the native host OS browser.
@@ -250,26 +259,29 @@ wizard-run: bootstrap docs
 	@echo "# PRE-FLIGHT ENVIRONMENT CONFIGURATION"
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
-		if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
-			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.md" ]; then \
-				$(PYTHON_BIN) $(CURDIR)/bin/compile_md.py -i $$REAL_DIR/index.md --html; \
-				$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#env.vars"; \
-			fi; \
-			cd $$REAL_DIR && $(PYTHON_BIN) $(CURDIR)/bin/env_instantiate.py -v; \
-			if grep -q "prep-instructions:" Makefile; then \
-				$(MAKE) --no-print-directory prep-instructions; \
-			fi; \
-			cd $(CURDIR); \
-			if [ "$(INTERACTIVE)" = "1" ]; then \
-				comp=$$(basename $$REAL_DIR); \
-				printf "$$comp environment is set. Proceed? [Y/n] "; \
-				read answer < /dev/tty; \
-				if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
-					echo "Setup aborted by user."; exit 1; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
+					if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.md" ]; then \
+						$(PYTHON_BIN) $(CURDIR)/bin/compile_md.py -i $$REAL_DIR/index.md --html; \
+						$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#env.vars"; \
+					fi; \
+					cd $$REAL_DIR && $(PYTHON_BIN) $(CURDIR)/bin/env_instantiate.py -v; \
+					if grep -q "prep-instructions:" Makefile; then \
+						$(MAKE) --no-print-directory prep-instructions; \
+					fi; \
+					cd $(CURDIR); \
+					if [ "$(INTERACTIVE)" = "1" ]; then \
+						comp=$$(basename $$REAL_DIR); \
+						printf "$$comp environment is set. Proceed? [Y/n] "; \
+						read answer < /dev/tty; \
+						if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
+							echo "Setup aborted by user."; exit 1; \
+						fi; \
+						echo "======================================================================"; \
+					fi; \
 				fi; \
-				echo "======================================================================"; \
 			fi; \
 		fi; \
 	done
@@ -277,26 +289,29 @@ wizard-run: bootstrap docs
 	@echo "# DEPLOYING CLUSTER INFRASTRUCTURE"
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then echo "WARNING: [$$REAL_DIR] Provider unimplemented (No Makefile). Skipping deploy."; continue; fi; \
-		echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"; \
-		echo "[Root] Deploying $$REAL_DIR..."; \
-		if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
-			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
-				$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#diagnostic-checks"; \
-			fi; \
-			$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
-			$(MAKE) --no-print-directory -C $$REAL_DIR wait-healthy || true; \
-			$(MAKE) --no-print-directory -C $$REAL_DIR check-status || true; \
-			if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
-				printf "Verify diagnostics for $$REAL_DIR. Proceed? [Y/n] "; \
-				read answer < /dev/tty; \
-				if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
-					echo "Setup aborted by user."; exit 1; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"; \
+				echo "[Root] Deploying $$REAL_DIR..."; \
+				if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
+					if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
+						$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#diagnostic-checks"; \
+					fi; \
+					$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
+					$(MAKE) --no-print-directory -C $$REAL_DIR wait-healthy || true; \
+					$(MAKE) --no-print-directory -C $$REAL_DIR check-status || true; \
+					if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
+						printf "Verify diagnostics for $$REAL_DIR. Proceed? [Y/n] "; \
+						read answer < /dev/tty; \
+						if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
+							echo "Setup aborted by user."; exit 1; \
+						fi; \
+					fi; \
+				else \
+					$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 				fi; \
 			fi; \
-		else \
-			$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 		fi; \
 	done
 	@echo "################################################################################"
@@ -338,9 +353,12 @@ clean-state:
 	@echo "# CLEANING LOCAL STATE ACROSS ALL SERVICES"
 	@echo "################################################################################"
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
-		OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clean-state || echo "Warning: $$REAL_DIR clean-state failed."; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clean-state || echo "Warning: $$REAL_DIR clean-state failed."; \
+			fi; \
+		fi; \
 	done
 
 # WHAT IT DOES: Triggers `factory-reset-soft` as the default reset behavior.
@@ -372,10 +390,13 @@ factory-reset-hard: factory-reset-soft
 	@echo "# PURGING ALL SECRETS AND PERSISTENT DATA (HARD RESET)"
 	@echo "################################################################################"
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
-		if [ ! -f "$$REAL_DIR/Makefile" ]; then rm -f "$$REAL_DIR/.env.json"; continue; fi; \
-		OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clobber-data || echo "Warning: $$REAL_DIR clobber-data failed."; \
-		rm -f "$$REAL_DIR/.env.json"; \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clobber-data || echo "Warning: $$REAL_DIR clobber-data failed."; \
+				rm -f "$$REAL_DIR/.env.json"; \
+			fi; \
+		fi; \
 	done
 	@rm -f .env.json profile.json
 	@rm -rf bin/.venv

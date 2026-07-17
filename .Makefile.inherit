@@ -24,7 +24,7 @@ PYTHON_BIN ?= $(abspath $(FRAMEWORK_ROOT)/bin/.venv/bin/python)
 RECREATE_DEPS ?= $(wildcard docker-compose.yml) $(wildcard .env) $(FRAMEWORK_ROOT)/.env
 RESTART_DEPS ?=
 
-.PHONY: up down logs pre-up post-up pre-down post-down verify_service status shell clean-state wait-healthy clobber-data check-logs check-status post-check-status apply restart docs
+.PHONY: up down pre-up post-up pre-down post-down verify_service clean-state clobber-data check-logs post-check-status apply restart docs
 
 # Standardized .env instantiation.
 .env: .env.template $(wildcard .env.json)
@@ -83,21 +83,21 @@ down:: pre-down
 logs::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
-	else \
+	elif [ ! -f .metal ]; then \
 		docker logs -f $(SERVICE_NAME); \
 	fi
 
 status::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
-	else \
+	elif [ ! -f .metal ]; then \
 		docker ps -f name=^/$(SERVICE_NAME)$$; \
 	fi
 
 shell::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
-	else \
+	elif [ ! -f .metal ]; then \
 		docker exec -it $(SERVICE_NAME) $(DOCKER_SHELL_CMD); \
 	fi
 
