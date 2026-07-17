@@ -24,6 +24,23 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
+def is_headless():
+    """
+    Detects if the current machine is running headlessly by checking for an
+    active Tailscale host daemon or the absence of a display server.
+    """
+    try:
+        res = subprocess.run(['tailscale', 'status'], capture_output=True)
+        if res.returncode == 0:
+            return True
+    except Exception:
+        pass
+
+    if sys.platform == 'linux':
+        if not os.environ.get('DISPLAY') and not os.environ.get('WAYLAND_DISPLAY'):
+            return True
+    return False
+
 def profile_local_hardware():
     total_storage, _, free_storage = shutil.disk_usage('/')
     try:
@@ -38,7 +55,8 @@ def profile_local_hardware():
         "cpu_cores": os.cpu_count() or 1,
         "ram_gb": round(ram_bytes / (1024**3), 2),
         "storage_total_gb": round(total_storage / (1024**3), 2),
-        "storage_free_gb": round(free_storage / (1024**3), 2)
+        "storage_free_gb": round(free_storage / (1024**3), 2),
+        "headless": is_headless()
     }
 
 def get_required_ssh_key():
@@ -54,6 +72,18 @@ def get_required_ssh_key():
         sys.exit(1)
 
     return metaesque_key
+
+def handle_ssh_auth_error(e, ssh_user, ip_address, key_filename):
+    """
+    Provides explicit user instructions if Fabric fails to authenticate.
+    """
+    err_str = str(e)
+    if "No authentication methods available" in err_str or "Authentication failed" in err_str:
+        print(f"\n  -> FATAL: SSH Authentication rejected by {ip_address}.")
+        print("  -> ACTION REQUIRED: You must copy your public key to the remote node to establish trust.")
+        print(f"  -> Run this command in your terminal now:\n")
+        print(f"     ssh-copy-id -i {key_filename}.pub {ssh_user}@{ip_address}\n")
+        sys.exit(1)
 
 def profile_remote_hardware(ip_address, ssh_user, key_filename):
     """
@@ -80,6 +110,7 @@ def profile_remote_hardware(ip_address, ssh_user, key_filename):
         return hw_details
 
     except Exception as e:
+        handle_ssh_auth_error(e, ssh_user, ip_address, key_filename)
         print(f"  -> FATAL: Remote interrogation failed: {e}")
         print("  -> Falling back to default baseline estimations.")
         return {
@@ -130,6 +161,7 @@ def main():
     print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
     print(f"  IP Address: {local_hw['ip_address']}")
     print(f"  RAM capacity: {local_hw['ram_gb']} GB")
+    print(f"  Headless Status: {local_hw['headless']}")
 
     print("\nConfigure Cluster Topology:")
     print("  [0] Tier 0: Single Laptop Minilith (Constrained Context)")
@@ -180,6 +212,10 @@ def main():
         print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
         compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
 
+        # --- PHASE 2: Live SSH Model Pull Execution (TODO) ---
+        # TODO: Safely implement robust remote model pulling logic here once progress bar
+        # streaming and timeout limits are finalized in the Fabric deployment block.
+
         profile["nodes"].append({
             "hostname": compute_host,
             "tier": 2,
@@ -200,6 +236,9 @@ def main():
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw
         })
+
+        # Local model pulling execution for Tier 0 / Tier 1 (TODO)
+        # TODO: Implement local model pull execution here using subprocess.
 
     # Execute dynamic local update pass via inherited orchestrator library
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
@@ -226,6 +265,7 @@ def main():
             c.put("profile.json", "repo/profile.json")
             print(f"  -> Successfully pushed to {compute_host}.")
         except Exception as e:
+            handle_ssh_auth_error(e, ssh_user, compute_ip, ssh_key)
             print(f"  -> WARNING: Failed to push profile.json: {e}")
             print("  -> Run 'make sync-cluster' manually.")
 

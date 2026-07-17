@@ -1,3 +1,12 @@
+# ==============================================================================
+# SUPER CRITICAL: REMOTE SSH PRESERVATION MANDATE
+# ==============================================================================
+# The targets in this Makefile MUST NEVER execute in a manner that disrupts or
+# tears down the host OS Tailscale daemon if one is running natively.
+# Doing so will immediately sever the user's remote SSH session to the server.
+# The .metal flag is utilized specifically to skip Docker Compose commands
+# when native infrastructure is detected.
+
 SERVICE_TITLE = Tailscale Network Service
 SERVICE_NAME = tailscale
 DOCKER_SHELL_CMD = sh

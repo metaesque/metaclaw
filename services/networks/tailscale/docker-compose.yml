@@ -1,5 +1,14 @@
 services:
   tailscale:
+    # ==============================================================================
+    # SUPER CRITICAL: REMOTE SSH PRESERVATION MANDATE
+    # ==============================================================================
+    # This container must NEVER be started if the host relies on a bare-metal
+    # Tailscale daemon for remote SSH access. Because network_mode is set to "host",
+    # the container will clash with the host daemon, attempting to lock the TUN
+    # device (/dev/net/tun) and modifying local routing tables.
+    # This WILL sever the connection and lock the user out of their server.
+
     # WHAT THIS IS: A zero-config WireGuard mesh VPN daemon.
     # WHY THIS TOOL: It allows your entire AI farm to communicate securely as if they were
     # on the same physical switch, and bypasses Starlink/residential CGNAT firewalls.
