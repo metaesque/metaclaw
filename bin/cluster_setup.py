@@ -155,6 +155,7 @@ def main():
             "tier": 2,
             "planes": ["control", "execution", "archive"],
             "require_wan": True,
+            "ssh_user": os.getlogin(),
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw
         })
@@ -179,24 +180,12 @@ def main():
         print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
         compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
 
-        # --- PHASE 2: Live SSH Model Pull Execution ---
-        print(f"\n[Phase 2] Verifying and pulling required LLMs on remote node.")
-        try:
-            connect_kwargs = {"key_filename": ssh_key}
-            c = Connection(host=compute_ip, user=ssh_user, connect_kwargs=connect_kwargs)
-            # pty=True ensures the Ollama progress bar streams naturally to the local terminal
-            # without getting buffered by Python's subprocessing layers.
-            c.run("OLLAMA_HOST=0.0.0.0:11434 ~/repo/services/runners/ollama/bin/ollama pull ingu627/llama4-scout-q4:109b", pty=True)
-            print("  -> Model verification complete.")
-        except Exception as e:
-            print(f"  -> WARNING: Failed to pull remote models via SSH: {e}")
-            print("  -> You may need to pull models manually on the compute node later.")
-
         profile["nodes"].append({
             "hostname": compute_host,
             "tier": 2,
             "planes": ["compute"],
             "require_wan": True,
+            "ssh_user": ssh_user,
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": compute_hw
         })
@@ -207,17 +196,10 @@ def main():
             "tier": int(tier_choice),
             "planes": ["control", "compute", "execution", "archive"],
             "require_wan": False,
+            "ssh_user": os.getlogin(),
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw
         })
-
-        # Local model pulling execution for Tier 0 / Tier 1
-        print(f"\n[Phase 2] Verifying and pulling required LLMs locally...")
-        try:
-            subprocess.run(["./services/runners/ollama/bin/ollama", "pull", "gemma4:e4b"], check=False)
-            print("  -> Model verification complete.")
-        except Exception:
-            print("  -> WARNING: Local model pull failed. Ensure Ollama is running.")
 
     # Execute dynamic local update pass via inherited orchestrator library
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
@@ -246,6 +228,8 @@ def main():
         except Exception as e:
             print(f"  -> WARNING: Failed to push profile.json: {e}")
             print("  -> Run 'make sync-cluster' manually.")
+
+    print("\nCluster configuration complete. Proceed by running: make wizard-cluster")
 
 if __name__ == "__main__":
     main()

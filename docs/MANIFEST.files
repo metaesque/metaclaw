@@ -35,6 +35,7 @@ bin/setup_plane.sh
 bin/sync_cluster.py
 bin/sysprofile.py
 bin/todo.py
+bin/wizard_cluster.py
 docs/ARCHITECTURE.md
 docs/CHANGELOG.md
 docs/DEMOS.md

@@ -28,7 +28,7 @@ export
 
 .PHONY: no_default
 no_default:
-	@echo "ERROR: Provide explicit target (e.g., make setup, make wizard-batch, make apply)."
+	@echo "ERROR: Provide explicit target (e.g., make setup, make wizard-cluster, make apply)."
 	@exit 1
 
 # OS-Agnostic Open Command
@@ -56,7 +56,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
+.PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
 
 # ==============================================================================
 # ENVIRONMENT BOOTSTRAPPING & UPDATES
@@ -112,9 +112,14 @@ setup: | $(PYTHON_BIN)
 	@$(PYTHON_BIN) ./bin/compile_md.py --setup
 	@echo "\n[Setup] Step 4: Instantiating global environment variables..."
 	@$(MAKE) --no-print-directory .env
+
+# WHAT IT DOES: Distributes and executes wizard-batch across all nodes via SSH
+# WHY IT EXISTS: Solves the chicken-and-egg deployment problem by ensuring the cluster is built sequentially.
+wizard-cluster: | $(PYTHON_BIN)
 	@echo "################################################################################"
-	@echo "# SETUP COMPLETE. Proceed by running: make wizard"
+	@echo "# INITIATING DISTRIBUTED CLUSTER WIZARD"
 	@echo "################################################################################"
+	@$(PYTHON_BIN) ./bin/wizard_cluster.py
 
 # ==============================================================================
 # ORCHESTRATION & NETWORKING
