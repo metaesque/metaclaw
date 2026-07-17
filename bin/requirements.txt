@@ -11,5 +11,4 @@ psycopg2-binary
 playwright
 markdown
 python_kasa
-
-
+fabric

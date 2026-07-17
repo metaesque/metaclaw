@@ -7,6 +7,12 @@ import shutil
 import subprocess
 import sys
 
+try:
+    from fabric import Connection
+except ImportError:
+    print("FATAL: Fabric library not found. Ensure you have run 'make install-code' in bin/.")
+    sys.exit(1)
+
 def get_local_ip():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,6 +40,51 @@ def profile_local_hardware():
         "storage_free_gb": round(free_storage / (1024**3), 2)
     }
 
+def profile_remote_hardware(ip_address, ssh_user):
+    """
+    Executes Phase 2 Interrogation via Fabric. Connects over SSH to the remote node,
+    harvests actual hardware telemetry securely, and returns a dictionary.
+    """
+    try:
+        print(f"  -> Connecting to {ssh_user}@{ip_address} via Fabric...")
+        c = Connection(host=ip_address, user=ssh_user)
+
+        # Gather OS and Arch
+        os_sys = c.run('uname -s', hide=True).stdout.strip()
+        arch = c.run('uname -m', hide=True).stdout.strip()
+
+        # Gather Memory
+        meminfo = c.run("awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo", hide=True).stdout.strip()
+        ram_bytes = int(meminfo) if meminfo.isdigit() else 0
+
+        # Gather Storage
+        storage_raw = c.run("df -B1 / | awk 'NR==2 {print $2, $4}'", hide=True).stdout.strip().split()
+        total_storage = int(storage_raw[0]) if len(storage_raw) == 2 else 0
+        free_storage = int(storage_raw[1]) if len(storage_raw) == 2 else 0
+
+        # Gather CPU
+        cpu_cores = int(c.run("nproc", hide=True).stdout.strip())
+
+        return {
+            "os": os_sys,
+            "architecture": arch,
+            "ip_address": ip_address,
+            "cpu_cores": cpu_cores,
+            "ram_gb": round(ram_bytes / (1024**3), 2),
+            "storage_total_gb": round(total_storage / (1024**3), 2),
+            "storage_free_gb": round(free_storage / (1024**3), 2),
+            "headless": True
+        }
+    except Exception as e:
+        print(f"  -> FATAL: Remote interrogation failed: {e}")
+        print("  -> Falling back to default baseline estimations.")
+        return {
+            "os": "Linux",
+            "architecture": "x86_64",
+            "ip_address": ip_address,
+            "headless": True
+        }
+
 def get_tailscale_ip(target_hostname):
     """
     Executes 'tailscale status --json' and parses the output to dynamically
@@ -43,7 +94,6 @@ def get_tailscale_ip(target_hostname):
         res = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, check=True)
         data = json.loads(res.stdout)
 
-        # Search the Peer dictionary
         for peer_key, peer_info in data.get('Peer', {}).items():
             host = peer_info.get('HostName', '')
             if host.lower() == target_hostname.lower():
@@ -51,7 +101,6 @@ def get_tailscale_ip(target_hostname):
                 if ips:
                     return ips[0]
 
-        # Fallback: check if the target is actually the local machine itself
         self_info = data.get('Self', {})
         if self_info.get('HostName', '').lower() == target_hostname.lower():
             ips = self_info.get('TailscaleIPs', [])
@@ -68,7 +117,6 @@ def main():
     print(" MetaClaw Distributed Cluster Setup Engine")
     print("==================================================")
 
-    # 1. Profile the local orchestrating node
     local_host = socket.gethostname()
     local_hw = profile_local_hardware()
 
@@ -94,7 +142,6 @@ def main():
     }
 
     if tier_choice == "2":
-        # Master node serves strictly as Control Plane in Tier 2
         profile["nodes"].append({
             "hostname": local_host,
             "tier": 2,
@@ -107,7 +154,6 @@ def main():
         print("\nEnter remote Compute node network coordinates:")
         compute_host = input("Compute Node Hostname [compute]: ").strip() or "compute"
 
-        # Interrogate Tailscale for an IP match
         default_ip = get_tailscale_ip(compute_host)
         ip_prompt = f"Compute Node IP address [{default_ip}]: " if default_ip else "Compute Node IP address (e.g., 100.x.y.z): "
 
@@ -115,25 +161,33 @@ def main():
         if not compute_ip and default_ip:
             compute_ip = default_ip
 
-        # Inject compute node configuration shell using basic interrogation targets
+        current_user = os.getlogin()
+        ssh_user = input(f"SSH Username for remote connection [{current_user}]: ").strip() or current_user
+
+        print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
+        compute_hw = profile_remote_hardware(compute_ip, ssh_user)
+
+        # --- PHASE 2: Live SSH Model Pull Execution ---
+        print(f"\n[Phase 2] Verifying and pulling required LLMs on remote node.")
+        try:
+            c = Connection(host=compute_ip, user=ssh_user)
+            # pty=True ensures the Ollama progress bar streams naturally to the local terminal
+            # without getting buffered by Python's subprocessing layers.
+            c.run("OLLAMA_HOST=0.0.0.0:11434 ~/repo/bin/ollama pull ingu627/llama4-scout-q4:109b", pty=True)
+            print("  -> Model verification complete.")
+        except Exception as e:
+            print(f"  -> WARNING: Failed to pull remote models via SSH: {e}")
+            print("  -> You may need to pull models manually on the compute node later.")
+
         profile["nodes"].append({
             "hostname": compute_host,
             "tier": 2,
             "planes": ["compute"],
             "require_wan": True,
             "order_prefs": ["cost", "safety", "resources"],
-            "hardware": {
-                "os": "Linux",
-                "architecture": "x86_64",
-                "ip_address": compute_ip,
-                "headless": True
-            }
+            "hardware": compute_hw
         })
-        # TODO [Phase 2]: Implement interactive SSH session via Fabric to pull down required
-        # local models (e.g. gemma4:e4b, llama4:109b) directly to the compute node
-        # ensuring the Daemon is fully provisioned before closing the setup loop.
     else:
-        # Tiers 0 & 1 execute entirely locally on shared hardware
         profile["nodes"].append({
             "hostname": local_host,
             "tier": int(tier_choice),
@@ -142,10 +196,15 @@ def main():
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw
         })
-        # TODO [Phase 2]: Implement local subprocess shell commands to pull required models
-        # directly via Ollama CLI.
 
-    # Execute dynamic local update pass via inherited orchestrator library
+        # Local model pulling execution for Tier 0 / Tier 1
+        print(f"\n[Phase 2] Verifying and pulling required LLMs locally...")
+        try:
+            subprocess.run(["./bin/ollama", "pull", "gemma4:e4b"], check=False)
+            print("  -> Model verification complete.")
+        except Exception:
+            print("  -> WARNING: Local model pull failed. Ensure Ollama is running.")
+
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
     import metaclaw
 

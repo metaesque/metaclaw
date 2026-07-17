@@ -96,11 +96,28 @@ def setdefault_path(d, path_keys):
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
-# Enable OpenAI-compatible completions endpoint for testing script integration
+# ==============================================================================
+# DEVELOPER API SECURITY GATE
+# ==============================================================================
+# WHAT THIS DOES: Conditionally enables the /v1/chat/completions endpoint on OpenClaw.
+# WHY THIS EXISTS: We utilize this endpoint to test prompt-to-model resolution
+# via bin/openclaw_test.py. However, exposing a generic OpenAI-compatible interface
+# on the Gateway expands the attack surface, allowing potential headless script
+# abuse if the token leaks. To protect non-technical users, this is strictly
+# gated behind an administrative .env flag and defaults to disabled.
+
+enable_dev_apis = os.environ.get('OPENCLAW_ENABLE_DEV_APIS', 'false').lower() == 'true'
+
 http_cfg = setdefault_path(data, ['gateway', 'http'])
 endpoints_cfg = setdefault_path(http_cfg, ['endpoints'])
 chat_comp_cfg = setdefault_path(endpoints_cfg, ['chatCompletions'])
-chat_comp_cfg['enabled'] = True
+
+if enable_dev_apis:
+    chat_comp_cfg['enabled'] = True
+    print("WARNING: Developer APIs (chatCompletions) actively enabled via OPENCLAW_ENABLE_DEV_APIS.")
+else:
+    chat_comp_cfg['enabled'] = False
+    print("SECURE: Developer APIs (chatCompletions) disabled to minimize attack surface.")
 
 cui = setdefault_path(data, ['gateway', 'controlUi'])
 cui['allowInsecureAuth'] = True
@@ -127,7 +144,6 @@ auth = setdefault_path(data, ['gateway', 'auth'])
 auth['token'] = proxy_key
 
 # Fix cross-agent delegation visibility error
-# Remove the invalid 'gateway' nesting for 'tools' created in a previous turn
 if 'tools' in data.get('gateway', {}):
     del data['gateway']['tools']
 
@@ -300,7 +316,6 @@ with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
 
 print("SUCCESS: Patched baseline network routing and loopback binding.")
-print("SUCCESS: Enabled chatCompletions API endpoint.")
 print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
