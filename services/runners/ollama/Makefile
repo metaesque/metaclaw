@@ -49,8 +49,8 @@ down:
 	@if [ -f $(PID_FILE) ]; then \
 		kill $$(cat $(PID_FILE)) 2>/dev/null || true ; \
 		rm -f $(PID_FILE) ; \
-	fi
-	@ORPHAN=$$(lsof -t -i TCP:$(OLLAMA_PORT) 2>/dev/null) ; \
+	fi \
+	ORPHAN=$$(lsof -t -i TCP:$(OLLAMA_PORT) 2>/dev/null) ; \
 	if [ -n "$$ORPHAN" ]; then \
 		echo "Force killing orphaned process on port $(OLLAMA_PORT) (PID: $$ORPHAN)..." ; \
 		kill -9 $$ORPHAN 2>/dev/null || true ; \
@@ -77,7 +77,7 @@ check-status: status
 	@if grep -q "API unreachable" verification.log; then echo "FATAL: Ollama API unreachable."; exit 1; fi
 	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "Models Loaded:"
 
-clean-state: down
+clean-state:: down
 	@echo "Scrubbing local runtime state..."
 	@rm -f $(LOG_FILE) $(PID_FILE) verification.log index.html .updated
 
@@ -128,3 +128,4 @@ pull-judge: wait-healthy
 		echo "Pulling local judge model ($(JUDGE_MODEL_CLEAN))..."; \
 		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $(JUDGE_MODEL_CLEAN) || { echo "\nWARNING: Failed to pull $(JUDGE_MODEL_CLEAN). TLS error detected (SecPolicyCreateSSL). The OpenClaw Gateway will gracefully fallback to the cloud 'medium-model'."; exit 0; }; \
 	fi
+
