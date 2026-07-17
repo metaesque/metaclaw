@@ -56,7 +56,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
+.PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
 
 # ==============================================================================
 # ENVIRONMENT BOOTSTRAPPING & UPDATES
@@ -188,10 +188,14 @@ apply: symlinks
 		$(MAKE) --no-print-directory -C $$REAL_DIR apply || true; \
 	done
 
-# WHAT IT DOES: Executes `docker ps` for all managed containers, filtered to exclude unmanaged host containers.
-status:
+# WHAT IT DOES: Triggers the Python script to iterate through the cluster and report status across all nodes.
+status: | $(PYTHON_BIN)
+	@$(PYTHON_BIN) ./bin/cluster_status.py
+
+# WHAT IT DOES: Executes `docker ps` for all managed containers on the local machine.
+status-local:
 	@echo "################################################################################"
-	@echo "# GLOBAL INFRASTRUCTURE STATUS"
+	@echo "# LOCAL INFRASTRUCTURE STATUS"
 	@echo "################################################################################"
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \

@@ -11,6 +11,7 @@ bin/Makefile
 bin/browser.py
 bin/check_config.sh
 bin/cluster_setup.py
+bin/cluster_status.py
 bin/compare_config.sh
 bin/compile_md.py
 bin/customize.py
