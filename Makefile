@@ -105,19 +105,16 @@ setup: | $(PYTHON_BIN)
 	@echo "################################################################################"
 	@echo "# INITIATING METACLAW ENVIRONMENT SETUP"
 	@echo "################################################################################"
-	@echo "\n[Setup] Step 1: Profiling local hardware and establishing cluster tier..."
-	@$(PYTHON_BIN) ./bin/sysprofile.py
+	@$(PYTHON_BIN) ./bin/cluster_setup.py
 	@echo "\n[Setup] Step 2: Orchestrating dynamic symlinks and cross-node routing..."
 	@$(MAKE) --no-print-directory symlinks
-	@echo "\n[Setup] Step 3: User Customization (Modules & Workspace)..."
-	@$(PYTHON_BIN) ./bin/customize.py
-	@echo "\n[Setup] Step 4: Compiling modular taxonomy into documentation..."
+	@echo "\n[Setup] Step 3: Compiling modular taxonomy into documentation..."
 	@$(PYTHON_BIN) ./bin/compile_md.py --setup
-	@echo "\n[Setup] Step 5: Instantiating global environment variables..."
+	@echo "\n[Setup] Step 4: Instantiating global environment variables..."
 	@$(MAKE) --no-print-directory .env
 	@echo "################################################################################"
 	@echo "# SETUP COMPLETE. Proceed by running: make wizard"
-	@echo "################################################################################"
+	@echo "################################################────────────────################"
 
 # ==============================================================================
 # ORCHESTRATION & NETWORKING
@@ -330,7 +327,7 @@ wizard-run: bootstrap docs
 clean-state:
 	@echo "################################################################################"
 	@echo "# CLEANING LOCAL STATE ACROSS ALL SERVICES"
-	@echo "################################################################################"
+	@echo "################################────────────────────────────────################"
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \
