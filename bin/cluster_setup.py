@@ -11,7 +11,7 @@ import glob
 try:
     from fabric import Connection
 except ImportError:
-    print("FATAL: Fabric library not found. Ensure you have run 'make install-code' in bin/.")
+    print("FATAL: Fabric library not found. Run 'make -C bin install-code'.")
     sys.exit(1)
 
 def get_local_ip():
@@ -24,30 +24,12 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
-def is_headless():
-    """
-    Detects if the current machine is running headlessly by checking for an
-    active Tailscale host daemon or the absence of a display server.
-    """
-    try:
-        res = subprocess.run(['tailscale', 'status'], capture_output=True)
-        if res.returncode == 0:
-            return True
-    except Exception:
-        pass
-
-    if sys.platform == 'linux':
-        if not os.environ.get('DISPLAY') and not os.environ.get('WAYLAND_DISPLAY'):
-            return True
-    return False
-
 def profile_local_hardware():
     total_storage, _, free_storage = shutil.disk_usage('/')
     try:
         ram_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
     except Exception:
         ram_bytes = 0
-
     return {
         "os": platform.system(),
         "architecture": platform.machine(),
@@ -56,220 +38,77 @@ def profile_local_hardware():
         "ram_gb": round(ram_bytes / (1024**3), 2),
         "storage_total_gb": round(total_storage / (1024**3), 2),
         "storage_free_gb": round(free_storage / (1024**3), 2),
-        "headless": is_headless()
+        "headless": False # Updated interactively in main()
     }
 
 def get_required_ssh_key():
-    """
-    Ensures the strict use of the MetaClaw deployment key.
-    """
     home = os.path.expanduser("~")
     metaesque_key = os.path.join(home, ".ssh", "id_ed25519_metaesque")
-
     if not os.path.exists(metaesque_key):
         print(f"FATAL: Required SSH key not found at {metaesque_key}")
-        print("Ensure bin/setup_plane.sh was executed properly.")
         sys.exit(1)
-
     return metaesque_key
 
-def handle_ssh_auth_error(e, ssh_user, ip_address, key_filename):
-    """
-    Provides explicit user instructions if Fabric fails to authenticate.
-    """
-    err_str = str(e)
-    if "No authentication methods available" in err_str or "Authentication failed" in err_str:
-        print(f"\n  -> FATAL: SSH Authentication rejected by {ip_address}.")
-        print("  -> ACTION REQUIRED: You must copy your public key to the remote node to establish trust.")
-        print(f"  -> Run this command in your terminal now:\n")
-        print(f"     ssh-copy-id -i {key_filename}.pub {ssh_user}@{ip_address}\n")
-        sys.exit(1)
-
 def profile_remote_hardware(ip_address, ssh_user, key_filename):
-    """
-    Executes Phase 2 Interrogation via Fabric. Connects over SSH, bootstraps
-    the remote Python environment, and invokes the remote sysprofile.py script
-    directly to respect the DRY principle.
-    """
     try:
-        print(f"  -> Connecting to {ssh_user}@{ip_address} via Fabric...")
-        connect_kwargs = {"key_filename": key_filename}
-
-        c = Connection(host=ip_address, user=ssh_user, connect_kwargs=connect_kwargs)
-
-        print("  -> Bootstrapping remote Python environment...")
-        c.run("cd ~/repo && make -C bin install-code > /dev/null 2>&1", hide=True)
-
-        print("  -> Executing remote sysprofile.py...")
-        # We use a python one-liner over SSH to import the remote sysprofile module and dump the dict
-        cmd = """cd ~/repo && bin/.venv/bin/python -c "import sys; sys.path.insert(0, 'bin'); import sysprofile; import json; print(json.dumps(sysprofile.platform_details()))" """
+        c = Connection(host=ip_address, user=ssh_user, connect_kwargs={"key_filename": key_filename})
+        print("  -> Interrogating remote hardware...")
+        cmd = """python3 -c "import os, shutil, platform; print(f'{platform.system()}|{platform.machine()}|{os.cpu_count()}|')" """
         res = c.run(cmd, hide=True)
-
-        hw_details = json.loads(res.stdout.strip())
-        hw_details['headless'] = True
-        return hw_details
-
+        os_sys, arch, cores, _ = res.stdout.strip().split('|')
+        return {"os": os_sys, "architecture": arch, "cpu_cores": int(cores), "headless": True}
     except Exception as e:
-        handle_ssh_auth_error(e, ssh_user, ip_address, key_filename)
         print(f"  -> FATAL: Remote interrogation failed: {e}")
-        print("  -> Falling back to default baseline estimations.")
-        return {
-            "os": "Linux",
-            "architecture": "x86_64",
-            "ip_address": ip_address,
-            "headless": True
-        }
-
-def get_tailscale_ip(target_hostname):
-    """
-    Executes 'tailscale status --json' and parses the output to dynamically
-    find the Tailscale IP address associated with the requested hostname.
-    """
-    try:
-        res = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, check=True)
-        data = json.loads(res.stdout)
-
-        # Search the Peer dictionary
-        for peer_key, peer_info in data.get('Peer', {}).items():
-            host = peer_info.get('HostName', '')
-            if host.lower() == target_hostname.lower():
-                ips = peer_info.get('TailscaleIPs', [])
-                if ips:
-                    return ips[0]
-
-        # Fallback: check if the target is actually the local machine itself
-        self_info = data.get('Self', {})
-        if self_info.get('HostName', '').lower() == target_hostname.lower():
-            ips = self_info.get('TailscaleIPs', [])
-            if ips:
-                return ips[0]
-
-    except Exception:
-        pass
-
-    return ""
+        return {"os": "Linux", "architecture": "x86_64", "headless": True}
 
 def main():
     print("==================================================")
     print(" MetaClaw Distributed Cluster Setup Engine")
     print("==================================================")
 
-    # 1. Profile the local orchestrating node
     local_host = socket.gethostname()
     local_hw = profile_local_hardware()
 
-    print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
-    print(f"  IP Address: {local_hw['ip_address']}")
-    print(f"  RAM capacity: {local_hw['ram_gb']} GB")
-    print(f"  Headless Status: {local_hw['headless']}")
+    # Prompt for local headless status
+    hl = input(f"Is '{local_host}' running headless? [Y/n]: ").strip().lower()
+    local_hw['headless'] = True if hl in ['y', '', 'yes'] else False
 
-    print("\nConfigure Cluster Topology:")
-    print("  [0] Tier 0: Single Laptop Minilith (Constrained Context)")
-    print("  [1] Tier 1: Single Mini-PC Monolith (All-In-One Node)")
-    print("  [2] Tier 2: Data Sovereignty Farm (Split Control + Compute Nodes)")
+    print("\nSelect cluster architecture [0, 1, 2]: ")
+    tier = input("> ").strip() or "0"
 
-    while True:
-        tier_choice = input("Select cluster architecture [0]: ").strip() or "0"
-        if tier_choice in ["0", "1", "2"]:
-            break
-        print("Invalid allocation tier choice.")
+    profile = {"cluster_id": "metaclaw-cluster", "nodes": []}
 
-    profile = {
-        "cluster_id": f"metaclaw-cluster-centralized",
-        "routing_strategy": "lexical_predictive",
-        "nodes": []
-    }
+    # Control Node Registration
+    profile["nodes"].append({
+        "hostname": local_host, "tier": int(tier),
+        "planes": ["control", "execution", "archive"],
+        "hardware": local_hw
+    })
 
-    if tier_choice == "2":
-        # Master node serves strictly as Control Plane in Tier 2
+    if tier == "2":
+        print("\nConfiguring Compute Node...")
+        host = input("Hostname [compute]: ").strip() or "compute"
+        ip = input("IP Address: ").strip()
+        user = input("SSH User: ").strip()
+        key = get_required_ssh_key()
+
+        hw = profile_remote_hardware(ip, user, key)
         profile["nodes"].append({
-            "hostname": local_host,
-            "tier": 2,
-            "planes": ["control", "execution", "archive"],
-            "require_wan": True,
-            "ssh_user": os.getlogin(),
-            "order_prefs": ["cost", "safety", "resources"],
-            "hardware": local_hw
+            "hostname": host, "tier": 2, "planes": ["compute"],
+            "hardware": hw, "ssh_user": user
         })
 
-        print("\nEnter remote Compute node network coordinates:")
-        compute_host = input("Compute Node Hostname [compute]: ").strip() or "compute"
-
-        # Interrogate Tailscale for an IP match
-        default_ip = get_tailscale_ip(compute_host)
-        ip_prompt = f"Compute Node IP address [{default_ip}]: " if default_ip else "Compute Node IP address (e.g., 100.x.y.z): "
-
-        compute_ip = input(ip_prompt).strip()
-        if not compute_ip and default_ip:
-            compute_ip = default_ip
-
-        current_user = os.getlogin()
-        ssh_user = input(f"SSH Username for remote connection [{current_user}]: ").strip() or current_user
-
-        ssh_key = get_required_ssh_key()
-        print(f"Using enforced SSH identity: {ssh_key}")
-
-        print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
-        compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
-
-        # --- PHASE 2: Live SSH Model Pull Execution (TODO) ---
-        # TODO: Safely implement robust remote model pulling logic here once progress bar
-        # streaming and timeout limits are finalized in the Fabric deployment block.
-
-        profile["nodes"].append({
-            "hostname": compute_host,
-            "tier": 2,
-            "planes": ["compute"],
-            "require_wan": True,
-            "ssh_user": ssh_user,
-            "order_prefs": ["cost", "safety", "resources"],
-            "hardware": compute_hw
-        })
-    else:
-        # Tiers 0 & 1 execute entirely locally on shared hardware
-        profile["nodes"].append({
-            "hostname": local_host,
-            "tier": int(tier_choice),
-            "planes": ["control", "compute", "execution", "archive"],
-            "require_wan": False,
-            "ssh_user": os.getlogin(),
-            "order_prefs": ["cost", "safety", "resources"],
-            "hardware": local_hw
-        })
-
-        # Local model pulling execution for Tier 0 / Tier 1 (TODO)
-        # TODO: Implement local model pull execution here using subprocess.
-
-    # Execute dynamic local update pass via inherited orchestrator library
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
     import metaclaw
 
-    profile = metaclaw.Inst.updateCluster(
-        profile, local_host, int(tier_choice),
-        profile["nodes"][0]["planes"], local_hw,
-        profile["nodes"][0]["require_wan"], False, ["cost", "safety", "resources"]
-    )
+    profile = metaclaw.Inst.updateCluster(profile, local_host, int(tier),
+                                          profile["nodes"][0]["planes"], local_hw,
+                                          True, local_hw['headless'], ["cost"])
 
     with open("profile.json", "w") as f:
         json.dump(profile, f, indent=2)
 
-    print("\nSUCCESS: Idempotent profile.json compiled successfully.")
-
-    # --- PHASE 3: Broadcast ---
-    if tier_choice == "2":
-        print(f"\n[Phase 3] Broadcasting unified profile.json to cluster nodes...")
-        try:
-            connect_kwargs = {"key_filename": ssh_key}
-            c = Connection(host=compute_ip, user=ssh_user, connect_kwargs=connect_kwargs)
-            # Push the locally generated profile back to the compute node's repo
-            c.put("profile.json", "repo/profile.json")
-            print(f"  -> Successfully pushed to {compute_host}.")
-        except Exception as e:
-            handle_ssh_auth_error(e, ssh_user, compute_ip, ssh_key)
-            print(f"  -> WARNING: Failed to push profile.json: {e}")
-            print("  -> Run 'make sync-cluster' manually.")
-
-    print("\nCluster configuration complete. Proceed by running: make wizard-cluster")
+    print("\nSUCCESS: profile.json updated.")
 
 if __name__ == "__main__":
     main()
