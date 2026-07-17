@@ -15,9 +15,10 @@ echo "##########################################################################
 # 1. System Dependencies
 # Ubuntu Server Minimal strips make and python3-venv to reduce attack surface.
 # We must inject them before we can execute any Makefile targets.
+# jq is required for securely parsing and merging .env.json payloads over SSH.
 echo "[*] Installing core system dependencies..."
 sudo apt-get update
-sudo apt-get install -y make python3-venv python3-pip git curl netcat-openbsd
+sudo apt-get install -y make python3-venv python3-pip git curl netcat-openbsd jq
 
 # 2. SSH Identity Generation
 KEY_PATH="$HOME/.ssh/id_ed25519_metaesque"
