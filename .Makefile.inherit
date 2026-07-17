@@ -36,7 +36,7 @@ EXTERNAL_DRIVE_PATH := $(FRAMEWORK_ROOT)/external/metaclaw
 endif
 export EXTERNAL_DRIVE_PATH
 
-docs:
+docs::
 	@if [ -f index.md ]; then \
 		echo "[$(SERVICE_NAME)] Compiling markdown documentation..."; \
 		$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html; \
@@ -54,7 +54,7 @@ verify_service:
 		fi; \
 	fi
 
-up: .env verify_service pre-up docs
+up:: .env verify_service pre-up docs
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping 'up'."; \
 	else \
@@ -67,7 +67,7 @@ up: .env verify_service pre-up docs
 		$(MAKE) --no-print-directory post-up; \
 	fi
 
-down: pre-down
+down:: pre-down
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping 'down'."; \
 	else \
@@ -80,30 +80,30 @@ down: pre-down
 		$(MAKE) --no-print-directory post-down; \
 	fi
 
-logs:
+logs::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
 	else \
 		docker logs -f $(SERVICE_NAME); \
 	fi
 
-status:
+status::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
 	else \
 		docker ps -f name=^/$(SERVICE_NAME)$$; \
 	fi
 
-shell:
+shell::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented."; \
 	else \
 		docker exec -it $(SERVICE_NAME) $(DOCKER_SHELL_CMD); \
 	fi
 
-apply: .state_recreate .state_restart
+apply:: .state_recreate .state_restart
 
-restart:
+restart::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping restart."; \
 	else \
@@ -137,7 +137,7 @@ restart:
 	fi
 	@touch .state_restart
 
-check-logs:
+check-logs::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping log scan."; \
 	else \
@@ -152,7 +152,7 @@ check-logs:
 		fi; \
 	fi
 
-check-status:
+check-status::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping status check."; \
 	else \
@@ -174,7 +174,7 @@ clean-state::
 	@echo "[$(SERVICE_NAME)] Scrubbing ephemeral runtime state..."
 	@rm -f .env .up_stamp .state_* router.json verification.log index.html .metal
 
-wait-healthy:
+wait-healthy::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping health wait."; \
 	else \

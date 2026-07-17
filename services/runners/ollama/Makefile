@@ -21,17 +21,7 @@ JUDGE_MODEL_CLEAN = $(shell echo $(OPENCLAW_JUDGE_MODEL) | sed 's/ollama\///')
 
 .PHONY: up down status clean-state clobber-data check-status check-logs wait-healthy pull-judge apply docs
 
-docs: | $(PYTHON_BIN)
-	@if [ -f index.md ]; then \
-		echo "[$(SERVICE_TITLE)] Compiling markdown documentation..."; \
-		$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html; \
-	fi
-
-.env: .env.template $(wildcard .env.json)
-	@echo "Instantiating .env for $(SERVICE_TITLE)..."
-	$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/env_instantiate.py $(if $(filter down clean-state clobber-data,$(MAKECMDGOALS)),--teardown)
-
-up: .env ./bin/ollama docs
+up:: ./bin/ollama
 	@if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
 		echo "Ollama is already running (PID: $$(cat $(PID_FILE)))" ; \
 	else \
@@ -44,30 +34,30 @@ up: .env ./bin/ollama docs
 	fi
 	@$(MAKE) --no-print-directory pull-judge
 
-down:
+down::
 	@echo "Stopping Ollama..."
 	@if [ -f $(PID_FILE) ]; then \
 		kill $$(cat $(PID_FILE)) 2>/dev/null || true ; \
 		rm -f $(PID_FILE) ; \
-	fi \
-	ORPHAN=$$(lsof -t -i TCP:$(OLLAMA_PORT) 2>/dev/null) ; \
+	fi
+	@ORPHAN=$$(lsof -t -i TCP:$(OLLAMA_PORT) 2>/dev/null) ; \
 	if [ -n "$$ORPHAN" ]; then \
 		echo "Force killing orphaned process on port $(OLLAMA_PORT) (PID: $$ORPHAN)..." ; \
 		kill -9 $$ORPHAN 2>/dev/null || true ; \
 	fi
 
-status:
+status::
 	@if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
 		echo "Ollama is RUNNING." ; \
 	else \
 		echo "Ollama is STOPPED." ; \
 	fi
 
-check-logs:
+check-logs::
 	@echo "[$(SERVICE_TITLE)] Tailing last 5 lines of $(LOG_FILE)..."
 	@tail -n 5 $(LOG_FILE) 2>/dev/null || echo "Log file not found."
 
-check-status: status
+check-status:: status
 	@echo "================================================================================"
 	@echo "= $(SERVICE_TITLE) INTEGRITY VERIFICATION"
 	@echo "================================================================================"
@@ -88,7 +78,7 @@ clobber-data:
 	fi
 
 # Root reconciliation integration
-apply: .env
+apply:: .env
 	@echo "[$(SERVICE_TITLE)] Reconciling state..."
 	@chmod +x install.sh
 	@rm -f .updated
@@ -106,7 +96,7 @@ apply: .env
 	@chmod +x install.sh
 	@./install.sh
 
-wait-healthy: status
+wait-healthy:: status
 	@echo "[$(SERVICE_TITLE)] Awaiting healthy state..."
 	@attempt=1; \
 	while [ $$attempt -le 30 ]; do \
@@ -128,4 +118,3 @@ pull-judge: wait-healthy
 		echo "Pulling local judge model ($(JUDGE_MODEL_CLEAN))..."; \
 		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $(JUDGE_MODEL_CLEAN) || { echo "\nWARNING: Failed to pull $(JUDGE_MODEL_CLEAN). TLS error detected (SecPolicyCreateSSL). The OpenClaw Gateway will gracefully fallback to the cloud 'medium-model'."; exit 0; }; \
 	fi
-
