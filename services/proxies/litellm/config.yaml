@@ -46,7 +46,7 @@ model_list:
       api_base: "os.environ/COMPLEX_MODEL_API_BASE"
       api_key: "os.environ/COMPLEX_MODEL_API_KEY"
 
-  - model_name: reasoning-model
+  - model_name: frontier-model
     litellm_params:
       model: "os.environ/COMPLEX_MODEL_ID"
       api_base: "os.environ/COMPLEX_MODEL_API_BASE"
@@ -60,15 +60,25 @@ model_list:
   # --------------------------------------------------------------------------
   # FALLBACK CHAIN (Resilience against API downtime or rate limits)
   # --------------------------------------------------------------------------
-  # WHAT THIS DOES: If the primary 'complex-model' fails, LiteLLM automatically
+  # WHAT THIS DOES: If the primary model fails, LiteLLM automatically
   # routes the request to this fallback instead of crashing the OpenClaw agent.
+
+  - model_name: simple-model-fallback
+    litellm_params:
+      model: gemini/gemini-2.5-flash-lite
+      api_key: "os.environ/GEMINI_API_KEY"
+
+  - model_name: medium-model-fallback
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: "os.environ/GEMINI_API_KEY"
 
   - model_name: complex-model-fallback
     litellm_params:
       model: gemini/gemini-2.5-pro
       api_key: "os.environ/GEMINI_API_KEY"
 
-  - model_name: reasoning-model-fallback
+  - model_name: frontier-model-fallback
     litellm_params:
       model: gemini/gemini-3.1-pro-preview
       api_key: "os.environ/GEMINI_API_KEY"
@@ -112,8 +122,10 @@ router_settings:
   routing_strategy_args:
     auto_router_config_path: "/app/router.json"
   fallbacks:
+    - {"simple-model": ["simple-model-fallback"]}
+    - {"medium-model": ["medium-model-fallback"]}
     - {"complex-model": ["complex-model-fallback"]}
-    - {"reasoning-model": ["reasoning-model-fallback"]}
+    - {"frontier-model": ["frontier-model-fallback"]}
 
 general_settings:
   # Hard budget constraint to prevent infinite loop exploitation by rogue agents

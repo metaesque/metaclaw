@@ -96,6 +96,12 @@ def setdefault_path(d, path_keys):
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
+# Enable OpenAI-compatible completions endpoint for testing script integration
+http_cfg = setdefault_path(data, ['gateway', 'http'])
+endpoints_cfg = setdefault_path(http_cfg, ['endpoints'])
+chat_comp_cfg = setdefault_path(endpoints_cfg, ['chatCompletions'])
+chat_comp_cfg['enabled'] = True
+
 cui = setdefault_path(data, ['gateway', 'controlUi'])
 cui['allowInsecureAuth'] = True
 
@@ -294,6 +300,7 @@ with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
 
 print("SUCCESS: Patched baseline network routing and loopback binding.")
+print("SUCCESS: Enabled chatCompletions API endpoint.")
 print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")

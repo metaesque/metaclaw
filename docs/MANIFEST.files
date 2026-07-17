@@ -24,6 +24,7 @@ bin/litellm_test.py
 bin/newcode.py
 bin/newpwd.py
 bin/openclaw_releases.py
+bin/openclaw_test.py
 bin/orchestrate.py
 bin/parse_prompts_gem.py
 bin/parse_prompts_oc.py

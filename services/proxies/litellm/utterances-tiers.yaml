@@ -136,7 +136,7 @@ complex-model:
   - Write a script to automate the deployment of a dual-homed Docker swarm environment.
   - Analyze the tokenomics of a newly proposed layer-2 blockchain scaling solution.
   - Design a dynamic pricing algorithm for studio memberships based on utilization and time-of-day.
-reasoning-model:
+frontier-model:
   - Prove that the square root of 2 is irrational.
   - Solve the Monty Hall problem and provide a rigorous mathematical proof for why switching is optimal.
   - Analyze the ethical implications of deploying autonomous weapons systems.

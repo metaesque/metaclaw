@@ -129,6 +129,9 @@ def main():
                 "headless": True
             }
         })
+        # TODO [Phase 2]: Implement interactive SSH session via Fabric to pull down required
+        # local models (e.g. gemma4:e4b, llama4:109b) directly to the compute node
+        # ensuring the Daemon is fully provisioned before closing the setup loop.
     else:
         # Tiers 0 & 1 execute entirely locally on shared hardware
         profile["nodes"].append({
@@ -139,6 +142,8 @@ def main():
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw
         })
+        # TODO [Phase 2]: Implement local subprocess shell commands to pull required models
+        # directly via Ollama CLI.
 
     # Execute dynamic local update pass via inherited orchestrator library
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
