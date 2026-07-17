@@ -26,15 +26,6 @@ ROUTER_KIND ?= tiers
 # SERVICE-SPECIFIC TARGETS
 # ==============================================================================
 
-# Override the inherited 'apply' to explicitly track config.yaml modifications
-apply:
-	@if [ config.yaml -nt .start ] 2>/dev/null || [ ! -f .start ]; then \
-		echo "[$(SERVICE_TITLE)] Detected config.yaml modifications. Restarting proxy..."; \
-		$(MAKE) --no-print-directory restart; \
-	else \
-		$(MAKE) --no-print-directory -f $(FRAMEWORK_ROOT)/.Makefile.inherit apply; \
-	fi
-
 post-check-status:
 	@echo "Running diagnostic suite (~30s) ..."
 	@echo "--- 1. Web Server Health ---" > verification.log

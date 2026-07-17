@@ -83,7 +83,7 @@ clean-local-state:
 	@docker rmi openclaw-sandbox:bookworm-slim 2>/dev/null || true
 
 # Apply target fixed to trigger symlink and pre-up before non-destructive reload
-apply: symlink pre-up .state_recreate .state_restart
+apply:: symlink pre-up .state_recreate .state_restart
 
 # Creates a human-friendly symlink from project root to service config
 symlink:

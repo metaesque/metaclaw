@@ -218,7 +218,18 @@ def main():
         json.dump(profile, f, indent=2)
 
     print("\nSUCCESS: Idempotent profile.json compiled successfully.")
-    print("If operating a Tier 2 infrastructure, run 'make sync-cluster' to distribute state.")
+
+    # --- PHASE 3: Broadcast ---
+    if tier_choice == "2":
+        print(f"\n[Phase 3] Broadcasting unified profile.json to cluster nodes...")
+        try:
+            c = Connection(host=compute_ip, user=ssh_user)
+            # Push the locally generated profile back to the compute node's repo
+            c.put("profile.json", "repo/profile.json")
+            print(f"  -> Successfully pushed to {compute_host}.")
+        except Exception as e:
+            print(f"  -> WARNING: Failed to push profile.json: {e}")
+            print("  -> Run 'make sync-cluster' manually.")
 
 if __name__ == "__main__":
     main()

@@ -97,7 +97,7 @@ gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
 # ==============================================================================
-# DEVELOPER API SECURITY GATE
+# METACLAW ADMIN SECURITY GATE
 # ==============================================================================
 # WHAT THIS DOES: Conditionally enables the /v1/chat/completions endpoint on OpenClaw.
 # WHY THIS EXISTS: We utilize this endpoint to test prompt-to-model resolution
@@ -106,7 +106,7 @@ gw['mode'] = 'local'
 # abuse if the token leaks. To protect non-technical users, this is strictly
 # gated behind an administrative .env flag and defaults to disabled.
 
-enable_dev_apis = os.environ.get('OPENCLAW_ENABLE_DEV_APIS', 'false').lower() == 'true'
+enable_dev_apis = os.environ.get('METACLAW_ADMIN', 'false').lower() == 'true'
 
 http_cfg = setdefault_path(data, ['gateway', 'http'])
 endpoints_cfg = setdefault_path(http_cfg, ['endpoints'])
@@ -114,7 +114,7 @@ chat_comp_cfg = setdefault_path(endpoints_cfg, ['chatCompletions'])
 
 if enable_dev_apis:
     chat_comp_cfg['enabled'] = True
-    print("WARNING: Developer APIs (chatCompletions) actively enabled via OPENCLAW_ENABLE_DEV_APIS.")
+    print("WARNING: Developer APIs (chatCompletions) actively enabled via METACLAW_ADMIN.")
 else:
     chat_comp_cfg['enabled'] = False
     print("SECURE: Developer APIs (chatCompletions) disabled to minimize attack surface.")
