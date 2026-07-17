@@ -181,3 +181,7 @@ All markdown files must respect a strict **80-character line width limit.**
 Sensible exceptions include long URLs, shell commands, JSON schemas, or
 continuous code blocks that cannot be safely broken without destroying
 copy-paste functionality.
+
+## 12. The Tailscale Lifeline Mandate
+
+Never propose commands (like `tailscale set --ssh=false`) or Docker configurations that disable, override, or conflict with a bare-metal Tailscale installation. Doing so will sever the user's remote connection to headless nodes. Always assume remote nodes are accessed via Tailscale.

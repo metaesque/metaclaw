@@ -5,12 +5,6 @@ import socket
 import subprocess
 import sys
 
-try:
-    from fabric import Connection
-except ImportError:
-    print("FATAL: Fabric library not found. Ensure you have run 'make install-code' in bin/.")
-    sys.exit(1)
-
 def get_required_ssh_key():
     """
     Ensures the strict use of the MetaClaw deployment key for remote nodes.
@@ -37,6 +31,7 @@ def main():
         profile = json.load(f)
 
     local_host = socket.gethostname()
+    ssh_key = get_required_ssh_key()
 
     for node in profile.get("nodes", []):
         hostname = node.get("hostname")
@@ -55,14 +50,24 @@ def main():
         else:
             ip = node.get("hardware", {}).get("ip_address")
             ssh_user = node.get("ssh_user", os.getlogin())
-            ssh_key = get_required_ssh_key()
 
-            connect_kwargs = {"key_filename": ssh_key}
+            # Using native ssh with pseudo-tty (-t) allows interactive streaming
+            # of progress bars (like ollama pull) directly to the local terminal
+            ssh_cmd = [
+                "ssh", "-i", ssh_key,
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-o", "LogLevel=ERROR",
+                "-t",
+                f"{ssh_user}@{ip}",
+                "cd ~/repo && make wizard-batch"
+            ]
+
             try:
-                c = Connection(host=ip, user=ssh_user, connect_kwargs=connect_kwargs)
-                # pty=True ensures all output streams directly to the local terminal,
-                # including Docker Compose logs and interactive progress bars (like ollama pull).
-                c.run("cd ~/repo && make wizard-batch", pty=True)
+                res = subprocess.run(ssh_cmd)
+                if res.returncode != 0:
+                    print(f"FATAL: Remote wizard-batch failed on {hostname} with exit code {res.returncode}")
+                    sys.exit(1)
             except Exception as e:
                 print(f"FATAL: Remote wizard-batch failed on {hostname}: {e}")
                 sys.exit(1)

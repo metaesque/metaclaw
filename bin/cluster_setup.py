@@ -6,7 +6,6 @@ import platform
 import shutil
 import subprocess
 import sys
-import glob
 
 def get_local_ip():
     try:
@@ -219,6 +218,7 @@ def main():
     print(" MetaClaw Distributed Cluster Setup Engine")
     print("==================================================")
 
+    # 1. Profile the local orchestrating node
     local_host = socket.gethostname()
     local_hw = profile_local_hardware()
 
@@ -279,11 +279,13 @@ def main():
         print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
         compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
 
+        # CRITICAL FIX: Overwrite the hardware IP returned by sysprofile (which is the LAN IP)
+        # with the explicitly resolved Tailscale IP, so all downstream orchestration uses Tailscale SSH.
+        compute_hw['ip_address'] = compute_ip
+
         c_default_hl = 'y' if compute_hw.get('tailscale_active') else 'y'
         c_hl_input = input(f"Is Compute node '{compute_host}' running headless? [{c_default_hl}]: ").strip().lower()
         compute_hw['headless'] = True if c_hl_input in ['y', 'yes'] else (False if c_hl_input in ['n', 'no'] else c_default_hl == 'y')
-
-        # TODO: Model pulling logic deferred to wizard-cluster execution to ensure daemons are alive.
 
         profile["nodes"].append({
             "hostname": compute_host,
@@ -311,7 +313,7 @@ def main():
     profile = metaclaw.Inst.updateCluster(
         profile, local_host, int(tier_choice),
         profile["nodes"][0]["planes"], local_hw,
-        profile["nodes"][0]["require_wan"], False, ["cost", "safety", "resources"]
+        True if tier_choice == "2" else False, local_hw['headless'], ["cost", "safety", "resources"]
     )
 
     with open("profile.json", "w") as f:

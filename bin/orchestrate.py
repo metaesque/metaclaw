@@ -4,6 +4,10 @@ import subprocess
 import socket
 import sys
 
+# SUPER CRITICAL: REMOTE SSH PRESERVATION MANDATE
+# This script MUST NEVER deploy Docker Tailscale on a node that relies on a bare-metal
+# Tailscale daemon for remote SSH access.
+
 # Ensure we can import metaclaw from the lib directory
 sys.path.insert(
   0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib'))
@@ -87,9 +91,6 @@ def main():
       print(f"[Orchestrator] Teardown triggered for service: {sym}")
       env = dict(os.environ, OPENCLAW_SKIP_ENV="1")
       try:
-        # MANDATE: Resolve symlink to physical path so Docker Compose relative paths evaluate correctly.
-        # If PWD is the symlink (services/proxy), then ../../memory/.env resolves incorrectly to services/.env.
-        # By resolving the realpath (services/proxies/litellm), ../../memory/.env resolves correctly to services/memory/.env.
         real_sym_path = os.path.realpath(sym_path)
         subprocess.run(
           ["make", "--no-print-directory", "-C", real_sym_path, "down"],
@@ -113,22 +114,16 @@ def main():
       provider = prov_data.get("uid")
       metal = prov_data.get("metal", False)
     else:
-      # Support legacy string-based profile configurations
       provider = prov_data
       metal = False
 
     if svc not in metaclaw.Inst.structure()['services']:
-      print(
-        f"[Orchestrator] Warning: Unknown service '{svc}' found in profile.\n"
-        "Skipping symlink generation."
-      )
       continue
 
     uids = metaclaw.Inst.structure()['services'][svc]['uids']
     sym_path = os.path.join(services_dir, svc)
     target_path = os.path.join(uids, provider)
 
-    # Use lexists to correctly detect broken symlinks targeting unimplemented providers
     if not os.path.lexists(sym_path):
       cwd = os.getcwd()
       os.chdir(services_dir)
@@ -136,8 +131,12 @@ def main():
       print(f'NOTE: created symlink from {target_path} to {svc}')
       os.chdir(cwd)
 
-    # Establish execution state hooks for Makefiles
     metal_flag_path = os.path.join(sym_path, ".metal")
+    # CRITICAL LIFELINE PRESERVATION:
+    # Overrides matrix settings if the node is headless OR tailscale is already running natively
+    if svc == "network":
+        metal = my_node.get("hardware", {}).get("headless", False) or my_node.get("hardware", {}).get("tailscale_active", False)
+
     if metal:
       with open(metal_flag_path, "w") as f:
         f.write("1\n")
@@ -145,11 +144,6 @@ def main():
       if os.path.exists(metal_flag_path):
         os.remove(metal_flag_path)
 
-    # ========================================================================
-    # TIER-AWARE ENVIRONMENT SEEDING
-    # Automatically populates .env.json with intelligent defaults based on the
-    # cluster topology, preventing non-technical users from being prompted.
-    # ========================================================================
     real_provider_path = os.path.join(services_dir, uids, provider)
     env_json_path = os.path.join(real_provider_path, ".env.json")
     env_data = {}
@@ -170,7 +164,6 @@ def main():
       seeded = True
 
     elif provider == "litellm":
-      # Clean up legacy TIER keys if present
       for legacy_key in ["TIER_0_APIKEY", "TIER_1_APIKEY", "GEMINI_API_KEY_SIMPLE", "GEMINI_API_KEY_MEDIUM", "GEMINI_API_KEY_COMPLEX", "GEMINI_API_KEY_REASONING", "GEMINI_API_KEY_EMBEDDING"]:
           if legacy_key in env_data:
               del env_data[legacy_key]
@@ -179,7 +172,6 @@ def main():
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
 
-        # Route logic for Compute Farm
         env_data["SIMPLE_MODEL_ID"] = "ollama/gemma4:e4b"
         env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
@@ -192,7 +184,6 @@ def main():
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
       else:
-        # Route logic for Cloud Fallback (Tier 1)
         env_data["SIMPLE_MODEL_ID"] = "gemini/gemini-2.5-flash-lite"
         env_data["SIMPLE_MODEL_API_BASE"] = ""
         env_data["SIMPLE_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
