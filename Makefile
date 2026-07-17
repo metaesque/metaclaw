@@ -114,7 +114,7 @@ setup: | $(PYTHON_BIN)
 	@$(MAKE) --no-print-directory .env
 	@echo "################################################################################"
 	@echo "# SETUP COMPLETE. Proceed by running: make wizard"
-	@echo "################################################────────────────################"
+	@echo "################################################################################"
 
 # ==============================================================================
 # ORCHESTRATION & NETWORKING
@@ -327,7 +327,7 @@ wizard-run: bootstrap docs
 clean-state:
 	@echo "################################################################################"
 	@echo "# CLEANING LOCAL STATE ACROSS ALL SERVICES"
-	@echo "################################────────────────────────────────################"
+	@echo "################################################################################"
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		if [ ! -f "$$REAL_DIR/Makefile" ]; then continue; fi; \

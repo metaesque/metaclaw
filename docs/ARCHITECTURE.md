@@ -196,6 +196,17 @@ workload reassignment (such as observability agents). **You must run `make
 install-docker` and log out/log back in to refresh your user session permissions
 before executing `make wizard-batch` or `make apply`.**
 
+## Binary Localization (The Ollama Path Invariant)
+
+To ensure the framework does not clobber host-level binaries or create global PATH
+conflicts across heterogeneous operating systems, MetaClaw strictly isolates
+service binaries into their respective directories.
+
+*   The `ollama` daemon is downloaded and symlinked to `services/runners/ollama/bin/ollama`.
+*   It is **NOT** installed to the framework root `bin/ollama`. Any custom deployment
+    scripts or external wrappers must target the service-specific path to ensure
+    execution parity across the cluster.
+
 ## Cluster Profiling & Distributed Orchestration
 
 As Meta<Claw> scales, hardcoding service paths in `Makefile`s becomes unviable.
