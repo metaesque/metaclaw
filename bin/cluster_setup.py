@@ -5,6 +5,7 @@ import socket
 import platform
 import shutil
 import subprocess
+import sys
 
 def get_local_ip():
     try:
@@ -32,6 +33,35 @@ def profile_local_hardware():
         "storage_total_gb": round(total_storage / (1024**3), 2),
         "storage_free_gb": round(free_storage / (1024**3), 2)
     }
+
+def get_tailscale_ip(target_hostname):
+    """
+    Executes 'tailscale status --json' and parses the output to dynamically
+    find the Tailscale IP address associated with the requested hostname.
+    """
+    try:
+        res = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, check=True)
+        data = json.loads(res.stdout)
+
+        # Search the Peer dictionary
+        for peer_key, peer_info in data.get('Peer', {}).items():
+            host = peer_info.get('HostName', '')
+            if host.lower() == target_hostname.lower():
+                ips = peer_info.get('TailscaleIPs', [])
+                if ips:
+                    return ips[0]
+
+        # Fallback: check if the target is actually the local machine itself
+        self_info = data.get('Self', {})
+        if self_info.get('HostName', '').lower() == target_hostname.lower():
+            ips = self_info.get('TailscaleIPs', [])
+            if ips:
+                return ips[0]
+
+    except Exception:
+        pass
+
+    return ""
 
 def main():
     print("==================================================")
@@ -75,8 +105,15 @@ def main():
         })
 
         print("\nEnter remote Compute node network coordinates:")
-        compute_ip = input("Compute Node IP address (e.g., 100.116.216.4): ").strip()
         compute_host = input("Compute Node Hostname [compute]: ").strip() or "compute"
+
+        # Interrogate Tailscale for an IP match
+        default_ip = get_tailscale_ip(compute_host)
+        ip_prompt = f"Compute Node IP address [{default_ip}]: " if default_ip else "Compute Node IP address (e.g., 100.x.y.z): "
+
+        compute_ip = input(ip_prompt).strip()
+        if not compute_ip and default_ip:
+            compute_ip = default_ip
 
         # Inject compute node configuration shell using basic interrogation targets
         profile["nodes"].append({

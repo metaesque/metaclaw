@@ -67,6 +67,22 @@ else
     echo "[*] Repository directory already exists at $REPO_DIR. Skipping clone."
 fi
 
+# 5. Swapfile Provisioning (Required for Tier 2 Compute Nodes)
+SWAP_FILE="/swapfile"
+if ! swapon --show | grep -q "^${SWAP_FILE}"; then
+    echo "[*] Provisioning 32GB swapfile for massive LLM loading..."
+    sudo fallocate -l 32G ${SWAP_FILE} 2>/dev/null || sudo dd if=/dev/zero of=${SWAP_FILE} bs=1G count=32 status=progress
+    sudo chmod 600 ${SWAP_FILE}
+    sudo mkswap ${SWAP_FILE}
+    sudo swapon ${SWAP_FILE}
+    if ! grep -q "${SWAP_FILE}" /etc/fstab; then
+        echo "${SWAP_FILE} none swap sw 0 0" | sudo tee -a /etc/fstab
+    fi
+    echo "[*] Swapfile provisioning complete."
+else
+    echo "[*] Swapfile already provisioned. Skipping."
+fi
+
 echo "################################################################################"
 echo "# BOOTSTRAP COMPLETE"
 echo "################################################################################"
