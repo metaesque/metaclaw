@@ -24,7 +24,7 @@ export
 status::
 	@if [ -f "$(CURDIR)/.metal" ]; then \
 		echo "Bare-metal Tailscale Status:"; \
-		tailscale status --peers=false || echo "Tailscale daemon unreachable"; \
+		tailscale status || echo "Tailscale daemon unreachable"; \
 	else \
 		docker ps -f name=^/$(SERVICE_NAME)$$; \
 	fi
