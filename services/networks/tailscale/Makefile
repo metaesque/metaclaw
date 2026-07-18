@@ -21,6 +21,14 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 -include .env
 export
 
+status::
+	@if [ -f "$(CURDIR)/.metal" ]; then \
+		echo "Bare-metal Tailscale Status:"; \
+		tailscale status --peers=false || echo "Tailscale daemon unreachable"; \
+	else \
+		docker ps -f name=^/$(SERVICE_NAME)$$; \
+	fi
+
 post-check-status:
 	@echo "Running diagnostic suite..."
 	@if [ -f "$(CURDIR)/.metal" ]; then \
