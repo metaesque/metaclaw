@@ -155,9 +155,20 @@ sessions_cfg['visibility'] = 'all'
 if 'agentToAgent' in tools_cfg:
     del tools_cfg['agentToAgent']
 
+# ==============================================================================
+# PROXY ROUTING INTEGRATION
+# ==============================================================================
+
 openai_prov = setdefault_path(data, ['models', 'providers', 'openai'])
 openai_prov['baseUrl'] = "http://active-proxy:4000/v1"
 openai_prov['apiKey'] = proxy_key
+# Increase the provider timeout to 600s to gracefully accommodate massive LLM cold-starts
+openai_prov['timeoutSeconds'] = 600
+
+litellm_prov = setdefault_path(data, ['models', 'providers', 'litellm'])
+litellm_prov['baseUrl'] = "http://active-proxy:4000/v1"
+litellm_prov['apiKey'] = proxy_key
+litellm_prov['timeoutSeconds'] = 600
 
 defaults = setdefault_path(data, ['agents', 'defaults'])
 defaults['model'] = "openai/medium-model"
@@ -325,4 +336,6 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Configured tools.sessions.visibility to 'all' to permit cross-agent messaging.")
+print("SUCCESS: Raised provider timeout ceilings to safely execute massive local LLM cold-starts.")
+print("SUCCESS: Injected litellm API configuration for ClawRouter embeddings.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")

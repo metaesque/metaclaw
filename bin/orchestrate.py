@@ -171,16 +171,27 @@ def main():
       compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
+        compute_ram = compute_node.get("hardware", {}).get("ram_gb", 0)
+
+        # Dynamic Hardware Modeling
+        # If the compute node has >= 90GB of RAM, we assign the massive 109B scout model.
+        # Otherwise, we fallback to the fast, highly capable 32B model to prevent OOM errors.
+        if compute_ram >= 90:
+            target_medium = "ollama/ingu627/llama4-scout-q4:109b"
+            target_complex = "ollama/ingu627/llama4-scout-q4:109b"
+        else:
+            target_medium = "ollama/qwen-3-32b"
+            target_complex = "ollama/qwen-3-32b"
 
         env_data["SIMPLE_MODEL_ID"] = "ollama/gemma4:e4b"
         env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
-        env_data["MEDIUM_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
+        env_data["MEDIUM_MODEL_ID"] = target_medium
         env_data["MEDIUM_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["MEDIUM_MODEL_API_KEY"] = "sk-local-ollama-key"
 
-        env_data["COMPLEX_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
+        env_data["COMPLEX_MODEL_ID"] = target_complex
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
       else:

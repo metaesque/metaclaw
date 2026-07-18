@@ -12,12 +12,10 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 ## Phase 2: Distributed State & Observability (Upcoming)
 *   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
     Currently, VictoriaLogs only aggregates Docker JSON logs from the local `control` node. We need to explicitly configure `fluent-bit.conf` to tail bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
-*   **[TODO] Automated SSH Key Trust (`ssh-copy-id`):**
-    The `wizard_cluster.py` script requires the user to manually run `ssh-copy-id` to establish trust between the `control` and `compute` nodes. We need to implement a Python-native wrapper using `pexpect` or `paramiko` to intercept the password prompt and inject the public key autonomously during `make setup`.
-*   **[TODO] Dynamic Model Sizing:**
-    The orchestrator currently hardcodes `llama4-scout-q4:109b` for Tier 2 compute nodes. This must be refactored to dynamically calculate the maximum allowable model size based on the remote node's `ram_gb` value (e.g., 65GB model requires >= 80GB RAM), gracefully falling back to smaller models (e.g., 32B or 8B) if the node is under-provisioned.
+*   **[TODO] Dynamic Model Sizing Refinement:**
+    The orchestrator currently implements a basic RAM gate for `llama4-scout` vs `qwen-3`. This must be refactored to dynamically calculate precise VRAM offload capabilities across arbitrary GPU arrays (NVIDIA vs AMD), gracefully falling back through a wider gradient of quantized models (e.g., 70B, 32B, or 8B).
 *   **[TODO] Pre-Warming Models via `wizard-cluster`:**
-    Ollama performs cold-start tensor allocations upon the first API request, causing initial timeouts on massive models. Implement a background `curl` request inside `bin/wizard_cluster.py` to trigger the allocation sequence during the setup phase, ensuring models are "hot" before the user begins agent interactions.
+    Ollama performs cold-start tensor allocations upon the first API request, causing initial delays on massive models. Implement a background `curl` request inside `bin/wizard_cluster.py` to trigger the allocation sequence during the setup phase, ensuring models are "hot" before the user begins agent interactions.
 
 ## Phase 3: The Execution Plane (Sandboxing)
 *   **[TODO] Docker-out-of-Docker (DooD) Integration:**
