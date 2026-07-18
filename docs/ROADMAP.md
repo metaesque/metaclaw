@@ -1,25 +1,32 @@
-# MetaClaw Roadmap
+# MetaClaw Architecture Roadmap
 
-## Phase 1: Foundation & Infrastructure (Completed)
-- [x] Repository structure and Makefiles
-- [x] Docker Compose service definitions
-- [x] System profiling (`sysprofile.py`) and orchestration (`orchestrate.py`)
-- [x] Network mesh via Tailscale
-- [x] Hardware power telemetry and baseline mapping (`power_kasa.py`)
+This document outlines the strategic evolution of the MetaClaw framework, tracking technical debt, planned features, and architectural pivots identified during deployment testing.
 
-## Phase 2: Local AI Independence (In Progress)
-- [x] Configure LiteLLM proxy for tiered routing.
-- [x] Implement predictive routing to minimize cloud API costs.
-- [x] Dynamic Tier 2 configuration generation for Ollama endpoints.
-- [ ] **Verify distributed LLM invocation:** Ensure 'control' node routes `simple-model` to local Gemma4 and `medium/complex-model` to the 'compute' node's Llama4 over the local LAN.
-- [ ] Verify `0.0.0.0` host bindings for distributed Docker containers.
+## Phase 1: Foundation (Current)
+*   [x] Establish the `openclaw-network` mesh.
+*   [x] Implement `profile.json` dynamic orchestration.
+*   [x] Establish Tier 0 (Minilith) and Tier 2 (Compute Farm) baseline topologies.
+*   [x] Implement LiteLLM fallback chains (`medium-model` -> `gemini-2.5-flash`).
+*   [x] Distribute workloads via Tailscale SSH integration.
 
-## Phase 3: Agentic Capabilities (Planned)
-- [ ] Browser automation integration (Browser-Use, Stagehand).
-- [ ] Memory plane synchronization (pgvector / Milvus).
-- [ ] Distributed log aggregation (VictoriaLogs) for cost auditing.
-- [ ] OpenClaw UI dashboard deployment.
+## Phase 2: Distributed State & Observability (Upcoming)
+*   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
+    Currently, VictoriaLogs only aggregates Docker JSON logs from the local `control` node. We need to explicitly configure `fluent-bit.conf` to tail bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
+*   **[TODO] Automated SSH Key Trust (`ssh-copy-id`):**
+    The `wizard_cluster.py` script requires the user to manually run `ssh-copy-id` to establish trust between the `control` and `compute` nodes. We need to implement a Python-native wrapper using `pexpect` or `paramiko` to intercept the password prompt and inject the public key autonomously during `make setup`.
+*   **[TODO] Dynamic Model Sizing:**
+    The orchestrator currently hardcodes `llama4-scout-q4:109b` for Tier 2 compute nodes. This must be refactored to dynamically calculate the maximum allowable model size based on the remote node's `ram_gb` value (e.g., 65GB model requires >= 80GB RAM), gracefully falling back to smaller models (e.g., 32B or 8B) if the node is under-provisioned.
+*   **[TODO] Pre-Warming Models via `wizard-cluster`:**
+    Ollama performs cold-start tensor allocations upon the first API request, causing initial timeouts on massive models. Implement a background `curl` request inside `bin/wizard_cluster.py` to trigger the allocation sequence during the setup phase, ensuring models are "hot" before the user begins agent interactions.
 
-## Phase 4: Full Automation (Future)
-- [ ] Continuous Integration / Autonomous self-repair loops.
-- [ ] Zero-trust IAM enforcement across planes.
+## Phase 3: The Execution Plane (Sandboxing)
+*   **[TODO] Docker-out-of-Docker (DooD) Integration:**
+    Implement the secure workspace jails (`services/sandboxes/docker-dood`) to allow agents to write, execute, and iteratively debug code in isolated environments.
+*   **[TODO] Browser Automation Automation:**
+    Integrate `browseruse` and `stagehand` to allow the research agents to autonomously navigate dynamic SPAs and scrape live documentation.
+
+## Phase 4: Data Sovereignty
+*   **[TODO] PostgreSQL High Availability:**
+    Transition the single-node pgvector instance to a clustered topology for Tier 4 deployments to ensure conversation history survives physical node failures.
+*   **[TODO] Local Embedding Replacement:**
+    Currently, the OpenClaw `prompt-embedding-model` relies on Google Gemini. Transition this to a local, high-speed embedding model (e.g., `nomic-embed-text`) running natively on the `control` node to achieve 100% air-gapped privacy.
