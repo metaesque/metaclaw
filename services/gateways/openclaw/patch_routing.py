@@ -151,9 +151,9 @@ tools_cfg = setdefault_path(data, ['tools'])
 sessions_cfg = setdefault_path(tools_cfg, ['sessions'])
 sessions_cfg['visibility'] = 'all'
 
-# Remove legacy config if present
-if 'agentToAgent' in tools_cfg:
-    del tools_cfg['agentToAgent']
+# Restore legacy config required by OpenClaw 2026.6.8 for agent-to-agent delegaton
+agent_to_agent_cfg = setdefault_path(tools_cfg, ['agentToAgent'])
+agent_to_agent_cfg['enabled'] = True
 
 # ==============================================================================
 # PROXY ROUTING INTEGRATION
@@ -335,7 +335,7 @@ print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
-print("SUCCESS: Configured tools.sessions.visibility to 'all' to permit cross-agent messaging.")
+print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
 print("SUCCESS: Raised provider timeout ceilings to safely execute massive local LLM cold-starts.")
 print("SUCCESS: Injected litellm API configuration for ClawRouter embeddings.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")
