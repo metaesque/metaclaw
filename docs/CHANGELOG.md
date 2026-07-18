@@ -1,18 +1,14 @@
 # MetaClaw Changelog
 
-## [Unreleased]
-### Added
-- `bin/power_kasa.py`: Local energy telemetry script for TP-Link Kasa HS300 power strips. Features real-time JSONL data logging, delta calculations, and historical 30-day daily summary extraction.
-- Support for safe headless Wi-Fi provisioning of IoT devices via `nmcli` without disrupting Tailscale mesh routing.
+## [2026.6.8] - Cluster Provisioning & Network Resilience
 
-### Changed
-- `bin/orchestrate.py`: Enhanced dynamic environment seeding for Tier 2 clusters. Automatically populates LiteLLM configurations to route `SIMPLE_MODEL`, `MEDIUM_MODEL`, and `COMPLEX_MODEL` to local Ollama instances.
-- `services/proxies/litellm/config.yaml`: Updated predictive routing tiers to respect dynamically injected local endpoints.
+### Added
+*   **Native SSH Orchestration:** Replaced `fabric/paramiko` with `subprocess` calling native `ssh` and `scp`. This securely negotiates Tailscale's "none" authentication mechanism.
+*   **Global Secrets Sync (Phase 4):** `cluster_setup.py` now leverages `jq` over SSH to securely merge `ACTIVE_PROXY_KEY` and `GEMINI_API_KEY` into remote `.env.json` files without destroying node-specific state.
+*   **Centralized Cluster Status:** Added `bin/cluster_status.py` and the `make status` root target to iteratively poll both Docker and bare-metal services across the unified `profile.json` topology.
+*   **Dynamic RAM Modeling:** `orchestrate.py` now evaluates remote node `ram_gb` limits, gracefully assigning `qwen-3-32b` to nodes < 90GB RAM, and `llama4-scout-q4:109b` to high-capacity nodes.
 
 ### Fixed
-- Addressed 403 API Key Leak error by restructuring environment variable fallback chains and removing hardcoded plaintext keys from default configurations.
-- Suppressed `python-kasa` DeprecationWarnings for `is_strip` and `emeter_realtime` by migrating to the `DeviceType` and `Module.Energy` APIs.
-
-## [0.1.0] - Initial Foundation
-- Initial project structure, Docker Compose services, and orchestrator scripts.
-- MetaClaw protocol definitions and Basekit UI component rules established.
+*   **Tailscale Lifeline Protection:** Implemented strict `.metal` and `headless` detection. The framework will no longer attempt to deploy Dockerized Tailscale on nodes that already rely on bare-metal Tailscale for remote SSH access.
+*   **Ollama Daemon SIGHUP:** Modified `services/runners/ollama/Makefile` to launch the daemon with `nohup` and redirected `stdin`, preventing the daemon from instantly terminating when the remote SSH bootstrap session disconnects.
+*   **OpenClaw Gateway Patching:** Fixed `patch_routing.py` to inject 600-second timeouts for massive local LLM cold-starts, properly inject the Proxy API key for the `prompt-embedding-model`, and enable both `sessions.visibility="all"` and `tools.agentToAgent.enabled=true` to satisfy legacy schema validation.

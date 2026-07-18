@@ -7,13 +7,13 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   [x] Implement `profile.json` dynamic orchestration.
 *   [x] Establish Tier 0 (Minilith) and Tier 2 (Compute Farm) baseline topologies.
 *   [x] Implement LiteLLM fallback chains (`medium-model` -> `gemini-2.5-flash`).
-*   [x] Distribute workloads via Tailscale SSH integration.
+*   [x] Distribute workloads via Tailscale SSH integration using native `subprocess`.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
 *   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
     Currently, VictoriaLogs only aggregates Docker JSON logs from the local `control` node. We need to explicitly configure `fluent-bit.conf` to tail bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
-*   **[TODO] Dynamic Model Sizing Refinement:**
-    The orchestrator currently implements a basic RAM gate for `llama4-scout` vs `qwen-3`. This must be refactored to dynamically calculate precise VRAM offload capabilities across arbitrary GPU arrays (NVIDIA vs AMD), gracefully falling back through a wider gradient of quantized models (e.g., 70B, 32B, or 8B).
+*   **[TODO] Overcoming `num_ctx` Defaults:**
+    While models like `llama4-scout` have massive context limits, Ollama defaults API requests to 2048 tokens. OpenClaw Orchestrator prompts routinely exceed 7500 tokens. We must implement a centralized mechanism (via LiteLLM config or OpenClaw routing patches) to explicitly inject a high `num_ctx` (e.g., 16384) to prevent context truncation and subsequent cloud fallback.
 *   **[TODO] Pre-Warming Models via `wizard-cluster`:**
     Ollama performs cold-start tensor allocations upon the first API request, causing initial delays on massive models. Implement a background `curl` request inside `bin/wizard_cluster.py` to trigger the allocation sequence during the setup phase, ensuring models are "hot" before the user begins agent interactions.
 

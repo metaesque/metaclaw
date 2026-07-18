@@ -168,7 +168,16 @@ the public internet is a massive security vulnerability. MetaClaw utilizes
 * **Bare-Metal vs Dockerized Tailscale:** If you are using Tailscale to SSH
   into a headless remote node, Tailscale **MUST** be installed natively on the
   bare-metal host OS. If run as a Docker container, a framework teardown (`make
-  factory-reset-soft`) will sever your SSH tunnel and lock you out.
+  factory-reset-soft`) will sever your SSH tunnel and lock you out. This is
+  enforced systematically by generating a `.metal` flag inside `services/networks/tailscale`
+  when a native daemon is detected.
+
+* **Native SSH Over Python SSH:** Tailscale SSH authenticates users via their
+  machine identity, returning a `"none"` authentication response to standard OpenSSH
+  clients. Pure-Python SSH libraries (like `paramiko` and `fabric`) aggressively
+  reject `"none"` auth as a security vulnerability. Therefore, MetaClaw deployment
+  scripts must **always** use `subprocess` to call the host OS's native `ssh` and
+  `scp` binaries rather than relying on Python libraries for cluster orchestration.
 
 ## Bare-Metal Node Provisioning
 
