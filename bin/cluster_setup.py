@@ -46,10 +46,11 @@ def get_required_ssh_key():
 
     return metaesque_key
 
-def run_remote(ip_address, ssh_user, key_filename, cmd, hide=False):
+def run_remote(ip_address, ssh_user, key_filename, cmd, hide=False, prefix=""):
     """
     Executes a remote command using the native OpenSSH client via subprocess.
     This safely bypasses Paramiko's inability to negotiate Tailscale's 'none' auth.
+    Supports a real-time stream prefix to clarify which host is executing code.
     """
     ssh_cmd = [
         "ssh", "-i", key_filename,
@@ -62,7 +63,18 @@ def run_remote(ip_address, ssh_user, key_filename, cmd, hide=False):
     if hide:
         return subprocess.run(ssh_cmd, capture_output=True, text=True)
     else:
-        return subprocess.run(ssh_cmd)
+        if prefix:
+            process = subprocess.Popen(ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            for line in process.stdout:
+                print(f"[{prefix}] {line}", end="", flush=True)
+            process.wait()
+            class Result:
+                def __init__(self, returncode):
+                    self.returncode = returncode
+                    self.stderr = ""
+            return Result(process.returncode)
+        else:
+            return subprocess.run(ssh_cmd)
 
 def scp_remote(ip_address, ssh_user, key_filename, src, dst):
     """
@@ -337,9 +349,8 @@ def main():
             ip = node["hardware"]["ip_address"]
             user = node.get("ssh_user", os.getlogin())
             print(f"  -> Triggering 'make setup-local' on remote node {node['hostname']} ({ip})...")
-            # Using run_remote with hide=False streams the exact execution output (like model pulling progress)
-            # directly back to the human user's local terminal so they are not left in the dark.
-            res = run_remote(ip, user, ssh_key, "cd ~/repo && make setup-local", hide=False)
+            # Using run_remote with hide=False and a prefix explicitly clarifies which host is executing the setup logic
+            res = run_remote(ip, user, ssh_key, "cd ~/repo && make setup-local", hide=False, prefix=node['hostname'])
             if res.returncode != 0:
                 print(f"  -> WARNING: Remote setup failed on {node['hostname']}.")
 

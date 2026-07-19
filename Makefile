@@ -122,25 +122,21 @@ setup: | $(PYTHON_BIN)
 # WHAT IT DOES: Evaluates local providers, generates documents, creates secrets, and pulls models for the current machine.
 # WHY IT EXISTS: Separated from `setup` so that `cluster_setup.py` can invoke this target remotely on compute nodes via SSH.
 setup-local: bootstrap docs | $(PYTHON_BIN)
-	@echo "\n[Setup] Instantiating environment variables across all active services..."
+	@echo "\n[Setup: $$(hostname)] Instantiating environment variables across all active services..."
 	@$(MAKE) --no-print-directory .env
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
 				if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
-					echo "Instantiating environment for $$REAL_DIR..."; \
+					echo "[Setup: $$(hostname)] Instantiating environment for $$REAL_DIR..."; \
 					cd $$REAL_DIR && $(PYTHON_BIN) $(CURDIR)/bin/env_instantiate.py -v; \
 					cd $(CURDIR); \
 				fi; \
 			fi; \
 		fi; \
 	done
-	@echo "\n[Setup] Pre-fetching models and executing heavy lifting..."
-	@if [ -L "services/runner" ] && grep -q "pull-models:" services/runner/Makefile; then \
-		$(MAKE) --no-print-directory -C services/runner pull-models || true; \
-	fi
-	@echo "\n[Setup] Local node preparation complete."
+	@echo "\n[Setup: $$(hostname)] Local node preparation complete."
 
 # WHAT IT DOES: Distributes and executes wizard-batch across all nodes via SSH
 # WHY IT EXISTS: Solves the chicken-and-egg deployment problem by ensuring the cluster is built sequentially.

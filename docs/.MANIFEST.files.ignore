@@ -171,3 +171,4 @@ services/tracers/langfuse/.provider.json
 services/tracers/opentelemetry/.provider.json
 services/tracers/phoenix/.provider.json
 services/tracers/signoz/.provider.json
+services/searchers/tavily/.provider.json

@@ -31,3 +31,7 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Transition the single-node pgvector instance to a clustered topology for Tier 4 deployments to ensure conversation history survives physical node failures.
 *   **[TODO] Local Embedding Replacement:**
     Currently, the OpenClaw `prompt-embedding-model` relies on Google Gemini. Transition this to a local, high-speed embedding model (e.g., `nomic-embed-text`) running natively on the `control` node to achieve 100% air-gapped privacy.
+
+## Phase 5: Testing Infrastructure (Upcoming)
+*   **[TODO] Architectural Testing & Benchmarking:**
+    Establish a standardized testing infrastructure to evaluate the optimal execution locations for various models. The framework must support configurable matrix testing (e.g., testing Model A on Host X versus Model B on Host Y) to empirically prove latency hypotheses (such as whether `judge-model` performs faster on the control node versus the compute node).
