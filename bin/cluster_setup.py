@@ -89,6 +89,10 @@ def profile_remote_hardware(ip_address, ssh_user, key_filename):
         print("  -> Bootstrapping remote Python environment...")
         run_remote(ip_address, ssh_user, key_filename, "cd ~/repo && make -C bin install-code > /dev/null 2>&1", hide=True)
 
+        print("  -> Syncing local sysprofile.py to remote node...")
+        sysprofile_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sysprofile.py")
+        scp_remote(ip_address, ssh_user, key_filename, sysprofile_path, "repo/bin/sysprofile.py")
+
         print("  -> Executing remote sysprofile.py...")
         # Use a python one-liner over SSH to import the remote sysprofile module and dump the dict
         cmd = """cd ~/repo && bin/.venv/bin/python -c "import sys; sys.path.insert(0, 'bin'); import sysprofile; import json; print(json.dumps(sysprofile.platform_details()))" """
@@ -210,8 +214,18 @@ def main():
 
     print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
     print(f"  IP Address: {local_hw['ip_address']}")
-    print(f"  RAM capacity: {local_hw['ram_gb']} GB")
+    print(f"  OS RAM capacity: {local_hw['ram_gb']} GB")
     print(f"  Native Tailscale Active: {local_hw.get('tailscale_active', False)}")
+
+    print(f"\n[Hardware Verification] Node: {local_host}")
+    print(f"  Detected Hardware RAM: {local_hw.get('ram_hardware_gb')} GB")
+    print(f"  Detected GPU: {local_hw.get('gpu_detected')}")
+    user_ram_local = input(f"Confirm total physical RAM in GB for {local_host} [{local_hw.get('ram_hardware_gb')}]: ").strip()
+    if user_ram_local:
+        try:
+            local_hw['ram_hardware_gb'] = float(user_ram_local)
+        except ValueError:
+            pass
 
     # Explicit headless prompt to defeat dummy plug heuristics
     default_hl = 'y' if local_hw.get('tailscale_active') else 'n'
@@ -264,6 +278,18 @@ def main():
 
         print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
         compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
+
+        print(f"\n[Hardware Verification] Node: {compute_host}")
+        print(f"  Detected OS RAM: {compute_hw.get('ram_gb')} GB")
+        print(f"  Detected Hardware RAM: {compute_hw.get('ram_hardware_gb')} GB")
+        print(f"  Detected GPU: {compute_hw.get('gpu_detected')}")
+
+        user_ram = input(f"Confirm total physical RAM in GB for {compute_host} [{compute_hw.get('ram_hardware_gb')}]: ").strip()
+        if user_ram:
+            try:
+                compute_hw['ram_hardware_gb'] = float(user_ram)
+            except ValueError:
+                pass
 
         # CRITICAL FIX: Overwrite the hardware IP returned by sysprofile (which is the LAN IP)
         # with the explicitly resolved Tailscale IP, so all downstream orchestration uses Tailscale SSH.

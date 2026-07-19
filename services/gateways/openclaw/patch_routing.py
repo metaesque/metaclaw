@@ -266,15 +266,9 @@ for yf in yaml_files:
           allowed_tools = []
           for t in yaml_tools:
               if isinstance(t, str):
-                  # Auto-correct YAML search_web arrays to match OpenClaw's internal web_search tool structure
-                  if t == "search_web":
-                      t = "web_search"
                   allowed_tools.append(t)
               elif isinstance(t, dict) and 'name' in t:
-                  name = t['name']
-                  if name == "search_web":
-                      name = "web_search"
-                  allowed_tools.append(name)
+                  allowed_tools.append(t['name'])
 
           if allowed_tools:
               entry['tools'] = {"allow": allowed_tools}

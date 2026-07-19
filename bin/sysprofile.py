@@ -87,10 +87,10 @@ def _is_tailscale_running():
 
 def _get_hardware_ram_linux():
   """Parses dmidecode or memory banks to capture true physical hardware capacity."""
-  dmi = _run_cmd(['sudo', 'dmidecode', '--type', 'memory'])
+  # Use sudo -n to gracefully fail immediately without hanging on a password prompt
+  # Use --type 17 (Memory Device) to avoid double-counting the Type 16 Array handle
+  dmi = _run_cmd(['sudo', '-n', 'dmidecode', '--type', '17'])
   if dmi:
-    # Strict regex: Matches only the base 'Size:' line, discarding 'Volatile Size:'
-    # to prevent double-counting handles in SMBIOS 3.7.0.
     sizes = re.findall(r'^[ \t]*Size:\s+(\d+)\s+GB', dmi, re.MULTILINE)
     if sizes:
       return sum(int(s) for s in sizes)
