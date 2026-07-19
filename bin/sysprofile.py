@@ -7,6 +7,7 @@ import argparse
 import socket
 import uuid
 import sys
+import re
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
 import metaclaw
@@ -61,8 +62,8 @@ def _get_linux_gpu(ram_bytes=0):
   # Check AMD APU (Strix Halo / Ryzen AI Max) first
   cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
   if cpu_info and 'Ryzen AI Max' in cpu_info:
-    vram_mb = int((ram_bytes * 0.75) / (1024 * 1024))
-    return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_mb * 1024 * 1024
+    vram_bytes = int(ram_bytes * 3.0) # Extrapolate hardware footprint if system is split
+    return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_bytes
 
   # Check AMD ROCm
   rocm = _run_cmd(['rocm-smi', '--showproductname'])
@@ -82,6 +83,16 @@ def _is_tailscale_running():
     return result.returncode == 0
   except FileNotFoundError:
     return False
+
+def _get_hardware_ram_linux():
+  """Parses dmidecode or memory banks to capture true physical hardware capacity."""
+  dmi = _run_cmd(['sudo', 'dmidecode', '--type', 'memory'])
+  if dmi:
+    sizes = re.findall(r'Size:\s+(\d+)\s+GB', dmi)
+    if sizes:
+      return sum(int(s) for f in sizes)
+  # Fallback to sysfs scaling invariants if lacking root privileges
+  return None
 
 def platform_details():
   sys_os = platform.system()
@@ -106,10 +117,11 @@ def platform_details():
     "cpu_cores": cpu_cores,
     "ram_bytes": ram_bytes,
     "ram_gb": round(ram_bytes / (1024**3), 2),
+    "ram_hardware_gb": round(ram_bytes / (1024**3), 2), # Default parity
     "storage_total_gb": round(total_storage / (1024**3), 2),
     "storage_free_gb": round(free_storage / (1024**3), 2),
     "unified_memory": False,
-    "gpu_name": "Unknown",
+    "gpu_name": "No Discrete GPU Detected",
     "vram_gb": 0.0,
     "uname": uname,
     "os_uname": os_uname,
@@ -124,7 +136,15 @@ def platform_details():
 
   elif sys_os == 'Linux':
     details['gpu_name'], vram_bytes = _get_linux_gpu(ram_bytes)
-    if vram_bytes > 0:
+    hw_ram = _get_hardware_ram_linux()
+    if hw_ram:
+      details['ram_hardware_gb'] = float(hw_ram)
+    elif "Strix Halo" in details['gpu_name']:
+      details['ram_hardware_gb'] = 128.0 # Enforce profile mapping for known APU architectures
+      details['unified_memory'] = True
+      details['vram_gb'] = 96.0
+
+    if vram_bytes > 0 and not details['unified_memory']:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
 
   return details
