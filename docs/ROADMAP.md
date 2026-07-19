@@ -10,15 +10,20 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   [x] Distribute workloads via Tailscale SSH integration using native `subprocess`.
 
 ## Hardware Optimization (Pending Actions)
-*   **[TODO] Reclaim UMA Frame Buffer RAM:**
+*   **[TODO] Reclaim UMA Frame Buffer RAM (Control Node):**
     The GMKtec K8 Plus currently reserves ~3.78GB of RAM for the integrated Radeon 780M graphics (UMA Frame Buffer). Because the node runs headless (no display), this memory is wasted and hidden from the OS.
     **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`), navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX Configuration -> UMA Frame buffer Size**, and change it to `Auto` or `512MB`. This will free up RAM for Docker services, while the GPU continues to dynamically allocate inference memory via GTT.
+*   **[URGENT] Kernel Upgrade for Strix Halo (Compute Node):**
+    The GMKtec EVO-X2 features bleeding-edge RDNA 3.5 graphics. The default Ubuntu Linux 6.8 kernel does not possess the drivers to detect the GPU, forcing Ollama into extreme CPU-only bottlenecks (70s+ response times).
+    **Action Required:** Upgrade the Linux Kernel on the Compute node to 6.11+ and install the latest `amdgpu-dkms` drivers to unlock hardware acceleration.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
+*   **[TODO] Service Taxonomy Refactor:**
+    Currently, storage databases (VictoriaLogs, ELK) and edge agents (Fluent Bit, Vector) are incorrectly grouped in `services/loggers`. We must introduce a new `services/forwarders` (or `telemetry-agents`) category to properly decouple storage from collection.
 *   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
-    Currently, VictoriaLogs only aggregates Docker JSON logs from the local `control` node. We need to explicitly configure `fluent-bit.conf` to tail bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
-*   **[TODO] Overcoming `num_ctx` Defaults:**
-    While models like `llama4-scout` have massive context limits, Ollama defaults API requests to 2048 tokens. OpenClaw Orchestrator prompts routinely exceed 7500 tokens. We must implement a centralized mechanism (via LiteLLM config or OpenClaw routing patches) to explicitly inject a high `num_ctx` (e.g., 16384) to prevent context truncation and subsequent cloud fallback.
+    Once the taxonomy is fixed, deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to tail bare-metal logs (like `ollama.log`) and push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
+*   **[TODO] Dynamic `num_ctx` Calculation:**
+    While models like `llama4-scout` have massive context limits, Ollama defaults API requests to 2048 tokens. Instead of hardcoding fixes in LiteLLM, refactor `bin/cluster_setup.py` to dynamically calculate safe `num_ctx` ceilings based on the model's footprint and the host's detected VRAM, propagating the limits to `.env.cluster`.
 
 ## Phase 3: The Execution Plane (Sandboxing)
 *   **[TODO] Docker-out-of-Docker (DooD) Integration:**
