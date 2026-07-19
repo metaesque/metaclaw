@@ -176,8 +176,18 @@ def main():
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
       env_data["HSA_OVERRIDE_GFX_VERSION"] = "11.0.0"
-      # Inject target models so the runner's local Makefile knows what to auto-pull
-      env_data["OLLAMA_TARGET_MODELS"] = f"{target_simple} {target_medium} {target_complex}"
+
+      # INVARIANT: Judge Model on Control Plane
+      # We explicitly deploy the simple/judge model on the Control node for low-latency routing,
+      # while heavy models are assigned to the Compute node. Do NOT remove this logic.
+      models_to_pull = []
+      if "control" in my_node.get("planes", []):
+          models_to_pull.append(target_simple)
+
+      if "compute" in my_node.get("planes", []):
+          models_to_pull.extend([target_medium, target_complex])
+
+      env_data["OLLAMA_TARGET_MODELS"] = " ".join(list(dict.fromkeys(models_to_pull)))
       seeded = True
 
     elif provider == "litellm":

@@ -38,6 +38,7 @@ def main():
     parser = argparse.ArgumentParser(description="OpenClaw Gateway Routing Tester")
     parser.add_argument("-t", "--type", choices=['simple', 'medium', 'complex', 'frontier'],
                         default='simple', help="The type of prompt to simulate.")
+    parser.add_argument("-a", "--agent", default="openclaw", help="The specific agent ID to target (defaults to the global 'openclaw' default agent).")
     args = parser.parse_args()
 
     # OpenClaw shares the proxy key as its gateway token by default
@@ -62,16 +63,17 @@ def main():
         "frontier": "If I have three apples and you take away two, how many apples do I have left? Explain the logic."
     }
 
-    # We send ALL requests targeting the default agent ('openclaw') to let the
+    # We send requests targeting the specified agent to let the
     # lexical_predictive.js hook intercept and score the complexity automatically.
     payload = {
-        "model": "openclaw",
+        "model": args.agent,
         "messages": [{"role": "user", "content": prompts[args.type]}],
         "temperature": 0.1
     }
 
     print(f"--- Sending {args.type.upper()} request to OpenClaw Gateway ---")
     print(f"Endpoint: {url}")
+    print(f"Agent:    '{args.agent}'")
     print(f"Prompt:   '{prompts[args.type]}'\n")
 
     try:

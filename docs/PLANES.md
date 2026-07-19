@@ -8,7 +8,10 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Profile**: High network I/O, low CPU, low RAM.
 * **Justification**: This is the high-speed nervous system. It dictates traffic
   flow and maintains ephemeral state, operating flawlessly on low-power devices.
-* **Services**: proxy-reverse, iam, proxy, gateway, secret, event, cache, queue
+  INVARIANT: The runner service is included here explicitly so the Control Node
+  can host the low-latency Judge Model locally, even in Tier 2 deployments.
+* **Services**: proxy-reverse, iam, proxy, gateway, secret, event, cache, queue,
+  runner
 
 ### Hardware Recommendations for The Control Plane
 

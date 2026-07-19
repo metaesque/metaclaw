@@ -12,9 +12,10 @@
       "secret",
       "event",
       "cache",
-      "queue"
+      "queue",
+      "runner"
     ],
-    "justification": "This is the high-speed nervous system. It dictates traffic flow and maintains ephemeral state, operating flawlessly on low-power devices.",
+    "justification": "This is the high-speed nervous system. It dictates traffic flow and maintains ephemeral state, operating flawlessly on low-power devices. INVARIANT: The runner service is included here explicitly so the Control Node can host the low-latency Judge Model locally, even in Tier 2 deployments.",
     "hardware_recommendations": [
       {
         "name": "Example: GMKtec Gaming Mini PC K8 Plus",
@@ -190,4 +191,3 @@
     ]
   }
 }
-

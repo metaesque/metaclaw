@@ -100,13 +100,15 @@ model_list:
   # --------------------------------------------------------------------------
   # LOCAL LLM-AS-A-JUDGE (Air-gapped execution for privacy)
   # --------------------------------------------------------------------------
-  - model_name: ollama/gemma4:e4b
+  # INVARIANT: The Judge model runs on the Control Plane for lowest latency.
+  # Do not move this to the compute node.
+  - model_name: judge-model
     litellm_params:
       # WHY LOCAL: We run the complexity judge and the Archivist locally to ensure
       # zero PII leakage during routine triaging or personal journal querying.
       model: ollama/gemma4:e4b
       # HOST.DOCKER.INTERNAL allows the Docker container to bridge back out
-      # to the host OS where Ollama is running natively.
+      # to the host OS where Ollama is running natively on the Control Node.
       api_base: "http://host.docker.internal:11434"
 
 litellm_settings:
