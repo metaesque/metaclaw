@@ -1,0 +1,9 @@
+{
+  "uid": "fluentbit",
+  "name": "Fluent Bit Mesh Agent",
+  "overview": "Stateless C-based distributed log and metric forwarder configured to tail cluster diagnostics across disparate nodes.",
+  "details": [
+    "Fluent Bit sits directly on the host machine namespace or edge container setups, binding minimal overhead to system execution structures.",
+    "It reads local container streams alongside raw bare-metal output logs (such as the inference runner streams), applying structural mutations before forwarding."
+  ]
+}

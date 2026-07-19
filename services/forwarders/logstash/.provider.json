@@ -1,0 +1,6 @@
+{
+  "uid": "logstash",
+  "name": "Logstash Collector",
+  "overview": "Heavy JVM-driven streaming data pipeline plugin infrastructure.",
+  "details": []
+}

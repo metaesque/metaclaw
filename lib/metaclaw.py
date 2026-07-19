@@ -225,6 +225,10 @@ class MetaClaw:
         if n_wan:
             assigned_services.add("network")
 
+        # INVARIANT MESH MANDATE: The 'forwarder' tracking agent must automatically
+        # scale to run on ALL cluster nodes to guarantee distributed log capture back to control.
+        assigned_services.add("forwarder")
+
         new_providers = {}
         for svc_key in assigned_services:
             svc_data = struct.get('services', {}).get(svc_key, {})
@@ -246,6 +250,7 @@ class MetaClaw:
                     "gateway": "openclaw",
                     "proxy": "litellm",
                     "logger": "victorialogs",
+                    "forwarder": "fluentbit",
                     "cache": "redis",
                     "memory": "postgres",
                     "runner": "ollama",
@@ -543,7 +548,7 @@ class MetaClaw:
     target_dir = os.path.join(versions_dir, dirname) if dirname else versions_dir
     os.makedirs(target_dir, exist_ok=True)
 
-    mtime = os.path.getmtime(abs_filepath)
+    mtime = os.stat(abs_filepath).st_mtime
     timestamp = time.strftime('%Y%m%d%H%M%S', time.localtime(mtime))
     backup_name = f"{basename}.{timestamp}"
     backup_path = os.path.join(target_dir, backup_name)

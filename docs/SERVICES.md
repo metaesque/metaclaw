@@ -10,8 +10,8 @@ This document serves as the canonical registry categorizing and explaining the p
 * **Purpose**: Hardened execution environments designed to contain the blast
   radius of agent actions. If an agent hallucinates a dangerous Python or Bash
   script, this layer prevents that code from escaping and destroying the host
-  machine. (Standard Docker is insufficient here).
-* **Options**: Docker, gVisor, Hardened Docker DooD, Firecracker, E2B.
+  machine. (Standard Docker is insufficient here)[cite: 1].
+* **Options**: Docker, gVisor, Hardened Docker DooD, Firecracker, E2B[cite: 1].
 
 ### Secrets Manager {#secrets}
 
@@ -19,17 +19,17 @@ This document serves as the canonical registry categorizing and explaining the p
 * **Purpose**: A centralized, encrypted vault. It securely stores and injects
   third-party API keys (e.g., AWS, GitHub, Stripe) directly into the agent's
   runtime memory, ensuring secrets never leak into plaintext logs or
-  configuration files.
-* **Options**: Doppler, Infisical, Bitwarden Secrets Manager, HashiCorp Vault.
+  configuration files[cite: 1].
+* **Options**: Doppler, Infisical, Bitwarden Secrets Manager, HashiCorp Vault[cite: 1].
 
 ### Overlay Network {#networks}
 
 * **Path**: `services/networks/`
-* **Purpose**: Provides zero-trust mesh networking and secure inbound routing.
+* **Purpose**: Provides zero-trust mesh networking and secure inbound routing[cite: 1].
   It allows you to access your AI cluster remotely without exposing router
   ports, and allows external services (like Google Chat webhooks) to securely
-  POST data to your local gateway through CGNAT firewalls.
-* **Options**: Cloudflare Tunnels, Tailscale, ZeroTier.
+  POST data to your local gateway through CGNAT firewalls[cite: 1].
+* **Options**: Cloudflare Tunnels, Tailscale, ZeroTier[cite: 1].
 
 ### Identity & Access Management {#iam}
 
@@ -37,28 +37,30 @@ This document serves as the canonical registry categorizing and explaining the p
 * **Purpose**: The authentication gatekeeper. Enforces Multi-Factor
   Authentication (MFA) and Single Sign-On (SSO) at the reverse proxy layer,
   ensuring unauthorized users cannot access the OpenClaw dashboard from the
-  internet.
-* **Options**: Authentik, Authelia, Keycloak.
+  internet[cite: 1].
+* **Options**: Authentik, Authelia, Keycloak[cite: 1].
 
-## Observability & Provenance
+## Observability & Telemetry Forwarding
 
 ### Log Aggregator {#loggers}
 
 * **Path**: `services/loggers/`
-* **Purpose**: The central repository for system logs. It provides the
-  visibility required to monitor agent behavior in real-time, troubleshoot tool
-  execution errors, and audit actions when the agent is granted deep system
-  access.
-* **Options**: Grafana Loki, SigNoz, Graylog, OpenSearch, Quickwit, ELK Stack,
-  Fluent Bit, VictoriaLogs, Vector.
+* **Purpose**: The central relational or compressed repository for system logs. It provides full-text search index capability to monitor agent behavior in real-time, troubleshoot tool errors, and audit execution trends safely.
+* **Options**: Grafana Loki, VictoriaLogs, Quickwit, OpenSearch, Graylog.
+
+### Telemetry Forwarder {#forwarders}
+
+* **Path**: `services/forwarders/`
+* **Purpose**: Lightweight edge-node daemons that tail bare-metal log outputs and system socket metrics, processing data fragments locally before pushing them upstream over the mesh back to the central Log Aggregator.
+* **Options**: Fluent Bit, Vector, Logstash.
 
 ### Distributed Tracer {#tracers}
 
 * **Path**: `services/tracers/`
 * **Purpose**: While logging tells you what happened, tracing tells you how long
-  it took. It measures execution duration across services (Gateway -> Proxy ->
-  LLM Runner) to debug latency bottlenecks in complex multi-step trajectories.
-* **Options**: Langfuse, SigNoz, OpenTelemetry Collector + Jaeger, Phoenix.
+  it took[cite: 1]. It measures execution duration across services (Gateway -> Proxy ->
+  LLM Runner) to debug latency bottlenecks in complex multi-step trajectories[cite: 1].
+* **Options**: Langfuse, SigNoz, OpenTelemetry Collector + Jaeger, Phoenix[cite: 1].
 
 ## Intelligence Execution
 
@@ -66,35 +68,35 @@ This document serves as the canonical registry categorizing and explaining the p
 
 * **Path**: `services/fetchers/`
 * **Purpose**: Bypasses anti-bot measures to fetch, render, and extract clean,
-  LLM-ready markdown or JSON from specific URLs.
+  LLM-ready markdown or JSON from specific URLs[cite: 1].
 * **Options**: Crawl4AI, Firecrawl, Browse AI, Jina AI Reader, Zyte, Octoparse,
-  ScrapeGraphAI.
+  ScrapeGraphAI[cite: 1].
 
 ### Web Search API {#searchers}
 
 * **Path**: `services/searchers/`
 * **Purpose**: Executes high-speed, lightweight HTTP searches to return
-  structured snippets, URLs, and real-time knowledge.
+  structured snippets, URLs, and real-time knowledge[cite: 1].
 * **Options**: Exa, SearXNG, Brave Search API, Linkup, Parallel AI Search,
-  Tavily.
+  Tavily[cite: 1].
 
 ### Browser Automation {#browsers}
 
 * **Path**: `services/browsers/`
 * **Purpose**: Provides advanced, AI-driven DOM interaction, visual
-  interpretation, and self-healing autonomous navigation capabilities.
+  interpretation, and self-healing autonomous navigation capabilities[cite: 1].
 * **Options**: Steel Browser, Browser Use, Agent Browser, LaVague, Stagehand,
-  Hyperbrowser, Skyvern.
+  Hyperbrowser, Skyvern[cite: 1].
 
 ### LLM Runner {#runners}
 
 * **Path**: `services/runners/`
 * **Purpose**: Manages and executes local Large Language Models (LLMs) and
-  Multimodal models directly on your bare-metal hardware. It provides an OpenAI-
+  Multimodal models directly on your bare-metal hardware[cite: 1]. It provides an OpenAI-
   compatible API endpoint for the AI Proxy or Gateway to consume, enabling
-  offline intelligence.
+  offline intelligence[cite: 1].
 * **Options**: LM Studio, Text-Gen-WebUI, llama.cpp, LocalAI, Jan.ai, KoboldCPP,
-  vLLM, Msty, Ollama, GPT4All.
+  vLLM, Msty, Ollama, GPT4All[cite: 1].
 
 ## Decoupling & Workflow
 
@@ -103,81 +105,81 @@ This document serves as the canonical registry categorizing and explaining the p
 * **Path**: `services/ci/`
 * **Purpose**: The automated testing pipeline. It triggers automated builds and
   test suites on any code generated by the autonomous agent, mathematically
-  proving the code works before it is deployed to production.
+  proving the code works before it is deployed to production[cite: 1].
 * **Options**: GitLab CI/CD, Gitea/Drone, Woodpecker CI, Jenkins, BitBucket
-  Pipelines, Buildkite, GitHub Actions.
+  Pipelines, Buildkite, GitHub Actions[cite: 1].
 
 ### Message Queue {#queues}
 
 * **Path**: `services/queues/`
-* **Purpose**: The asynchronous task broker. It decouples the Gateway from the
-  execution nodes. Instead of waiting synchronously (which causes HTTP timeouts
+* **Purpose**: The asynchronous task broker[cite: 1]. It decouples the Gateway from the
+  execution nodes[cite: 1]. Instead of waiting synchronously (which causes HTTP timeouts
   if a local model takes 60 seconds to reply), the Gateway pushes tasks to a
-  queue for worker nodes to consume at their own pace.
-* **Options**: Redis Streams, RabbitMQ, NATS, Apache Kafka.
+  queue for worker nodes to consume at their own pace[cite: 1].
+* **Options**: Redis Streams, RabbitMQ, NATS, Apache Kafka[cite: 1].
 
 ### Event Gateway {#events}
 
 * **Path**: `services/events/`
-* **Purpose**: The external signal receiver. It securely ingests, queues, and
+* **Purpose**: The external signal receiver[cite: 1]. It securely ingests, queues, and
   standardizes incoming webhooks from the outside world (like emails, calendar
   alerts, or smart home triggers) to wake up the agent and trigger workflows
-  asynchronously.
-* **Options**: Custom ngrok endpoints, Svix, Hookdeck.
+  asynchronously[cite: 1].
+* **Options**: Custom ngrok endpoints, Svix, Hookdeck[cite: 1].
 
 ## Orchestration & Routing
 
 ### Reverse Proxy {#proxies-reverse}
 
 * **Path**: `services/proxies-reverse/`
-* **Purpose**: The network front door. It handles SSL termination, load
+* **Purpose**: The network front door[cite: 1]. It handles SSL termination, load
   balancing incoming external requests, rate limiting, and securely exposing
-  your local AI ecosystem to the internet for remote access.
-* **Options**: Nginx, Caddy, Traefik, HAProxy.
+  your local AI ecosystem to the internet for remote access[cite: 1].
+* **Options**: Nginx, Caddy, Traefik, HAProxy[cite: 1].
 
 ### AI Gateway {#gateways}
 
 * **Path**: `services/gateways/`
-* **Purpose**: The core intelligence layer. This is the user-facing agent
+* **Purpose**: The core intelligence layer[cite: 1]. This is the user-facing agent
   framework that handles tool definitions, semantic memory retrieval, workflow
-  execution, and multi-agent routing.
+  execution, and multi-agent routing[cite: 1].
 * **Options**: Moltis, NanoClaw, OpenClaw, TrustClaw, Knolli AI, Claude Code,
-  Nanobot, NullClaw, ZeroClaw, n8n + AI, PicoClaw, Manis AI.
+  Nanobot, NullClaw, ZeroClaw, n8n + AI, PicoClaw, Manis AI[cite: 1].
 
 ### AI Proxy {#proxies}
 
 * **Path**: `services/proxies/`
 * **Purpose**: The middleware sitting between the Gateway and external LLM
-  providers. It acts as a central control plane for cost management, enforcing
-  guardrails, load balancing requests, and masking raw API keys from the agent.
+  providers[cite: 1]. It acts as a central control plane for cost management, enforcing
+  guardrails, load balancing requests, and masking raw API keys from the agent[cite: 1].
 * **Options**: Portkey, OpenRouter, Helicone, Manifest, TrueFoundry, Bifrost,
-  LiteLLM.
+  LiteLLM[cite: 1].
 
 ## Source Truth & Reliability
 
 ### Version Control System {#vcses}
 
 * **Path**: `services/vcses/`
-* **Purpose**: The immutable state capture layer. Tracks all code modifications,
+* **Purpose**: The immutable state capture layer[cite: 1]. Tracks all code modifications,
   documentation updates, and schema patches generated by autonomous agents
-  locally before review.
-* **Options**: None currently defined.
+  locally before review[cite: 1].
+* **Options**: None currently defined[cite: 1].
 
 ## Data & State Management
 
 ### Long-Term Memory {#memories}
 
 * **Path**: `services/memories/`
-* **Purpose**: The permanent, space-efficient archive for the agent. This
+* **Purpose**: The permanent, space-efficient archive for the agent[cite: 1]. This
   database must support high-dimensional vector embeddings for semantic search
-  (associative recall) alongside standard relational data (configs, logs).
-* **Options**: SQLite, PostgreSQL + pgvector, Qdrant, Weaviate, Milvus.
+  (associative recall) alongside standard relational data (configs, logs)[cite: 1].
+* **Options**: SQLite, PostgreSQL + pgvector, Qdrant, Weaviate, Milvus[cite: 1].
 
 ### Real-Time Cache {#caches}
 
 * **Path**: `services/caches/`
-* **Purpose**: Ultra-low latency, ephemeral storage. It is used for semantic
+* **Purpose**: Ultra-low latency, ephemeral storage[cite: 1]. It is used for semantic
   caching (to save money on repeated API queries), maintaining short-term
   session states, facilitating multi-agent pub/sub communication, and
-  distributed locking.
-* **Options**: Redis, Context Lakes, Turso, Convex, Memcached, Memori Labs.
+  distributed locking[cite: 1].
+* **Options**: Redis, Context Lakes, Turso, Convex, Memcached, Memori Labs[cite: 1].
