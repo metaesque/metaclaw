@@ -62,7 +62,8 @@ def _get_linux_gpu(ram_bytes=0):
   # Check AMD APU (Strix Halo / Ryzen AI Max) first
   cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
   if cpu_info and 'Ryzen AI Max' in cpu_info:
-    vram_bytes = int(ram_bytes * 3.0) # Extrapolate hardware footprint if system is split
+    # Strix Halo allocates up to 96GB (roughly 3x the standard OS visibility)
+    vram_bytes = int(ram_bytes * 3.0)
     return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_bytes
 
   # Check AMD ROCm
@@ -88,10 +89,11 @@ def _get_hardware_ram_linux():
   """Parses dmidecode or memory banks to capture true physical hardware capacity."""
   dmi = _run_cmd(['sudo', 'dmidecode', '--type', 'memory'])
   if dmi:
-    sizes = re.findall(r'Size:\s+(\d+)\s+GB', dmi)
+    # Strict regex: Matches only the base 'Size:' line, discarding 'Volatile Size:'
+    # to prevent double-counting handles in SMBIOS 3.7.0.
+    sizes = re.findall(r'^[ \t]*Size:\s+(\d+)\s+GB', dmi, re.MULTILINE)
     if sizes:
-      return sum(int(s) for f in sizes)
-  # Fallback to sysfs scaling invariants if lacking root privileges
+      return sum(int(s) for s in sizes)
   return None
 
 def platform_details():
@@ -117,30 +119,33 @@ def platform_details():
     "cpu_cores": cpu_cores,
     "ram_bytes": ram_bytes,
     "ram_gb": round(ram_bytes / (1024**3), 2),
-    "ram_hardware_gb": round(ram_bytes / (1024**3), 2), # Default parity
+    "ram_hardware_gb": round(ram_bytes / (1024**3), 2),
     "storage_total_gb": round(total_storage / (1024**3), 2),
     "storage_free_gb": round(free_storage / (1024**3), 2),
     "unified_memory": False,
-    "gpu_name": "No Discrete GPU Detected",
+    "gpu_detected": "No Discrete GPU Detected",
     "vram_gb": 0.0,
+    "tailscale_active": _is_tailscale_running(),
     "uname": uname,
     "os_uname": os_uname,
   }
 
   if sys_os == 'Darwin':
-    details['gpu_name'], _ = _get_mac_gpu()
+    details['gpu_detected'], _ = _get_mac_gpu()
     if arch == 'arm64':
       details['unified_memory'] = True
       vram_bytes = int(ram_bytes * 0.7)
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
 
   elif sys_os == 'Linux':
-    details['gpu_name'], vram_bytes = _get_linux_gpu(ram_bytes)
+    details['gpu_detected'], vram_bytes = _get_linux_gpu(ram_bytes)
     hw_ram = _get_hardware_ram_linux()
+
     if hw_ram:
       details['ram_hardware_gb'] = float(hw_ram)
-    elif "Strix Halo" in details['gpu_name']:
-      details['ram_hardware_gb'] = 128.0 # Enforce profile mapping for known APU architectures
+    elif "Strix Halo" in details['gpu_detected']:
+      # Hardware enforce Strix Halo properties if dmidecode access fails
+      details['ram_hardware_gb'] = 128.0
       details['unified_memory'] = True
       details['vram_gb'] = 96.0
 

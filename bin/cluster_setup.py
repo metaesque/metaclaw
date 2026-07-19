@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 import os
+import sys
+
+# Ensure sysprofile can be imported from the local bin directory
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+import sysprofile
+
 import json
 import socket
 import platform
 import shutil
 import subprocess
-import sys
 
 def get_local_ip():
     try:
@@ -26,25 +31,6 @@ def is_tailscale_active():
         return res.returncode == 0
     except Exception:
         return False
-
-def profile_local_hardware():
-    total_storage, _, free_storage = shutil.disk_usage('/')
-    try:
-        ram_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-    except Exception:
-        ram_bytes = 0
-
-    return {
-        "os": platform.system(),
-        "architecture": platform.machine(),
-        "ip_address": get_local_ip(),
-        "cpu_cores": os.cpu_count() or 1,
-        "ram_gb": round(ram_bytes / (1024**3), 2),
-        "storage_total_gb": round(total_storage / (1024**3), 2),
-        "storage_free_gb": round(free_storage / (1024**3), 2),
-        "tailscale_active": is_tailscale_active(),
-        "headless": False # Updated interactively
-    }
 
 def get_required_ssh_key():
     """
@@ -220,15 +206,15 @@ def main():
 
     # 1. Profile the local orchestrating node
     local_host = socket.gethostname()
-    local_hw = profile_local_hardware()
+    local_hw = sysprofile.platform_details()
 
     print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
     print(f"  IP Address: {local_hw['ip_address']}")
     print(f"  RAM capacity: {local_hw['ram_gb']} GB")
-    print(f"  Native Tailscale Active: {local_hw['tailscale_active']}")
+    print(f"  Native Tailscale Active: {local_hw.get('tailscale_active', False)}")
 
     # Explicit headless prompt to defeat dummy plug heuristics
-    default_hl = 'y' if local_hw['tailscale_active'] else 'n'
+    default_hl = 'y' if local_hw.get('tailscale_active') else 'n'
     hl_input = input(f"Is orchestrator node '{local_host}' running headless? [{default_hl}]: ").strip().lower()
     local_hw['headless'] = True if hl_input in ['y', 'yes'] else (False if hl_input in ['n', 'no'] else default_hl == 'y')
 

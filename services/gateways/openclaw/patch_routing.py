@@ -156,13 +156,42 @@ agent_to_agent_cfg = setdefault_path(tools_cfg, ['agentToAgent'])
 agent_to_agent_cfg['enabled'] = True
 
 # ==============================================================================
+# SEARCH PLUGIN INJECTION
+# ==============================================================================
+plugins = setdefault_path(data, ['plugins'])
+plugins['enabled'] = True
+
+allow = plugins.get('allow', [])
+if "metaclaw-routing" not in allow:
+    allow.append("metaclaw-routing")
+if "searxng" not in allow:
+    allow.append("searxng")
+plugins['allow'] = allow
+
+entries = setdefault_path(plugins, ['entries'])
+mc_routing = setdefault_path(entries, ['metaclaw-routing'])
+mc_routing['enabled'] = True
+hooks = setdefault_path(mc_routing, ['hooks'])
+hooks['allowConversationAccess'] = True
+
+# Enable the SearXNG plugin using the active-searcher Docker alias
+searxng = setdefault_path(entries, ['searxng'])
+searxng['enabled'] = True
+searxng_config = setdefault_path(searxng, ['config', 'webSearch'])
+searxng_config['baseUrl'] = f"http://{os.environ.get('ACTIVE_SEARCHER_HOST', 'active-searcher')}:9003"
+
+# Wire the built-in web_search tool to the configured searxng provider
+web_tools = setdefault_path(data, ['tools', 'web', 'search'])
+web_tools['provider'] = 'searxng'
+
+# ==============================================================================
 # PROXY ROUTING INTEGRATION
 # ==============================================================================
 
 openai_prov = setdefault_path(data, ['models', 'providers', 'openai'])
 openai_prov['baseUrl'] = "http://active-proxy:4000/v1"
 openai_prov['apiKey'] = proxy_key
-# Increase the provider timeout to 600s to gracefully accommodate massive LLM cold-starts
+# Increase the provider timeout to 600s to gracefully accommodate massive local LLM cold-starts
 openai_prov['timeoutSeconds'] = 600
 
 litellm_prov = setdefault_path(data, ['models', 'providers', 'litellm'])
@@ -218,7 +247,11 @@ for yf in yaml_files:
           yaml_has_default = True
 
       if agent_data.get('model'):
-          entry['model'] = agent_data.get('model')
+          model_name = agent_data.get('model')
+          # Prepend the required openai/ prefix to silence warnings in OpenClaw
+          if '/' not in model_name:
+              model_name = f"openai/{model_name}"
+          entry['model'] = model_name
 
       yaml_constraints = agent_data.get('constraints', {})
       if yaml_constraints:
@@ -233,9 +266,15 @@ for yf in yaml_files:
           allowed_tools = []
           for t in yaml_tools:
               if isinstance(t, str):
+                  # Auto-correct YAML search_web arrays to match OpenClaw's internal web_search tool structure
+                  if t == "search_web":
+                      t = "web_search"
                   allowed_tools.append(t)
               elif isinstance(t, dict) and 'name' in t:
-                  allowed_tools.append(t['name'])
+                  name = t['name']
+                  if name == "search_web":
+                      name = "web_search"
+                  allowed_tools.append(name)
 
           if allowed_tools:
               entry['tools'] = {"allow": allowed_tools}
@@ -313,29 +352,14 @@ for agent in agents['list']:
     if 'fromFile' in agent:
         del agent['fromFile']
 
-plugins = setdefault_path(data, ['plugins'])
-plugins['enabled'] = True
-
-allow = plugins.get('allow', [])
-if "metaclaw-routing" not in allow:
-    allow.append("metaclaw-routing")
-plugins['allow'] = allow
-
-entries = setdefault_path(plugins, ['entries'])
-mc_routing = setdefault_path(entries, ['metaclaw-routing'])
-mc_routing['enabled'] = True
-hooks = setdefault_path(mc_routing, ['hooks'])
-hooks['allowConversationAccess'] = True
-
 with open(CONFIG_PATH, 'w') as f:
   json.dump(data, f, indent=2)
 
 print("SUCCESS: Patched baseline network routing and loopback binding.")
-print("SUCCESS: Registered 'metaclaw-routing' natively via plugins.allow.")
+print("SUCCESS: Registered 'metaclaw-routing' and 'searxng' natively via plugins.allow.")
 print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to facilitate mesh access.")
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
 print("SUCCESS: Raised provider timeout ceilings to safely execute massive local LLM cold-starts.")
-print("SUCCESS: Injected litellm API configuration for ClawRouter embeddings.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")
