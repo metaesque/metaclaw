@@ -1,3 +1,0 @@
-name: "basic_assistant"
-description: "A general-purpose assistant for answering standard queries and performing basic text manipulation."
-system_prompt: "You are a helpful assistant. Provide concise answers."
