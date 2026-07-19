@@ -11,15 +11,14 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 -include .env
 # ARCHITECTURAL SHIFT: Depend on the abstracted gateway symlink instead of hardcoding openclaw-gateway
 -include $(FRAMEWORK_ROOT)/services/gateway/.env
+# ARCHITECTURAL SHIFT: Include proxy variables to dynamically detect which models to pull
+-include $(FRAMEWORK_ROOT)/services/proxy/.env
 export
 
 PID_FILE = .ollama.pid
 LOG_FILE = ollama.log
 
-# Strips the Litellm provider prefix (e.g., 'ollama/') to isolate the native model name
-JUDGE_MODEL_CLEAN = $(shell echo $(OPENCLAW_JUDGE_MODEL) | sed 's/ollama\///')
-
-.PHONY: up down status clean-state clobber-data check-status check-logs wait-healthy pull-judge apply docs
+.PHONY: up down status clean-state clobber-data check-status check-logs wait-healthy pull-models apply docs
 
 up:: ./bin/ollama
 	@if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
@@ -32,7 +31,7 @@ up:: ./bin/ollama
 		OLLAMA_HOST=0.0.0.0:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
 		echo $$! > $(PID_FILE) ; \
 	fi
-	@$(MAKE) --no-print-directory pull-judge
+	@$(MAKE) --no-print-directory pull-models
 
 down::
 	@echo "Stopping Ollama..."
@@ -112,9 +111,13 @@ wait-healthy:: status
 	cat $(LOG_FILE) 2>/dev/null || true; \
 	exit 1
 
-# Instructs the running Ollama process to pull the specific weights defined in your Gateway config
-pull-judge: wait-healthy
-	@if [ -n "$(JUDGE_MODEL_CLEAN)" ]; then \
-		echo "Pulling local judge model ($(JUDGE_MODEL_CLEAN))..."; \
-		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $(JUDGE_MODEL_CLEAN) || { echo "\nWARNING: Failed to pull $(JUDGE_MODEL_CLEAN). TLS error detected (SecPolicyCreateSSL). The OpenClaw Gateway will gracefully fallback to the cloud 'medium-model'."; exit 0; }; \
-	fi
+# Instructs the running Ollama process to pull any models assigned to it by the Gateway/Proxy configuration
+pull-models: wait-healthy
+	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
+	@for raw_model in "$(OPENCLAW_JUDGE_MODEL)" "$(SIMPLE_MODEL_ID)" "$(MEDIUM_MODEL_ID)" "$(COMPLEX_MODEL_ID)" "$(FRONTIER_MODEL_ID)"; do \
+		if echo "$$raw_model" | grep -q "^ollama/"; then \
+			clean_model=$$(echo "$$raw_model" | sed 's/ollama\///'); \
+			echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
+			OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model. TLS error or missing model."; \
+		fi; \
+	done
