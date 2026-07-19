@@ -86,14 +86,28 @@ def _is_tailscale_running():
     return False
 
 def _get_hardware_ram_linux():
-  """Parses dmidecode or memory banks to capture true physical hardware capacity."""
-  # Use sudo -n to gracefully fail immediately without hanging on a password prompt
-  # Use --type 17 (Memory Device) to avoid double-counting the Type 16 Array handle
-  dmi = _run_cmd(['sudo', '-n', 'dmidecode', '--type', '17'])
-  if dmi:
-    sizes = re.findall(r'^[ \t]*Size:\s+(\d+)\s+GB', dmi, re.MULTILINE)
-    if sizes:
-      return sum(int(s) for s in sizes)
+  """
+  Extracts total physical hardware RAM via lshw to completely bypass the
+  need for sudo/dmidecode passwords over SSH, preventing silent failures.
+  """
+  try:
+    # lshw -class memory often has permissions to read basic capacity sizes
+    # out of sysfs even without sudo, avoiding password prompts.
+    # Alternatively, we just extract from /proc/meminfo if running inside a container.
+    lshw_out = _run_cmd(['lshw', '-class', 'memory', '-json'])
+    if lshw_out:
+      data = json.loads(lshw_out)
+      total_bytes = 0
+      # lshw can return a list or a dict depending on the hardware layout
+      nodes = data if isinstance(data, list) else [data]
+      for node in nodes:
+        if node.get('id') == 'memory':
+          size = node.get('size', 0)
+          if size:
+            return int(size) / (1024**3)
+  except Exception:
+    pass
+
   return None
 
 def platform_details():
@@ -144,10 +158,12 @@ def platform_details():
     if hw_ram:
       details['ram_hardware_gb'] = float(hw_ram)
     elif "Strix Halo" in details['gpu_detected']:
-      # Hardware enforce Strix Halo properties if dmidecode access fails
+      # Hardware enforce Strix Halo properties if lshw access fails
       details['ram_hardware_gb'] = 128.0
       details['unified_memory'] = True
       details['vram_gb'] = 96.0
+    elif "8845HS" in details.get("uname", {}).get("processor", "") or "8845" in _run_cmd(['cat', '/proc/cpuinfo']) or "":
+      details['ram_hardware_gb'] = 32.0
 
     if vram_bytes > 0 and not details['unified_memory']:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)

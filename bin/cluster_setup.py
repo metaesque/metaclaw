@@ -215,17 +215,8 @@ def main():
     print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
     print(f"  IP Address: {local_hw['ip_address']}")
     print(f"  OS RAM capacity: {local_hw['ram_gb']} GB")
+    print(f"  Hardware RAM detected: {local_hw.get('ram_hardware_gb')} GB")
     print(f"  Native Tailscale Active: {local_hw.get('tailscale_active', False)}")
-
-    print(f"\n[Hardware Verification] Node: {local_host}")
-    print(f"  Detected Hardware RAM: {local_hw.get('ram_hardware_gb')} GB")
-    print(f"  Detected GPU: {local_hw.get('gpu_detected')}")
-    user_ram_local = input(f"Confirm total physical RAM in GB for {local_host} [{local_hw.get('ram_hardware_gb')}]: ").strip()
-    if user_ram_local:
-        try:
-            local_hw['ram_hardware_gb'] = float(user_ram_local)
-        except ValueError:
-            pass
 
     # Explicit headless prompt to defeat dummy plug heuristics
     default_hl = 'y' if local_hw.get('tailscale_active') else 'n'
@@ -283,13 +274,6 @@ def main():
         print(f"  Detected OS RAM: {compute_hw.get('ram_gb')} GB")
         print(f"  Detected Hardware RAM: {compute_hw.get('ram_hardware_gb')} GB")
         print(f"  Detected GPU: {compute_hw.get('gpu_detected')}")
-
-        user_ram = input(f"Confirm total physical RAM in GB for {compute_host} [{compute_hw.get('ram_hardware_gb')}]: ").strip()
-        if user_ram:
-            try:
-                compute_hw['ram_hardware_gb'] = float(user_ram)
-            except ValueError:
-                pass
 
         # CRITICAL FIX: Overwrite the hardware IP returned by sysprofile (which is the LAN IP)
         # with the explicitly resolved Tailscale IP, so all downstream orchestration uses Tailscale SSH.
