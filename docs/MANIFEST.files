@@ -142,6 +142,7 @@ services/loggers/graylog/.provider.json
 services/loggers/loki/.provider.json
 services/loggers/opensearch/.provider.json
 services/loggers/quickwit/.provider.json
+services/loggers/signoz/.provider.json
 services/loggers/victorialogs/.provider.json
 services/memories/.service.json
 services/memories/postgres/.env.template
