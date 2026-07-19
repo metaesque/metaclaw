@@ -48,9 +48,9 @@ model_list:
 
   - model_name: frontier-model
     litellm_params:
-      model: "os.environ/COMPLEX_MODEL_ID"
-      api_base: "os.environ/COMPLEX_MODEL_API_BASE"
-      api_key: "os.environ/COMPLEX_MODEL_API_KEY"
+      model: "os.environ/FRONTIER_MODEL_ID"
+      api_base: "os.environ/FRONTIER_MODEL_API_BASE"
+      api_key: "os.environ/FRONTIER_MODEL_API_KEY"
 
   - model_name: prompt-embedding-model
     litellm_params:
