@@ -3,6 +3,7 @@
 .env
 .env.cluster
 .env.json
+.metal
 .logs/
 .old
 .state_recreate
