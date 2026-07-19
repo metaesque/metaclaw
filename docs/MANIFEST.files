@@ -99,6 +99,10 @@ services/fetchers/scrapegraphai/.provider.json
 services/fetchers/zyte/.provider.json
 services/forwarders/.service.json
 services/forwarders/Makefile
+services/forwarders/fluentbit/.env.template
+services/forwarders/fluentbit/Makefile
+services/forwarders/fluentbit/docker-compose.yml
+services/forwarders/fluentbit/fluent-bit.conf
 services/forwarders/fluentbit/.provider.json
 services/forwarders/logstash/.provider.json
 services/forwarders/vector/.provider.json
@@ -133,13 +137,11 @@ services/loggers/.service.json
 services/loggers/victorialogs/.env.template
 services/loggers/victorialogs/Makefile
 services/loggers/victorialogs/docker-compose.yml
-services/loggers/victorialogs/fluent-bit.conf
 services/loggers/elk/.provider.json
 services/loggers/graylog/.provider.json
 services/loggers/loki/.provider.json
 services/loggers/opensearch/.provider.json
 services/loggers/quickwit/.provider.json
-services/loggers/signoz/.provider.json
 services/loggers/victorialogs/.provider.json
 services/memories/.service.json
 services/memories/postgres/.env.template

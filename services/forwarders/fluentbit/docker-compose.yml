@@ -1,0 +1,28 @@
+services:
+  fluent-bit:
+    # WHAT THIS IS: A lightweight C-based log processor and forwarder.
+    # WHY THIS TOOL: It tails the raw Docker JSON logs and bare-metal files on the edge node, streaming them into VictoriaLogs seamlessly.
+    image: fluent/fluent-bit:${FLUENTBIT_VERSION}
+    container_name: fluent-bit
+    restart: unless-stopped
+    environment:
+      # WHAT THIS DOES: Injects the current node's internal network identifier into the container.
+      # WHY IT MATTERS: Allows the forwarder to tag logs so VictoriaLogs can partition them by host origin.
+      - HOST_IDENTIFIER=${ACTIVE_FORWARDER_HOST:-unknown}
+      - ACTIVE_LOGGER_HOST=${ACTIVE_LOGGER_HOST:-active-logger}
+    volumes:
+      # WHAT THIS DOES: Mounts our custom routing configuration.
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      # WHAT THIS DOES: Mounts the host Docker container logs path.
+      # WHY THIS DEFAULT: By mounting this path read-only, Fluent Bit can passively collect logs from ALL containers without requiring you to change their Docker logging drivers.
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # WHAT THIS DOES: Mounts the absolute root of the MetaClaw installation directory.
+      # WHY IT MATTERS: This allows Fluent Bit to tail bare-metal logs (like Ollama's native log file) residing inside the repository structure.
+      - ${OPENCLAW_ROOT:-/home/node/repo}:/metaclaw:ro
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true
