@@ -19,7 +19,6 @@ docs/.MANIFEST.files.ignore
 docs/legacy/INFO.md
 docs/legacy/INSTALL.md
 docs/legacy/TODO.org
-docs/WORKSPACE.files
 docs/index.html
 external/
 lib/__pycache__/

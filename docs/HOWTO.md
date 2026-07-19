@@ -94,30 +94,27 @@ or your session memory becomes bloated beyond repair, the fastest path to
 stability is to reset the system. We offer two levels of reset depending on
 severity.
 
-### The Cluster Bring-Up Sequence
-To properly tear down and rebuild your cluster, always follow this strict sequence:
-1.  `make factory-reset-soft`: Clears old state gracefully. (Only used when a reset is strictly necessary. Otherwise, prefer `make apply` for in-place configuration changes).
-2.  `make setup`: Re-profiles your local hardware and assigns architectural planes.
-3.  `make wizard-batch` (or `make wizard`): Sequentially bootstraps the environment, applies network routing, and verifies health.
-4.  `make gui`: Opens the OpenClaw interface with your secure access token.
-
-### The "Soft Reset" (Recommended)
+### The "Soft Reset" & Cluster Bring-Up Sequence (Recommended)
 This is the standard troubleshooting step. It cleanly shuts down all containers,
 deletes the internal network, and scrubs ephemeral runtime files. **Crucially,
 it preserves your API keys, your PostgreSQL database, and your Python
-environments.**
+environments.** To properly tear down and rebuild your cluster, always follow this strict sequence:
 
-1.  In your terminal, run: `make factory-reset-soft`
-2.  Once complete, rebuild the environment by running: `make wizard-batch`
-    * *Note: The batch wizard will safely bypass interactive inputs, boot the
-      network, apply essential routing patches, and generate HTML documentation.*
+1.  In your terminal, run: `make factory-reset-soft` to clear old state gracefully.
+2.  Run `make setup`: Re-profiles your local hardware and assigns architectural planes. *Note: This command is now executed once from the Control node. It profiles the entire cluster and automatically broadcasts the configuration to all remote hosts.*
+3.  Execute the deployment wizard. Choose one of the following based on your needs:
+    *   `make wizard-cluster`: The new default for multi-node setups. It orchestrates the deployment sequence across the entire distributed cluster automatically via SSH.
+    *   `make wizard-batch`: A non-interactive deployment sequence for a single node. Bypasses all human-in-the-loop prompts assuming `.env.json` secrets are intact.
+    *   `make wizard`: The interactive deployment sequence. Pulls up a helpful Chrome browser with service/provider-specific information and diagnostic checks as setup occurs.
+4.  Run `make gui`: Opens the OpenClaw interface with your secure access token.
 
 ### The "Nuclear Option" (Hard Reset)
 Use this only if you need to completely purge everything, including your
 database records, vector embeddings, and stored API keys.
 
 1.  In your terminal, run: `make factory-reset-hard`
-2.  You will need to run `make wizard` and re-enter all your API credentials as
+2.  Run `make setup` to re-profile your hardware from scratch across the cluster.
+3.  You will need to run `make wizard-cluster` (or `make wizard`) and re-enter all your API credentials as
     if you were installing the framework for the first time.
 
 ## Upgrading (or Downgrading) OpenClaw

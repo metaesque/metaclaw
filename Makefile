@@ -58,6 +58,23 @@ METACLAW_METAPATH=workspace/src/metaclaw
 
 .PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
 
+define h1_title
+	echo ""; \
+	echo "############"; \
+	echo "# $(1)"; \
+	echo "--"
+endef
+
+define h2_title
+	echo "============"; \
+	echo "= $(1)"
+endef
+
+define h3_title
+	echo "------------"; \
+	echo "- $(1)"
+endef
+
 # ==============================================================================
 # ENVIRONMENT BOOTSTRAPPING & UPDATES
 # ==============================================================================
@@ -65,18 +82,14 @@ METACLAW_METAPATH=workspace/src/metaclaw
 # WHAT IT DOES: Pulls the latest framework from GitHub and reconciles the containers.
 # WHY IT EXISTS: The standard update loop for non-technical users.
 mc-update:
-	@echo "################################################################################"
-	@echo "# UPDATING METACLAW FRAMEWORK"
-	@echo "################################################################################"
+	@$(call h1_title,"UPDATING METACLAW FRAMEWORK")
 	@git pull origin main
 	@$(MAKE) --no-print-directory apply
 
 # WHAT IT DOES: Allows the user to modify their dynamic configuration (routing, paths).
 # WHY IT EXISTS: Bypasses the full `setup` hardware profiler to quickly tweak settings.
 customize: | $(PYTHON_BIN)
-	@echo "################################################################################"
-	@echo "# MODIFYING METACLAW CONFIGURATION"
-	@echo "################################################################################"
+	@$(call h1_title,"MODIFYING METACLAW CONFIGURATION")
 	@$(PYTHON_BIN) ./bin/customize.py
 	@$(MAKE) --no-print-directory .env
 	@echo "Run 'make apply' to enact any routing or path changes."
@@ -84,9 +97,7 @@ customize: | $(PYTHON_BIN)
 # WHAT IT DOES: Analyzes the host OS and automatically installs Docker Engine or OrbStack.
 # WHY IT EXISTS: Streamlines bare-metal node provisioning before 'make setup'.
 install-docker:
-	@echo "################################################################################"
-	@echo "# INSTALLING DOCKER ENGINE"
-	@echo "################################################################################"
+	@$(call h1_title,"INSTALLING DOCKER ENGINE")
 	@bash ./bin/install_docker.sh
 
 # WHAT IT DOES: Ensures the Python virtual environment exists and dependencies are installed.
@@ -102,9 +113,7 @@ $(PYTHON_BIN):
 # WHAT IT DOES: Analyzes the hardware footprint, assigns a Tier (0-5), and generates `profile.json`.
 # WHY IT EXISTS: This is the core cluster-state generator required before deploying services.
 setup: | $(PYTHON_BIN)
-	@echo "################################################################################"
-	@echo "# INITIATING METACLAW ENVIRONMENT SETUP"
-	@echo "################################################################################"
+	@$(call h1_title,"INITIATING METACLAW ENVIRONMENT SETUP")
 	@$(PYTHON_BIN) ./bin/cluster_setup.py
 	@echo "\n[Setup] Step 2: Orchestrating dynamic symlinks and cross-node routing..."
 	@$(MAKE) --no-print-directory symlinks
@@ -116,9 +125,7 @@ setup: | $(PYTHON_BIN)
 # WHAT IT DOES: Distributes and executes wizard-batch across all nodes via SSH
 # WHY IT EXISTS: Solves the chicken-and-egg deployment problem by ensuring the cluster is built sequentially.
 wizard-cluster: | $(PYTHON_BIN)
-	@echo "################################################################################"
-	@echo "# INITIATING DISTRIBUTED CLUSTER WIZARD"
-	@echo "################################################################################"
+	@$(call h1_title,"INITIATING DISTRIBUTED CLUSTER WIZARD")
 	@$(PYTHON_BIN) ./bin/wizard_cluster.py
 
 # ==============================================================================
@@ -170,9 +177,7 @@ __undock:
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
-				echo "################################################################################"; \
-				echo "# Executing teardown in $$REAL_DIR..."; \
-				echo "################################################################################"; \
+				$(call h1_title,"Executing teardown in $$REAL_DIR..."); \
 				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR down || true; \
 			fi; \
 		fi; \
@@ -181,9 +186,7 @@ __undock:
 # WHAT IT DOES: Compares running container configurations against physical `.env` files and restarts/rebuilds them if mismatched.
 # WHY IT EXISTS: The standard deployment command for pushing infrastructure changes gracefully.
 apply: symlinks
-	@echo "################################################################################"
-	@echo "# RECONCILING GLOBAL INFRASTRUCTURE STATE"
-	@echo "################################################################################"
+	@$(call h1_title,"RECONCILING GLOBAL INFRASTRUCTURE STATE")
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -200,9 +203,7 @@ status: | $(PYTHON_BIN)
 
 # WHAT IT DOES: Executes `docker ps` for all managed containers on the local machine.
 status-local:
-	@echo "################################################################################"
-	@echo "# LOCAL INFRASTRUCTURE STATUS"
-	@echo "################################################################################"
+	@$(call h1_title,"LOCAL INFRASTRUCTURE STATUS")
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -241,9 +242,7 @@ docs: | $(PYTHON_BIN)
 
 # The core execution loop for booting the cluster in a safe, dependency-aware sequence.
 wizard-run: bootstrap docs
-	@echo "################################################################################"
-	@echo "# INITIATING FRAMEWORK SETUP"
-	@echo "################################################################################"
+	@$(call h1_title,"INITIATING FRAMEWORK SETUP")
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
 		$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/index.html"; \
 	fi
@@ -255,9 +254,7 @@ wizard-run: bootstrap docs
 		read dummy < /dev/tty; \
 	fi
 	@mkdir -p .logs
-	@echo "################################################################################"
-	@echo "# PRE-FLIGHT ENVIRONMENT CONFIGURATION"
-	@echo "################################################################################"
+	@$(call h2_title,"PRE-FLIGHT ENVIRONMENT CONFIGURATION")
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -279,20 +276,17 @@ wizard-run: bootstrap docs
 						if [ "$$answer" != "" ] && [ "$$answer" != "Y" ] && [ "$$answer" != "y" ] && [ "$$answer" != "yes" ]; then \
 							echo "Setup aborted by user."; exit 1; \
 						fi; \
-						echo "======================================================================"; \
 					fi; \
 				fi; \
 			fi; \
 		fi; \
 	done
-	@echo "################################################################################"
-	@echo "# DEPLOYING CLUSTER INFRASTRUCTURE"
-	@echo "################################################################################"
+	@$(call h2_title,"DEPLOYING CLUSTER INFRASTRUCTURE")
 	@for dir in $(WIZARD_BOOT_ORDER); do \
+		$(call h2_title,"$$dir"); \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
-				echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"; \
 				echo "[Root] Deploying $$REAL_DIR..."; \
 				if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
 					if [ "$(INTERACTIVE)" = "1" ] && [ -f "$$REAL_DIR/index.html" ]; then \
@@ -314,20 +308,16 @@ wizard-run: bootstrap docs
 			fi; \
 		fi; \
 	done
-	@echo "################################################################################"
-	@echo "# APPLYING GATEWAY CONFIGURATION"
-	@echo "################################################################################"
+	@$(call h2_title,"APPLYING GATEWAY CONFIGURATION")
 	@if [ -d "$(GATEWAY_SUBDIR)" ] && [ -f "$(GATEWAY_SUBDIR)/Makefile" ]; then \
 		echo "Applying routing patch..."; \
 		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch; \
 	else \
 		echo "No Gateway plane detected on this node. Skipping routing patch."; \
 	fi
-	@echo "################################################################################"
+
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
-		echo "# WIZARD COMPLETE. LAUNCHING WEB GUI..."; \
-		echo "################################################################################"; \
-		echo ""; \
+		$(call h2_title,"LAUNCHING WEB GUI..."); \
 		if [ -d "$(GATEWAY_SUBDIR)" ] && [ -f "$(GATEWAY_SUBDIR)/Makefile" ]; then \
 			echo "Waiting for OpenClaw Gateway to finish booting..."; \
 			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
@@ -339,7 +329,6 @@ wizard-run: bootstrap docs
 		fi; \
 	else \
 		echo "# BATCH WIZARD COMPLETE. ALL SYSTEMS ONLINE."; \
-		echo "################################################################################"; \
 	fi
 
 # ==============================================================================
@@ -349,9 +338,7 @@ wizard-run: bootstrap docs
 # WHAT IT DOES: Deletes ephemeral files (`verification.log`, cached `.html` pages, `.state_*` flags) globally.
 # WHY IT EXISTS: Cleans up the developer workspace without harming secrets or databases.
 clean-state:
-	@echo "################################################################################"
-	@echo "# CLEANING LOCAL STATE ACROSS ALL SERVICES"
-	@echo "################################################################################"
+	@$(call h2_title,"CLEANING LOCAL STATE ACROSS ALL SERVICES")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -368,15 +355,14 @@ factory-reset: factory-reset-soft
 # WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data.
 #   This is the safest way to bounce a broken framework.
 factory-reset-soft: __undock clean-network
-	@echo "################################################################################"
-	@echo "# INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)"
-	@echo "################################################################################"
+	@$(call h1_title,INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA))
 	@$(MAKE) --no-print-directory clean-state
+	@$(call h2_title,"Removing .env files...")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
-	@echo "Purging global runtime state..."
+	@$(call h2_title,"Purging global runtime state...")
 	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
 	@rm -rf .logs
 	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
@@ -386,9 +372,7 @@ factory-reset-soft: __undock clean-network
 # WHAT IT DOES: The Nuclear Option. Destroys everything, including cached `.env.json` secrets and the hardware `profile.json`.
 # WHY IT EXISTS: Required if the user wishes to redeploy from scratch with entirely new API keys or a different hardware cluster configuration.
 factory-reset-hard: factory-reset-soft
-	@echo "################################################################################"
-	@echo "# PURGING ALL SECRETS AND PERSISTENT DATA (HARD RESET)"
-	@echo "################################################################################"
+	@$(call h1_title,"INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -409,9 +393,7 @@ factory-reset-hard: factory-reset-soft
 # WHAT IT DOES: Creates a deployable ZIP archive of the framework respecting `MANIFEST.files`.
 zip: tmp/metaclaw.zip
 tmp/metaclaw.zip: FORCE | $(PYTHON_BIN)
-	@echo "################################################################################"
-	@echo "# PACKAGING FRAMEWORK"
-	@echo "################################################################################"
+	@$(call h1_title,"PACKAGING FRAMEWORK")
 	@if [ ! -f docs/MANIFEST.files ]; then echo "FATAL: docs/MANIFEST.files is missing."; exit 1; fi
 	@rm -rf .tmp_pack tmp/metaclaw.zip
 	@mkdir -p .tmp_pack tmp
@@ -456,9 +438,7 @@ todo: | $(PYTHON_BIN)
 # WHAT IT DOES: Provisions a Git clone of MetaClaw into the agent's workspace.
 # WHY IT EXISTS: Allows the agent to autonomously develop the framework via standard Git PRs.
 meta-push:
-	@echo "################################################################################"
-	@echo "# [GitOps] Provisioning MetaClaw repository in agent workspace..."
-	@echo "################################################################################"
+	@$(call h1_title,"[GitOps] Provisioning MetaClaw repository in agent workspace...")
 	@if [ ! -d $(METACLAW_METAPATH) ]; then \
 		git clone https://github.com/metaesque/metaclaw.git $(METACLAW_METAPATH); \
 	else \
@@ -479,9 +459,7 @@ meta-cmp:
 # WHAT IT DOES: Pulls the merged changes from GitHub into the live host.
 # WHY IT EXISTS: Closes the loop on agent-driven development securely.
 meta-pull:
-	@echo "################################################################################"
-	@echo "# [GitOps] Pulling merged updates from the public repository to the live host..."
-	@echo "################################################################################"
+	@$(call h1_title,"[GitOps] Pulling merged updates from the public repository to the live host...")
 	@git pull origin main
 	@echo "Run 'make apply' to deploy the new state."
 

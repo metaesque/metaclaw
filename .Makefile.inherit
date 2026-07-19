@@ -26,6 +26,30 @@ RESTART_DEPS ?=
 
 .PHONY: up down pre-up post-up pre-down post-down verify_service clean-state clobber-data check-logs post-check-status apply restart docs
 
+# MACROS
+#  - For creating a consistent look in headings, without producing excessive
+#    tokens (so that I can copy output into Gemini without wasting tokens on
+#    fluff).
+#  - TODO(wmh): There is currently code redundancy between the definitions here
+#    and in ./Makefile. Can ./Makefile inherit from this file like all the
+#    service/*/*/Makefile's do? Or will that pose problems?
+define h1_title
+	echo ""; \
+	echo "############"; \
+	echo "# $(1)"; \
+	echo "--"
+endef
+
+define h2_title
+	echo "============"; \
+	echo "= $(1)"
+endef
+
+define h3_title
+	echo "------------"; \
+	echo "- $(1)"
+endef
+
 # Standardized .env instantiation.
 .env: .env.template $(wildcard .env.json)
 	@echo "[$(SERVICE_NAME)] Validating environment configuration..."
@@ -156,9 +180,7 @@ check-status::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping status check."; \
 	else \
-		echo "================================================================================"; \
-		echo "= $(SERVICE_NAME) INTEGRITY VERIFICATION"; \
-		echo "================================================================================"; \
+		$(call h2_title,"$(SERVICE_NAME) INTEGRITY VERIFICATION"); \
 		if [ ! -f .metal ]; then \
 			STATUS=$$(docker inspect --format="{{.State.Status}}" $(SERVICE_NAME) 2>/dev/null || echo "MISSING"); \
 			if [ "$$STATUS" = "running" ]; then \
