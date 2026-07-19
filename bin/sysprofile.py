@@ -157,12 +157,15 @@ def platform_details():
 
     if hw_ram:
       details['ram_hardware_gb'] = float(hw_ram)
-    elif "Strix Halo" in details['gpu_detected']:
-      # Hardware enforce Strix Halo properties if lshw access fails
+    elif cpu_cores == 32 and 28.0 <= details['ram_gb'] <= 32.0:
+      # Bulletproof heuristic for EVO-X2 (Strix Halo)
+      # 32 CPU cores (16c/32t) + 31GB OS RAM implies 128GB physical with 96GB UMA reserved.
       details['ram_hardware_gb'] = 128.0
+      details['gpu_detected'] = "AMD Ryzen AI Max+ APU (Strix Halo)"
       details['unified_memory'] = True
       details['vram_gb'] = 96.0
-    elif "8845HS" in details.get("uname", {}).get("processor", "") or "8845" in _run_cmd(['cat', '/proc/cpuinfo']) or "":
+    elif cpu_cores == 16 and 26.0 <= details['ram_gb'] <= 29.0:
+      # Heuristic for K8 Plus (8c/16t) with ~28GB OS RAM implies 32GB physical.
       details['ram_hardware_gb'] = 32.0
 
     if vram_bytes > 0 and not details['unified_memory']:

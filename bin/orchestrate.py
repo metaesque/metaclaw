@@ -115,7 +115,7 @@ def main():
 
   target_simple = "ollama/gemma4:e4b"
   if cluster_tier_value >= 2 and compute_node:
-      target_medium = "ollama/qwen-3-32b"
+      target_medium = "ollama/qwen2.5:32b"
       target_complex = "ollama/ingu627/llama4-scout-q4:109b"
   else:
       target_medium = "gemini/gemini-2.5-flash"
