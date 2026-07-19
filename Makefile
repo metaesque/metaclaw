@@ -56,7 +56,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
 
 define h1_title
 	echo ""; \
@@ -110,17 +110,37 @@ $(PYTHON_BIN):
 .env: .env.template $(wildcard .env.json) | $(PYTHON_BIN)
 	$(PYTHON_BIN) ./bin/env_instantiate.py $(if $(filter factory-reset% clean% __undock,$(MAKECMDGOALS)),--teardown)
 
-# WHAT IT DOES: Analyzes the hardware footprint, assigns a Tier (0-5), and generates `profile.json`.
-# WHY IT EXISTS: This is the core cluster-state generator required before deploying services.
+# WHAT IT DOES: The master cluster preparation target. Analyzes hardware, assigns providers,
+#               pushes topology configs via SSH, and executes heavy lifting (model pulls, env generation).
+# WHY IT EXISTS: It prepares the entire distributed cluster for work in a single invocation
+#                from the Control node, eliminating manual cross-node synchronization.
 setup: | $(PYTHON_BIN)
-	@$(call h1_title,"INITIATING METACLAW ENVIRONMENT SETUP")
+	@$(call h1_title,"INITIATING CLUSTER-WIDE METACLAW SETUP")
 	@$(PYTHON_BIN) ./bin/cluster_setup.py
-	@echo "\n[Setup] Step 2: Orchestrating dynamic symlinks and cross-node routing..."
-	@$(MAKE) --no-print-directory symlinks
-	@echo "\n[Setup] Step 3: Compiling modular taxonomy into documentation..."
-	@$(PYTHON_BIN) ./bin/compile_md.py --setup
-	@echo "\n[Setup] Step 4: Instantiating global environment variables..."
+	@$(MAKE) --no-print-directory setup-local
+
+# WHAT IT DOES: Evaluates local providers, generates documents, creates secrets, and pulls models for the current machine.
+# WHY IT EXISTS: Separated from `setup` so that `cluster_setup.py` can invoke this target remotely on compute nodes via SSH.
+setup-local: bootstrap docs | $(PYTHON_BIN)
+	@echo "\n[Setup] Instantiating environment variables across all active services..."
 	@$(MAKE) --no-print-directory .env
+	@for dir in $(WIZARD_BOOT_ORDER); do \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				if [ -f "$$REAL_DIR/.metal" ] || [ -f "$$REAL_DIR/docker-compose.yml" ]; then \
+					echo "Instantiating environment for $$REAL_DIR..."; \
+					cd $$REAL_DIR && $(PYTHON_BIN) $(CURDIR)/bin/env_instantiate.py -v; \
+					cd $(CURDIR); \
+				fi; \
+			fi; \
+		fi; \
+	done
+	@echo "\n[Setup] Pre-fetching models and executing heavy lifting..."
+	@if [ -L "services/runner" ] && grep -q "pull-models:" services/runner/Makefile; then \
+		$(MAKE) --no-print-directory -C services/runner pull-models || true; \
+	fi
+	@echo "\n[Setup] Local node preparation complete."
 
 # WHAT IT DOES: Distributes and executes wizard-batch across all nodes via SSH
 # WHY IT EXISTS: Solves the chicken-and-egg deployment problem by ensuring the cluster is built sequentially.
@@ -242,16 +262,9 @@ docs: | $(PYTHON_BIN)
 
 # The core execution loop for booting the cluster in a safe, dependency-aware sequence.
 wizard-run: bootstrap docs
-	@$(call h1_title,"INITIATING FRAMEWORK SETUP")
+	@$(call h1_title,"INITIATING FRAMEWORK DEPLOYMENT")
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
 		$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/index.html"; \
-	fi
-	@if [ "$(INTERACTIVE)" = "1" ] || [ ! -f .env.json ] || grep -q "change_me" .env.json 2>/dev/null; then \
-		echo "ATTENTION: The setup wizard will now request several API keys."; \
-		echo "If you require remote WAN access, please generate a Tailscale Auth Key at:"; \
-		echo "https://login.tailscale.com/admin/settings/keys"; \
-		echo "Press ENTER to continue when you are ready..."; \
-		read dummy < /dev/tty; \
 	fi
 	@mkdir -p .logs
 	@$(call h2_title,"PRE-FLIGHT ENVIRONMENT CONFIGURATION")
@@ -264,11 +277,9 @@ wizard-run: bootstrap docs
 						$(PYTHON_BIN) $(CURDIR)/bin/compile_md.py -i $$REAL_DIR/index.md --html; \
 						$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/$$REAL_DIR/index.html#env.vars"; \
 					fi; \
-					cd $$REAL_DIR && $(PYTHON_BIN) $(CURDIR)/bin/env_instantiate.py -v; \
-					if grep -q "prep-instructions:" Makefile; then \
-						$(MAKE) --no-print-directory prep-instructions; \
+					if grep -q "prep-instructions:" $$REAL_DIR/Makefile; then \
+						$(MAKE) --no-print-directory -C $$REAL_DIR prep-instructions; \
 					fi; \
-					cd $(CURDIR); \
 					if [ "$(INTERACTIVE)" = "1" ]; then \
 						comp=$$(basename $$REAL_DIR); \
 						printf "$$comp environment is set. Proceed? [Y/n] "; \
@@ -372,7 +383,7 @@ factory-reset-soft: __undock clean-network
 # WHAT IT DOES: The Nuclear Option. Destroys everything, including cached `.env.json` secrets and the hardware `profile.json`.
 # WHY IT EXISTS: Required if the user wishes to redeploy from scratch with entirely new API keys or a different hardware cluster configuration.
 factory-reset-hard: factory-reset-soft
-	@$(call h1_title,"INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)")
+	@$(call h1_title,"INITIATING FACTORY RESET (HARD - DESTROYING SECRETS & DATA)")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \

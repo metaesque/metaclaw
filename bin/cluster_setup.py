@@ -330,6 +330,19 @@ def main():
     # --- PHASE 4: Global Secrets ---
     configure_env_secrets(profile, ssh_key)
 
+    # --- PHASE 5: Remote Execution Pipeline ---
+    print("\n[Phase 5] Executing remote cluster setup tasks...")
+    for node in profile.get("nodes", []):
+        if node["hostname"] != socket.gethostname():
+            ip = node["hardware"]["ip_address"]
+            user = node.get("ssh_user", os.getlogin())
+            print(f"  -> Triggering 'make setup-local' on remote node {node['hostname']} ({ip})...")
+            # Using run_remote with hide=False streams the exact execution output (like model pulling progress)
+            # directly back to the human user's local terminal so they are not left in the dark.
+            res = run_remote(ip, user, ssh_key, "cd ~/repo && make setup-local", hide=False)
+            if res.returncode != 0:
+                print(f"  -> WARNING: Remote setup failed on {node['hostname']}.")
+
     print("\nCluster configuration complete. Proceed by running: make wizard-cluster")
 
 if __name__ == "__main__":

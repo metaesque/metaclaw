@@ -104,11 +104,26 @@ def main():
         print(f"[Orchestrator] Removed symlink: {sym}")
 
   # --------------------------------------------------------------------------
-  # 2. PROVISIONING
+  # 2. GLOBAL MODEL RESOLUTION
   # --------------------------------------------------------------------------
+  # Evaluate the cluster topography globally so we can inject target model strings
+  # into multiple provider configurations (Proxy vs Runner) symmetrically.
+
   cluster_nodes = profile.get("nodes", [])
   cluster_tier_value = max([get_tier_weight(n.get("tier", 0)) for n in cluster_nodes] + [0])
+  compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
 
+  target_simple = "ollama/gemma4:e4b"
+  if cluster_tier_value >= 2 and compute_node:
+      target_medium = "ollama/qwen-3-32b"
+      target_complex = "ollama/ingu627/llama4-scout-q4:109b"
+  else:
+      target_medium = "gemini/gemini-2.5-flash"
+      target_complex = "gemini/gemini-3.1-pro-preview"
+
+  # --------------------------------------------------------------------------
+  # 3. PROVISIONING
+  # --------------------------------------------------------------------------
   for svc, prov_data in providers.items():
     if isinstance(prov_data, dict):
       provider = prov_data.get("uid")
@@ -161,6 +176,8 @@ def main():
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
       env_data["HSA_OVERRIDE_GFX_VERSION"] = "11.0.0"
+      # Inject target models so the runner's local Makefile knows what to auto-pull
+      env_data["OLLAMA_TARGET_MODELS"] = f"{target_simple} {target_medium} {target_complex}"
       seeded = True
 
     elif provider == "litellm":
@@ -168,19 +185,18 @@ def main():
           if legacy_key in env_data:
               del env_data[legacy_key]
 
-      compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
 
-        env_data["SIMPLE_MODEL_ID"] = "ollama/gemma4:e4b"
+        env_data["SIMPLE_MODEL_ID"] = target_simple
         env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
-        env_data["MEDIUM_MODEL_ID"] = "ollama/qwen-3-32b"
+        env_data["MEDIUM_MODEL_ID"] = target_medium
         env_data["MEDIUM_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["MEDIUM_MODEL_API_KEY"] = "sk-local-ollama-key"
 
-        env_data["COMPLEX_MODEL_ID"] = "ollama/ingu627/llama4-scout-q4:109b"
+        env_data["COMPLEX_MODEL_ID"] = target_complex
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
 
@@ -192,11 +208,11 @@ def main():
         env_data["SIMPLE_MODEL_API_BASE"] = ""
         env_data["SIMPLE_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
 
-        env_data["MEDIUM_MODEL_ID"] = "gemini/gemini-2.5-flash"
+        env_data["MEDIUM_MODEL_ID"] = target_medium
         env_data["MEDIUM_MODEL_API_BASE"] = ""
         env_data["MEDIUM_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
 
-        env_data["COMPLEX_MODEL_ID"] = "gemini/gemini-3.1-pro-preview"
+        env_data["COMPLEX_MODEL_ID"] = target_complex
         env_data["COMPLEX_MODEL_API_BASE"] = ""
         env_data["COMPLEX_MODEL_API_KEY"] = "${GEMINI_API_KEY}"
 
@@ -212,7 +228,7 @@ def main():
         json.dump(env_data, f, indent=2)
 
   # --------------------------------------------------------------------------
-  # 3. DISTRIBUTED DNS GENERATION
+  # 4. DISTRIBUTED DNS GENERATION
   # --------------------------------------------------------------------------
   env_lines = [
     "# =====================================================================\n",

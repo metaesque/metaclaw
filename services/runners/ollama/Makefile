@@ -111,13 +111,13 @@ wait-healthy:: status
 	cat $(LOG_FILE) 2>/dev/null || true; \
 	exit 1
 
-# Instructs the running Ollama process to pull any models assigned to it by the Gateway/Proxy configuration
+# Instructs the running Ollama process to pull any models assigned to it by the global orchestrator configuration
 pull-models: wait-healthy
 	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
-	@for raw_model in "$(OPENCLAW_JUDGE_MODEL)" "$(SIMPLE_MODEL_ID)" "$(MEDIUM_MODEL_ID)" "$(COMPLEX_MODEL_ID)" "$(FRONTIER_MODEL_ID)"; do \
+	@for raw_model in $(OLLAMA_TARGET_MODELS) $(OPENCLAW_JUDGE_MODEL); do \
 		if echo "$$raw_model" | grep -q "^ollama/"; then \
 			clean_model=$$(echo "$$raw_model" | sed 's/ollama\///'); \
 			echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-			OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model. TLS error or missing model."; \
+			OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
 		fi; \
 	done
