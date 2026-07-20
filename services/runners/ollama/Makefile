@@ -28,7 +28,7 @@ up:: ./bin/ollama
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
 		mkdir -p $(EXTERNAL_DRIVE_PATH)/ollama-models ; \
-		OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) HSA_OVERRIDE_GFX_VERSION=$(HSA_OVERRIDE_GFX_VERSION) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
+		OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_VULKAN=1 HIP_VISIBLE_DEVICES=-1 OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
 		echo $$! > $(PID_FILE) ; \
 	fi
 	@$(MAKE) --no-print-directory pull-models
