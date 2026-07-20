@@ -185,6 +185,7 @@ def main():
       # Hardcode Vulkan compute backend for APU stability (RDNA 3.5 specific)
       env_data["OLLAMA_VULKAN"] = "1"
       env_data["OLLAMA_IGPU_ENABLE"] = "1"
+      env_data["ROCR_VISIBLE_DEVICES"] = "none"
 
       # INVARIANT: Judge Model on Control Plane
       # We explicitly deploy the simple/judge model on the Control node for low-latency routing,

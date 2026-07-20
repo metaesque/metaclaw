@@ -12,7 +12,7 @@
 
 ### Fixed
 *   **APU Hardware Acceleration (Strix Halo):** Upgraded target Linux kernels to 7.0 via the official Ubuntu HWE stack to introduce missing RDNA 3.5 drivers.
-*   **Ollama APU Vulcan Initialization:** Injected `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` overrides to bypass broken ROCm CGo compilation issues for integrated AMD graphics. Eliminated conflicting `HIP_VISIBLE_DEVICES` blinders that forced CPU fallbacks.
+*   **Ollama APU Vulkan Initialization:** Injected `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` overrides, and forced `ROCR_VISIBLE_DEVICES="none"` to bypass AMD ROCm's Shared Virtual Memory (SVM) hard-limits. This allows the Vulkan driver to detect and fully utilize the BIOS-allocated 96GB UMA Frame Buffer on Strix Halo APUs, preventing catastrophic swap thrashing during heavy context loads. Eliminated conflicting `HIP_VISIBLE_DEVICES` blinders that forced CPU fallbacks.
 
 ## [2026.6.8] - Cluster Provisioning & Network Resilience
 
