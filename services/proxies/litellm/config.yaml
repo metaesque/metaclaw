@@ -27,6 +27,7 @@ model_list:
       api_base: "os.environ/SIMPLE_MODEL_API_BASE"
       api_key: "os.environ/SIMPLE_MODEL_API_KEY"
       num_ctx: 16384
+      request_timeout: 600
 
   - model_name: medium-model
     litellm_params:
@@ -35,6 +36,7 @@ model_list:
       api_key: "os.environ/MEDIUM_MODEL_API_KEY"
       # Explicitly elevates the KV cache limit for Ollama to prevent prompt truncation
       num_ctx: 32768
+      request_timeout: 600
 
   - model_name: complex-model
     litellm_params:
@@ -42,6 +44,10 @@ model_list:
       api_base: "os.environ/COMPLEX_MODEL_API_BASE"
       api_key: "os.environ/COMPLEX_MODEL_API_KEY"
       num_ctx: 65536
+      # WHAT THIS DOES: Extends the connection timeout window to 10 minutes.
+      # WHY IT MATTERS: Prevents LiteLLM from dropping the socket connection during heavy
+      # context eviction and cold-start loading cycles of the 109B model on the compute node.
+      request_timeout: 600
 
   # The critical alias to catch OpenClaw's literal provider string
   - model_name: litellm/complex-model
@@ -50,12 +56,14 @@ model_list:
       api_base: "os.environ/COMPLEX_MODEL_API_BASE"
       api_key: "os.environ/COMPLEX_MODEL_API_KEY"
       num_ctx: 65536
+      request_timeout: 600
 
   - model_name: frontier-model
     litellm_params:
       model: "os.environ/FRONTIER_MODEL_ID"
       api_base: "os.environ/FRONTIER_MODEL_API_BASE"
       api_key: "os.environ/FRONTIER_MODEL_API_KEY"
+      request_timeout: 600
 
   - model_name: prompt-embedding-model
     litellm_params:
@@ -116,6 +124,7 @@ model_list:
       # to the host OS where Ollama is running natively on the Control Node.
       api_base: "http://host.docker.internal:11434"
       num_ctx: 8192
+      request_timeout: 600
 
 litellm_settings:
   drop_params: true
