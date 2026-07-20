@@ -28,7 +28,7 @@ up:: ./bin/ollama
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
 		mkdir -p $(EXTERNAL_DRIVE_PATH)/ollama-models ; \
-		OLLAMA_HOST=0.0.0.0:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
+		OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) HSA_OVERRIDE_GFX_VERSION=$(HSA_OVERRIDE_GFX_VERSION) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
 		echo $$! > $(PID_FILE) ; \
 	fi
 	@$(MAKE) --no-print-directory pull-models
@@ -118,6 +118,6 @@ pull-models: wait-healthy
 		if echo "$$raw_model" | grep -q "^ollama/"; then \
 			clean_model=$$(echo "$$raw_model" | sed 's/ollama\///'); \
 			echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-			OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
+			OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
 		fi; \
 	done
