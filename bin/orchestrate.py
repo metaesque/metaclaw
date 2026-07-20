@@ -182,10 +182,18 @@ def main():
       if "HIP_VISIBLE_DEVICES" in env_data:
           del env_data["HIP_VISIBLE_DEVICES"]
 
-      # Hardcode Vulkan compute backend for APU stability (RDNA 3.5 specific)
-      env_data["OLLAMA_VULKAN"] = "1"
-      env_data["OLLAMA_IGPU_ENABLE"] = "1"
-      env_data["ROCR_VISIBLE_DEVICES"] = "none"
+      gpu_detected = my_node.get("hardware", {}).get("gpu_detected", "")
+      is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
+
+      # Hardcode Vulkan compute backend exclusively for AMD APUs (RDNA 3.5 specific)
+      if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
+          env_data["OLLAMA_VULKAN"] = "1"
+          env_data["OLLAMA_IGPU_ENABLE"] = "1"
+          env_data["ROCR_VISIBLE_DEVICES"] = "none"
+      else:
+          for key in ["OLLAMA_VULKAN", "OLLAMA_IGPU_ENABLE", "ROCR_VISIBLE_DEVICES"]:
+              if key in env_data:
+                  del env_data[key]
 
       # INVARIANT: Judge Model on Control Plane
       # We explicitly deploy the simple/judge model on the Control node for low-latency routing,
