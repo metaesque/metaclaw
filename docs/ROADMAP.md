@@ -13,9 +13,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Reclaim UMA Frame Buffer RAM (Control Node):**
     The GMKtec K8 Plus currently reserves ~3.78GB of RAM for the integrated Radeon 780M graphics (UMA Frame Buffer). Because the node runs headless (no display), this memory is wasted and hidden from the OS.
     **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`), navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX Configuration -> UMA Frame buffer Size**, and change it to `Auto` or `512MB`. This will free up RAM for Docker services, while the GPU continues to dynamically allocate inference memory via GTT.
-*   **[URGENT] Kernel Upgrade for Strix Halo (Compute Node):**
-    The GMKtec EVO-X2 features bleeding-edge RDNA 3.5 graphics. The default Ubuntu Linux 6.8 kernel does not possess the drivers to detect the GPU, forcing Ollama into extreme CPU-only bottlenecks (70s+ response times).
-    **Action Required:** Upgrade the Linux Kernel on the Compute node to 6.11+ and install the latest `amdgpu-dkms` drivers to unlock hardware acceleration.
+*   **[x] Kernel Upgrade for Strix Halo (Compute Node):**
+    The GMKtec EVO-X2 features bleeding-edge RDNA 3.5 graphics. Successfully upgraded from the default Linux 6.8 kernel to the official HWE Linux 7.0 kernel, bridging the missing `amdgpu` driver gap to unlock the Radeon 8060S GPU and drop Ollama TTFT latencies from 70s+ down to sub-second responses.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
 *   **[TODO] Service Taxonomy Refactor:**
