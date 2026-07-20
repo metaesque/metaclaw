@@ -59,7 +59,7 @@ live. **You must profile the NEW machine locally.**
 ## Git Version Control: Restoring Stable States
 
 The MetaClaw framework is publicly maintained at
-`https://github.com/metaesque/metaclaw`. If experimental framework modifications
+`[https://github.com/metaesque/metaclaw](https://github.com/metaesque/metaclaw)`. If experimental framework modifications
 break your local deployment, you can leverage Git tags to rewind time to a known
 stable state (e.g., `stable-v1`).
 
@@ -116,6 +116,17 @@ database records, vector embeddings, and stored API keys.
 2.  Run `make setup` to re-profile your hardware from scratch across the cluster.
 3.  You will need to run `make wizard-cluster` (or `make wizard`) and re-enter all your API credentials as
     if you were installing the framework for the first time.
+
+## Troubleshooting Local GPU Inference (Ollama)
+
+Running large models on edge hardware (like AMD APUs) often encounters proprietary driver bottlenecks. If your Ollama log (`services/runners/ollama/ollama.log`) reports `library=cpu` and massive token latencies, follow this diagnostic path:
+
+1. **Verify OS Kernel Support:**
+   Run `uname -r`. If you are running an LTS kernel (e.g., 6.8) but possess bleeding-edge silicon (like RDNA 3.5), the OS will not detect the GPU. Install the HWE stack to upgrade to Linux 7.0+: `sudo apt install linux-generic-hwe-24.04` and reboot.
+2. **Verify Hardware Enumeration:**
+   Run `rocm-smi`. You must see your discrete GPU or APU listed in the table. If you see `WARNING: No AMD GPUs specified`, your kernel upgrade failed or driver packages are missing.
+3. **Bypass ROCm Restrictions (APUs Only):**
+   Integrated graphics often fail Ollama's proprietary ROCm CGo compilation checks. If the OS sees the GPU but Ollama doesn't, force the Vulkan compute API. Ensure `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` are exported in the environment. **Never use `HIP_VISIBLE_DEVICES=-1`**, as this blinds the hardware scanner entirely.
 
 ## Upgrading (or Downgrading) OpenClaw
 

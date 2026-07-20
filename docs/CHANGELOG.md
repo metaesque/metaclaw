@@ -1,5 +1,19 @@
 # MetaClaw Changelog
 
+## [2026.7.20] - Hardware Enablement & Telemetry Decoupling
+
+### Added
+*   **Forwarders Service Taxonomy:** Introduced the `forwarders` service category. Fluidly decoupled log collection agents (Fluent Bit, Vector) from Log Storage engines (VictoriaLogs, ELK).
+*   **Global Telemetry Mesh:** Orchestrator now forces `forwarders` onto every node in the cluster, injecting `HOST_IDENTIFIER` to tag logs by Tailscale IP.
+*   **Docker Origin Enrichment:** Fluent Bit now mounts the Docker socket, dynamically resolving container IDs to human-readable names (`_container_name`) in the VictoriaLogs index.
+
+### Changed
+*   **Timeout Extensions:** Elevated proxy and test script timeouts from 300s to 600s/900s to support lengthy VRAM weight-loading delays for 100B+ parameter models.
+
+### Fixed
+*   **APU Hardware Acceleration (Strix Halo):** Upgraded target Linux kernels to 7.0 via the official Ubuntu HWE stack to introduce missing RDNA 3.5 drivers.
+*   **Ollama APU Vulcan Initialization:** Injected `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` overrides to bypass broken ROCm CGo compilation issues for integrated AMD graphics. Eliminated conflicting `HIP_VISIBLE_DEVICES` blinders that forced CPU fallbacks.
+
 ## [2026.6.8] - Cluster Provisioning & Network Resilience
 
 ### Added

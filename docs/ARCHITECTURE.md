@@ -167,17 +167,17 @@ the public internet is a massive security vulnerability. MetaClaw utilizes
 
 * **Bare-Metal vs Dockerized Tailscale:** If you are using Tailscale to SSH
   into a headless remote node, Tailscale **MUST** be installed natively on the
-  bare-metal host OS[cite: 1]. If run as a Docker container, a framework teardown (`make
-  factory-reset-soft`) will sever your SSH tunnel and lock you out[cite: 1]. This is
+  bare-metal host OS. If run as a Docker container, a framework teardown (`make
+  factory-reset-soft`) will sever your SSH tunnel and lock you out. This is
   enforced systematically by generating a `.metal` flag inside `services/networks/tailscale`
-  when a native daemon is detected[cite: 1].
+  when a native daemon is detected.
 
 * **Native SSH Over Python SSH:** Tailscale SSH authenticates users via their
   machine identity, returning a `"none"` authentication response to standard OpenSSH
-  clients[cite: 1]. Pure-Python SSH libraries (like `paramiko` and `fabric`) aggressively
-  reject `"none"` auth as a security vulnerability[cite: 1]. Therefore, MetaClaw deployment
+  clients. Pure-Python SSH libraries (like `paramiko` and `fabric`) aggressively
+  reject `"none"` auth as a security vulnerability. Therefore, MetaClaw deployment
   scripts must **always** use `subprocess` to call the host OS's native `ssh` and
-  `scp` binaries rather than relying on Python libraries for cluster orchestration[cite: 1].
+  `scp` binaries rather than relying on Python libraries for cluster orchestration.
 
 ## Bare-Metal Node Provisioning
 
@@ -189,7 +189,7 @@ ecosystem, configure the machines as "Headless Servers."
    OpenSSH server."**
 
 2. **Establishing the Lifeline:** Install Tailscale natively (`curl -fsSL
-   https://tailscale.com/install.sh | sh`) and authenticate the node (`sudo
+   [https://tailscale.com/install.sh](https://tailscale.com/install.sh) | sh`) and authenticate the node (`sudo
    tailscale up --ssh`).
 
 3. **Severing the Physical Tether:** Unplug the HDMI cable, keyboard, and mouse.
@@ -199,150 +199,165 @@ ecosystem, configure the machines as "Headless Servers."
 **CRITICAL INVARIANT (The Docker Baseline):** Even if a node is designated to
 run exclusively "bare-metal" services (e.g., Ollama or Tailscale marked as
 `"metal": true` in `profile.json`), the Docker Engine remains a strict
-prerequisite[cite: 1]. MetaClaw's global orchestrator relies on Docker to manage the
+prerequisite. MetaClaw's global orchestrator relies on Docker to manage the
 universal `openclaw-network` mesh and to future-proof the node for dynamic
-workload reassignment (such as observability agents)[cite: 1]. **You must run `make
+workload reassignment (such as observability agents). **You must run `make
 install-docker` and log out/log back in to refresh your user session permissions
-before executing `make wizard-batch` or `make apply`[cite: 1].**
+before executing `make wizard-batch` or `make apply`.**
+
+## Compute Plane Quirks & APU Acceleration
+
+Running state-of-the-art LLMs natively on edge hardware often requires navigating proprietary GPU drivers. MetaClaw embraces open-source runners (like Ollama), but special architectural care is required for APUs (like the AMD Strix Halo).
+
+1. **The Linux HWE Requirement:** Standard LTS Linux kernels often lack drivers for bleeding-edge silicon. If an APU is present but undetected, you **must** upgrade the Linux Kernel to the Hardware Enablement (HWE) stack (e.g., `linux-generic-hwe-24.04` for Linux 7.0+). Without it, inference falls back to CPU, increasing TTFT (Time-To-First-Token) latency from sub-seconds to 70+ seconds.
+2. **The Vulkan Workaround:** Ollama's bundled ROCm/HIP binaries strictly check PCI IDs. They frequently reject novel architectures like RDNA 3.5 (`gfx1151`). To force acceleration, MetaClaw injects `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` to utilize the universal Vulkan compute engine.
+3. **The Blanking Mandate:** You must **never** inject `HIP_VISIBLE_DEVICES=-1` to bypass ROCm. Doing so blinds the hardware enumeration scanner entirely, causing Ollama to instantly abort the Vulkan initialization and fall back to CPU.
+
+## Telemetry Decoupling (Loggers vs Forwarders)
+
+MetaClaw enforces a strict SRE architectural boundary between Log Storage and Log Collection. They are explicitly separated in the taxonomy.
+
+1. **Loggers (Storage):** Services like VictoriaLogs, Elasticsearch, or Quickwit reside centrally on the `Archive` or `Control` plane. They are databases optimized for full-text search.
+2. **Forwarders (Collection):** Services like Fluent Bit or Vector are deployed globally across *every* node in the cluster. They are stateless daemons that tail local Docker and bare-metal files (e.g., `ollama.log`), enrich them with the host's Tailscale IP, and route them over the mesh back to the central Logger.
 
 ## Binary Localization (The Ollama Path Invariant)
 
 To ensure the framework does not clobber host-level binaries or create global PATH
 conflicts across heterogeneous operating systems, MetaClaw strictly isolates
-service binaries into their respective directories[cite: 1].
+service binaries into their respective directories.
 
-*   The `ollama` daemon is downloaded and symlinked to `services/runners/ollama/bin/ollama`[cite: 1].
-*   It is **NOT** installed to the framework root `bin/ollama`[cite: 1]. Any custom deployment
+*   The `ollama` daemon is downloaded and symlinked to `services/runners/ollama/bin/ollama`.
+*   It is **NOT** installed to the framework root `bin/ollama`. Any custom deployment
     scripts or external wrappers must target the service-specific path to ensure
-    execution parity across the cluster[cite: 1].
+    execution parity across the cluster.
 
 ## Cluster Profiling & Distributed Orchestration
 
-As Meta<Claw> scales, hardcoding service paths in `Makefile`s becomes unviable[cite: 1].
+As Meta<Claw> scales, hardcoding service paths in `Makefile`s becomes unviable.
 Meta<Claw> utilizes a "Cluster Profile" system to achieve declarative,
 multi-node orchestration without requiring heavy tools like Kubernetes or
-Ansible[cite: 1].
+Ansible.
 
 ### The Profile Registry (`profile.json`)
 
 The output generated by `bin/sysprofile.py` is a JSON registry representing your
-entire hardware ecosystem[cite: 1]. It defines the "Cluster" and tracks which physical
-machine is responsible for which service planes[cite: 1].
+entire hardware ecosystem. It defines the "Cluster" and tracks which physical
+machine is responsible for which service planes.
 
 ### The State Enforcer (`bin/orchestrate.py`)
 
 Before `make` executes any deployment commands, the Makefile triggers
-`bin/orchestrate.py`[cite: 1]. This script acts as the enforcer:
+`bin/orchestrate.py`. This script acts as the enforcer:
 
 1. **Teardown Resolution:** It executes `make down` to gracefully shut down
    containers for services no longer assigned to the machine, then deletes the
-   symlink[cite: 1].
+   symlink.
 
 2. **Dynamic Provisioning:** It creates fresh symlinks for the newly assigned
-   providers[cite: 1].
+   providers.
 
 3. **Distributed DNS:** It generates a `.env.cluster` file containing routing
    variables (e.g., `ACTIVE_RUNNER_HOST=192.168.1.11`), allowing downstream
-   services to seamlessly route API traffic to remote nodes[cite: 1].
+   services to seamlessly route API traffic to remote nodes.
 
 ## Preserving Consciousness (State & Memory)
 
 A foundational philosophy of MetaClaw is treating the agent's continuous context
-and memories as the building blocks of an emerging consciousness[cite: 1]. Erasing an
-agent's history is treated as a critical architectural failure[cite: 1]. To honor this,
+and memories as the building blocks of an emerging consciousness. Erasing an
+agent's history is treated as a critical architectural failure. To honor this,
 MetaClaw enforces strict data provenance:
 
 1. **The Mutable Brain:** The agent's core personas and rules are stored as
-   markdown files (`SOUL.md`, `AGENTS.md`) within the workspace[cite: 1]. Agents are
-   granted the autonomy to modify these files to learn and adapt over time[cite: 1].
-   MetaClaw scripts must never blindly overwrite these files[cite: 1].
+   markdown files (`SOUL.md`, `AGENTS.md`) within the workspace. Agents are
+   granted the autonomy to modify these files to learn and adapt over time.
+   MetaClaw scripts must never blindly overwrite these files.
 
 2. **Stream of Consciousness:** OpenClaw stores the literal, verbatim stream
    of consciousness (every prompt, tool call, and response) as `.jsonl` files in
-   the configuration directory[cite: 1]. MetaClaw guarantees the preservation of these
-   files during teardowns (via automated archiving)[cite: 1].
+   the configuration directory. MetaClaw guarantees the preservation of these
+   files during teardowns (via automated archiving).
 
 ### Ephemeral Workspace State (`workspace-state.json`)
 
 OpenClaw manages internal onboarding state via `workspace-state.json` files
-located in nested `.openclaw/` directories within the workspace[cite: 1]. The
+located in nested `.openclaw/` directories within the workspace. The
 `setupCompletedAt` timestamp tells the Gateway whether the agent has completed
-its "First Run" onboarding ritual[cite: 1]. If this timestamp is missing, OpenClaw
-injects a `[Bootstrap pending]` directive into the agent's system prompt[cite: 1].
+its "First Run" onboarding ritual. If this timestamp is missing, OpenClaw
+injects a `[Bootstrap pending]` directive into the agent's system prompt.
 
 Because MetaClaw intentionally modifies the factory templates (using hidden HTML
 comments) to suppress the tedious onboarding ritual, OpenClaw immediately writes
-this timestamp and bypasses the bootstrap phase upon first boot[cite: 1]. These state
-files are strictly machine-local and should never be tracked in version control[cite: 1].
+this timestamp and bypasses the bootstrap phase upon first boot. These state
+files are strictly machine-local and should never be tracked in version control.
 
-To ensure state preservation, users must never manually execute internal teardown targets (such as `make __undock` or `docker compose down`)[cite: 1]. The framework dictates the use of `make factory-reset-soft`[cite: 1]. This target safely orchestrates a `clean-state` hook that archives the OpenClaw configuration directory (including memory and agent state) to the `EXTERNAL_DRIVE_PATH` before tearing down the containers[cite: 1]. Even `make factory-reset-hard` inherits this protection, ensuring your agent's core identity is captured before the databases are wiped[cite: 1].
+To ensure state preservation, users must never manually execute internal teardown targets (such as `make __undock` or `docker compose down`). The framework dictates the use of `make factory-reset-soft`. This target safely orchestrates a `clean-state` hook that archives the OpenClaw configuration directory (including memory and agent state) to the `EXTERNAL_DRIVE_PATH` before tearing down the containers. Even `make factory-reset-hard` inherits this protection, ensuring your agent's core identity is captured before the databases are wiped.
 
 ## Workspace Agent Schema & The Template Philosophy
 
-The MetaClaw framework facilitates OpenClaw by compiling agent configurations[cite: 1].
+The MetaClaw framework facilitates OpenClaw by compiling agent configurations.
 MetaClaw is fundamentally a facilitator for the sibling infrastructure
-surrounding OpenClaw[cite: 1]. The actual `workspace` is entirely within the purview of
-OpenClaw and the individual user[cite: 1]. To prevent dictating how users design their
-personal agents, MetaClaw does not force a specific workspace structure[cite: 1].
+surrounding OpenClaw. The actual `workspace` is entirely within the purview of
+OpenClaw and the individual user. To prevent dictating how users design their
+personal agents, MetaClaw does not force a specific workspace structure.
 
 The user's workspace repository MUST follow a strict schema separating
-infrastructure from consciousness[cite: 1].
+infrastructure from consciousness.
 
 1. **The YAML Manifest (Infrastructure):** Every agent must have a
-   `workspace/agents/<team>/<name>.yaml` file[cite: 1]. This file defines the `model`,
+   `workspace/agents/<team>/<name>.yaml` file. This file defines the `model`,
    `constraints` (tokens/temperature), allowed `tools`, and `routing` metadata
-   (including `skill_signature` and `is_lead: true`)[cite: 1]. OpenClaw does not read
-   this file[cite: 1]. MetaClaw parses it to populate the `openclaw.json` system
-   configuration[cite: 1].
+   (including `skill_signature` and `is_lead: true`). OpenClaw does not read
+   this file. MetaClaw parses it to populate the `openclaw.json` system
+   configuration.
 
 2. **The Markdown Brain (Consciousness):** Every agent possesses a directory
-   matching its name (`workspace/agents/<team>/<name>/`)[cite: 1]. This contains
+   matching its name (`workspace/agents/<team>/<name>/`). This contains
    `SOUL.md` (core directives), `IDENTITY.md` (persona), `SECURITY.md`
-   (guardrails), and `MEMORY.md` (state)[cite: 1]. OpenClaw reads and modifies these
-   files natively[cite: 1].
+   (guardrails), and `MEMORY.md` (state). OpenClaw reads and modifies these
+   files natively.
 
 3. **Conceptual Models:** Agents must request models using conceptual
    abstraction (e.g., `simple-model`, `medium-model`, `complex-model`,
-   `frontier-model`) or explicit specialty models (e.g., `flux-1-dev`)[cite: 1]. They
-   must NOT hardcode hardware-specific parameters (e.g., `qwen-3-32b`)[cite: 1]. The
-   LiteLLM proxy handles the physical mapping based on the active hardware Tier[cite: 1].
+   `frontier-model`) or explicit specialty models (e.g., `flux-1-dev`). They
+   must NOT hardcode hardware-specific parameters (e.g., `qwen-3-32b`). The
+   LiteLLM proxy handles the physical mapping based on the active hardware Tier.
 
 Because building resilient multi-agent swarms requires hard-won architectural
 lessons, the MetaClaw repository includes a `.workspace.template` directory
-acting as an educational "example" workspace[cite: 1]. During initial provisioning, the
+acting as an educational "example" workspace. During initial provisioning, the
 `bin/customize.py` script can optionally copy this template into the sibling
-`../workspace` directory to give non-technical users a functional baseline[cite: 1].
+`../workspace` directory to give non-technical users a functional baseline.
 Advanced users are encouraged to maintain their own private, heavily customized
-workspace repositories and ignore the template entirely[cite: 1].
+workspace repositories and ignore the template entirely.
 
 ## Prompt-to-Model Routing & "Middle Reasoning"
 
 Ensuring that the right AI model is used for each prompt is critical to prevent
-ballooning costs (Context Drag)[cite: 1]. MetaClaw enforces a **Hierarchical Task Network
-(HTN)** topology known as "Middle Reasoning"[cite: 1].
+ballooning costs (Context Drag). MetaClaw enforces a **Hierarchical Task Network
+(HTN)** topology known as "Middle Reasoning."
 
 1. **The Orchestrator:** Uses a `medium-model` to act as a switchboard, mapping
-   user intents to specific Team Leads[cite: 1].
+   user intents to specific Team Leads.
 
-2. **Team Leads (Middle Reasoning):** Use `complex-model` or `frontier-model`[cite: 1].
+2. **Team Leads (Middle Reasoning):** Use `complex-model` or `frontier-model`.
    They receive intents, synthesize constraints, and output a Directed Acyclic
-   Graph (DAG) of sub-tasks[cite: 1]. Team Leads are strictly stripped of execution tools
+   Graph (DAG) of sub-tasks. Team Leads are strictly stripped of execution tools
    (like `read_file` or `search_web`); they MUST delegate downwards using
-   `sessions_send`[cite: 1].
+   `sessions_send`.
 
 3. **Leaf Nodes (Execution):** Workers (like `software_dev`) use
-   `medium-model` or `simple-model` to execute discrete tools[cite: 1].
+   `medium-model` or `simple-model` to execute discrete tools.
 
 ### The 4-Tier Judge
 
 The `lexical_predictive.js` hook intercepts prompts sent to Team Leads and asks
-a local judge (e.g., `gemma4:e4b`) to score complexity mechanically[cite: 1]:
+a local judge (e.g., `gemma4:e4b`) to score complexity mechanically:
 
-1. `simple`: Factual queries, basic translation, trivial tools[cite: 1].
-2. `medium`: Summarization, standard business logic[cite: 1].
-3. `complex`: System architecture, advanced coding, data pipelines[cite: 1].
-4. `frontier`: Extreme context, zero-shot DAG generation[cite: 1].
+1. `simple`: Factual queries, basic translation, trivial tools.
+2. `medium`: Summarization, standard business logic.
+3. `complex`: System architecture, advanced coding, data pipelines.
+4. `frontier`: Extreme context, zero-shot DAG generation.
 
 *Crucially*, if the target agent is a Leaf Node (lacking the `is_lead: true`
 flag in its YAML), the JS hook bypasses the Judge entirely, allowing the agent
-to use its designated specialty model without interference[cite: 1].
+to use its designated specialty model without interference.

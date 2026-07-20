@@ -15,11 +15,13 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`), navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX Configuration -> UMA Frame buffer Size**, and change it to `Auto` or `512MB`. This will free up RAM for Docker services, while the GPU continues to dynamically allocate inference memory via GTT.
 *   **[x] Kernel Upgrade for Strix Halo (Compute Node):**
     The GMKtec EVO-X2 features bleeding-edge RDNA 3.5 graphics. Successfully upgraded from the default Linux 6.8 kernel to the official HWE Linux 7.0 kernel, bridging the missing `amdgpu` driver gap to unlock the Radeon 8060S GPU and drop Ollama TTFT latencies from 70s+ down to sub-second responses.
+*   **[URGENT] Investigate ROCm APU VRAM Misreporting:**
+    Despite the BIOS successfully allocating a 96GB UMA Frame Buffer, the ROCm driver on the EVO-X2 misreports `available="28.3 GiB"` to Ollama (mirroring the host OS's free system RAM). This causes massive KV Cache allocations (like a 32k context window on Qwen3:32b) to instantly trigger Out-Of-Memory (OOM) errors and cloud fallbacks. We must find a flag to bypass this false ceiling or manually cap `num_ctx` in `config.yaml` to fit within the artificially reported 28GB constraint.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
-*   **[TODO] Service Taxonomy Refactor:**
+*   **[x] Service Taxonomy Refactor:**
     Currently, storage databases (VictoriaLogs, ELK) and edge agents (Fluent Bit, Vector) are incorrectly grouped in `services/loggers`. We must introduce a new `services/forwarders` (or `telemetry-agents`) category to properly decouple storage from collection.
-*   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
+*   **[x] Distributed Logging (VictoriaLogs & Fluent Bit):**
     Once the taxonomy is fixed, deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to tail bare-metal logs (like `ollama.log`) and push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
 *   **[TODO] Dynamic `num_ctx` Calculation:**
     While models like `llama4-scout` have massive context limits, Ollama defaults API requests to 2048 tokens. Instead of hardcoding fixes in LiteLLM, refactor `bin/cluster_setup.py` to dynamically calculate safe `num_ctx` ceilings based on the model's footprint and the host's detected VRAM, propagating the limits to `.env.cluster`.
