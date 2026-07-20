@@ -9,10 +9,6 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 
 -include $(FRAMEWORK_ROOT)/.env
 -include .env
-# ARCHITECTURAL SHIFT: Depend on the abstracted gateway symlink instead of hardcoding openclaw-gateway
--include $(FRAMEWORK_ROOT)/services/gateway/.env
-# ARCHITECTURAL SHIFT: Include proxy variables to dynamically detect which models to pull
--include $(FRAMEWORK_ROOT)/services/proxy/.env
 export
 
 PID_FILE = .ollama.pid
@@ -82,11 +78,9 @@ apply:: .env
 	@chmod +x install.sh
 	@rm -f .updated
 	@./install.sh
-	@if [ -f .updated ]; then \
-		echo "[$(SERVICE_TITLE)] Binary updated. Bouncing daemon..."; \
-		$(MAKE) --no-print-directory down; \
-		rm -f .updated; \
-	fi
+	@echo "[$(SERVICE_TITLE)] Bouncing daemon to apply new configuration..."
+	@$(MAKE) --no-print-directory down
+	@rm -f .updated
 	@$(MAKE) --no-print-directory up
 
 ./bin/ollama:
@@ -118,6 +112,6 @@ pull-models: wait-healthy
 		if echo "$$raw_model" | grep -q "^ollama/"; then \
 			clean_model=$$(echo "$$raw_model" | sed 's/ollama\///'); \
 			echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-			OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_VULKAN=1 OLLAMA_IGPU_ENABLE=1 HIP_VISIBLE_DEVICES=-1 OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
+			OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
 		fi; \
 	done
