@@ -317,6 +317,8 @@ class MetaClaw:
         except json.JSONDecodeError:
           print(f"Error parsing {env_json_path}. Starting with empty mapping.")
 
+    original_env_vars = env_vars.copy()
+
     # Regex matches: KEY=change_me_to_IDENTIFIER[OPTIONAL_DEFAULT] SUFFIX
     # Identifier is optional to handle empty defaults like 'change_me_to_'
     pattern = re.compile(
@@ -415,7 +417,8 @@ class MetaClaw:
           # Pass non-variable configuration lines straight through
           f_out.write(line_stripped + '\n')
 
-    if not skip_env_prompt:
+    # Only write to disk if the values actually mutated, breaking Make reload loops
+    if not skip_env_prompt and env_vars != original_env_vars:
       with open(env_json_path, 'w') as f:
         json.dump(env_vars, f, indent=2)
 
