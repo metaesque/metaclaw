@@ -176,14 +176,15 @@ def main():
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
 
-      # Purge the legacy, broken ROCm override to prevent discovery collisions
+      # Purge the legacy overrides to prevent discovery collisions
       if "HSA_OVERRIDE_GFX_VERSION" in env_data:
           del env_data["HSA_OVERRIDE_GFX_VERSION"]
+      if "HIP_VISIBLE_DEVICES" in env_data:
+          del env_data["HIP_VISIBLE_DEVICES"]
 
       # Hardcode Vulkan compute backend for APU stability (RDNA 3.5 specific)
       env_data["OLLAMA_VULKAN"] = "1"
       env_data["OLLAMA_IGPU_ENABLE"] = "1"
-      env_data["HIP_VISIBLE_DEVICES"] = "-1"
 
       # INVARIANT: Judge Model on Control Plane
       # We explicitly deploy the simple/judge model on the Control node for low-latency routing,
