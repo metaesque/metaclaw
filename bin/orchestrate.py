@@ -186,12 +186,14 @@ def main():
       is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
 
       # Hardcode Vulkan compute backend exclusively for AMD APUs (RDNA 3.5 specific)
+      # We explicitly scope this to the exact hardware running on *this* node.
       if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
           env_data["OLLAMA_VULKAN"] = "1"
           env_data["OLLAMA_IGPU_ENABLE"] = "1"
           env_data["ROCR_VISIBLE_DEVICES"] = "none"
+          env_data["HSA_OVERRIDE_GFX_VERSION"] = "11.0.0"
       else:
-          for key in ["OLLAMA_VULKAN", "OLLAMA_IGPU_ENABLE", "ROCR_VISIBLE_DEVICES"]:
+          for key in ["OLLAMA_VULKAN", "OLLAMA_IGPU_ENABLE", "ROCR_VISIBLE_DEVICES", "HSA_OVERRIDE_GFX_VERSION"]:
               if key in env_data:
                   del env_data[key]
 
