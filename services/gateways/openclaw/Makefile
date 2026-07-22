@@ -117,7 +117,9 @@ sync:
 
 prep-instructions:
 	@echo "Compiling Markdown to HTML..."
-	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html
+	@if [ -f index.md ]; then \
+		$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/compile_md.py -i index.md --html; \
+	fi
 
 # ==============================================================================
 # USER INTERFACE TARGETS

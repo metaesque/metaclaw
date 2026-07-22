@@ -280,7 +280,7 @@ for yf in yaml_files:
       if yaml_routing:
           routing_meta[agent_id] = yaml_routing
 
-      handled_keys = {'name', 'description', 'default', 'model', 'tools', 'constraints', 'routing', 'system_prompt'}
+      handled_keys = {'name', 'description', 'default', 'model', 'tools', 'constraints', 'routing', 'system_prompt', 'tests'}
       unhandled = set(agent_data.keys()) - handled_keys
       if unhandled:
           with open(yf, 'r', encoding='utf-8') as f_lines:

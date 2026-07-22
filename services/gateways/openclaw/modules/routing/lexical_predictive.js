@@ -45,7 +45,7 @@ export default function register(api) {
             if (!isLead && agentId !== 'orchestrator' && agentId !== 'generalist') {
                 logToStdout(`[HOOK-DEBUG] Agent '${agentId}' is a leaf node. Bypassing Predictive Judge to preserve specialty models.`);
                 logToStdout("==================================================\n");
-                return {};
+                return null;
             }
 
             const userPrompt = typeof event.prompt === 'string' ? event.prompt.trim() : JSON.stringify(event.prompt || "");
@@ -70,7 +70,7 @@ export default function register(api) {
 
             if (!judgeModel || !masterKey) {
                 logToStdout("[HOOK-DEBUG] Infrastructure missing Judge Model or Master Key. Bypassing.");
-                return {};
+                return null;
             }
 
             const judgeSystemPrompt = `You are an AI pipeline router. Analyze the complexity of the user prompt.\nOutput ONLY valid JSON in the following format: {"complexity": "simple" | "medium" | "complex" | "frontier"}\n\nGuidelines:\n- "simple": Factual queries, basic translation, formatting, or trivial tool usage.\n- "medium": Summarization, standard business logic, drafting emails, moderate data parsing.\n- "complex": System architecture, advanced coding, mathematical proofs, multi-step data pipelines.\n- "frontier": Extreme context, zero-shot DAG generation, or advanced abstract reasoning.`;
@@ -85,7 +85,7 @@ export default function register(api) {
                 response_format: { type: "json_object" }
             };
 
-            logToStdout(`[HOOK-DEBUG] Invoking Predictive Judge (${judgeModel}) via ${proxyUrl}...`);
+            logToStdout(`[HOOK-DEBUG] Invoking Predictive Judge (${judgeModel}) via${proxyUrl}...`);
 
             try {
                 const controller = new AbortController();
@@ -135,8 +135,7 @@ export default function register(api) {
             logToStdout(`\n[HOOK-DEBUG] !!! FATAL UNHANDLED ERROR IN HOOK !!!`);
             logToStdout(globalErr.stack || globalErr.message);
             logToStdout("==================================================\n");
-            return {};
+            return null;
         }
     });
 }
-
