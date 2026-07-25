@@ -39,6 +39,7 @@ docs/DEMOS.md
 docs/HOWTO.md
 docs/LLM.md
 docs/MANIFEST.files
+docs/OPENCLAW.md
 docs/WORKSPACE.files
 docs/Makefile
 docs/OC.md
@@ -246,3 +247,4 @@ services/tracers/langfuse/.provider.json
 services/tracers/opentelemetry/.provider.json
 services/tracers/phoenix/.provider.json
 services/tracers/signoz/.provider.json
+

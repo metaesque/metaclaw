@@ -1,8 +1,9 @@
 import asyncio
 import os
 import sys
+import re
+import json
 
-# Ensure Playwright is available in the local virtual environment
 try:
     from playwright.async_api import async_playwright
 except ImportError:
@@ -13,16 +14,12 @@ except ImportError:
 async def main():
     """
     Spawns a headless Chromium instance to navigate to LMArena and extract
-    the fully rendered DOM. This allows us to inspect the highly obfuscated
-    Gradio UI structure to locate the exact XPaths for the Domain/Variant/Category dropdowns.
+    the fully rendered DOM. It parses the script tags to locate the embedded
+    Gradio state JSON, dumping the raw data for triplet extraction.
     """
     url = "https://arena.ai/leaderboard"
-    out_dir = "tmp"
-    out_file = os.path.join(out_dir, "arena_dom.html")
 
-    os.makedirs(out_dir, exist_ok=True)
-
-    print(f"Launching headless Chromium to fetch {url}...")
+    print(f"Launching headless Chromium to fetch {url}...", file=sys.stderr)
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -34,19 +31,33 @@ async def main():
         try:
             # We use networkidle to ensure all Gradio React components and API calls finish rendering
             await page.goto(url, wait_until="networkidle", timeout=60000)
-            print("Page successfully loaded and settled.")
+            print("Page successfully loaded and settled.", file=sys.stderr)
 
-            # Extract the raw, fully hydrated HTML string
             content = await page.content()
 
-            with open(out_file, "w", encoding="utf-8") as f:
-                f.write(content)
+            # Parse all <script> tags for the Gradio data payload
+            script_pattern = re.compile(r'<script[^>]*>(.*?)</script>', re.DOTALL | re.IGNORECASE)
+            scripts = script_pattern.findall(content)
 
-            print(f"\nSUCCESS: Fully rendered DOM saved to {out_file}")
-            print("You can now grep this file to identify the specific class names and nested divs used for the Category filters.")
+            found_data = False
+            for s in scripts:
+                # Target the specific Gradio state push array
+                m = re.match(r'^\s*self\.__f\.push\((?P<json>.*)\)\s*$', s, re.DOTALL)
+                if m:
+                    try:
+                        j = json.loads(m.group('json'))
+                        # Output the clean JSON to stdout for piping/saving
+                        json.dump(j, sys.stdout, indent=2, sort_keys=True)
+                        print("\n", file=sys.stdout)
+                        found_data = True
+                    except json.JSONDecodeError as e:
+                        print(f"Warning: Regex matched but JSON parsing failed: {e}", file=sys.stderr)
+
+            if not found_data:
+                print("WARNING: Could not find any script tags matching 'self.__f.push(...)'. The page structure may have changed.", file=sys.stderr)
 
         except Exception as e:
-            print(f"ERROR: Failed to load or extract DOM: {e}")
+            print(f"ERROR: Failed to load or extract DOM: {e}", file=sys.stderr)
 
         finally:
             await browser.close()
