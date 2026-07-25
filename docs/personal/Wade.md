@@ -99,6 +99,13 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 * **Source URL:** https://www.amazon.ca/dp/B0F53MLYQ6
 * **Detailed Specifications:** AMD Ryzen AI Max+ 395 (16 Cores, 32 Threads, up to 5.1GHz). Integrated AMD Radeon 8060S GPU (40 Compute Units). 128GB LPDDR5X 8000MHz (16GB x 8 configuration) Unified Memory layout. 2TB PCIe 4.0 NVMe SSD. Dual 2.5G LAN ports, WiFi 7, Bluetooth 5.4, USB4 interfaces, SD Card Reader 4.0, support for Quad Screen 8K Displays.
 
+#### Node 03 (Compute Plane Inference Server)
+* **Date Bought:** 2026-07-16
+* **Price Spent:** $5776.83 CAD all-in (included free ASUS ROG Strik 27" QHD 2K 1440P 260Hz IPS Gaming Computer Monitor valued at $576 CAD)
+* **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark, NVIDIA GB10 Superchip, 128GB LPDDR5x, 1TB PCIe Gen4 NVMe SSD, Wi-Fi 7 & BT5.4, DGX OS, Agentic AI Ready, Supports OpenClaw, NemoClaw, Stackable Chassis
+* **Source URL:** https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044
+* **Detailed Specifications:** TODO
+
 ### 3.2 Network & Uplink Assets
 
 #### ISP Core Modem
@@ -114,6 +121,12 @@ This section tracks every computing and electrical asset in the ecosystem. OpenC
 * **Title/Description:** Binardat 8 Port 10 Gigabit Managed Switch Metal Small Network Switch
 * **Source URL:** https://www.amazon.ca/dp/B0DQ77BS64
 * **Detailed Specifications:** Layer 3 Web Managed engine. 160Gbps total backplane switching bandwidth. Physical layout: 4x 10G RJ45 Copper Ethernet ports + 4x 10G SFP+ Fiber interface cages. Native NBASE-T auto-negotiation support (10G/5G/2.5G/1G/100M).
+
+#### Kasa Smart Plug Power Strip HS300
+* **Date Bought:** 2023-06-01
+* **Price Spent:** $46.99 USD
+* **Title/Description:** Kasa Smart Plug Power Strip HS300, Surge Protector with 6 Individually Controlled Smart Outlets and 3 USB Ports, Works with Alexa & Google Home, No Hub Required , White
+* **Source URL:** no longer available at amazon, but available at https://snapklik.com/en-ca/product/kasa-smart-plug-power-strip-hs300-surge-protector-with-6-individually-controlled-smart-outlets-and-3-usb-ports-works-with-alexa-and-google-home-no-hub-required/02U04PK719UL5?utm_source=google&utm_medium=search&utm_campaign=_&utm_term=&utm_content=642197582121&gad_source=1&gad_campaignid=19327368420&gbraid=0AAAAACkGCJGViIvNLvuin-R4tuiX6E6FV&gclid=CjwKCAjw1IHTBhAaEiwA4AYNFljqP6FUjAXwXhdysCrFRzONzpfcziWBcNE6pLiFLcC1QWqOg8SwbRoCp8gQAvD_BwE
 
 #### Satellite Mobile Uplink Kit
 * **Date Bought:** 2022-07-19

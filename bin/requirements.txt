@@ -12,3 +12,7 @@ playwright
 markdown
 python_kasa
 fabric
+yt_dlp
+youtube_transcript_api
+google-genai
+litellm
