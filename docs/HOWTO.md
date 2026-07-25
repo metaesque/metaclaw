@@ -126,7 +126,7 @@ Running large models on edge hardware (like AMD APUs) often encounters proprieta
 2. **Verify Hardware Enumeration:**
    Run `rocm-smi`. You must see your discrete GPU or APU listed in the table. If you see `WARNING: No AMD GPUs specified`, your kernel upgrade failed or driver packages are missing.
 3. **Bypass ROCm Restrictions (APUs Only):**
-   Integrated graphics often fail Ollama's proprietary ROCm CGo compilation checks. If the OS sees the GPU but Ollama doesn't, force the Vulkan compute API. Ensure `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` are exported in the environment. **Never use `HIP_VISIBLE_DEVICES=-1`**, as this blinds the hardware scanner entirely.
+   Integrated graphics often fail Ollama's proprietary ROCm CGo compilation checks. If the OS sees the GPU but Ollama doesn't, force the Vulkan compute API. Ensure `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` are exported in the environment. **Never use `HIP_VISIBLE_DEVICES=-1`**, as this blinds the hardware scanner entirely. If you are hitting AMD SVM limits (swap thrashing), you may also need to set `ROCR_VISIBLE_DEVICES=none` to prevent ROCm from locking system memory.
 
 ## Upgrading (or Downgrading) OpenClaw
 
@@ -167,6 +167,14 @@ trivial prompt should have routed to your designated cheap model (e.g.,
 `gemini-2.5-flash-lite`), and the complex prompt to your premium model (e.g.,
 `gemini-3.1-pro-preview`). If the log shows that *both* prompts hit the
 expensive model, your routing configuration is broken and needs to be patched.
+
+### Testing Agent Specific Prompts
+You can also bypass the Web GUI entirely and test specific agents and complexities using the testing script. If you add a `tests:` array block to an agent's YAML file containing custom prompts, you can execute them directly:
+
+```bash
+# Tests the 'simple-model' prompt explicitly defined in the pm.yaml file
+python bin/openclaw_test.py -t simple -a openclaw/software_pm
+```
 
 ## Verifying Internal DNS (Aliases)
 

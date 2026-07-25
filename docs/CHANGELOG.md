@@ -1,5 +1,19 @@
 # MetaClaw Changelog
 
+## [2026.7.21] - Arena Taxonomies & TTY Stability
+
+### Added
+*   **Agent YAML Testing Block:** Added support for a `tests:` array within individual agent YAML definitions. `bin/openclaw_test.py` now dynamically parses these files to allow per-agent, per-complexity unit testing, replacing global hardcoded test prompts.
+*   **Playwright Arena Fetcher:** Introduced `bin/fetch_arena.py` to extract raw, fully-rendered Gradio JSON state payloads directly from `https://arena.ai/leaderboard`. This unlocks the ability to parse granular sub-domain/category triplets for dynamic ELO-based prompt-to-model routing.
+
+### Changed
+*   **Remote SSH TTY Allocation:** Modified `run_remote()` in `bin/cluster_setup.py` to inject the `-t` pseudo-terminal flag when executing non-hidden commands. This fixes an issue where `make setup` would hang indefinitely when attempting to prompt the user for `.env` variables over an SSH pipe.
+
+### Fixed
+*   **Predictive Judge Schema Crash:** Fixed `lexical_predictive.js` to return `null` instead of `{}` when bypassing the Predictive Judge for leaf nodes. This resolves HTTP 500 "api_error" crashes triggered by strict schema validation in the OpenClaw gateway.
+*   **APU Vulkan Variable Scoping:** Fixed a critical deployment bug where `bin/orchestrate.py` and `.env.template` blindly prompted and injected AMD APU-specific overrides (`OLLAMA_VULKAN=1`, `HSA_OVERRIDE_GFX_VERSION=11.0.0`) globally across all nodes. The script now correctly scopes these variables strictly to Linux nodes where an AMD APU is detected in the hardware profile.
+*   **Missing Index Documentation Crash:** Added a bash file-existence check to `prep-instructions` in `services/gateways/openclaw/Makefile` to prevent `make wizard-cluster` from halting when `index.md` has not yet been generated.
+
 ## [2026.7.20] - Hardware Enablement & Telemetry Decoupling
 
 ### Added

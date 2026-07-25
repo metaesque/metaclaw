@@ -210,8 +210,8 @@ before executing `make wizard-batch` or `make apply`.**
 Running state-of-the-art LLMs natively on edge hardware often requires navigating proprietary GPU drivers. MetaClaw embraces open-source runners (like Ollama), but special architectural care is required for APUs (like the AMD Strix Halo).
 
 1. **The Linux HWE Requirement:** Standard LTS Linux kernels often lack drivers for bleeding-edge silicon. If an APU is present but undetected, you **must** upgrade the Linux Kernel to the Hardware Enablement (HWE) stack (e.g., `linux-generic-hwe-24.04` for Linux 7.0+). Without it, inference falls back to CPU, increasing TTFT (Time-To-First-Token) latency from sub-seconds to 70+ seconds.
-2. **The Vulkan Workaround:** Ollama's bundled ROCm/HIP binaries strictly check PCI IDs. They frequently reject novel architectures like RDNA 3.5 (`gfx1151`). To force acceleration, MetaClaw injects `OLLAMA_VULKAN=1` and `OLLAMA_IGPU_ENABLE=1` to utilize the universal Vulkan compute engine.
-3. **The Blanking Mandate:** You must **never** inject `HIP_VISIBLE_DEVICES=-1` to bypass ROCm. Doing so blinds the hardware enumeration scanner entirely, causing Ollama to instantly abort the Vulkan initialization and fall back to CPU.
+2. **The Vulkan Workaround:** Ollama's bundled ROCm/HIP binaries strictly check PCI IDs. They frequently reject novel architectures like RDNA 3.5 (`gfx1151`). Furthermore, the Linux `amdgpu` driver enforces strict Shared Virtual Memory (SVM) limits that can cause catastrophic swap thrashing when loading massive models into UMA frame buffers. To force acceleration and bypass these limits, MetaClaw injects `OLLAMA_VULKAN=1`, `OLLAMA_IGPU_ENABLE=1`, and `ROCR_VISIBLE_DEVICES=none` to utilize the universal Vulkan compute engine.
+3. **The Blanking Mandate:** You must **never** inject `HIP_VISIBLE_DEVICES=-1` to bypass ROCm. Doing so blinds the hardware enumeration scanner entirely, causing Ollama to instantly abort initialization and fall back to CPU.
 
 ## Telemetry Decoupling (Loggers vs Forwarders)
 
@@ -316,48 +316,10 @@ infrastructure from consciousness.
    (guardrails), and `MEMORY.md` (state). OpenClaw reads and modifies these
    files natively.
 
-3. **Conceptual Models:** Agents must request models using conceptual
-   abstraction (e.g., `simple-model`, `medium-model`, `complex-model`,
-   `frontier-model`) or explicit specialty models (e.g., `flux-1-dev`). They
-   must NOT hardcode hardware-specific parameters (e.g., `qwen-3-32b`). The
-   LiteLLM proxy handles the physical mapping based on the active hardware Tier.
+## Prompt-to-Model Routing & Taxonomy
 
-Because building resilient multi-agent swarms requires hard-won architectural
-lessons, the MetaClaw repository includes a `.workspace.template` directory
-acting as an educational "example" workspace. During initial provisioning, the
-`bin/customize.py` script can optionally copy this template into the sibling
-`../workspace` directory to give non-technical users a functional baseline.
-Advanced users are encouraged to maintain their own private, heavily customized
-workspace repositories and ignore the template entirely.
+Ensuring that the right AI model is used for each prompt is critical to maximize reasoning quality while protecting API token budgets. MetaClaw explicitly rejects arbitrary, static model assignments (like hardcoding all workers to a generic `medium-model`). Instead, MetaClaw leverages the empirically derived, millions-of-votes taxonomies provided by **LMArena (Arena.ai)**.
 
-## Prompt-to-Model Routing & "Middle Reasoning"
-
-Ensuring that the right AI model is used for each prompt is critical to prevent
-ballooning costs (Context Drag). MetaClaw enforces a **Hierarchical Task Network
-(HTN)** topology known as "Middle Reasoning."
-
-1. **The Orchestrator:** Uses a `medium-model` to act as a switchboard, mapping
-   user intents to specific Team Leads.
-
-2. **Team Leads (Middle Reasoning):** Use `complex-model` or `frontier-model`.
-   They receive intents, synthesize constraints, and output a Directed Acyclic
-   Graph (DAG) of sub-tasks. Team Leads are strictly stripped of execution tools
-   (like `read_file` or `search_web`); they MUST delegate downwards using
-   `sessions_send`.
-
-3. **Leaf Nodes (Execution):** Workers (like `software_dev`) use
-   `medium-model` or `simple-model` to execute discrete tools.
-
-### The 4-Tier Judge
-
-The `lexical_predictive.js` hook intercepts prompts sent to Team Leads and asks
-a local judge (e.g., `gemma4:e4b`) to score complexity mechanically:
-
-1. `simple`: Factual queries, basic translation, trivial tools.
-2. `medium`: Summarization, standard business logic.
-3. `complex`: System architecture, advanced coding, data pipelines.
-4. `frontier`: Extreme context, zero-shot DAG generation.
-
-*Crucially*, if the target agent is a Leaf Node (lacking the `is_lead: true`
-flag in its YAML), the JS hook bypasses the Judge entirely, allowing the agent
-to use its designated specialty model without interference.
+1. **The Orchestrator (Intent Classification):** The top-level orchestrator agent evaluates the user prompt and performs a single-shot Intent Classification. It maps the prompt to a specific **LMArena Triplet** consisting of an Arena (e.g., `Chat`), a Variant/Task (e.g., `Text`), and a Category (e.g., `Legal & Government`). It then delegates the task to the specialized agent responsible for that domain.
+2. **The Dynamic Model Registry:** Agent YAML files define their capabilities using an `arena_category` tag rather than a static model string. During deployment (`make apply`), MetaClaw's orchestration layer looks up the #1 ranked ELO model for that specific LMArena category and automatically binds that premium model to the agent for the duration of the session.
+3. **Agent Decoupling:** We do not spawn duplicate agents for every category (e.g., `media_image_3d` vs `media_image_art`). Agents are defined by their *Personas and Tools* (e.g., a single `media_image` worker). MetaClaw dynamically hands that single worker the best model for the current specific category.

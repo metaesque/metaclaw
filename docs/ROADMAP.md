@@ -35,3 +35,9 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 ## Phase 5: Templating Engine Migration (Jinja2)
 *   **[TODO] Transition .env Overrides to Jinja2 Compilation:**
     The current `.env.template` injection system requires complex, rigid Python logic (`orchestrate.py`) to map specific variables. We must replace this by implementing a `bin/compile_templates.py` engine that utilizes Jinja2 `.j2` template files. This will allow declarative rendering of Compose and Config files directly from `profile.json` node parameters (e.g., `{% if hardware.gpu_detected == "AMD APU" %}`), removing the need for error-prone `change_me_to_` prompt bypasses and global overrides.
+
+## Phase 6: Arena-Driven Model Routing
+*   **[TODO] Deprecate Rigid 'Middle Reasoning' DAG:**
+    Move away from hardcoding specific models (`complex-model`, `medium-model`) in agent YAML definitions. The current multi-hop DAG approach introduces latency and arbitrary model assignments.
+*   **[TODO] Implement LMArena.ai Taxonomy Mapping:**
+    Utilize the `bin/fetch_arena.py` script to scrape the live Gradio JSON state from LMArena. Modify agent YAMLs to include an `arena_category` parameter (e.g., `Chat/Text/Legal & Government`). The Orchestrator will act as a single-shot Intent Classifier, passing the prompt to the appropriate agent, while MetaClaw's orchestration engine dynamically binds the #1 ranked ELO model for that category to the agent executing the task.
