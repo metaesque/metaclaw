@@ -325,6 +325,23 @@ if os.path.exists(plugin_dir):
         json.dump(routing_meta, f, indent=2)
     print(f"SUCCESS: Generated routing_meta.json for {len(routing_meta)} agents.")
 
+# ==============================================================================
+# SEMANTIC ROUTING UTTERANCES GENERATION
+# ==============================================================================
+utterances_agents = {}
+for agent_id, meta in routing_meta.items():
+    sig = meta.get('skill_signature')
+    if sig:
+        utterances_agents[agent_id] = [sig]
+
+litellm_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'proxies', 'litellm'))
+utterances_path = os.path.join(litellm_dir, 'utterances-agents.yaml')
+
+if os.path.exists(litellm_dir):
+    with open(utterances_path, 'w', encoding='utf-8') as f:
+        yaml.dump(utterances_agents, f, default_flow_style=False)
+    print(f"SUCCESS: Auto-generated {utterances_path} containing {len(utterances_agents)} semantic skill signatures.")
+
 if 'plugins' in data:
     if 'load' in data['plugins']:
         if 'paths' in data['plugins']['load']:
