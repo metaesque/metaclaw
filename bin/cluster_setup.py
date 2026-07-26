@@ -32,6 +32,22 @@ def is_tailscale_active():
     except Exception:
         return False
 
+def get_local_tailscale_ip():
+    """
+    Queries the local Tailscale daemon directly for this machine's 100.x.y.z IP address,
+    bypassing hostname matching entirely.
+    """
+    try:
+        res = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True)
+        if res.returncode == 0:
+            data = json.loads(res.stdout)
+            self_ips = data.get('Self', {}).get('TailscaleIPs', [])
+            if self_ips:
+                return self_ips[0]
+    except Exception:
+        pass
+    return ""
+
 def get_required_ssh_key():
     """
     Ensures the strict use of the MetaClaw deployment key.
@@ -136,24 +152,29 @@ def profile_remote_hardware(ip_address, ssh_user, key_filename):
 def get_tailscale_ip(target_hostname):
     """
     Executes 'tailscale status --json' and parses the output to dynamically
-    find the Tailscale IP address associated with the requested hostname.
+    find the Tailscale IP address associated with the requested hostname or alias.
     """
     try:
         res = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, check=True)
         data = json.loads(res.stdout)
 
-        for peer_key, peer_info in data.get('Peer', {}).items():
-            host = peer_info.get('HostName', '')
-            if host.lower() == target_hostname.lower():
-                ips = peer_info.get('TailscaleIPs', [])
-                if ips:
-                    return ips[0]
+        target_clean = target_hostname.lower().split('.')[0]
 
         self_info = data.get('Self', {})
-        if self_info.get('HostName', '').lower() == target_hostname.lower():
+        self_host = self_info.get('HostName', '').lower().split('.')[0]
+        self_dns = self_info.get('DNSName', '').lower().split('.')[0]
+        if target_clean in [self_host, self_dns]:
             ips = self_info.get('TailscaleIPs', [])
             if ips:
                 return ips[0]
+
+        for peer_key, peer_info in data.get('Peer', {}).items():
+            p_host = peer_info.get('HostName', '').lower().split('.')[0]
+            p_dns = peer_info.get('DNSName', '').lower().split('.')[0]
+            if target_clean in [p_host, p_dns]:
+                ips = peer_info.get('TailscaleIPs', [])
+                if ips:
+                    return ips[0]
 
     except Exception:
         pass
@@ -231,11 +252,11 @@ def main():
     local_host = socket.gethostname()
     local_hw = sysprofile.platform_details()
 
-    # Overwrite the LAN IP with the Tailscale IP if Tailscale is active
-    if local_hw.get('tailscale_active'):
-        ts_ip = get_tailscale_ip(local_host)
-        if ts_ip:
-            local_hw['ip_address'] = ts_ip
+    # Query local Tailscale daemon directly to override LAN IP with 100.x.y.z
+    ts_ip = get_local_tailscale_ip()
+    if ts_ip:
+        local_hw['ip_address'] = ts_ip
+        local_hw['tailscale_active'] = True
 
     print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
     print(f"  IP Address: {local_hw['ip_address']}")

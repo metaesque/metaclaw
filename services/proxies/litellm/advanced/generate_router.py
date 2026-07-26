@@ -16,7 +16,7 @@ def main():
 
   args = parser.parse_args()
 
-  # Absolute path resolution to prevent CWD dependency errors
+  # Absolute path resolution to anchor all relative file paths to the service directory
   script_dir = os.path.dirname(os.path.abspath(__file__))
   proxy_dir = os.path.dirname(script_dir)
 

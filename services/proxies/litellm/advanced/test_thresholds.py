@@ -6,8 +6,9 @@ import sys
 
 def load_local_env(repo_root):
     """
-    Dynamically loads the API key from the local environment files.
+    Dynamically loads the API key from local environment configuration files across known paths.
     """
+    # 1. Try litellm .env.json
     env_json_path = os.path.join(repo_root, 'services', 'proxies', 'litellm', '.env.json')
     if os.path.exists(env_json_path):
         try:
@@ -18,9 +19,10 @@ def load_local_env(repo_root):
         except Exception:
             pass
 
-    env_path = os.path.join(repo_root, '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
+    # 2. Try litellm .env
+    litellm_env = os.path.join(repo_root, 'services', 'proxies', 'litellm', '.env')
+    if os.path.exists(litellm_env):
+        with open(litellm_env, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
@@ -28,17 +30,35 @@ def load_local_env(repo_root):
                     if key not in os.environ:
                         os.environ[key] = value.strip('"\' ')
 
-def fetch_embeddings(url, headers, texts):
-  """Fetches vector arrays from the local LiteLLM proxy."""
+    # 3. Try root .env
+    root_env = os.path.join(repo_root, '.env')
+    if os.path.exists(root_env):
+        with open(root_env, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    if key not in os.environ:
+                        os.environ[key] = value.strip('"\' ')
+
+def fetch_embeddings(urls, headers, texts):
+  """Attempts fetching vector arrays, cascading across proxy IP targets if needed."""
   payload = {
     "model": "gemini/gemini-embedding-001",
     "input": texts
   }
-  response = requests.post(url, headers=headers, json=payload)
-  response.raise_for_status()
-  data = response.json()
-  sorted_data = sorted(data["data"], key=lambda x: x["index"])
-  return [item["embedding"] for item in sorted_data]
+  last_err = None
+  for url in urls:
+    try:
+      response = requests.post(url, headers=headers, json=payload, timeout=15)
+      response.raise_for_status()
+      data = response.json()
+      sorted_data = sorted(data["data"], key=lambda x: x["index"])
+      return [item["embedding"] for item in sorted_data]
+    except Exception as e:
+      last_err = e
+      continue
+  raise last_err
 
 def cosine_similarity(vec_a, vec_b):
   """Calculates the cosine similarity between two vectors."""
@@ -50,7 +70,7 @@ def cosine_similarity(vec_a, vec_b):
   return dot_product / (norm_a * norm_b)
 
 def main():
-  # Absolute path resolution to prevent CWD dependency errors
+  # Absolute path resolution to anchor all relative file paths to the repository root
   script_dir = os.path.dirname(os.path.abspath(__file__))
   proxy_dir = os.path.dirname(script_dir)
   repo_root = os.path.dirname(os.path.dirname(os.path.dirname(proxy_dir)))
@@ -59,7 +79,7 @@ def main():
 
   master_key = os.environ.get('ACTIVE_PROXY_KEY')
   if not master_key:
-      print("FATAL: ACTIVE_PROXY_KEY not found in environment.")
+      print("FATAL: ACTIVE_PROXY_KEY not found in environment or .env files.")
       sys.exit(1)
 
   # Resolve the dynamic proxy IP from the cluster profile
@@ -76,7 +96,13 @@ def main():
           except json.JSONDecodeError:
               pass
 
-  url = f"http://{proxy_ip}:4000/v1/embeddings"
+  # Formulate candidate URLs (Tailscale IP, loopback IPs)
+  target_urls = list(dict.fromkeys([
+      f"http://{proxy_ip}:4000/v1/embeddings",
+      "http://127.0.0.1:4000/v1/embeddings",
+      "http://localhost:4000/v1/embeddings"
+  ]))
+
   headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {master_key}"
@@ -85,7 +111,7 @@ def main():
   router_path = os.path.join(proxy_dir, "router.json")
   print(f"Loading {router_path}...")
   if not os.path.exists(router_path):
-      print("FATAL: router.json not found.")
+      print(f"FATAL: {router_path} not found.")
       sys.exit(1)
 
   with open(router_path, 'r') as f:
@@ -98,7 +124,7 @@ def main():
   for route in routes:
     tier_name = route["name"]
     utterances = route["utterances"]
-    cluster_embeddings[tier_name] = fetch_embeddings(url, headers, utterances)
+    cluster_embeddings[tier_name] = fetch_embeddings(target_urls, headers, utterances)
 
   test_prompts = [
     "What is the capital of France?",
@@ -115,7 +141,7 @@ def main():
   ]
 
   print("Vectorizing test prompts...\n")
-  test_embeddings = fetch_embeddings(url, headers, test_prompts)
+  test_embeddings = fetch_embeddings(target_urls, headers, test_prompts)
 
   headers_print = ["Test Prompt", "Top Match", "Confidence Score"]
   print(f"{headers_print[0]:<72} | {headers_print[1]:<25} | {headers_print[2]}")
