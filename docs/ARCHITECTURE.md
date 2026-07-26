@@ -316,6 +316,14 @@ infrastructure from consciousness.
    (guardrails), and `MEMORY.md` (state). OpenClaw reads and modifies these
    files natively.
 
+### Agent Execution & ReAct Loops
+
+To maximize autonomy while preventing runaway API costs, MetaClaw establishes strict operational constraints for executing code within OpenClaw. Agents equipped with the `execute_shell_command` tool (like `software_dev` or `qa_engineer`) possess the ability to run their own code in the designated sandbox.
+
+This enables an internal **ReAct (Reasoning and Acting)** loop. If an agent writes a script and the test execution fails due to a syntax error, the agent intercepts the `stderr` output and autonomously rewrites the code to fix the bug without pinging the Team Lead. While highly efficient, unconstrained ReAct loops can cause an agent to repeatedly hallucinate the same broken fix, spinning into an infinite loop and burning token budgets. Therefore, all agents with execution authority must have a strict "Retry Budget" (e.g., max 3 retries) explicitly defined in their `SECURITY.md` files, commanding them to HALT and fail upward to the Team Lead if the loop ceiling is reached.
+
+Furthermore, agents are instructed to follow standard, language-idiomatic Object-Oriented Programming (OOP) architectures (one class per file, explicit interfaces, standard `tests/` directories). Deviating from these norms forces the LLM to fight its internal syntactic weighting, creating severe friction and degrading code quality. Instead of wasting LLM context on enforcing granular style-guides (like line limits), agents are instructed to use automated formatters (`black`, `pylint`) via shell execution to standardize code.
+
 ## Prompt-to-Model Routing & Taxonomy
 
 Ensuring that the right AI model is used for each prompt is critical to maximize reasoning quality while protecting API token budgets. "Right" is defined as the most cost-effective model capable of providing an exceptional answer.
@@ -385,13 +393,11 @@ Inspired by the empirically derived taxonomies from LMArena (Arena.ai), this imp
 
 This approach provides direct alignment with empirical leaderboards and entirely bypasses middle-management delegation hops, routing the prompt straight to the optimal specialized agent and model tier. It provides quantitative, data-driven justification for using a costly `frontier` model versus a free `complex` local model for any given task.
 
-The primary weakness is the unacceptably high classification error rate. Forcing an LLM to reliably distinguish between 60+ granular categories in a single zero-shot pass inevitably leads to attention dilution, category confusion, and severe classification hallucinations. It also requires system prompt token bloat to pack the 60+ category definitions into the classifier's context window on every turn. Furthermore, it completely ignores the hot/cold state of the compute farm, potentially assigning a model that forces a massive VRAM eviction instead of utilizing an already-hot model with a slightly lower ELO. Live empirical classification logging is still required to determine the precise accuracy ceiling of current local micro-models when attempting to perform 60+ category intent classification.
+The primary weakness is the unacceptably high classification error rate. Forcing an LLM to reliably distinguish between 60+ granular categories in a single zero-shot pass inevitably leads to attention dilution, category confusion, and severe classification hallucinations. It also requires massive system prompt token bloat to pack the 60+ category definitions into the classifier's context window on every turn. Furthermore, it completely ignores the hot/cold state of the compute farm, potentially assigning a model that forces a massive VRAM eviction instead of utilizing an already-hot model with a slightly lower ELO. Live empirical classification logging is still required to determine the precise accuracy ceiling of current local micro-models when attempting to perform 60+ category intent classification.
 
 #### Semantic-Predictive Routing
 
 This implementation utilizes a highly efficient hybrid two-stage pipeline. In Stage 1 (Intent Routing), a fast embedding model maps the prompt into a vector space and compares it against agent skill signatures via cosine similarity to instantly select the correct domain agent. In Stage 2 (Complexity Routing), a local micro-model (`judge-model`) evaluates the prompt's computational difficulty. The proxy then dynamically binds the optimal model tier based on the judge's assessment.
-
-**TODO:** To fully activate Semantic Prompt-to-Agent routing dynamically at runtime, the `semantic_predictive.js` hook must be expanded. It needs to read the local `routing_meta.json` file, extract the skill signatures, make an HTTP POST to the local LiteLLM `/v1/embeddings` endpoint, calculate the cosine similarity, and compare the max score against a defined threshold (e.g., 0.70). If the score exceeds the threshold, the hook must forcibly rewrite the target `agentId` inside the OpenClaw event payload.
 
 Semantic-Predictive Routing delivers ultra-low latency, extreme cost efficiency, and exceptional accuracy. By separating categorical domain intent (which is handled flawlessly by vector math) from computational difficulty (handled efficiently by a fast LLM Judge), it minimizes `frontier` API costs by allowing the local Judge to strictly gatekeep when hyperscaler models are permitted to execute.
 
@@ -443,7 +449,7 @@ To mitigate the architectural weakness of "1-Shot Intent Classification" halluci
 #### Compute Farm Context
 When transitioning from a single local workstation to a multi-node, shared cluster, the infrastructure must account for multi-tenant prioritization. MetaClaw integrates with software designed to handle local LLM requests from multiple users (e.g., opening the compute farm to friends).
 
-This capability introduces priority queues, ensuring that the primary owner retains overriding priority on compute tasks. It enforces rate limits on external users and tracks which models are currently "hot" in the VRAM of specific nodes. The prompt-to-model routing logic must integrate with this context layer to ensure that a low-priority external request does not evict the owner's `complex-model` from VRAM, prioritizing already-hot models for non-critical tasks to preserve maximum system throughput.
+This capability introduces priority queues, ensuring that the primary owner retains overriding priority on compute tasks. It enforces rate limits on external users and tracks which models are currently "hot" in the VRAM of specific nodes. The prompt-to-model routing logic must integrate with this context layer (operating securely within the Control Node's LiteLLM proxy) to ensure that a low-priority external request does not evict the owner's `complex-model` from VRAM, prioritizing already-hot models for non-critical tasks to preserve maximum system throughput.
 
 #### DAGs
 A Directed Acyclic Graph (DAG) represents a sequence of sub-tasks where the execution of one task strictly depends on the output of previous tasks, preventing circular logic or infinite loops. In OpenClaw, Team Leads (like the `software_architect`) operate as DAG planners to organize agent swarms.

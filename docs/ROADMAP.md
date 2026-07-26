@@ -43,3 +43,5 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Move away from hardcoding specific models (`complex-model`, `medium-model`) in agent YAML definitions. The current multi-hop DAG approach introduces latency and arbitrary model assignments.
 *   **[TODO] Implement LMArena.ai Taxonomy Mapping:**
     Utilize the `bin/fetch_arena.py` script to scrape the live Gradio JSON state from LMArena. Modify agent YAMLs to include an `arena_category` parameter (e.g., `Chat/Text/Legal & Government`). The Orchestrator will act as a single-shot Intent Classifier, passing the prompt to the appropriate agent, while MetaClaw's orchestration engine dynamically binds the #1 ranked ELO model for that category to the agent executing the task.
+*   **[TODO] Implement Runtime Semantic-Predictive Hook:**
+    Finish writing the javascript interceptor in `services/gateways/openclaw/modules/routing/semantic_predictive.js` to natively evaluate cosine similarity at runtime against the `router.json` embeddings and forcefully overwrite the `agentId` variable, fully activating the semantic routing architecture.

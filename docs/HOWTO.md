@@ -56,10 +56,19 @@ live. **You must profile the NEW machine locally.**
     were migrated away and redirect internal traffic via the newly generated
     `.env.cluster` file.
 
+## Testing Semantic Routing (Vector Space)
+
+When editing agent personas or expanding the workspace, you must ensure that your new agents do not cause "semantic bleed" (where two agents have overlapping skill descriptions, confusing the mathematical router).
+
+1.  **Regenerate Utterances:** After editing a `workspace/agents/**/*.yaml` file, run `make patch` from the repository root. This script will automatically extract your new `skill_signature` strings and compile them into `services/proxies/litellm/utterances-agents.yaml`.
+2.  **Compile the Router:** Navigate to `services/proxies/litellm/` and run `python advanced/generate_router.py -k agents`. This loads the utterances into the active `router.json` payload.
+3.  **Visual Verification:** Run `python advanced/plot_clusters.py` to generate a `semantic_clusters.png` file. Download this file to your local machine and verify that your agent clusters are mathematically distinct (not overlapping).
+4.  **Test Thresholds:** Run `python advanced/test_thresholds.py` to simulate a dozen sample prompts against your active LiteLLM proxy and verify they match the intended domain agent with a confidence score > 0.70.
+
 ## Git Version Control: Restoring Stable States
 
 The MetaClaw framework is publicly maintained at
-`[https://github.com/metaesque/metaclaw](https://github.com/metaesque/metaclaw)`. If experimental framework modifications
+`https://github.com/metaesque/metaclaw`. If experimental framework modifications
 break your local deployment, you can leverage Git tags to rewind time to a known
 stable state (e.g., `stable-v1`).
 

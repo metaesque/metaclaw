@@ -1,5 +1,24 @@
 # MetaClaw Changelog
 
+## [2026.7.26] - Semantic Predictive Routing & Hierarchical Orchestrators
+
+### Added
+*   **Semantic-Predictive Routing Initialization:** Added foundational support for a hybrid routing architecture combining fast cosine similarity (Intent) with a local LLM Judge (Complexity). Includes a Javascript hook stub `semantic_predictive.js` to intercept and score payloads at runtime.
+*   **Hierarchical Orchestrators:** Refactored the top-level `orchestrator` agent into a dedicated team (`lead`, `chat`, `code`, `image`, `video`). The `orchestrator/lead` now acts as the `default: true` ingress point to mitigate 60-category LMArena hallucination risks by narrowing the classification scope for sub-orchestrators.
+*   **Context Caching & Multi-Tenant Priority Documentation:** Added architectural guidance for utilizing PagedAttention caching and configuring the local LiteLLM proxy to handle priority queues for external friends accessing the compute farm.
+
+### Changed
+*   **Automated Utterance Generation:** Refactored `patch_routing.py` to auto-parse workspace YAMLs and extract `skill_signature` fields into `utterances-agents.yaml`, allowing seamless updates to the semantic routing vector space without manual intervention.
+*   **Agent Semantic Isolation:** Re-wrote `skill_signature` and `negative_keywords` across all agents (Health, Self, Social, Media, Software, SRE) to establish strictly orthogonal boundaries, dramatically reducing semantic bleed during vector projection.
+*   **Software Execution Directives:** Updated `software_architect`, `lead_developer`, and `qa_engineer` `SOUL.md` files. Deprecated rigid parallel testing directories and Bazel compilation. Enforced standard, language-idiomatic OOP structures, Makefiles, and automated linters (`pylint`, `black`).
+*   **ReAct Loop Safety Bounds:** Injected explicit retry budgets (maximum 3 loops) into the `SECURITY.md` of agents possessing `execute_shell_command` tools to prevent infinite hallucination loops when debugging code.
+
+### Fixed
+*   **Advanced Python Scripts Resolution:** Modified `test_thresholds.py`, `plot_clusters.py`, and `generate_router.py` to securely anchor relative paths using `os.path.abspath(__file__)`, preventing crashes when executed outside the repository root.
+*   **Headless Plotting:** Fixed `plot_clusters.py` crashing on headless Tier 2 nodes by swapping `plt.show()` for `plt.savefig()`.
+*   **Dynamic Auth Key Retrieval:** Repaired `test_thresholds.py` and `plot_clusters.py` to dynamically fetch the `ACTIVE_PROXY_KEY` and target Tailscale IPs directly from `.env.json` and `profile.json`, rather than relying on legacy hardcoded `localhost` variables.
+*   **Cluster Setup IP Mapping:** Fixed a bug in `bin/cluster_setup.py` where the master node erroneously stored its LAN IP instead of its `100.x.y.z` Tailscale IP in `profile.json` due to hostname string mismatches.
+
 ## [2026.7.21] - Arena Taxonomies & TTY Stability
 
 ### Added
