@@ -324,7 +324,7 @@ This process fundamentally involves two distinct, but interconnected concepts: *
 
 Prompt-to-agent routing decides *who* does the work. It operates by mapping the user's intent to a specific domain expert (e.g., routing a question about capital gains to the `finance_tax` agent). Prompt-to-model routing decides *which brain* (compute tier) that agent uses to do the work. It determines whether the assigned task is simple enough for a free local model or if it requires the deep reasoning capabilities of a billed frontier model.
 
-When an agent's configuration hardcodes a specific model (e.g., `model: "openai/complex-model"`), these two concepts merge into a 1:1 mapping. Routing the prompt to the agent inherently routes it to that specific model. However, in advanced dynamic implementations, the domain agent to use is selected first via intent classification, and the model tier to assign to that agent is calculated dynamically on the fly. To accommodate different hardware profiles and workflow preferences, MetaClaw provides a modular architectural framework that allows operators to switch between distinct prompt-to-model routing implementations.
+When an agent's configuration hardcodes a specific model (e.g., `model: "openai/complex-model"`), these two concepts merge into a rigid 1:1 mapping. Routing the prompt to the agent inherently routes it to that specific model. However, in advanced dynamic implementations, the domain agent to use is selected first via intent classification, and the model tier to assign to that agent is calculated dynamically on the fly. To accommodate different hardware profiles and workflow preferences, MetaClaw provides a modular architectural framework that allows operators to switch between distinct routing implementations.
 
 ### Notes
 
@@ -336,15 +336,15 @@ Finally, while fast response times (low Time-To-First-Token scores) are critical
 
 ### Routing Strategies
 
-The routing process relies on five distinct strategies that cascade progressively. These strategies form the building blocks for the overarching implementations.
+The routing process relies on distinct strategies that cascade progressively. These strategies form the building blocks for the overarching implementations.
 
 #### Deterministic Routing (Pre-cognitive)
-Deterministic routing relies on a hardcoded, strict 1:1 mapping based entirely on system state, tool selection, or explicit user overrides. This approach is completely independent of the prompt's semantic content; if a task is sent to an endpoint, the endpoint executes using its assigned parameters without evaluating the payload's difficulty or intent.
+Deterministic routing relies on a hardcoded, strict mapping based entirely on system state, tool selection, or explicit user overrides. This approach is completely independent of the prompt's semantic content; if a task is sent to an endpoint, the endpoint executes using its assigned parameters without evaluating the payload's difficulty or intent.
 
-In OpenClaw, this is enforced via static bindings in agent YAML manifests (e.g., `model: "openai/complex-model"`) and direct CLI target selectors. It is utilized heavily in the Middle Reasoning DAG implementation, where Team Leads explicitly dictate which worker and model tier will handle a downstream sub-task.
+In OpenClaw, this is enforced via static bindings in agent YAML manifests and direct CLI target selectors. It is utilized heavily in the Middle Reasoning DAG implementation, where Team Leads explicitly dictate which worker and model tier will handle a downstream sub-task.
 
 #### Lexical Routing (Heuristic / Fast-Path)
-Lexical routing provides a high-speed heuristic analysis of raw text. It scans the payload for specific reasoning markers (e.g., "think step by step"), structural complexity indicators (like dense JSON schemas), code syntax blocks, or simple system commands (e.g., `heartbeat`).
+Lexical routing provides a high-speed heuristic analysis of raw text. It scans the payload for specific reasoning markers, structural complexity indicators, code syntax blocks, or simple system commands (e.g., `heartbeat`).
 
 This strategy is implemented natively within the `lexical_predictive.js` workspace routing hook, intercepting events in the `before_model_resolve` lifecycle phase. Trivial commands are routed immediately to local or cheap models, preventing simple status pings from wasting compute cycles on heavier classification algorithms.
 
@@ -353,7 +353,9 @@ Semantic routing utilizes a fast embedding model to project the prompt into a hi
 
 Early experiments attempting to use semantic routing to classify complexity tiers (e.g., defining a region of vector space for `complex` prompts) resulted in extremely poor categorization because complexity spans all domains of discourse. A complex math proof and a complex poetry request occupy entirely different spatial regions. However, using agent skill descriptions (e.g., `finance_tax`) to define the vector space establishes a highly accurate domain of discourse. Topical intents cluster tightly, allowing the system to instantly resolve which domain agent should handle a task without relying on LLM hallucination. In OpenClaw, this is managed via LiteLLM's `router.json` for proxy-level routing, utilizing tools like `generate_router.py` to compile the spaces and `plot_clusters.py` to visually verify the semantic groupings via t-SNE projection.
 
-A critical limitation of this strategy involves batch ingestion. LiteLLM parses `router.json` on startup and attempts to batch-embed every utterance via the configured encoder (e.g., `gemini-embedding-001`). However, Google's API enforces a strict hard limit of 100 inputs per batch request. Without the fragile monkey-patch implemented in `advanced/patch_entrypoint.py` (which chunks the embeddings into smaller arrays), LiteLLM will crash on boot if the total number of utterances across all agents exceeds 100. This limitation dictates careful consideration regarding agent granularity. Maintaining a small number of agents with broad, generalized skill definitions avoids the API ceiling and ensures high recall, but risks mandate overlap where an ambiguous prompt matches multiple agents. Conversely, deploying a massive swarm of specialized agents requires narrow, highly detailed skill signatures to prevent overlap, risking queries falling into empty vector space if the cosine similarity threshold is set too high.
+A critical limitation of this strategy involves batch ingestion. LiteLLM parses `router.json` on startup and attempts to batch-embed every utterance via the configured encoder. However, Google's API enforces a strict hard limit of 100 inputs per batch request. Without the fragile monkey-patch implemented in `advanced/patch_entrypoint.py` (which chunks the embeddings into smaller arrays), LiteLLM will crash on boot if the total number of utterances across all agents exceeds 100.
+
+This limitation dictates careful consideration regarding agent granularity. Maintaining a small number of agents with broad, generalized skill definitions avoids the API ceiling and ensures high recall, but risks mandate overlap where an ambiguous prompt matches multiple agents. Conversely, deploying a massive swarm of specialized agents requires narrow, highly detailed skill signatures to prevent overlap, risking queries falling into empty vector space if the cosine similarity threshold is set too high.
 
 #### Predictive Routing (LLM-as-a-Judge)
 Predictive routing employs an LLM to evaluate the prompt before primary inference occurs. A micro-model (often quantized locally) reads the prompt and outputs a discrete complexity score (`simple`, `medium`, `complex`, `frontier`). The prompt is then directed to the corresponding proxy tier based on this computational difficulty assessment.
@@ -428,3 +430,8 @@ Instead of trying to write the entire app itself, the `software_architect` decom
 Routing Hooks are lightweight interceptor scripts (such as OpenClaw's native `lexical_predictive.js` workspace plugin) that function as a critical routing tool. They catch prompts in-flight before they ever reach the target model or the proxy layer.
 
 This capability allows operators to inject custom JavaScript or Python logic to dynamically rewrite the targeted model string, enforce hard cost boundaries, or execute the LLM-as-a-Judge API calls outside the core framework source code. By utilizing middleware hooks, the framework maintains extreme flexibility, allowing complex prompt-to-model logic to be executed and tested without requiring modifications to the upstream Gateway binaries.
+
+#### Context Caching (Prompt Caching)
+Context caching is an optimization capability that allows the inference engine to store the KV-cache of frequently used system prompts, massive documents, or conversation histories. Instead of recomputing the tokens for the entire context window on every turn, the engine instantly recalls the cached state and only computes the new user message.
+
+This tool heavily mitigates the token cost and latency weaknesses inherent in the Middle Reasoning DAG implementation. If the Orchestrator, Team Lead, and Worker share significant overlapping context (such as the same `AGENTS.md` definitions), context caching ensures that the repeated transmission of this data across the DAG does not burn through API budgets or induce massive Time-To-First-Token delays.
