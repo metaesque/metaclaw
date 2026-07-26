@@ -31,6 +31,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Transition the single-node pgvector instance to a clustered topology for Tier 4 deployments to ensure conversation history survives physical node failures.
 *   **[TODO] Local Embedding Replacement:**
     Currently, the OpenClaw `prompt-embedding-model` relies on Google Gemini. Transition this to a local, high-speed embedding model (e.g., `nomic-embed-text`) running natively on the `control` node to achieve 100% air-gapped privacy.
+*   **[TODO] Multi-Tenant Priority Proxying (LiteLLM):**
+    Implement Virtual Key management and rate limiting within the local LiteLLM proxy to allow external users (friends) to access the Compute Plane. Ensure the proxy maintains a priority queue that privileges internal owner prompts to prevent VRAM eviction of hot models during heavy external load.
 
 ## Phase 5: Templating Engine Migration (Jinja2)
 *   **[TODO] Transition .env Overrides to Jinja2 Compilation:**

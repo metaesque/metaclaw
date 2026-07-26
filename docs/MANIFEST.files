@@ -115,6 +115,7 @@ services/proxies/litellm/advanced/test_thresholds.py
 services/proxies/litellm/advanced/upgrade_proxy.sh
 services/proxies/litellm/config.yaml
 services/proxies/litellm/docker-compose.yml
+services/proxies/litellm/utterances-agents.yaml
 services/proxies/litellm/utterances-interests.yaml
 services/proxies/litellm/utterances-tiers.yaml
 services/queues/.service.json
