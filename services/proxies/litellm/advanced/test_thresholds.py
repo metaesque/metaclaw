@@ -1,21 +1,40 @@
 import json
 import requests
 import numpy as np
+import os
+import sys
 
-URL = "http://localhost:4000/v1/embeddings"
-HEADERS = {
-  "Content-Type": "application/json",
-  "Authorization": "Bearer sk-openclaw-master-key-31415"
-}
-MODEL_NAME = "gemini/gemini-embedding-001"
+def load_local_env(repo_root):
+    """
+    Dynamically loads the API key from the local environment files.
+    """
+    env_json_path = os.path.join(repo_root, 'services', 'proxies', 'litellm', '.env.json')
+    if os.path.exists(env_json_path):
+        try:
+            with open(env_json_path, 'r') as f:
+                data = json.load(f)
+                for k, v in data.items():
+                    os.environ[k] = str(v)
+        except Exception:
+            pass
 
-def fetch_embeddings(texts):
+    env_path = os.path.join(repo_root, '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    if key not in os.environ:
+                        os.environ[key] = value.strip('"\' ')
+
+def fetch_embeddings(url, headers, texts):
   """Fetches vector arrays from the local LiteLLM proxy."""
   payload = {
-    "model": MODEL_NAME,
+    "model": "gemini/gemini-embedding-001",
     "input": texts
   }
-  response = requests.post(URL, headers=HEADERS, json=payload)
+  response = requests.post(url, headers=headers, json=payload)
   response.raise_for_status()
   data = response.json()
   sorted_data = sorted(data["data"], key=lambda x: x["index"])
@@ -31,18 +50,55 @@ def cosine_similarity(vec_a, vec_b):
   return dot_product / (norm_a * norm_b)
 
 def main():
-  print("Loading router.json...")
-  with open('../router.json', 'r') as f:
+  # Absolute path resolution to prevent CWD dependency errors
+  script_dir = os.path.dirname(os.path.abspath(__file__))
+  proxy_dir = os.path.dirname(script_dir)
+  repo_root = os.path.dirname(os.path.dirname(os.path.dirname(proxy_dir)))
+
+  load_local_env(repo_root)
+
+  master_key = os.environ.get('ACTIVE_PROXY_KEY')
+  if not master_key:
+      print("FATAL: ACTIVE_PROXY_KEY not found in environment.")
+      sys.exit(1)
+
+  # Resolve the dynamic proxy IP from the cluster profile
+  proxy_ip = "127.0.0.1"
+  profile_path = os.path.join(repo_root, "profile.json")
+  if os.path.exists(profile_path):
+      with open(profile_path, 'r') as f:
+          try:
+              profile = json.load(f)
+              for node in profile.get('nodes', []):
+                  if 'proxy' in node.get('providers', {}):
+                      proxy_ip = node.get('hardware', {}).get('ip_address', '127.0.0.1')
+                      break
+          except json.JSONDecodeError:
+              pass
+
+  url = f"http://{proxy_ip}:4000/v1/embeddings"
+  headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {master_key}"
+  }
+
+  router_path = os.path.join(proxy_dir, "router.json")
+  print(f"Loading {router_path}...")
+  if not os.path.exists(router_path):
+      print("FATAL: router.json not found.")
+      sys.exit(1)
+
+  with open(router_path, 'r') as f:
     config = json.load(f)
 
   routes = config.get("routes", [])
   cluster_embeddings = {}
 
-  print("Vectorizing tier utterances from local proxy...")
+  print(f"Vectorizing utterances from proxy ({proxy_ip})...")
   for route in routes:
     tier_name = route["name"]
     utterances = route["utterances"]
-    cluster_embeddings[tier_name] = fetch_embeddings(utterances)
+    cluster_embeddings[tier_name] = fetch_embeddings(url, headers, utterances)
 
   test_prompts = [
     "What is the capital of France?",
@@ -53,15 +109,17 @@ def main():
     "Write a custom Python metaclass for a multi-agent framework.",
     "Formulate a mathematical proof for the twin prime conjecture.",
     "Evaluate the epistemological limits of artificial superintelligence.",
-    "Give me a recipe for chocolate chip cookies."
+    "Give me a recipe for chocolate chip cookies.",
+    "Extract the gross revenue from this AAPL 10-K filing.",
+    "Calculate the current RSI and MACD for Ethereum."
   ]
 
   print("Vectorizing test prompts...\n")
-  test_embeddings = fetch_embeddings(test_prompts)
+  test_embeddings = fetch_embeddings(url, headers, test_prompts)
 
-  headers = ["Test Prompt", "Simple", "Medium", "Complex", "Reasoning", "Max Match"]
-  print(f"{headers[0]:<72} | {headers[1]:<6} | {headers[2]:<6} | {headers[3]:<7} | {headers[4]:<9} | {headers[5]}")
-  print("-" * 130)
+  headers_print = ["Test Prompt", "Top Match", "Confidence Score"]
+  print(f"{headers_print[0]:<72} | {headers_print[1]:<25} | {headers_print[2]}")
+  print("-" * 125)
 
   for i, test_emb in enumerate(test_embeddings):
     scores = {}
@@ -71,15 +129,10 @@ def main():
 
     prompt_trunc = (test_prompts[i][:69] + '...') if len(test_prompts[i]) > 72 else test_prompts[i]
 
-    s_score = f"{scores['simple-model']:.3f}"
-    m_score = f"{scores['medium-model']:.3f}"
-    c_score = f"{scores['complex-model']:.3f}"
-    r_score = f"{scores['reasoning-model']:.3f}"
-
     best_tier = max(scores, key=scores.get)
     best_val = scores[best_tier]
 
-    print(f"{prompt_trunc:<72} | {s_score:<6} | {m_score:<6} | {c_score:<7} | {r_score:<9} | {best_tier} ({best_val:.3f})")
+    print(f"{prompt_trunc:<72} | {best_tier:<25} | {best_val:.3f}")
 
 if __name__ == "__main__":
   main()

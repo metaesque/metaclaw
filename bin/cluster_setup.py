@@ -231,6 +231,12 @@ def main():
     local_host = socket.gethostname()
     local_hw = sysprofile.platform_details()
 
+    # Overwrite the LAN IP with the Tailscale IP if Tailscale is active
+    if local_hw.get('tailscale_active'):
+        ts_ip = get_tailscale_ip(local_host)
+        if ts_ip:
+            local_hw['ip_address'] = ts_ip
+
     print(f"\n[Master] Profiling orchestrator node '{local_host}'...")
     print(f"  IP Address: {local_hw['ip_address']}")
     print(f"  OS RAM capacity: {local_hw['ram_gb']} GB")
