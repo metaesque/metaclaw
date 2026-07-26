@@ -1,6 +1,7 @@
 /browser
 /cache
 /fetcher
+/forwarder
 /gateway
 /logger
 /memory
