@@ -385,11 +385,13 @@ Inspired by the empirically derived taxonomies from LMArena (Arena.ai), this imp
 
 This approach provides direct alignment with empirical leaderboards and entirely bypasses middle-management delegation hops, routing the prompt straight to the optimal specialized agent and model tier. It provides quantitative, data-driven justification for using a costly `frontier` model versus a free `complex` local model for any given task.
 
-The primary weakness is the unacceptably high classification error rate. Forcing an LLM to reliably distinguish between 60+ granular categories in a single zero-shot pass inevitably leads to attention dilution, category confusion, and severe classification hallucinations. It also requires massive system prompt token bloat to pack the 60+ category definitions into the classifier's context window on every turn. Furthermore, it completely ignores the hot/cold state of the compute farm, potentially assigning a model that forces a massive VRAM eviction instead of utilizing an already-hot model with a slightly lower ELO. Live empirical classification logging is still required to determine the precise accuracy ceiling of current local micro-models when attempting to perform 60+ category intent classification.
+The primary weakness is the unacceptably high classification error rate. Forcing an LLM to reliably distinguish between 60+ granular categories in a single zero-shot pass inevitably leads to attention dilution, category confusion, and severe classification hallucinations. It also requires system prompt token bloat to pack the 60+ category definitions into the classifier's context window on every turn. Furthermore, it completely ignores the hot/cold state of the compute farm, potentially assigning a model that forces a massive VRAM eviction instead of utilizing an already-hot model with a slightly lower ELO. Live empirical classification logging is still required to determine the precise accuracy ceiling of current local micro-models when attempting to perform 60+ category intent classification.
 
 #### Semantic-Predictive Routing
 
 This implementation utilizes a highly efficient hybrid two-stage pipeline. In Stage 1 (Intent Routing), a fast embedding model maps the prompt into a vector space and compares it against agent skill signatures via cosine similarity to instantly select the correct domain agent. In Stage 2 (Complexity Routing), a local micro-model (`judge-model`) evaluates the prompt's computational difficulty. The proxy then dynamically binds the optimal model tier based on the judge's assessment.
+
+**TODO:** To fully activate Semantic Prompt-to-Agent routing dynamically at runtime, the `semantic_predictive.js` hook must be expanded. It needs to read the local `routing_meta.json` file, extract the skill signatures, make an HTTP POST to the local LiteLLM `/v1/embeddings` endpoint, calculate the cosine similarity, and compare the max score against a defined threshold (e.g., 0.70). If the score exceeds the threshold, the hook must forcibly rewrite the target `agentId` inside the OpenClaw event payload.
 
 Semantic-Predictive Routing delivers ultra-low latency, extreme cost efficiency, and exceptional accuracy. By separating categorical domain intent (which is handled flawlessly by vector math) from computational difficulty (handled efficiently by a fast LLM Judge), it minimizes `frontier` API costs by allowing the local Judge to strictly gatekeep when hyperscaler models are permitted to execute.
 
@@ -399,11 +401,44 @@ The primary weakness of this approach is the operational overhead of maintaining
 
 #### Arena/Variant/Category-specific ELO ratings on arena.ai
 LMArena (formerly Chatbot Arena by LMSYS) provides empirically derived AI leaderboards by crowd-sourcing blind, head-to-head model comparisons. The taxonomy is divided into:
-*   **Arenas:** High-level domains such as Chat, Code, Vision (Image), and Video.
-*   **Variants/Tasks:** Specific operational modes, such as Text generation, Image Edit, or Image-to-WebDev.
-*   **Categories:** Granular sub-domains (e.g., Mathematics, Creative Writing, Legal & Government, Hard Prompts).
+
+*   **Agent:**
+*   **Chat:**
+    *   **Text:**
+        *   **Categories:** Overall, Expert, Occupational (Software & IT Services, Writing/Literature/Language, Life/Physical/Social Science, Business/Management/Financial, Entertainment/Sports/Media, Mathematical, Legal & Government, Medicine & Healthcare), Math, Instruction Following, Multi-Turn, Creative Writing, Coding, Hard Prompts, Hard Prompts (English), Longer Query, Language (English, Non-English, Chinese, French, German, Spanish, Russian, Japanese, Korean, Polish), Exclude Ties.
+        *   **Filters:** Adjustments, License Type, Score Range, Input Price, Output Price, Context Length.
+    *   **Search:**
+        *   **Filters:** Adjustments, License Type, Score Range, Input Price, Output Price, Context Length.
+    *   **Vision:**
+        *   **Categories:** Overall, English, Chinese, Captioning, Creative Writing, Diagram, Entity Recognition, Homework, Humor, OCR.
+        *   **Filters:** Style Control, License Type, Score Range, Input Price, Output Price, Context Length.
+    *   **Document:**
+        *   **Filters:** Style Control, License Type, Score Range, Input Price, Output Price, Context Length.
+*   **Code:**
+    *   **WebDev:**
+        *   **Template:** Overall, HTML, React.
+        *   **Domain:** Brand & Marketing, Reference-Based Design, Data & Analytics, Consumer Product, Gaming, Simulations, Content Creation Tools.
+        *   **Filters:** License Type, Score Range, Input Price, Output Price, Context Length.
+    *   **Image-to-WebDev:**
+        *   **Filters:** License Type, Score Range, Input Price, Output Price, Context Length.
+*   **Image:**
+    *   **Text-to-Image:**
+        *   **Categories:** Overall, Product/Branding & Commercial Design, 3D Imaging & Modeling, Cartoon/Anime & Fantasy, Photorealistic & Cinematic Imagery, Art, Portraits, Text Rendering.
+        *   **Filters:** License Type, Score Range.
+    *   **Image Edit:**
+        *   **Categories:** Single-Image Edit, Multi-Image Edit.
+        *   **Filters:** License Type, Score Range.
+*   **Video:**
+    *   **Text-to-Video:**
+        *   **Filters:** License Type, Score Range.
+    *   **Image-to-Video:**
+        *   **Filters:** License Type, Score Range.
+    *   **Video Edit:**
+        *   **Filters:** License Type, Score Range.
 
 By extending `bin/fetch_arena.py` to extract this raw Gradio JSON state data, MetaClaw can programmatically pull live ELO scores. This provides a quantitative mechanism to identify the absolute best model overall, the best `frontier` (hyperscaler) model, and the best local model for any given Arena/Variant/Category triplet. If agents in the workspace are explicitly tagged with unambiguous triplets, the orchestration layer can dynamically assign the most capable, cost-efficient model to an agent based on objective data rather than guesswork.
+
+To mitigate the architectural weakness of "1-Shot Intent Classification" hallucinating across 60+ categories, this hierarchy enables **Hierarchical Orchestrators**. Rather than one master Orchestrator trying to classify the entire list, the user selects a top-level domain (e.g., a `Chat_Orchestrator`), which then only needs to perform intent classification across the ~15 sub-categories within its specific Variant, drastically boosting classification accuracy.
 
 #### Compute Farm Context
 When transitioning from a single local workstation to a multi-node, shared cluster, the infrastructure must account for multi-tenant prioritization. MetaClaw integrates with software designed to handle local LLM requests from multiple users (e.g., opening the compute farm to friends).
@@ -418,13 +453,13 @@ A Directed Acyclic Graph (DAG) represents a sequence of sub-tasks where the exec
 **DAG Generation:**
 Instead of trying to write the entire app itself, the `software_architect` decomposes the problem and generates a structured dependency graph:
 1.  **Task A (Design):** `software_architect` drafts the Flutter widget hierarchy, state management approach (e.g., Riverpod), and battery API interfaces. (Delegated to itself, `complex-model`).
-2.  **Task B (Implementation):** `software_dev` receives Task A's output and writes the Dart code for the iOS/Android platform channels and web abstractions. (Depends on A, `medium-model`).
+2.  **Task B (Implementation):** `lead_developer` receives Task A's output and writes the Dart code for the iOS/Android platform channels and web abstractions. (Depends on A, `medium-model`).
 3.  **Task C (Testing):** `qa_engineer` writes unit tests for the state manager and mocks the battery API responses. (Depends on B, `medium-model`).
 4.  **Task D (Review):** `project_manager` reviews the final codebase against the user's initial prompt requirements before presenting the final output. (Depends on C, `simple-model`).
 
 **Collaborative vs. Autonomous Coding:**
 *   **Collaborative (Human-in-the-Loop):** The DAG pauses at predefined waypoints. The `software_architect` presents the structural design (Task A) to the human user for approval. If approved, the DAG resumes execution, allowing the developer to write the code. Fast Time-To-First-Token (TTFT) is critical here to keep the human engaged.
-*   **Autonomous Coding:** The swarm executes the entire DAG independently. The `qa_engineer` might fail the test in Task C, dynamically appending a new "Fix Code" node back to the `software_dev`, completely without human intervention. In this mode, total processing time matters more than TTFT, and deterministic model routing (explicitly assigning specific local models directly to the QA engineer) is vastly more efficient than repeatedly invoking a dynamic prompt-to-model judge.
+*   **Autonomous Coding:** The swarm executes the entire DAG independently. The `qa_engineer` might fail the test in Task C, dynamically appending a new "Fix Code" node back to the `lead_developer`, completely without human intervention. In this mode, total processing time matters more than TTFT, and deterministic model routing (explicitly assigning specific local models directly to the QA engineer) is vastly more efficient than repeatedly invoking a dynamic prompt-to-model judge.
 
 #### Pre-Execution Routing Hooks (Middleware)
 Routing Hooks are lightweight interceptor scripts (such as OpenClaw's native `lexical_predictive.js` workspace plugin) that function as a critical routing tool. They catch prompts in-flight before they ever reach the target model or the proxy layer.

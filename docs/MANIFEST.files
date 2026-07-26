@@ -84,6 +84,7 @@ services/gateways/openclaw/docker-compose.yml
 services/gateways/openclaw/index.template.md
 services/gateways/openclaw/modules/routing/lexical_predictive.js
 services/gateways/openclaw/modules/routing/pass_through.js
+services/gateways/openclaw/modules/routing/semantic_predictive.js
 services/gateways/openclaw/patch_routing.py
 services/iam/.service.json
 services/iam/Makefile
@@ -247,4 +248,3 @@ services/tracers/langfuse/.provider.json
 services/tracers/opentelemetry/.provider.json
 services/tracers/phoenix/.provider.json
 services/tracers/signoz/.provider.json
-

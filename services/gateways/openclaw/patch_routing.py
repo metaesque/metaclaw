@@ -45,10 +45,14 @@ if os.path.exists(JS_CONFIG_PATH):
 
 profile_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'profile.json'))
 routing_strategy = "lexical_predictive"
+semantic_granularity = "flat"
 if os.path.exists(profile_path):
     with open(profile_path, 'r') as f:
         profile_data = json.load(f)
-        routing_strategy = profile_data.get('routing_strategy', 'lexical_predictive')
+        # Handle fallback for the new semantic_predictive string
+        raw_strategy = profile_data.get('routing_strategy', 'lexical_predictive')
+        routing_strategy = "lexical_predictive" if raw_strategy == "semantic_predictive" else raw_strategy
+        semantic_granularity = profile_data.get('semantic_granularity', 'flat')
 
 plugin_dir = os.path.join(workspace_dir, '.openclaw', 'extensions', 'metaclaw-routing')
 
@@ -331,7 +335,11 @@ if os.path.exists(plugin_dir):
 utterances_agents = {}
 for agent_id, meta in routing_meta.items():
     sig = meta.get('skill_signature')
+    is_lead = meta.get('is_lead', False)
     if sig:
+        # Respect the user's semantic granularity choice
+        if semantic_granularity == 'hierarchical' and not is_lead:
+            continue
         utterances_agents[agent_id] = [sig]
 
 litellm_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'proxies', 'litellm'))

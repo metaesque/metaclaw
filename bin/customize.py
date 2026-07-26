@@ -31,6 +31,7 @@ def main():
         print("\nSelect Prompt Routing Strategy for OpenClaw:")
         print("  [1] Lexical + Predictive (Uses local Judge Model to score complexity)")
         print("  [2] Pass-Through (Rigid 1:1 mapping based entirely on YAML profiles)")
+        print("  [3] Semantic-Predictive (Hybrid Vector + LLM Judge Routing)")
         while True:
             r_choice = input("Enter choice [1]: ").strip()
             if not r_choice or r_choice == '1':
@@ -39,10 +40,31 @@ def main():
             elif r_choice == '2':
                 routing_strategy = "pass_through"
                 break
+            elif r_choice == '3':
+                routing_strategy = "semantic_predictive"
+                break
             else:
                 print("Invalid choice.")
 
         profile["routing_strategy"] = routing_strategy
+
+        if routing_strategy == "semantic_predictive":
+            print("\nSelect Semantic Granularity:")
+            print("  [1] Hierarchical Semantic Routing (Only Team Leads added to vector space)")
+            print("  [2] Flat Semantic Routing (All team members and leads added to vector space)")
+            while True:
+                g_choice = input("Enter choice [1]: ").strip()
+                if not g_choice or g_choice == '1':
+                    semantic_granularity = "hierarchical"
+                    break
+                elif g_choice == '2':
+                    semantic_granularity = "flat"
+                    break
+                else:
+                    print("Invalid choice.")
+            profile["semantic_granularity"] = semantic_granularity
+            print(f"  -> Semantic Granularity saved: {semantic_granularity}")
+
         with open(profile_path, 'w') as f:
             json.dump(profile, f, indent=2)
         print(f"  -> Routing Strategy saved: {routing_strategy}")
