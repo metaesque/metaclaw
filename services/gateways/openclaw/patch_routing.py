@@ -310,7 +310,7 @@ for agent in existing_list:
 if not yaml_has_default and not existing_has_default:
     made_default = False
     for entry in yaml_entries:
-        if entry['id'] == 'orchestrator':
+        if entry['id'] == 'orchestrator_lead':
             entry['default'] = True
             made_default = True
             break

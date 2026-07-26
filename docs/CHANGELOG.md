@@ -4,13 +4,14 @@
 
 ### Added
 *   **Semantic-Predictive Routing Initialization:** Added foundational support for a hybrid routing architecture combining fast cosine similarity (Intent) with a local LLM Judge (Complexity). Includes a Javascript hook stub `semantic_predictive.js` to intercept and score payloads at runtime.
-*   **Hierarchical Orchestrators:** Refactored the top-level `orchestrator` agent into a dedicated team (`lead`, `chat`, `code`, `image`, `video`). The `orchestrator/lead` now acts as the `default: true` ingress point to mitigate 60-category LMArena hallucination risks by narrowing the classification scope for sub-orchestrators.
+*   **Hierarchical Orchestrators:** Refactored the top-level `orchestrator` agent into a dedicated team (`lead`, `chat`, `code`, `image`, `video`). The `orchestrator_lead` now acts as the `default: true` ingress point to mitigate 60-category LMArena hallucination risks by narrowing the classification scope for sub-orchestrators.
 *   **Context Caching & Multi-Tenant Priority Documentation:** Added architectural guidance for utilizing PagedAttention caching and configuring the local LiteLLM proxy to handle priority queues for external friends accessing the compute farm.
 
 ### Changed
+*   **Agent Naming Conventions:** Refactored identity documents and routing architectures to strictly enforce the `<team>_<member>` agent ID nomenclature (e.g., `software_qa` and `software_dev`).
 *   **Automated Utterance Generation:** Refactored `patch_routing.py` to auto-parse workspace YAMLs and extract `skill_signature` fields into `utterances-agents.yaml`, allowing seamless updates to the semantic routing vector space without manual intervention.
 *   **Agent Semantic Isolation:** Re-wrote `skill_signature` and `negative_keywords` across all agents (Health, Self, Social, Media, Software, SRE) to establish strictly orthogonal boundaries, dramatically reducing semantic bleed during vector projection.
-*   **Software Execution Directives:** Updated `software_architect`, `lead_developer`, and `qa_engineer` `SOUL.md` files. Deprecated rigid parallel testing directories and Bazel compilation. Enforced standard, language-idiomatic OOP structures, Makefiles, and automated linters (`pylint`, `black`).
+*   **Software Execution Directives:** Updated `software_architect`, `software_dev`, and `software_qa` `SOUL.md` files. Deprecated rigid parallel testing directories and Bazel compilation. Enforced standard, language-idiomatic OOP structures, Makefiles, and automated linters (`pylint`, `black`).
 *   **ReAct Loop Safety Bounds:** Injected explicit retry budgets (maximum 3 loops) into the `SECURITY.md` of agents possessing `execute_shell_command` tools to prevent infinite hallucination loops when debugging code.
 
 ### Fixed

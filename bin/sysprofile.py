@@ -157,16 +157,18 @@ def platform_details():
 
     if hw_ram:
       details['ram_hardware_gb'] = float(hw_ram)
-    elif cpu_cores == 32 and 28.0 <= details['ram_gb'] <= 32.0:
+    elif cpu_cores == 16 and 26.0 <= details['ram_gb'] <= 29.0:
+      # Heuristic for K8 Plus (8c/16t) with ~28GB OS RAM implies 32GB physical.
+      details['ram_hardware_gb'] = 32.0
+
+    cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
+    if cpu_info and 'Ryzen AI Max' in cpu_info:
       # Bulletproof heuristic for EVO-X2 (Strix Halo)
-      # 32 CPU cores (16c/32t) + 31GB OS RAM implies 128GB physical with 96GB UMA reserved.
+      # Force hardware RAM to 128.0 regardless of what lshw says, as UMA reserves hide it.
       details['ram_hardware_gb'] = 128.0
       details['gpu_detected'] = "AMD Ryzen AI Max+ APU (Strix Halo)"
       details['unified_memory'] = True
       details['vram_gb'] = 96.0
-    elif cpu_cores == 16 and 26.0 <= details['ram_gb'] <= 29.0:
-      # Heuristic for K8 Plus (8c/16t) with ~28GB OS RAM implies 32GB physical.
-      details['ram_hardware_gb'] = 32.0
 
     if vram_bytes > 0 and not details['unified_memory']:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)

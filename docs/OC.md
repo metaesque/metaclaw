@@ -39,5 +39,6 @@ To conserve API tokens and reduce latency, do NOT issue separate sequential tool
 2. **Container Restarts & The Human-in-the-Loop Loop:** Modifying files inside a running container via `execute_shell_command` does not persist those changes to the MetaClaw codebase. Update the source files in the staging directory, then instruct the human to execute `make meta-pull` followed by the appropriate `make apply` target.
 3. **Docker in Docker:** When using your `execute_shell_command` tool, you are calling Docker from within the OpenClaw Sandbox container (which mounts the host's Docker socket). You can use `docker ps` and `docker exec` normally to troubleshoot.
 4. **Test Your Work:** Before telling me a task is complete, use your shell execution tool to run syntax checks or test your code inside the sandbox.
+5. **Agent Naming Convention:** You must ALWAYS refer to agents by their strict ID format (`<team>_<member>`, e.g., `software_architect`, `software_dev`, `health_lead`). Never invent or use colloquial names (like `qa_engineer`) when editing code, schemas, or communicating.
 
 Acknowledge you have ingested the context files and are ready for the first task.

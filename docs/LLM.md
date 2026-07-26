@@ -157,6 +157,7 @@ ensuring strict integration with:
   forbidden from modifying its own internal gateway state via tools. Gateway
   config must be patched and injected via Python scripts (`patch_routing.py`)
   during `make apply`.
+* **Agent Naming & ID Referencing:** To maintain strict structural parity across the cluster, you must ALWAYS refer to agents by their exact ID format: `<team>_<member>` (e.g., `software_architect`, `health_lead`, `software_qa`). Do not use colloquial names (like `qa_engineer` or `project_manager`) in code, documentation, or when interacting with OpenClaw tools.
 
 ## 10. Formatting and Output Protocol
 

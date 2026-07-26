@@ -316,9 +316,15 @@ infrastructure from consciousness.
    (guardrails), and `MEMORY.md` (state). OpenClaw reads and modifies these
    files natively.
 
+### Agent Naming & Direct UI Interaction
+
+To maintain strict structural parity across the cluster, all LLMs and human operators are mandated to refer to agents exclusively by their ID format: `<team>_<member>` (e.g., `software_architect`, `health_lead`, `software_qa`).
+
+Furthermore, the `orchestrator_{chat,code,image,video}` agents serve a specialized role. They are explicitly designed as top-level agents that the user can interact with directly in the OpenClaw UI to force a specific domain execution flow, bypassing the generalist logic of the `orchestrator_lead` when the user already knows which domain is required. Do not remove or deprecate these UI-level orchestrators.
+
 ### Agent Execution & ReAct Loops
 
-To maximize autonomy while preventing runaway API costs, MetaClaw establishes strict operational constraints for executing code within OpenClaw. Agents equipped with the `execute_shell_command` tool (like `software_dev` or `qa_engineer`) possess the ability to run their own code in the designated sandbox.
+To maximize autonomy while preventing runaway API costs, MetaClaw establishes strict operational constraints for executing code within OpenClaw. Agents equipped with the `execute_shell_command` tool (like `software_dev` or `software_qa`) possess the ability to run their own code in the designated sandbox.
 
 This enables an internal **ReAct (Reasoning and Acting)** loop. If an agent writes a script and the test execution fails due to a syntax error, the agent intercepts the `stderr` output and autonomously rewrites the code to fix the bug without pinging the Team Lead. While highly efficient, unconstrained ReAct loops can cause an agent to repeatedly hallucinate the same broken fix, spinning into an infinite loop and burning token budgets. Therefore, all agents with execution authority must have a strict "Retry Budget" (e.g., max 3 retries) explicitly defined in their `SECURITY.md` files, commanding them to HALT and fail upward to the Team Lead if the loop ceiling is reached.
 
@@ -459,13 +465,13 @@ A Directed Acyclic Graph (DAG) represents a sequence of sub-tasks where the exec
 **DAG Generation:**
 Instead of trying to write the entire app itself, the `software_architect` decomposes the problem and generates a structured dependency graph:
 1.  **Task A (Design):** `software_architect` drafts the Flutter widget hierarchy, state management approach (e.g., Riverpod), and battery API interfaces. (Delegated to itself, `complex-model`).
-2.  **Task B (Implementation):** `lead_developer` receives Task A's output and writes the Dart code for the iOS/Android platform channels and web abstractions. (Depends on A, `medium-model`).
-3.  **Task C (Testing):** `qa_engineer` writes unit tests for the state manager and mocks the battery API responses. (Depends on B, `medium-model`).
-4.  **Task D (Review):** `project_manager` reviews the final codebase against the user's initial prompt requirements before presenting the final output. (Depends on C, `simple-model`).
+2.  **Task B (Implementation):** `software_dev` receives Task A's output and writes the Dart code for the iOS/Android platform channels and web abstractions. (Depends on A, `medium-model`).
+3.  **Task C (Testing):** `software_qa` writes unit tests for the state manager and mocks the battery API responses. (Depends on B, `medium-model`).
+4.  **Task D (Review):** `software_pm` reviews the final codebase against the user's initial prompt requirements before presenting the final output. (Depends on C, `simple-model`).
 
 **Collaborative vs. Autonomous Coding:**
 *   **Collaborative (Human-in-the-Loop):** The DAG pauses at predefined waypoints. The `software_architect` presents the structural design (Task A) to the human user for approval. If approved, the DAG resumes execution, allowing the developer to write the code. Fast Time-To-First-Token (TTFT) is critical here to keep the human engaged.
-*   **Autonomous Coding:** The swarm executes the entire DAG independently. The `qa_engineer` might fail the test in Task C, dynamically appending a new "Fix Code" node back to the `lead_developer`, completely without human intervention. In this mode, total processing time matters more than TTFT, and deterministic model routing (explicitly assigning specific local models directly to the QA engineer) is vastly more efficient than repeatedly invoking a dynamic prompt-to-model judge.
+*   **Autonomous Coding:** The swarm executes the entire DAG independently. The `software_qa` might fail the test in Task C, dynamically appending a new "Fix Code" node back to the `software_dev`, completely without human intervention. In this mode, total processing time matters more than TTFT, and deterministic model routing (explicitly assigning specific local models directly to the QA engineer) is vastly more efficient than repeatedly invoking a dynamic prompt-to-model judge.
 
 #### Pre-Execution Routing Hooks (Middleware)
 Routing Hooks are lightweight interceptor scripts (such as OpenClaw's native `lexical_predictive.js` workspace plugin) that function as a critical routing tool. They catch prompts in-flight before they ever reach the target model or the proxy layer.
