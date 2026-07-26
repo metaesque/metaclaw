@@ -42,7 +42,7 @@ export default function register(api) {
             const agentId = event.agentId || (event.session && event.session.agentId) || 'unknown';
             const isLead = routingMeta[agentId]?.is_lead;
 
-            if (!isLead && agentId !== 'orchestrator' && agentId !== 'generalist') {
+            if (!isLead && agentId !== 'orchestrator_lead' && agentId !== 'generalist') {
                 logToStdout(`[HOOK-DEBUG] Agent '${agentId}' is a leaf node. Bypassing Predictive Judge to preserve specialty models.`);
                 logToStdout("==================================================\n");
                 return null;

@@ -88,7 +88,7 @@ export default function register(api) {
 
             // TODO: Calculate Cosine Similarity against all agent vectors.
             // If Max Score > 0.70 (THRESHOLD), return { agentOverride: "matched_agent_id" }
-            // Else, return null (allowing OpenClaw to fall back to the default generalist/orchestrator).
+            // Else, return null (allowing OpenClaw to fall back to the default generalist/orchestrator_lead).
 
             logToStdout(`[HOOK-DEBUG] Semantic routing stub completed. Proceeding to default agent.`);
             logToStdout("==================================================\n");

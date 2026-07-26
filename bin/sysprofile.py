@@ -59,21 +59,23 @@ def _get_linux_gpu(ram_bytes=0):
     vram_mb = int(parts[1].replace('MiB', '').strip())
     return name, vram_mb * 1024 * 1024
 
-  # Check AMD APU (Strix Halo / Ryzen AI Max) first
-  cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
-  if cpu_info and 'Ryzen AI Max' in cpu_info:
-    # Strix Halo allocates up to 96GB (roughly 3x the standard OS visibility)
-    vram_bytes = int(ram_bytes * 3.0)
-    return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_bytes
-
-  # Check AMD ROCm
-  rocm = _run_cmd(['rocm-smi', '--showproductname'])
-  if rocm:
-    lspci = _run_cmd(['lspci'])
-    if lspci:
-      for line in lspci.split('\n'):
-        if 'VGA' in line and 'Advanced Micro Devices' in line:
-          return "AMD Radeon GPU (ROCm)", 0
+  # Check AMD ROCm for dynamic VRAM mapping
+  try:
+    vram_json = _run_cmd(['rocm-smi', '--showmeminfo', 'vram', '--json'])
+    if vram_json:
+      data = json.loads(vram_json)
+      total_vram_bytes = 0
+      for card_key, card_info in data.items():
+        if isinstance(card_info, dict) and 'VRAM Total Memory (B)' in card_info:
+            total_vram_bytes += int(card_info['VRAM Total Memory (B)'])
+      if total_vram_bytes > 0:
+        # Check if it's an APU specifically to identify unified architecture
+        cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
+        if cpu_info and 'Ryzen AI Max' in cpu_info:
+            return "AMD Ryzen AI Max+ APU (Strix Halo)", total_vram_bytes
+        return "AMD Radeon GPU (ROCm)", total_vram_bytes
+  except Exception:
+    pass
 
   return "No Discrete GPU Detected", 0
 
@@ -87,18 +89,33 @@ def _is_tailscale_running():
 
 def _get_hardware_ram_linux():
   """
-  Extracts total physical hardware RAM via lshw to completely bypass the
-  need for sudo/dmidecode passwords over SSH, preventing silent failures.
+  Extracts total physical hardware RAM dynamically, bypassing UMA OS-level hiding.
   """
+  # Method 1: Use dmidecode to read the physical SPD DIMMs directly.
   try:
-    # lshw -class memory often has permissions to read basic capacity sizes
-    # out of sysfs even without sudo, avoiding password prompts.
-    # Alternatively, we just extract from /proc/meminfo if running inside a container.
+    dmi_out = _run_cmd(['sudo', '-n', 'dmidecode', '-t', 'memory'])
+    if dmi_out:
+      total_mb = 0
+      for line in dmi_out.split('\n'):
+        line = line.strip()
+        if line.startswith('Size:') and 'No Module Installed' not in line:
+            parts = line.split()
+            if len(parts) >= 3:
+                if parts[2] == 'GB':
+                    total_mb += int(parts[1]) * 1024
+                elif parts[2] == 'MB':
+                    total_mb += int(parts[1])
+      if total_mb > 0:
+        return total_mb / 1024.0
+  except Exception:
+    pass
+
+  # Method 2: Fallback to lshw
+  try:
     lshw_out = _run_cmd(['lshw', '-class', 'memory', '-json'])
     if lshw_out:
       data = json.loads(lshw_out)
       total_bytes = 0
-      # lshw can return a list or a dict depending on the hardware layout
       nodes = data if isinstance(data, list) else [data]
       for node in nodes:
         if node.get('id') == 'memory':
@@ -157,20 +174,13 @@ def platform_details():
 
     if hw_ram:
       details['ram_hardware_gb'] = float(hw_ram)
-    elif cpu_cores == 16 and 26.0 <= details['ram_gb'] <= 29.0:
-      # Heuristic for K8 Plus (8c/16t) with ~28GB OS RAM implies 32GB physical.
-      details['ram_hardware_gb'] = 32.0
 
-    cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
-    if cpu_info and 'Ryzen AI Max' in cpu_info:
-      # Bulletproof heuristic for EVO-X2 (Strix Halo)
-      # Force hardware RAM to 128.0 regardless of what lshw says, as UMA reserves hide it.
-      details['ram_hardware_gb'] = 128.0
-      details['gpu_detected'] = "AMD Ryzen AI Max+ APU (Strix Halo)"
+    if 'Strix Halo' in details['gpu_detected']:
       details['unified_memory'] = True
-      details['vram_gb'] = 96.0
 
     if vram_bytes > 0 and not details['unified_memory']:
+      details['vram_gb'] = round(vram_bytes / (1024**3), 2)
+    elif vram_bytes > 0 and details['unified_memory']:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
 
   return details
