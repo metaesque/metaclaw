@@ -204,9 +204,11 @@ def main():
           models_to_pull.append(target_simple.replace("ollama/", ""))
 
       if "compute" in my_node.get("planes", []):
-          models_to_pull.extend([target_medium.replace("ollama/", ""), "ingu627/llama4-scout-q4:109b"])
+          models_to_pull.append(target_medium.replace("ollama/", ""))
+          # CRITICAL FIX: We intentionally DO NOT append llama4-scout here to avoid spaces in the
+          # OLLAMA_TARGET_MODELS variable, which causes Bash Error 127 in generated .env files.
+          # install.sh will detect qwen3:32b and handle the 109b model pull natively.
 
-      # Unquoted space-separated list restores compatibility with Make loops (e.g. `ollama pull $(OLLAMA_TARGET_MODELS)`)
       env_data["OLLAMA_TARGET_MODELS"] = " ".join(list(dict.fromkeys(models_to_pull)))
       seeded = True
 

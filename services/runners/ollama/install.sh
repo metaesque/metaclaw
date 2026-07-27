@@ -1,16 +1,12 @@
 #!/bin/bash
 set -e
 
-# Load orchestrator variables
+# Load orchestrator variables natively and securely
 if [ -f ../../../.env ]; then
     source ../../../.env
 fi
-
 if [ -f .env ]; then
-    # Parse securely using grep. Avoids 'source .env' which crashes Bash (Error 127)
-    # when processing unquoted space-separated Make loops like OLLAMA_TARGET_MODELS.
-    export OLLAMA_TARGET_MODELS=$(grep "^OLLAMA_TARGET_MODELS=" .env | cut -d= -f2- | tr -d '"' | tr -d "'")
-    export OLLAMA_PORT=$(grep "^OLLAMA_PORT=" .env | cut -d= -f2- | tr -d '"' | tr -d "'")
+    source .env
 fi
 
 ARCH=$(uname -m)
@@ -47,7 +43,7 @@ if [ -x "ollama" ]; then
         # ==============================================================================
         # We must execute this even if Ollama is already downloaded.
 
-        if echo "$OLLAMA_TARGET_MODELS" | grep -q "ingu627/llama4-scout-q4:109b"; then
+        if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
             echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
             # Start a temporary daemon in the background to build the model if it's not running
@@ -73,24 +69,14 @@ PARAMETER stop "<|header_end|>"
 PARAMETER stop "</tool_call>"
 
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
-{{ .System }}
+{{ .System }}<|eot|>
 {{- end }}
-{{- if .Tools }}
-You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
-Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
-Do NOT output conversational text alongside the tool call.
-Available tools:
-{{- range .Tools }}
-- {{ .Function.Name }}: {{ .Function.Description }}
-  Arguments Schema: {{ .Function.Parameters }}
-{{- end }}
-{{- end }}<|eot|>
 {{- range .Messages }}
 {{- if eq .Role "user" }}<|header_start|>user<|header_end|>
 {{ .Content }}<|eot|>
 {{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
 {{- if .ToolCalls }}
-{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{ end }}
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
 {{- else }}{{ .Content }}<|eot|>
 {{- end }}
 {{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
@@ -152,7 +138,7 @@ echo "Ollama v$OLLAMA_VERSION installation complete."
 # ==============================================================================
 # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
 # ==============================================================================
-if echo "$OLLAMA_TARGET_MODELS" | grep -q "ingu627/llama4-scout-q4:109b"; then
+if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
     echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
     # Start a temporary daemon in the background to build the model if it's not running
@@ -178,24 +164,14 @@ PARAMETER stop "<|header_end|>"
 PARAMETER stop "</tool_call>"
 
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
-{{ .System }}
+{{ .System }}<|eot|>
 {{- end }}
-{{- if .Tools }}
-You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
-Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
-Do NOT output conversational text alongside the tool call.
-Available tools:
-{{- range .Tools }}
-- {{ .Function.Name }}: {{ .Function.Description }}
-  Arguments Schema: {{ .Function.Parameters }}
-{{- end }}
-{{- end }}<|eot|>
 {{- range .Messages }}
 {{- if eq .Role "user" }}<|header_start|>user<|header_end|>
 {{ .Content }}<|eot|>
 {{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
 {{- if .ToolCalls }}
-{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{ end }}
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
 {{- else }}{{ .Content }}<|eot|>
 {{- end }}
 {{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
