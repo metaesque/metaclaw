@@ -367,6 +367,12 @@
 ../workspace/agents/sre/network/SECURITY.md
 ../workspace/agents/sre/network/SOUL.md
 ../workspace/agents/sre/network/TOOLS.md
+../workspace/agents/sre/orchestrator.yaml
+../workspace/agents/sre/orchestrator/IDENTITY.md
+../workspace/agents/sre/orchestrator/MEMORY.md
+../workspace/agents/sre/orchestrator/SECURITY.md
+../workspace/agents/sre/orchestrator/SOUL.md
+../workspace/agents/sre/orchestrator/TOOLS.md
 ../workspace/agents/sre/power.yaml
 ../workspace/agents/sre/power/IDENTITY.md
 ../workspace/agents/sre/power/MEMORY.md

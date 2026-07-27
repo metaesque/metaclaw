@@ -259,7 +259,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.6 The SRE (Grid) Team
 *Domain: Cluster stability, distributed network resilience, and system administration.*
-- **Lead:** `sre_lead` [complex-model] - Disaster recovery and blameless post-mortems.
+- **Lead:** `sre_lead` [complex-model] - SRE consultation and conversational strategy.
+- **Worker:** `sre_orchestrator` [complex-model] - Disaster recovery, hardware stability, and local DAG delegation.
 - **Worker:** `sre_incident` [complex-model] - Emergency graceful degradation protocols.
 - **Worker:** `sre_power` [medium-model] - Remote monitoring of the Transit van's solar/battery telemetry.
 - **Worker:** `sre_telemetry` [simple-model] - Log parsing and memory leak detection.
