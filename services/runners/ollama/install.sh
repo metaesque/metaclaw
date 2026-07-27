@@ -103,16 +103,31 @@ fi
 
 # Try .tar.zst modern archive format first, fallback to legacy .tgz
 if curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst"; then
-    tar xf ollama.archive ./bin/ollama
+    tar xf ollama.archive
 elif curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"; then
-    tar xzf ollama.archive ./bin/ollama
+    tar xzf ollama.archive
 else
     echo "Failed to download Ollama v${OLLAMA_VERSION} binary. Neither .tar.zst nor .tgz were found."
     exit 1
 fi
 
-mv ./bin/ollama .
-rm -rf ./bin ollama.archive
+# Modern Ollama archives extract into 'bin/ollama' and 'lib/ollama/...'.
+# Because we are in ./bin, tar creates nested directories. We must elevate them.
+if [ -f "bin/ollama" ]; then
+    mv bin/ollama ./ollama
+elif [ -f "./bin/ollama" ]; then
+    mv ./bin/ollama ./ollama
+fi
+
+if [ -d "lib" ]; then
+    rm -rf ../lib
+    mv lib ../
+elif [ -d "./lib" ]; then
+    rm -rf ../lib
+    mv ./lib ../
+fi
+
+rm -rf bin ./bin ollama.archive
 
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
