@@ -100,6 +100,10 @@ def setdefault_path(d, path_keys):
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
+# Enforce experimental Lean Mode to prevent small local models from choking on tool bloat
+experimental = setdefault_path(data, ['experimental'])
+experimental['localModelLean'] = True
+
 # ==============================================================================
 # METACLAW ADMIN SECURITY GATE
 # ==============================================================================
@@ -274,8 +278,7 @@ for yf in yaml_files:
               elif isinstance(t, dict) and 'name' in t:
                   allowed_tools.append(t['name'])
 
-      # Inject profile: "coding" to ensure session orchestration tools are available.
-      # It must be nested under the 'tools' key to satisfy OpenClaw strict schema validation.
+      # Inject profile: "coding" to ensure session orchestration tools are available
       entry['tools'] = {"profile": "coding"}
       if allowed_tools:
           entry['tools']['allow'] = allowed_tools
@@ -383,6 +386,5 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
-print("SUCCESS: Configured 'profile: coding' globally to enable session orchestration tools.")
-print("SUCCESS: Raised provider timeout ceilings to safely execute massive local LLM cold-starts.")
+print("SUCCESS: Configured experimental.localModelLean to true to optimize tool context sizes.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")

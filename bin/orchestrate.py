@@ -216,15 +216,15 @@ def main():
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
 
-        env_data["SIMPLE_MODEL_ID"] = target_simple
+        env_data["SIMPLE_MODEL_ID"] = target_simple.replace("ollama/", "ollama_chat/")
         env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
-        env_data["MEDIUM_MODEL_ID"] = target_medium
+        env_data["MEDIUM_MODEL_ID"] = target_medium.replace("ollama/", "ollama_chat/")
         env_data["MEDIUM_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["MEDIUM_MODEL_API_KEY"] = "sk-local-ollama-key"
 
-        env_data["COMPLEX_MODEL_ID"] = target_complex
+        env_data["COMPLEX_MODEL_ID"] = target_complex.replace("ollama/", "ollama_chat/")
         env_data["COMPLEX_MODEL_API_BASE"] = f"http://{compute_ip}:11434"
         env_data["COMPLEX_MODEL_API_KEY"] = "sk-local-ollama-key"
 
