@@ -60,26 +60,35 @@ if [ -x "ollama" ]; then
             # Pull the base weights if they don't exist
             OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
 
-            # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers
+            # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers and strict stop tokens
             cat << 'EOF' > Modelfile.llama4-fixed
 FROM ingu627/llama4-scout-q4:109b
-TEMPLATE """{{- if .Messages }}
+
+PARAMETER stop "<|eot|>"
+PARAMETER stop "<|header_start|>"
+PARAMETER stop "<|header_end|>"
+PARAMETER stop "assistant\n"
+
+TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
+
+{{ .System }}<|eot|>
+{{- end }}
 {{- range .Messages }}
-{{- if eq .Role "system" }}<|system|>
-{{ .Content }}<|end|>
-{{- else if eq .Role "user" }}<|user|>
-{{ .Content }}<|end|>
-{{- else if eq .Role "assistant" }}<|assistant|>
-{{- if .ToolCalls }}<|tool_call|>
-{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}{{- end }}<|end|>
-{{- else }}
-{{ .Content }}<|end|>
+{{- if eq .Role "user" }}<|header_start|>user<|header_end|>
+
+{{ .Content }}<|eot|>
+{{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
+
+{{- if .ToolCalls }}
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
+{{- else }}{{ .Content }}<|eot|>
 {{- end }}
-{{- else if eq .Role "tool" }}<|tool|>
-{{ .Content }}<|end|>
+{{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
+
+{{ .Content }}<|eot|>
 {{- end }}
-{{- end }}
-{{- end }}<|assistant|>
+{{- end }}<|header_start|>assistant<|header_end|>
+
 """
 EOF
 
@@ -151,26 +160,35 @@ if echo "$OLLAMA_TARGET_MODELS" | grep -q "llama4-scout-q4:109b"; then
     # Pull the base weights if they don't exist
     OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
 
-    # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers
+    # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers and strict stop tokens
     cat << 'EOF' > Modelfile.llama4-fixed
 FROM ingu627/llama4-scout-q4:109b
-TEMPLATE """{{- if .Messages }}
+
+PARAMETER stop "<|eot|>"
+PARAMETER stop "<|header_start|>"
+PARAMETER stop "<|header_end|>"
+PARAMETER stop "assistant\n"
+
+TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
+
+{{ .System }}<|eot|>
+{{- end }}
 {{- range .Messages }}
-{{- if eq .Role "system" }}<|system|>
-{{ .Content }}<|end|>
-{{- else if eq .Role "user" }}<|user|>
-{{ .Content }}<|end|>
-{{- else if eq .Role "assistant" }}<|assistant|>
-{{- if .ToolCalls }}<|tool_call|>
-{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}{{- end }}<|end|>
-{{- else }}
-{{ .Content }}<|end|>
+{{- if eq .Role "user" }}<|header_start|>user<|header_end|>
+
+{{ .Content }}<|eot|>
+{{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
+
+{{- if .ToolCalls }}
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
+{{- else }}{{ .Content }}<|eot|>
 {{- end }}
-{{- else if eq .Role "tool" }}<|tool|>
-{{ .Content }}<|end|>
+{{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
+
+{{ .Content }}<|eot|>
 {{- end }}
-{{- end }}
-{{- end }}<|assistant|>
+{{- end }}<|header_start|>assistant<|header_end|>
+
 """
 EOF
 
