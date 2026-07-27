@@ -257,9 +257,6 @@ for yf in yaml_files:
               model_name = f"openai/{model_name}"
           entry['model'] = model_name
 
-      # Inject profile: "coding" to ensure session orchestration tools are available
-      entry['profile'] = "coding"
-
       yaml_constraints = agent_data.get('constraints', {})
       if yaml_constraints:
           entry['params'] = {}
@@ -269,16 +266,19 @@ for yf in yaml_files:
               entry['params']['temperature'] = yaml_constraints['temperature']
 
       yaml_tools = agent_data.get('tools', [])
+      allowed_tools = []
       if yaml_tools:
-          allowed_tools = []
           for t in yaml_tools:
               if isinstance(t, str):
                   allowed_tools.append(t)
               elif isinstance(t, dict) and 'name' in t:
                   allowed_tools.append(t['name'])
 
-          if allowed_tools:
-              entry['tools'] = {"allow": allowed_tools}
+      # Inject profile: "coding" to ensure session orchestration tools are available.
+      # It must be nested under the 'tools' key to satisfy OpenClaw strict schema validation.
+      entry['tools'] = {"profile": "coding"}
+      if allowed_tools:
+          entry['tools']['allow'] = allowed_tools
 
       yaml_entries.append(entry)
 
