@@ -245,7 +245,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.5 The Media Team
 *Domain: Creative asset generation and VRAM cold-swap execution.*
-- **Lead:** `media_producer` [complex-model] - Modality delegation and hardware concurrency limits.
+- **Lead:** `media_lead` [complex-model] - Media consultation and conversational strategy.
+- **Worker:** `media_orchestrator` [complex-model] - Modality delegation and hardware concurrency limits.
 - **Worker:** `media_image` [flux-1-dev] - SFW diagram and graphic layout rendering.
 - **Worker:** `media_imagex` [pony-diffusion-v6-xl] - NSFW anatomical character styling.
 - **Worker:** `media_video` [complex-model] - SFW temporal synthesis and motion vectors.
@@ -325,7 +326,7 @@ If you create a completely new team branch:
 ### 6.3 Upgrading Hardware (Changing VRAM/RAM capacity)
 If you add a new host or upgrade memory constraints:
 1. **Update Telemetry Memory:** Modify `workspace/agents/sre/telemetry/MEMORY.md` so the Warden agent knows the new absolute limits before throwing an Out-Of-Memory alert.
-2. **Update Producer Memory:** Modify `workspace/agents/media/producer/MEMORY.md`. If you gain enough VRAM to keep Flux and Qwen hot simultaneously, you must remove the strict concurrency/cold-swap limits from the Producer's configuration.
+2. **Update Producer Memory:** Modify `workspace/agents/media/orchestrator/MEMORY.md`. If you gain enough VRAM to keep Flux and Qwen hot simultaneously, you must remove the strict concurrency/cold-swap limits from the Orchestrator's configuration.
 
 ## 7. Tier Journey & Hardware Scaling Projections
 
