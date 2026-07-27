@@ -57,7 +57,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs
 
 define h1_title
 	echo ""; \
@@ -239,6 +239,30 @@ gui:
 # WHAT IT DOES: opens the OpenClaw TUI
 tui:
 	@$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) tui
+
+# ==============================================================================
+# OBSERVABILITY & LOGGING
+# ==============================================================================
+
+# WHAT IT DOES: Prints the URL to access the VictoriaLogs UI (vmui).
+logurl:
+	@$(call h1_title,"VICTORIALOGS DASHBOARD URL")
+	@echo "Access the centralized logs via your Tailscale IP:"
+	@echo "http://$(ACTIVE_LOGGER_HOST):9428/select/vmui"
+	@echo ""
+	@echo "Note: If you are SSHed into this node from your MacBook, you must copy/paste this URL into your local MacBook browser. The remote terminal cannot launch a local tab."
+
+# WHAT IT DOES: Tails the last N (default 50) lines of critical service logs sequentially for rapid debugging.
+logs:
+	@$(call h1_title,"SYSTEM LOGS SNAPSHOT (Tail: $${N:-50})")
+	@$(call h2_title,"OpenClaw Gateway")
+	@docker logs --tail $${N:-50} openclaw-gateway 2>/dev/null || echo "Container not found on this node."
+	@$(call h2_title,"LiteLLM Proxy")
+	@docker logs --tail $${N:-50} litellm-proxy 2>/dev/null || echo "Container not found on this node."
+	@$(call h2_title,"Ollama Runner (Bare-metal)")
+	@tail -n $${N:-50} services/runners/ollama/ollama.log 2>/dev/null || echo "Log file not found on this node."
+	@$(call h2_title,"Fluent Bit Forwarder")
+	@docker logs --tail $${N:-50} fluent-bit 2>/dev/null || echo "Container not found on this node."
 
 # ==============================================================================
 # WIZARD BOOT SEQUENCE
