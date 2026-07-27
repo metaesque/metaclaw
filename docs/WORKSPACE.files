@@ -253,6 +253,12 @@
 ../workspace/agents/self/mirror/SECURITY.md
 ../workspace/agents/self/mirror/SOUL.md
 ../workspace/agents/self/mirror/TOOLS.md
+../workspace/agents/self/orchestrator.yaml
+../workspace/agents/self/orchestrator/IDENTITY.md
+../workspace/agents/self/orchestrator/MEMORY.md
+../workspace/agents/self/orchestrator/SECURITY.md
+../workspace/agents/self/orchestrator/SOUL.md
+../workspace/agents/self/orchestrator/TOOLS.md
 ../workspace/agents/self/simulator.yaml
 ../workspace/agents/self/simulator/IDENTITY.md
 ../workspace/agents/self/simulator/MEMORY.md

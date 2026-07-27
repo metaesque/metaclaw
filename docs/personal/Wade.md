@@ -235,7 +235,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.4 The Self (Modeling) Team
 *Domain: Psychological sandbox, relational topologies, and biometric evaluation (Eudaimonia/Hedonia/Health).*
-- **Lead:** `self_lead` [complex-model] - Models strict data pipelines and local DAG delegation.
+- **Lead:** `self_lead` [complex-model] - Psychological consultation and conversational strategy.
+- **Worker:** `self_orchestrator` [complex-model] - Models strict data pipelines and local DAG delegation.
 - **Worker:** `self_council` [frontier-model] - Secular humanist mixture-of-experts synthesis.
 - **Worker:** `self_simulator` [medium-model] - Ephemeral sandbox twin for testing interventions.
 - **Worker:** `self_mirror` [complex-model] - Cognitive friction and logical fallacy detection.
