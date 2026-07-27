@@ -100,8 +100,9 @@ def setdefault_path(d, path_keys):
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
-# Enforce experimental Lean Mode to prevent small local models from choking on tool bloat
-experimental = setdefault_path(data, ['experimental'])
+defaults = setdefault_path(data, ['agents', 'defaults'])
+defaults['model'] = "openai/medium-model"
+experimental = setdefault_path(defaults, ['experimental'])
 experimental['localModelLean'] = True
 
 # ==============================================================================
@@ -207,9 +208,6 @@ litellm_prov['baseUrl'] = "http://active-proxy:4000/v1"
 litellm_prov['apiKey'] = proxy_key
 litellm_prov['timeoutSeconds'] = 600
 
-defaults = setdefault_path(data, ['agents', 'defaults'])
-defaults['model'] = "openai/medium-model"
-
 agents = setdefault_path(data, ['agents'])
 existing_list = agents.get('list', [])
 
@@ -262,8 +260,9 @@ for yf in yaml_files:
           entry['model'] = model_name
 
       yaml_constraints = agent_data.get('constraints', {})
+      entry['params'] = {}
+      entry['params']['thinking'] = False
       if yaml_constraints:
-          entry['params'] = {}
           if 'max_tokens' in yaml_constraints:
               entry['params']['maxTokens'] = yaml_constraints['max_tokens']
           if 'temperature' in yaml_constraints:
@@ -278,7 +277,6 @@ for yf in yaml_files:
               elif isinstance(t, dict) and 'name' in t:
                   allowed_tools.append(t['name'])
 
-      # Inject profile: "coding" to ensure session orchestration tools are available
       entry['tools'] = {"profile": "coding"}
       if allowed_tools:
           entry['tools']['allow'] = allowed_tools
