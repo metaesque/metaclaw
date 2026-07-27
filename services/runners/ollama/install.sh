@@ -5,8 +5,12 @@ set -e
 if [ -f ../../../.env ]; then
     source ../../../.env
 fi
+
 if [ -f .env ]; then
-    source .env
+    # Parse securely using grep. Avoids 'source .env' which crashes Bash (Error 127)
+    # when processing unquoted space-separated Make loops like OLLAMA_TARGET_MODELS.
+    export OLLAMA_TARGET_MODELS=$(grep "^OLLAMA_TARGET_MODELS=" .env | cut -d= -f2- | tr -d '"' | tr -d "'")
+    export OLLAMA_PORT=$(grep "^OLLAMA_PORT=" .env | cut -d= -f2- | tr -d '"' | tr -d "'")
 fi
 
 ARCH=$(uname -m)
@@ -43,9 +47,7 @@ if [ -x "ollama" ]; then
         # ==============================================================================
         # We must execute this even if Ollama is already downloaded.
 
-        # We trigger the 109b pull and template fix if the compute node model (qwen3:32b) is present.
-        # This avoids space-separated multi-model strings in the .env configuration.
-        if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
+        if echo "$OLLAMA_TARGET_MODELS" | grep -q "ingu627/llama4-scout-q4:109b"; then
             echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
             # Start a temporary daemon in the background to build the model if it's not running
@@ -68,28 +70,33 @@ FROM ingu627/llama4-scout-q4:109b
 PARAMETER stop "<|eot|>"
 PARAMETER stop "<|header_start|>"
 PARAMETER stop "<|header_end|>"
-PARAMETER stop "assistant\n"
+PARAMETER stop "</tool_call>"
 
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
-
-{{ .System }}<|eot|>
+{{ .System }}
 {{- end }}
+{{- if .Tools }}
+You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
+Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
+Do NOT output conversational text alongside the tool call.
+Available tools:
+{{- range .Tools }}
+- {{ .Function.Name }}: {{ .Function.Description }}
+  Arguments Schema: {{ .Function.Parameters }}
+{{- end }}
+{{- end }}<|eot|>
 {{- range .Messages }}
 {{- if eq .Role "user" }}<|header_start|>user<|header_end|>
-
 {{ .Content }}<|eot|>
 {{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
-
 {{- if .ToolCalls }}
-{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
+{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{ end }}
 {{- else }}{{ .Content }}<|eot|>
 {{- end }}
 {{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
-
 {{ .Content }}<|eot|>
 {{- end }}
 {{- end }}<|header_start|>assistant<|header_end|>
-
 """
 EOF
 
@@ -145,7 +152,7 @@ echo "Ollama v$OLLAMA_VERSION installation complete."
 # ==============================================================================
 # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
 # ==============================================================================
-if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
+if echo "$OLLAMA_TARGET_MODELS" | grep -q "ingu627/llama4-scout-q4:109b"; then
     echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
     # Start a temporary daemon in the background to build the model if it's not running
@@ -168,28 +175,33 @@ FROM ingu627/llama4-scout-q4:109b
 PARAMETER stop "<|eot|>"
 PARAMETER stop "<|header_start|>"
 PARAMETER stop "<|header_end|>"
-PARAMETER stop "assistant\n"
+PARAMETER stop "</tool_call>"
 
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
-
-{{ .System }}<|eot|>
+{{ .System }}
 {{- end }}
+{{- if .Tools }}
+You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
+Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
+Do NOT output conversational text alongside the tool call.
+Available tools:
+{{- range .Tools }}
+- {{ .Function.Name }}: {{ .Function.Description }}
+  Arguments Schema: {{ .Function.Parameters }}
+{{- end }}
+{{- end }}<|eot|>
 {{- range .Messages }}
 {{- if eq .Role "user" }}<|header_start|>user<|header_end|>
-
 {{ .Content }}<|eot|>
 {{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
-
 {{- if .ToolCalls }}
-{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
+{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{ end }}
 {{- else }}{{ .Content }}<|eot|>
 {{- end }}
 {{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
-
 {{ .Content }}<|eot|>
 {{- end }}
 {{- end }}<|header_start|>assistant<|header_end|>
-
 """
 EOF
 
