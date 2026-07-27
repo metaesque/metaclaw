@@ -43,9 +43,10 @@ if [ -x "ollama" ]; then
         # ==============================================================================
         # We must execute this even if Ollama is already downloaded.
 
-        # We only need to generate the fix if the target model is actually assigned to this node
-        if echo "$OLLAMA_TARGET_MODELS" | grep -q "llama4-scout-q4:109b"; then
-            echo "Patching broken llama4-scout tool template..."
+        # We trigger the 109b pull and template fix if the compute node model (qwen3:32b) is present.
+        # This avoids space-separated multi-model strings in the .env configuration.
+        if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
+            echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
             # Start a temporary daemon in the background to build the model if it's not running
             DAEMON_STARTED=0
@@ -144,8 +145,8 @@ echo "Ollama v$OLLAMA_VERSION installation complete."
 # ==============================================================================
 # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
 # ==============================================================================
-if echo "$OLLAMA_TARGET_MODELS" | grep -q "llama4-scout-q4:109b"; then
-    echo "Patching broken llama4-scout tool template..."
+if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
+    echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
     # Start a temporary daemon in the background to build the model if it's not running
     DAEMON_STARTED=0

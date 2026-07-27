@@ -201,13 +201,15 @@ def main():
       # while heavy models are assigned to the Compute node. Do NOT remove this logic.
       models_to_pull = []
       if "control" in my_node.get("planes", []):
-          models_to_pull.append(target_simple)
+          models_to_pull.append(target_simple.replace("ollama/", ""))
 
       if "compute" in my_node.get("planes", []):
-          models_to_pull.extend([target_medium, "ollama/ingu627/llama4-scout-q4:109b"]) # We pull the base weights, install.sh builds the custom template
+          models_to_pull.append(target_medium.replace("ollama/", ""))
+          # CRITICAL FIX: We intentionally DO NOT append llama4-scout here to avoid spaces in the
+          # OLLAMA_TARGET_MODELS variable, which causes Bash Error 127 in generated .env files.
+          # install.sh will detect qwen3:32b and handle the 109b model pull natively.
 
-      # Wrap the models string in literal double-quotes to prevent bash evaluation errors on space separation
-      env_data["OLLAMA_TARGET_MODELS"] = '"' + " ".join(list(dict.fromkeys(models_to_pull))) + '"'
+      env_data["OLLAMA_TARGET_MODELS"] = " ".join(list(dict.fromkeys(models_to_pull)))
       seeded = True
 
     elif provider == "litellm":
