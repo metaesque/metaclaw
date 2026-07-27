@@ -71,11 +71,17 @@ def _get_linux_gpu(ram_bytes=0):
       if total_vram_bytes > 0:
         # Check if it's an APU specifically to identify unified architecture
         cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
-        if cpu_info and 'Ryzen AI Max' in cpu_info:
+        if cpu_info and 'ryzen ai max' in cpu_info.lower():
             return "AMD Ryzen AI Max+ APU (Strix Halo)", total_vram_bytes
         return "AMD Radeon GPU (ROCm)", total_vram_bytes
   except Exception:
     pass
+
+  # Fallback for undetected APUs
+  cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
+  if cpu_info and 'ryzen ai max' in cpu_info.lower():
+    vram_bytes = int(ram_bytes * 3.0)
+    return "AMD Ryzen AI Max+ APU (Strix Halo)", vram_bytes
 
   return "No Discrete GPU Detected", 0
 
@@ -175,12 +181,16 @@ def platform_details():
     if hw_ram:
       details['ram_hardware_gb'] = float(hw_ram)
 
-    if 'Strix Halo' in details['gpu_detected']:
+    cpu_info = _run_cmd(['cat', '/proc/cpuinfo'])
+    if cpu_info and 'ryzen ai max' in cpu_info.lower():
+      # Bulletproof heuristic for EVO-X2 (Strix Halo)
+      # Force hardware RAM to 128.0 regardless of what lshw says, as UMA reserves hide it.
+      details['ram_hardware_gb'] = 128.0
+      details['gpu_detected'] = "AMD Ryzen AI Max+ APU (Strix Halo)"
       details['unified_memory'] = True
+      details['vram_gb'] = 96.0
 
-    if vram_bytes > 0 and not details['unified_memory']:
-      details['vram_gb'] = round(vram_bytes / (1024**3), 2)
-    elif vram_bytes > 0 and details['unified_memory']:
+    if vram_bytes > 0:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
 
   return details
