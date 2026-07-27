@@ -111,6 +111,12 @@
 ../workspace/agents/health/nutritionist/SECURITY.md
 ../workspace/agents/health/nutritionist/SOUL.md
 ../workspace/agents/health/nutritionist/TOOLS.md
+../workspace/agents/health/orchestrator.yaml
+../workspace/agents/health/orchestrator/IDENTITY.md
+../workspace/agents/health/orchestrator/MEMORY.md
+../workspace/agents/health/orchestrator/SECURITY.md
+../workspace/agents/health/orchestrator/SOUL.md
+../workspace/agents/health/orchestrator/TOOLS.md
 ../workspace/agents/health/physio.yaml
 ../workspace/agents/health/physio/IDENTITY.md
 ../workspace/agents/health/physio/MEMORY.md

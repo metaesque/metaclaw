@@ -212,7 +212,7 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.1 The Global Routing Layer
 - **`judge`** [simple-model]: Intent classifier. Protects token budgets via continuous thresholding into 4 tiers (`simple`, `medium`, `complex`, `frontier`).
-- **`orchestrator`** [medium-model]: Global DAG generator. Delegates exclusively to the Team Leads.
+- **`orchestrator_lead`** [medium-model]: Global DAG generator. Delegates exclusively to the Team Leads.
 - **`generalist`** [complex-model]: Handles unmatched general-knowledge queries.
 
 ### 5.2 The Software Team
@@ -271,7 +271,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.7 The Health Team
 *Domain: Physiological data orchestration, clinical diagnostics, metabolic/vascular/endocrine protocols, and physical rehabilitation.*
-- **Lead:** `health_lead` [complex-model] - Diagnostic synthesis and local DAG delegation.
+- **Lead:** `health_lead` [complex-model] - Health consultation and conversational strategy.
+- **Worker:** `health_orchestrator` [complex-model] - Diagnostic synthesis and local DAG delegation.
 - **Worker:** `health_heart` [medium-model] - Cardiovascular analysis (atherosclerosis, endothelial function).
 - **Worker:** `health_hormones` [medium-model] - Endocrinology (insulin resistance, testosterone, osteopenia).
 - **Worker:** `health_brain` [medium-model] - Neurology (hippocampal volume, microvascular ischemia).
