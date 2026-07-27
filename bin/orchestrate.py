@@ -206,7 +206,8 @@ def main():
       if "compute" in my_node.get("planes", []):
           models_to_pull.extend([target_medium, "ollama/ingu627/llama4-scout-q4:109b"]) # We pull the base weights, install.sh builds the custom template
 
-      env_data["OLLAMA_TARGET_MODELS"] = " ".join(list(dict.fromkeys(models_to_pull)))
+      # Wrap the models string in literal double-quotes to prevent bash evaluation errors on space separation
+      env_data["OLLAMA_TARGET_MODELS"] = '"' + " ".join(list(dict.fromkeys(models_to_pull))) + '"'
       seeded = True
 
     elif provider == "litellm":
