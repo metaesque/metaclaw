@@ -257,6 +257,9 @@ for yf in yaml_files:
               model_name = f"openai/{model_name}"
           entry['model'] = model_name
 
+      # Inject profile: "coding" to ensure session orchestration tools are available
+      entry['profile'] = "coding"
+
       yaml_constraints = agent_data.get('constraints', {})
       if yaml_constraints:
           entry['params'] = {}
@@ -380,5 +383,6 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
+print("SUCCESS: Configured 'profile: coding' globally to enable session orchestration tools.")
 print("SUCCESS: Raised provider timeout ceilings to safely execute massive local LLM cold-starts.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")
