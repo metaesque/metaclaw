@@ -116,7 +116,8 @@ def main():
   target_simple = "ollama/gemma4:e4b"
   if cluster_tier_value >= 2 and compute_node:
       target_medium = "ollama/qwen3:32b"
-      target_complex = "ollama/ingu627/llama4-scout-q4:109b"
+      # Point to our custom locally-patched template instead of the broken upstream GGUF
+      target_complex = "ollama/metaclaw-llama4-scout"
   else:
       target_medium = "gemini/gemini-2.5-flash"
       target_complex = "gemini/gemini-3.1-pro-preview"
@@ -203,7 +204,7 @@ def main():
           models_to_pull.append(target_simple)
 
       if "compute" in my_node.get("planes", []):
-          models_to_pull.extend([target_medium, target_complex])
+          models_to_pull.extend([target_medium, "ollama/ingu627/llama4-scout-q4:109b"]) # We pull the base weights, install.sh builds the custom template
 
       env_data["OLLAMA_TARGET_MODELS"] = " ".join(list(dict.fromkeys(models_to_pull)))
       seeded = True

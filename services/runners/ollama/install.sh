@@ -1,19 +1,162 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-if ! command -v ollama >/dev/null 2>&1; then
-    echo "Installing Ollama system-wide..."
-    curl -fsSL https://ollama.com/install.sh | sh
+# Load orchestrator variables
+if [ -f ../../../.env ]; then
+    source ../../../.env
+fi
+if [ -f .env ]; then
+    source .env
 fi
 
-mkdir -p bin
-ln -sf $(which ollama) bin/ollama
-
-# Prevent the systemd daemon from automatically starting and conflicting with MetaClaw's port management
-if systemctl is-active --quiet ollama 2>/dev/null; then
-    echo "Stopping background systemd Ollama service to allow MetaClaw orchestration..."
-    sudo systemctl stop ollama || true
-    sudo systemctl disable ollama || true
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+    OLLAMA_ARCH="amd64"
+elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+    OLLAMA_ARCH="arm64"
+else
+    echo "Unsupported architecture: $ARCH"
+    exit 1
 fi
 
-echo "SUCCESS: Ollama linked to ./bin/ollama"
+mkdir -p ./bin
+cd ./bin
+
+if [ -z "$OLLAMA_VERSION" ]; then
+    echo "Fetching latest Ollama release version from GitHub API..."
+    LATEST_RELEASE=$(curl -s https://api.github.com/repos/ollama/ollama/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    if [ -z "$LATEST_RELEASE" ]; then
+        echo "Failed to fetch latest Ollama version. Network error?"
+        exit 1
+    fi
+    OLLAMA_VERSION=$LATEST_RELEASE
+fi
+
+# Do not re-download if the binary already exists and is the correct version
+if [ -x "ollama" ]; then
+    CURRENT_VERSION=$(./ollama --version 2>/dev/null | awk '{print $NF}' | sed 's/^v//')
+    if [ "$CURRENT_VERSION" = "$OLLAMA_VERSION" ]; then
+        echo "Ollama v$OLLAMA_VERSION is already installed in ./bin."
+
+        # ==============================================================================
+        # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
+        # ==============================================================================
+        # We must execute this even if Ollama is already downloaded.
+
+        # We only need to generate the fix if the target model is actually assigned to this node
+        if echo "$OLLAMA_TARGET_MODELS" | grep -q "llama4-scout-q4:109b"; then
+            echo "Patching broken llama4-scout tool template..."
+
+            # Start a temporary daemon in the background to build the model if it's not running
+            DAEMON_STARTED=0
+            if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
+                echo "Starting temporary Ollama daemon for model patching..."
+                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
+                DAEMON_PID=$!
+                DAEMON_STARTED=1
+                sleep 5
+            fi
+
+            # Pull the base weights if they don't exist
+            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
+
+            # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers
+            cat << 'EOF' > Modelfile.llama4-fixed
+FROM ingu627/llama4-scout-q4:109b
+TEMPLATE """{{- if .Messages }}
+{{- range .Messages }}
+{{- if eq .Role "system" }}<|system|>
+{{ .Content }}<|end|>
+{{- else if eq .Role "user" }}<|user|>
+{{ .Content }}<|end|>
+{{- else if eq .Role "assistant" }}<|assistant|>
+{{- if .ToolCalls }}<|tool_call|>
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}{{- end }}<|end|>
+{{- else }}
+{{ .Content }}<|end|>
+{{- end }}
+{{- else if eq .Role "tool" }}<|tool|>
+{{ .Content }}<|end|>
+{{- end }}
+{{- end }}
+{{- end }}<|assistant|>
+"""
+EOF
+
+            echo "Building metaclaw-llama4-scout..."
+            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
+            rm Modelfile.llama4-fixed
+
+            if [ $DAEMON_STARTED -eq 1 ]; then
+                echo "Stopping temporary daemon..."
+                kill $DAEMON_PID 2>/dev/null || true
+            fi
+        fi
+
+        exit 0
+    else
+        echo "Updating Ollama from v$CURRENT_VERSION to v$OLLAMA_VERSION..."
+    fi
+else
+    echo "Downloading Ollama v$OLLAMA_VERSION for $OLLAMA_ARCH..."
+fi
+
+curl -f -sSL -o ollama.tgz "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"
+tar xzf ollama.tgz ./bin/ollama
+mv ./bin/ollama .
+rm -rf ./bin ollama.tgz
+
+chmod +x ollama
+echo "Ollama v$OLLAMA_VERSION installation complete."
+
+# ==============================================================================
+# CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
+# ==============================================================================
+if echo "$OLLAMA_TARGET_MODELS" | grep -q "llama4-scout-q4:109b"; then
+    echo "Patching broken llama4-scout tool template..."
+
+    # Start a temporary daemon in the background to build the model if it's not running
+    DAEMON_STARTED=0
+    if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
+        echo "Starting temporary Ollama daemon for model patching..."
+        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
+        DAEMON_PID=$!
+        DAEMON_STARTED=1
+        sleep 5
+    fi
+
+    # Pull the base weights if they don't exist
+    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
+
+    # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers
+    cat << 'EOF' > Modelfile.llama4-fixed
+FROM ingu627/llama4-scout-q4:109b
+TEMPLATE """{{- if .Messages }}
+{{- range .Messages }}
+{{- if eq .Role "system" }}<|system|>
+{{ .Content }}<|end|>
+{{- else if eq .Role "user" }}<|user|>
+{{ .Content }}<|end|>
+{{- else if eq .Role "assistant" }}<|assistant|>
+{{- if .ToolCalls }}<|tool_call|>
+{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}{{- end }}<|end|>
+{{- else }}
+{{ .Content }}<|end|>
+{{- end }}
+{{- else if eq .Role "tool" }}<|tool|>
+{{ .Content }}<|end|>
+{{- end }}
+{{- end }}
+{{- end }}<|assistant|>
+"""
+EOF
+
+    echo "Building metaclaw-llama4-scout..."
+    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
+    rm Modelfile.llama4-fixed
+
+    if [ $DAEMON_STARTED -eq 1 ]; then
+        echo "Stopping temporary daemon..."
+        kill $DAEMON_PID 2>/dev/null || true
+    fi
+fi
