@@ -163,6 +163,10 @@ sessions_cfg['visibility'] = 'all'
 agent_to_agent_cfg = setdefault_path(tools_cfg, ['agentToAgent'])
 agent_to_agent_cfg['enabled'] = True
 
+# Enable strict loop detection to prevent local models from burning budget if they fail to generate EOS tokens
+loop_detection_cfg = setdefault_path(tools_cfg, ['loopDetection'])
+loop_detection_cfg['enabled'] = True
+
 # ==============================================================================
 # SEARCH PLUGIN INJECTION
 # ==============================================================================
@@ -395,4 +399,5 @@ print("SUCCESS: Hijacked the default OpenAI provider to transparently route via 
 print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
 print("SUCCESS: Configured 'profile: coding' globally and disabled 'sessions_spawn' to prevent LLM tool hallucination.")
 print("SUCCESS: Forced 'thinking: false' across all agents to prevent reasoning leakage.")
+print("SUCCESS: Enabled loopDetection to protect API budgets against generative timeouts.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")

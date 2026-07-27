@@ -84,6 +84,10 @@ clean-local-state:
 
 # Apply target fixed to trigger symlink and pre-up before non-destructive reload
 apply:: symlink pre-up .state_recreate .state_restart
+	@if [ -f config/openclaw.json ]; then \
+		echo "[$(SERVICE_TITLE)] Enforcing config patch on apply..."; \
+		$(MAKE) --no-print-directory patch; \
+	fi
 
 # Creates a human-friendly symlink from project root to service config
 symlink:
