@@ -100,9 +100,8 @@ def setdefault_path(d, path_keys):
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
-defaults = setdefault_path(data, ['agents', 'defaults'])
-defaults['model'] = "openai/medium-model"
-experimental = setdefault_path(defaults, ['experimental'])
+# Enforce experimental Lean Mode to prevent small local models from choking on tool bloat
+experimental = setdefault_path(data, ['agents', 'defaults', 'experimental'])
 experimental['localModelLean'] = True
 
 # ==============================================================================
@@ -208,6 +207,9 @@ litellm_prov['baseUrl'] = "http://active-proxy:4000/v1"
 litellm_prov['apiKey'] = proxy_key
 litellm_prov['timeoutSeconds'] = 600
 
+defaults = setdefault_path(data, ['agents', 'defaults'])
+defaults['model'] = "openai/medium-model"
+
 agents = setdefault_path(data, ['agents'])
 existing_list = agents.get('list', [])
 
@@ -261,6 +263,7 @@ for yf in yaml_files:
 
       yaml_constraints = agent_data.get('constraints', {})
       entry['params'] = {}
+      # Explicitly disable thinking modality to prevent LLMs flushing internal tags and breaking JSON interception
       entry['params']['thinking'] = False
       if yaml_constraints:
           if 'max_tokens' in yaml_constraints:
@@ -277,9 +280,15 @@ for yf in yaml_files:
               elif isinstance(t, dict) and 'name' in t:
                   allowed_tools.append(t['name'])
 
+      # Inject profile: "coding" to ensure session orchestration tools are available
       entry['tools'] = {"profile": "coding"}
       if allowed_tools:
           entry['tools']['allow'] = allowed_tools
+
+      # EXPLICIT DENY: Strip the hallucination-prone sessions_spawn tool entirely from the view of the LLM.
+      # By mathematically blinding the model to this tool, it is forced to use sessions_send for delegation.
+      if "sessions_send" in allowed_tools:
+          entry['tools']['deny'] = ["sessions_spawn"]
 
       yaml_entries.append(entry)
 
@@ -384,5 +393,6 @@ print("SUCCESS: Allowed insecure HTTP auth and safely merged Tailscale IPs to fa
 print("SUCCESS: Synchronized the Gateway Auth Token with the MetaClaw ACTIVE_PROXY_KEY.")
 print("SUCCESS: Hijacked the default OpenAI provider to transparently route via active-proxy.")
 print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
-print("SUCCESS: Configured experimental.localModelLean to true to optimize tool context sizes.")
+print("SUCCESS: Configured 'profile: coding' globally and disabled 'sessions_spawn' to prevent LLM tool hallucination.")
+print("SUCCESS: Forced 'thinking: false' across all agents to prevent reasoning leakage.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")
