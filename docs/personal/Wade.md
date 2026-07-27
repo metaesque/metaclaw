@@ -217,7 +217,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.2 The Software Team
 *Domain: Engineering, architecture, testing, and deployment.*
-- **Lead:** `software_architect` [complex-model] - System design and local DAG delegation.
+- **Lead:** `software_lead` [complex-model] - Software consultation and conversational strategy.
+- **Worker:** `software_orchestrator` [complex-model] - System design and local DAG delegation.
 - **Worker:** `software_dev` [medium-model] - Application code and script execution.
 - **Worker:** `software_qa` [medium-model] - Test harness generation and edge-case execution.
 - **Worker:** `software_auditor` [simple-model] - CVE scanning and log/cost analysis.
@@ -225,7 +226,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.3 The Research Team
 *Domain: OSINT, financial modeling, and ambient technology scanning.*
-- **Lead:** `research_synthesizer` [complex-model] - Briefing compilation and local DAG delegation.
+- **Lead:** `research_lead` [complex-model] - Research consultation and conversational strategy.
+- **Worker:** `research_orchestrator` [complex-model] - Briefing compilation and local DAG delegation.
 - **Worker:** `research_scout` [medium-model] - Large-context web scraping and HTML extraction.
 - **Worker:** `research_quant` [medium-model] - Python-based math and multi-currency analysis.
 - **Worker:** `research_scanner` [complex-model] - Academic paper and patent tracking.
