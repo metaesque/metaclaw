@@ -299,7 +299,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.9 The Social Team
 *Domain: Platform publishing, audience engagement, social SEO, and community management.*
-- **Lead:** `social_lead` [complex-model] - Cross-platform strategy and local DAG delegation.
+- **Lead:** `social_lead` [complex-model] - Cross-platform consultation and conversational strategy.
+- **Worker:** `social_orchestrator` [complex-model] - Cross-platform strategy and local DAG delegation.
 - **Worker:** `social_youtube` [medium-model] - Video SEO, chapters, timestamps, and comment parsing.
 - **Worker:** `social_reddit` [medium-model] - Subreddit engagement and organic tone matching.
 - **Worker:** `social_bluesky` [simple-model] - Decentralized short-form publishing.

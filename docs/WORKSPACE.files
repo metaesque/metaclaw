@@ -283,6 +283,16 @@
 ../workspace/agents/social/linkedin/MEMORY.md
 ../workspace/agents/social/linkedin/SECURITY.md
 ../workspace/agents/social/linkedin/SOUL.md
+../workspace/agents/social/orchestrator.yaml
+../workspace/agents/social/orchestrator/IDENTITY.md
+../workspace/agents/social/orchestrator/MEMORY.md
+../workspace/agents/social/orchestrator/SECURITY.md
+../workspace/agents/social/orchestrator/SOUL.md
+../workspace/agents/social/orchestrator/TOOLS.md
+../workspace/agents/social/pinterest.yaml
+../workspace/agents/social/reddit.yaml
+../workspace/agents/social/snapchat.yaml
+../workspace/agents/social/tiktok.yaml
 ../workspace/agents/social/twitter.yaml
 ../workspace/agents/social/twitter/IDENTITY.md
 ../workspace/agents/social/twitter/MEMORY.md
