@@ -101,10 +101,18 @@ else
     echo "Downloading Ollama v$OLLAMA_VERSION for $OLLAMA_ARCH..."
 fi
 
-curl -f -sSL -o ollama.tgz "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"
-tar xzf ollama.tgz ./bin/ollama
+# Try .tar.zst modern archive format first, fallback to legacy .tgz
+if curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst"; then
+    tar xf ollama.archive ./bin/ollama
+elif curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"; then
+    tar xzf ollama.archive ./bin/ollama
+else
+    echo "Failed to download Ollama v${OLLAMA_VERSION} binary. Neither .tar.zst nor .tgz were found."
+    exit 1
+fi
+
 mv ./bin/ollama .
-rm -rf ./bin ollama.tgz
+rm -rf ./bin ollama.archive
 
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
