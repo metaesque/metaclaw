@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-# Load orchestrator variables natively and securely
+# Load orchestrator variables natively. Now that orchestrator.py writes a clean,
+# properly delimited environment file, we can safely use 'source' without crashing Bash.
 if [ -f ../../../.env ]; then
     source ../../../.env
 fi
@@ -41,26 +42,27 @@ if [ -x "ollama" ]; then
         # ==============================================================================
         # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
         # ==============================================================================
-        # We must execute this even if Ollama is already downloaded.
+        # Safely iterate over the OLLAMA_TARGET_MODELS list using IFS to detect if the target
+        # model is assigned to this specific node before compiling the patch.
+        IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
+        for model in "${models[@]}"; do
+            if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
+                echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
-        if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
-            echo "Compute Node Detected. Patching broken llama4-scout tool template..."
+                DAEMON_STARTED=0
+                if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
+                    echo "Starting temporary Ollama daemon for model patching..."
+                    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
+                    DAEMON_PID=$!
+                    DAEMON_STARTED=1
+                    sleep 5
+                fi
 
-            # Start a temporary daemon in the background to build the model if it's not running
-            DAEMON_STARTED=0
-            if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
-                echo "Starting temporary Ollama daemon for model patching..."
-                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
-                DAEMON_PID=$!
-                DAEMON_STARTED=1
-                sleep 5
-            fi
+                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
 
-            # Pull the base weights if they don't exist
-            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
-
-            # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers and strict stop tokens
-            cat << 'EOF' > Modelfile.llama4-fixed
+                # By defining the explicit <tool_call> boundaries in the Modelfile, Ollama's generic backend
+                # can reliably reverse-engineer the regex schema needed to parse the JSON into an API object.
+                cat << 'EOF' > Modelfile.llama4-fixed
 FROM ingu627/llama4-scout-q4:109b
 
 PARAMETER stop "<|eot|>"
@@ -71,12 +73,22 @@ PARAMETER stop "</tool_call>"
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
 {{ .System }}<|eot|>
 {{- end }}
+{{- if .Tools }}<|header_start|>system<|header_end|>
+You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
+Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
+Do NOT output conversational text alongside the tool call.
+Available tools:
+{{- range .Tools }}
+- {{ .Function.Name }}: {{ .Function.Description }}
+  Arguments Schema: {{ .Function.Parameters }}
+{{- end }}<|eot|>
+{{- end }}
 {{- range .Messages }}
 {{- if eq .Role "user" }}<|header_start|>user<|header_end|>
 {{ .Content }}<|eot|>
 {{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
 {{- if .ToolCalls }}
-{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
+{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{- end }}
 {{- else }}{{ .Content }}<|eot|>
 {{- end }}
 {{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
@@ -86,15 +98,17 @@ TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
 """
 EOF
 
-            echo "Building metaclaw-llama4-scout..."
-            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
-            rm Modelfile.llama4-fixed
+                echo "Building metaclaw-llama4-scout..."
+                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
+                rm Modelfile.llama4-fixed
 
-            if [ $DAEMON_STARTED -eq 1 ]; then
-                echo "Stopping temporary daemon..."
-                kill $DAEMON_PID 2>/dev/null || true
+                if [ $DAEMON_STARTED -eq 1 ]; then
+                    echo "Stopping temporary daemon..."
+                    kill $DAEMON_PID 2>/dev/null || true
+                fi
+                break
             fi
-        fi
+        done
 
         exit 0
     else
@@ -104,7 +118,6 @@ else
     echo "Downloading Ollama v$OLLAMA_VERSION for $OLLAMA_ARCH..."
 fi
 
-# Try .tar.zst modern archive format first, fallback to legacy .tgz
 if curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst"; then
     tar xf ollama.archive
 elif curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"; then
@@ -114,8 +127,6 @@ else
     exit 1
 fi
 
-# Modern Ollama archives extract into 'bin/ollama' and 'lib/ollama/...'.
-# Because we are in ./bin, tar creates nested directories. We must elevate them.
 if [ -f "bin/ollama" ]; then
     mv bin/ollama ./ollama
 elif [ -f "./bin/ollama" ]; then
@@ -131,31 +142,29 @@ elif [ -d "./lib" ]; then
 fi
 
 rm -rf bin ./bin ollama.archive
-
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
 
 # ==============================================================================
 # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
 # ==============================================================================
-if echo "$OLLAMA_TARGET_MODELS" | grep -q "qwen3:32b"; then
-    echo "Compute Node Detected. Patching broken llama4-scout tool template..."
+IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
+for model in "${models[@]}"; do
+    if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
+        echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
-    # Start a temporary daemon in the background to build the model if it's not running
-    DAEMON_STARTED=0
-    if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
-        echo "Starting temporary Ollama daemon for model patching..."
-        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
-        DAEMON_PID=$!
-        DAEMON_STARTED=1
-        sleep 5
-    fi
+        DAEMON_STARTED=0
+        if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
+            echo "Starting temporary Ollama daemon for model patching..."
+            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
+            DAEMON_PID=$!
+            DAEMON_STARTED=1
+            sleep 5
+        fi
 
-    # Pull the base weights if they don't exist
-    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
+        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
 
-    # Create a fixed Modelfile that forces LiteLLM-compatible XML tool markers and strict stop tokens
-    cat << 'EOF' > Modelfile.llama4-fixed
+        cat << 'EOF' > Modelfile.llama4-fixed
 FROM ingu627/llama4-scout-q4:109b
 
 PARAMETER stop "<|eot|>"
@@ -166,12 +175,22 @@ PARAMETER stop "</tool_call>"
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
 {{ .System }}<|eot|>
 {{- end }}
+{{- if .Tools }}<|header_start|>system<|header_end|>
+You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
+Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
+Do NOT output conversational text alongside the tool call.
+Available tools:
+{{- range .Tools }}
+- {{ .Function.Name }}: {{ .Function.Description }}
+  Arguments Schema: {{ .Function.Parameters }}
+{{- end }}<|eot|>
+{{- end }}
 {{- range .Messages }}
 {{- if eq .Role "user" }}<|header_start|>user<|header_end|>
 {{ .Content }}<|eot|>
 {{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
 {{- if .ToolCalls }}
-{{- range .ToolCalls }}{"name": "{{ .Function.Name }}", "parameters": {{ .Function.Arguments }}}{{ end }}
+{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{- end }}
 {{- else }}{{ .Content }}<|eot|>
 {{- end }}
 {{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
@@ -181,12 +200,14 @@ TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
 """
 EOF
 
-    echo "Building metaclaw-llama4-scout..."
-    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
-    rm Modelfile.llama4-fixed
+        echo "Building metaclaw-llama4-scout..."
+        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
+        rm Modelfile.llama4-fixed
 
-    if [ $DAEMON_STARTED -eq 1 ]; then
-        echo "Stopping temporary daemon..."
-        kill $DAEMON_PID 2>/dev/null || true
+        if [ $DAEMON_STARTED -eq 1 ]; then
+            echo "Stopping temporary daemon..."
+            kill $DAEMON_PID 2>/dev/null || true
+        fi
+        break
     fi
-fi
+done
