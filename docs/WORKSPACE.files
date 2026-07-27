@@ -28,6 +28,12 @@
 ../workspace/agents/finance/manager/SECURITY.md
 ../workspace/agents/finance/manager/SOUL.md
 ../workspace/agents/finance/manager/TOOLS.md
+../workspace/agents/finance/orchestrator.yaml
+../workspace/agents/finance/orchestrator/IDENTITY.md
+../workspace/agents/finance/orchestrator/MEMORY.md
+../workspace/agents/finance/orchestrator/SECURITY.md
+../workspace/agents/finance/orchestrator/SOUL.md
+../workspace/agents/finance/orchestrator/TOOLS.md
 ../workspace/agents/finance/quant.yaml
 ../workspace/agents/finance/quant/IDENTITY.md
 ../workspace/agents/finance/quant/MEMORY.md

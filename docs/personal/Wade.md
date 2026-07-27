@@ -285,7 +285,8 @@ The system enforces a strict Vertical Command Structure to prevent routing loops
 
 ### 5.8 The Finance Team
 *Domain: Financial modeling, market analysis, intrinsic valuation, risk assessment, tax strategy, and portfolio allocation.*
-- **Lead:** `finance_lead` [complex-model] - Financial orchestration and local DAG delegation.
+- **Lead:** `finance_lead` [complex-model] - Financial consultation and conversational strategy.
+- **Worker:** `finance_orchestrator` [complex-model] - Financial orchestration and local DAG delegation.
 - **Worker:** `finance_manager` [complex-model] - Portfolio allocation, position sizing, and Buy/Hold/Sell execution plans.
 - **Worker:** `finance_risk` [complex-model] - Thesis counter-analysis, structural risk identification, and stress testing.
 - **Worker:** `finance_crypto` [medium-model] - On-chain analysis, tokenomics, and smart contract auditing.
