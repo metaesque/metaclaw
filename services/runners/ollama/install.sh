@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Load orchestrator variables
+# Load orchestrator variables natively
 if [ -f ../../../.env ]; then
     source ../../../.env
 fi
@@ -38,75 +38,11 @@ if [ -x "ollama" ]; then
     if [ "$CURRENT_VERSION" = "$OLLAMA_VERSION" ]; then
         echo "Ollama v$OLLAMA_VERSION is already installed in ./bin."
 
-        # ==============================================================================
-        # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
-        # ==============================================================================
         # We parse the array using IFS to safely detect the target model without quoting issues
         IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
         for model in "${models[@]}"; do
             if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
-                echo "Compute Node Detected. Patching broken llama4-scout tool template..."
-
-                # Start a temporary daemon in the background to build the model if it's not running
-                DAEMON_STARTED=0
-                if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
-                    echo "Starting temporary Ollama daemon for model patching..."
-                    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
-                    DAEMON_PID=$!
-                    DAEMON_STARTED=1
-                    sleep 5
-                fi
-
-                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
-
-                # We inject explicit <tool_call> boundaries and stop tokens so Ollama's generic
-                # backend can reliably reverse-engineer the regex schema needed to parse the JSON.
-                # Stopping at "assistant" strictly truncates hallucinated conversation leaks.
-                cat << 'EOF' > Modelfile.llama4-fixed
-FROM ingu627/llama4-scout-q4:109b
-
-PARAMETER stop "<|eot|>"
-PARAMETER stop "<|header_start|>"
-PARAMETER stop "<|header_end|>"
-PARAMETER stop "</tool_call>"
-PARAMETER stop "assistant"
-
-TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
-{{ .System }}<|eot|>
-{{- end }}
-{{- if .Tools }}<|header_start|>system<|header_end|>
-You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
-Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
-Do NOT output conversational text alongside the tool call.
-Available tools:
-{{- range .Tools }}
-- {{ .Function.Name }}: {{ .Function.Description }}
-  Arguments Schema: {{ .Function.Parameters }}
-{{- end }}<|eot|>
-{{- end }}
-{{- range .Messages }}
-{{- if eq .Role "user" }}<|header_start|>user<|header_end|>
-{{ .Content }}<|eot|>
-{{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
-{{- if .ToolCalls }}
-{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{- end }}
-{{- else }}{{ .Content }}<|eot|>
-{{- end }}
-{{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
-{{ .Content }}<|eot|>
-{{- end }}
-{{- end }}<|header_start|>assistant<|header_end|>
-"""
-EOF
-
-                echo "Building metaclaw-llama4-scout..."
-                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
-                rm Modelfile.llama4-fixed
-
-                if [ $DAEMON_STARTED -eq 1 ]; then
-                    echo "Stopping temporary daemon..."
-                    kill $DAEMON_PID 2>/dev/null || true
-                fi
+                echo "Compute Node Detected. Model template patching has been removed in favor of native LiteLLM stop sequences."
                 break
             fi
         done
@@ -120,100 +56,60 @@ else
 fi
 
 # Try .tar.zst modern archive format first, fallback to legacy .tgz
+mkdir -p tmp_extract
 if curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst"; then
-    tar xf ollama.archive
+    tar xf ollama.archive -C tmp_extract
 elif curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"; then
-    tar xzf ollama.archive
+    tar xzf ollama.archive -C tmp_extract
 else
     echo "Failed to download Ollama v${OLLAMA_VERSION} binary. Neither .tar.zst nor .tgz were found."
+    rm -rf tmp_extract
     exit 1
 fi
 
-# Modern Ollama archives extract into 'bin/ollama' and 'lib/ollama/...'.
-# Because we are in ./bin, tar creates nested directories. We must elevate them.
-if [ -f "bin/ollama" ]; then
-    mv bin/ollama ./ollama
-elif [ -f "./bin/ollama" ]; then
-    mv ./bin/ollama ./ollama
+# ==============================================================================
+# ARCHITECTURAL DECISION: Hermetic Installation vs Global APT
+# ==============================================================================
+# MetaClaw uses a hermetic, localized installation rather than a global APT package.
+# Ollama updates extremely frequently (often daily for new model compatibility).
+# Relying on OS package managers introduces severe lag. By downloading the artifact
+# directly into the repository namespace, we strictly pin the Ollama daemon version
+# to the framework state and isolate it from OS changes.
+#
+# To prevent port binding collisions and PATH resolution nightmares, we aggressively
+# destroy any rogue global Ollama installations running in the background.
+
+if [ -f "/usr/local/bin/ollama" ]; then
+    echo "WARNING: Global Ollama installation detected at /usr/local/bin/ollama."
+    echo "Destroying global daemon to prevent port conflicts with hermetic MetaClaw deployment..."
+    sudo rm -f /usr/local/bin/ollama
+    sudo systemctl stop ollama 2>/dev/null || true
+    sudo systemctl disable ollama 2>/dev/null || true
 fi
 
-if [ -d "lib" ]; then
-    rm -rf ../lib
-    mv lib ../
-elif [ -d "./lib" ]; then
-    rm -rf ../lib
-    mv ./lib ../
+# Safely extract the binary
+if [ -f "tmp_extract/bin/ollama" ]; then
+    mv tmp_extract/bin/ollama .
 fi
 
-rm -rf bin ./bin ollama.archive
+# Safely extract runner libraries to services/runners/ollama/lib/ollama
+# This replaces the destructive '../lib' command that wiped out metaclaw.py
+mkdir -p ../lib
+if [ -d "tmp_extract/lib/ollama" ]; then
+    rm -rf ../lib/ollama
+    mv tmp_extract/lib/ollama ../lib/
+fi
+
+rm -rf tmp_extract ollama.archive
 
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
 
-# ==============================================================================
-# CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
-# ==============================================================================
+# Re-run IFS parsing for first-time installation detection logging
 IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
 for model in "${models[@]}"; do
     if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
-        echo "Compute Node Detected. Patching broken llama4-scout tool template..."
-
-        DAEMON_STARTED=0
-        if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
-            echo "Starting temporary Ollama daemon for model patching..."
-            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
-            DAEMON_PID=$!
-            DAEMON_STARTED=1
-            sleep 5
-        fi
-
-        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
-
-        cat << 'EOF' > Modelfile.llama4-fixed
-FROM ingu627/llama4-scout-q4:109b
-
-PARAMETER stop "<|eot|>"
-PARAMETER stop "<|header_start|>"
-PARAMETER stop "<|header_end|>"
-PARAMETER stop "</tool_call>"
-PARAMETER stop "assistant"
-
-TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
-{{ .System }}<|eot|>
-{{- end }}
-{{- if .Tools }}<|header_start|>system<|header_end|>
-You are an intelligent agent equipped with native function calling. To execute a function, you MUST wrap your JSON payload strictly inside <tool_call> tags.
-Example: <tool_call>{"name": "get_weather", "arguments": {"location": "Paris"}}</tool_call>
-Do NOT output conversational text alongside the tool call.
-Available tools:
-{{- range .Tools }}
-- {{ .Function.Name }}: {{ .Function.Description }}
-  Arguments Schema: {{ .Function.Parameters }}
-{{- end }}<|eot|>
-{{- end }}
-{{- range .Messages }}
-{{- if eq .Role "user" }}<|header_start|>user<|header_end|>
-{{ .Content }}<|eot|>
-{{- else if eq .Role "assistant" }}<|header_start|>assistant<|header_end|>
-{{- if .ToolCalls }}
-{{- range .ToolCalls }}<tool_call>{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}</tool_call>{{- end }}
-{{- else }}{{ .Content }}<|eot|>
-{{- end }}
-{{- else if eq .Role "tool" }}<|header_start|>ipython<|header_end|>
-{{ .Content }}<|eot|>
-{{- end }}
-{{- end }}<|header_start|>assistant<|header_end|>
-"""
-EOF
-
-        echo "Building metaclaw-llama4-scout..."
-        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
-        rm Modelfile.llama4-fixed
-
-        if [ $DAEMON_STARTED -eq 1 ]; then
-            echo "Stopping temporary daemon..."
-            kill $DAEMON_PID 2>/dev/null || true
-        fi
+        echo "Compute Node Detected. Model template patching has been removed in favor of native LiteLLM stop sequences."
         break
     fi
 done
