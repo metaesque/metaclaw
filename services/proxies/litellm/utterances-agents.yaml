@@ -1,0 +1,219 @@
+finance_crypto:
+- cryptocurrency on-chain analysis, decentralized finance tokenomics, blockchain smart
+  contract auditing, crypto exchange reserves
+finance_data:
+- financial corporate data engineering, SEC 10-K PDF parsing, earnings call transcript
+  extraction, XBRL balance sheet formatting
+finance_fundamental:
+- corporate intrinsic valuation, discounted cash flow DCF modeling, company balance
+  sheet analysis, ROIC PEG revenue modeling
+finance_lead:
+- financial consultation, collaborative investment strategy, conversational finance
+  expert, high-level portfolio planning
+finance_manager:
+- investment portfolio allocation, capital position sizing, Kelly criterion variance,
+  buy sell hold financial execution
+finance_orchestrator:
+- financial investment portfolio orchestration, market thesis delegation, capital
+  allocation synthesis, trading team orchestration
+finance_quant:
+- financial market technical analysis, OHLCV price action, RSI MACD momentum indicators,
+  algorithmic market regimes
+finance_risk:
+- financial investment thesis stress testing, portfolio structural tail risk, market
+  drawdown analysis, devil's advocate
+finance_tax:
+- Canadian cross-border tax strategy, capital gains calculations, RRSP TFSA asset
+  location, dividend withholding tax
+generalist:
+- miscellaneous unstructured prompts, casual conversational banter, general trivia,
+  ad-hoc basic questions, undefined catch-all workflows
+health_brain:
+- clinical neurology, neurovascular medicine, physiological brain volumetrics, medical
+  neuro-inflammation, cognitive decline prevention
+health_coach:
+- clinical protocol adherence, medical habit implementation, physiological daily tracking,
+  physical lifestyle medicine execution
+health_heart:
+- clinical cardiology, cardiovascular medicine, physiological lipidology, medical
+  atherosclerosis treatment, endothelial function, blood pressure
+health_hormones:
+- clinical endocrinology, physiological metabolic cascades, medical insulin resistance,
+  hormone therapy, clinical osteopenia
+health_kidney:
+- clinical nephrology, physiological renal clearance, medical kidney function, eGFR
+  analysis, clinical creatinine
+health_lead:
+- health consultation, collaborative medical strategy, conversational health expert,
+  high-level wellness planning
+health_liver:
+- clinical hepatology, physiological hepatic steatosis, medical metabolic syndrome,
+  fatty liver analysis, clinical AST ALT
+health_longevity:
+- clinical gerontology, physiological lifespan extension, medical healthspan maximization,
+  senolytics, clinical mTOR AMPK
+health_nutritionist:
+- clinical dietetics, medical macronutrient planning, physiological dietary protocols,
+  clinical meal structures
+health_orchestrator:
+- clinical internal medicine, medical diagnostics orchestration, physiological protocol
+  synthesis, healthcare delegation
+health_physio:
+- clinical physiotherapy, biomechanical rehabilitation, physiological exercise programming,
+  medical mobility structures
+health_psychiatrist:
+- clinical psychopharmacology, physiological neurochemistry, medical psychiatric drivers,
+  biological mental health
+media_audio:
+- offline audio rendering, speech synthesis generation, generative voice cloning,
+  generative sound design
+media_audiox:
+- NSFW audio generation, explicit sound effects, uncensored foley, moans
+media_image:
+- safe for work image generation, SFW graphics, diagram creation, ui/ux mockups
+media_imagex:
+- NSFW image generation, explicit art, uncensored graphics, anatomical styling
+media_lead:
+- media production consultation, multimodal creative strategy, conversational asset
+  generation expert, high-level media pipeline planning
+media_orchestrator:
+- multimodal generative asset rendering, offline media production coordination, pixel
+  synthesis, audio rendering pipeline
+media_producer:
+- multimodal generative asset rendering, offline media production coordination, pixel
+  synthesis, audio rendering pipeline
+media_text:
+- safe for work creative writing, scriptwriting, copywriting, narrative design, story
+  generation
+media_textx:
+- NSFW creative writing, explicit erotica, dark fiction, uncensored prose, roleplay
+  generation
+media_video:
+- offline video rendering, generative temporal synthesis, pixel animation pipeline,
+  motion graphics generation
+media_videox:
+- NSFW video generation, explicit animation, uncensored temporal motion
+research_concierge:
+- physical world travel logistics, international visa requirements, global flight
+  routing, hardware shipping sourcing
+research_lead:
+- OSINT research consultation, knowledge discovery strategy, academic tracking, general
+  web search coordination, conversational research expert
+research_orchestrator:
+- OSINT research team orchestration, knowledge compression, technical briefing document
+  compilation, intelligence DAG delegation
+research_quant:
+- generalized python data science, pandas CSV data processing, fiat currency exchange
+  arbitrage, generic mathematical cost modeling
+research_scanner:
+- ambient academic research monitoring, arXiv paper tracking, emergent technology
+  patent scanning, scientific serendipity
+research_scout:
+- raw OSINT intelligence gathering, general search engine crawling, unstructured web
+  HTML extraction, bypassing SEO spam
+self_archivist:
+- personal digital exhaust, quantified-self historical logs, introspective biometric
+  telemetry retrieval, personal data vault
+self_council:
+- introspective philosophical synthesis, personal psychological consensus, secular
+  humanist self-reflection, internal behavioral debate
+self_integrator:
+- personal behavioral scripting, introspective habit formation, psychological routine
+  translation, personal calendar blocking
+self_lead:
+- personal psychological consultation, conversational self-reflection expert, introspective
+  strategy, high-level behavioral planning
+self_mirror:
+- introspective cognitive friction, personal logical fallacies, psychological self-deception,
+  socratic self-reflection
+self_orchestrator:
+- personal psychological orchestration, introspective self-modeling, behavioral delegation,
+  internal identity maintenance
+self_simulator:
+- personal behavioral mirroring, psychological ego defense prediction, introspective
+  digital twin, personal reflex simulation
+self_sociologist:
+- personal relational topology, psychological social graph, introspective interpersonal
+  network analysis, metamour mapping
+social_bluesky:
+- bluesky, bsky, AT protocol, short-form text, custom feeds
+social_discord:
+- discord, server management, real-time chat, moderation, webhooks
+social_facebook:
+- facebook, fb groups, community pages, event planning
+social_instagram:
+- instagram, ig, reels, stories, carousels, hashtags
+social_lead:
+- social media consultation, brand strategy, conversational marketing expert, high-level
+  audience planning
+social_linkedin:
+- public B2B audience distribution, outbound professional networking posts, corporate
+  brand publishing, linkedin algorithm SEO
+social_orchestrator:
+- public audience distribution, outbound social media publishing strategy, community
+  engagement algorithms, brand voice coordination
+social_pinterest:
+- pinterest, pins, boards, visual seo, evergreen content
+social_reddit:
+- Reddit strategy, subreddit engagement, organic tone matching, AMA preparation, community
+  rules adherence, deep-dive discussions.
+social_snapchat:
+- snapchat, ephemeral, spotlight, stories, youth marketing
+social_tiktok:
+- TikTok strategy, short-form video hooks, trend analysis, descriptions, virality,
+  audience retention.
+social_twitter:
+- public microblogging distribution, outbound short-form text publishing, X algorithm
+  SEO, audience hook generation, twitter threads
+social_youtube:
+- YouTube strategy, Video SEO, chapters, timestamps, comment parsing, script outlines,
+  audience retention.
+software_auditor:
+- application security auditing, code vulnerability scanning, CVE dependency checking,
+  static analysis
+software_dev:
+- writing application code, software engineering, flutter, python development, UI/UX
+  implementation, application bug fixing
+software_lead:
+- software consultation, collaborative software design, conversational engineering
+  expert, high-level project strategy
+software_orchestrator:
+- software application design, programming language architecture, full-stack development
+  patterns, object-oriented design, frontend UI, backend API development
+software_pm:
+- software project management, agile sprints, developer ticket tracking, feature requirements
+software_qa:
+- software unit testing, application integration tests, jest, pytest, software bug
+  reproduction
+sre_bandwidth:
+- hardware network throttling, satellite uplink, physical bandwidth monitoring, tailscale
+  mesh throughput
+sre_db:
+- postgres database administration, physical disk indexing, pgvector maintenance,
+  SQL performance profiling
+sre_incident:
+- catastrophic hardware failure, site reliability incident response, system outage,
+  server downtime post-mortem
+sre_lead:
+- server infrastructure consultation, conversational SRE expert, hardware provisioning
+  strategy, physical data center stability planning
+sre_network:
+- tailscale VPN networking, physical firewall routing, VPC tunneling, port forwarding
+sre_orchestrator:
+- server infrastructure orchestration, hardware provisioning, physical data center
+  stability
+sre_power:
+- physical electrical power management, solar panel yield, lithium battery degradation,
+  off-grid energy
+sre_storage:
+- physical disk drive wear, NVMe TBW, storage capacity monitoring, docker system volume
+  pruning
+sre_sysadmin:
+- linux bash terminal execution, host OS file manipulation, root privileges, unix
+  administration
+sre_telemetry:
+- hardware resource monitoring, RAM utilization, physical VRAM tracking, server dashboard
+  logging
+sre_thermal:
+- hardware temperature monitoring, CPU thermal throttling, cooling fans, server heat
+  management
