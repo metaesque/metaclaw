@@ -70,7 +70,6 @@ def main():
     if sym not in providers:
       needs_teardown = True
     else:
-      # Check if transition requires teardown (e.g., target changed or metal state flipped)
       prov_data = providers[sym]
       if isinstance(prov_data, dict):
         provider = prov_data.get("uid")
@@ -106,9 +105,6 @@ def main():
   # --------------------------------------------------------------------------
   # 2. GLOBAL MODEL RESOLUTION
   # --------------------------------------------------------------------------
-  # Evaluate the cluster topography globally so we can inject target model strings
-  # into multiple provider configurations (Proxy vs Runner) symmetrically.
-
   cluster_nodes = profile.get("nodes", [])
   cluster_tier_value = max([get_tier_weight(n.get("tier", 0)) for n in cluster_nodes] + [0])
   compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
@@ -147,8 +143,6 @@ def main():
       os.chdir(cwd)
 
     metal_flag_path = os.path.join(sym_path, ".metal")
-    # CRITICAL LIFELINE PRESERVATION:
-    # Overrides matrix settings if the node is headless OR tailscale is already running natively
     if svc == "network":
         metal = my_node.get("hardware", {}).get("headless", False) or my_node.get("hardware", {}).get("tailscale_active", False)
 
@@ -176,7 +170,6 @@ def main():
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
 
-      # Purge the legacy overrides to prevent discovery collisions
       if "HSA_OVERRIDE_GFX_VERSION" in env_data:
           del env_data["HSA_OVERRIDE_GFX_VERSION"]
       if "HIP_VISIBLE_DEVICES" in env_data:
@@ -185,7 +178,6 @@ def main():
       gpu_detected = my_node.get("hardware", {}).get("gpu_detected", "")
       is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
 
-      # Hardcode Vulkan compute backend exclusively for AMD APUs (RDNA 3.5 specific)
       if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
           env_data["OLLAMA_VULKAN"] = "1"
           env_data["OLLAMA_IGPU_ENABLE"] = "1"
@@ -195,9 +187,6 @@ def main():
               if key in env_data:
                   del env_data[key]
 
-      # INVARIANT: Judge Model on Control Plane
-      # We explicitly deploy the simple/judge model on the Control node for low-latency routing,
-      # while heavy models are assigned to the Compute node. Do NOT remove this logic.
       models_to_pull = []
       if "control" in my_node.get("planes", []):
           models_to_pull.append(target_simple.replace("ollama/", ""))
@@ -205,7 +194,11 @@ def main():
       if "compute" in my_node.get("planes", []):
           models_to_pull.extend([target_medium.replace("ollama/", ""), "ingu627/llama4-scout-q4:109b"])
 
-      # Explicit literal quoting to satisfy Bash parsing while maintaining Make loop compatibility
+      # HISTORICAL CONTEXT: We wrap the string in explicit double quotes to prevent Bash `Error 127`
+      # when scripts like `install.sh` use `source .env`. Without the quotes, Bash interprets the space
+      # between models as a new command. The Make `for` loop in upstream scripts is correctly designed
+      # to handle quoted string evaluation. We previously tried using `grep` to bypass `source`, but it
+      # left the `.env` file toxic for other system scripts. This explicit quoting is the safest design.
       env_data["OLLAMA_TARGET_MODELS"] = '"' + " ".join(list(dict.fromkeys(models_to_pull))) + '"'
       seeded = True
 
