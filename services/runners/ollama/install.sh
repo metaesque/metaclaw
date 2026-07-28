@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-# Load orchestrator variables natively. Now that orchestrator.py writes a clean,
-# properly delimited environment file, we can safely use 'source' without crashing Bash.
+# Load orchestrator variables
 if [ -f ../../../.env ]; then
     source ../../../.env
 fi
@@ -42,13 +41,13 @@ if [ -x "ollama" ]; then
         # ==============================================================================
         # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
         # ==============================================================================
-        # Safely iterate over the OLLAMA_TARGET_MODELS list using IFS to detect if the target
-        # model is assigned to this specific node before compiling the patch.
+        # We parse the array using IFS to safely detect the target model without quoting issues
         IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
         for model in "${models[@]}"; do
             if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
                 echo "Compute Node Detected. Patching broken llama4-scout tool template..."
 
+                # Start a temporary daemon in the background to build the model if it's not running
                 DAEMON_STARTED=0
                 if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
                     echo "Starting temporary Ollama daemon for model patching..."
@@ -60,8 +59,9 @@ if [ -x "ollama" ]; then
 
                 OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
 
-                # By defining the explicit <tool_call> boundaries in the Modelfile, Ollama's generic backend
-                # can reliably reverse-engineer the regex schema needed to parse the JSON into an API object.
+                # We inject explicit <tool_call> boundaries and stop tokens so Ollama's generic
+                # backend can reliably reverse-engineer the regex schema needed to parse the JSON.
+                # Stopping at "assistant" strictly truncates hallucinated conversation leaks.
                 cat << 'EOF' > Modelfile.llama4-fixed
 FROM ingu627/llama4-scout-q4:109b
 
@@ -69,6 +69,7 @@ PARAMETER stop "<|eot|>"
 PARAMETER stop "<|header_start|>"
 PARAMETER stop "<|header_end|>"
 PARAMETER stop "</tool_call>"
+PARAMETER stop "assistant"
 
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
 {{ .System }}<|eot|>
@@ -118,6 +119,7 @@ else
     echo "Downloading Ollama v$OLLAMA_VERSION for $OLLAMA_ARCH..."
 fi
 
+# Try .tar.zst modern archive format first, fallback to legacy .tgz
 if curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst"; then
     tar xf ollama.archive
 elif curl -f -sSL -o ollama.archive "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tgz"; then
@@ -127,6 +129,8 @@ else
     exit 1
 fi
 
+# Modern Ollama archives extract into 'bin/ollama' and 'lib/ollama/...'.
+# Because we are in ./bin, tar creates nested directories. We must elevate them.
 if [ -f "bin/ollama" ]; then
     mv bin/ollama ./ollama
 elif [ -f "./bin/ollama" ]; then
@@ -142,6 +146,7 @@ elif [ -d "./lib" ]; then
 fi
 
 rm -rf bin ./bin ollama.archive
+
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
 
@@ -171,6 +176,7 @@ PARAMETER stop "<|eot|>"
 PARAMETER stop "<|header_start|>"
 PARAMETER stop "<|header_end|>"
 PARAMETER stop "</tool_call>"
+PARAMETER stop "assistant"
 
 TEMPLATE """{{- if .System }}<|header_start|>system<|header_end|>
 {{ .System }}<|eot|>
