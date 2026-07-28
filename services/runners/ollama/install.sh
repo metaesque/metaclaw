@@ -34,7 +34,7 @@ fi
 
 # Do not re-download if the binary already exists and is the correct version
 if [ -x "ollama" ]; then
-    CURRENT_VERSION=$(./ollama --version 2>/dev/null | awk '{print $NF}' | sed 's/^v//')
+    CURRENT_VERSION=$(./ollama --version 2>/dev/null | grep -i "version" | tail -n 1 | awk '{print $NF}' | sed 's/^v//')
     if [ "$CURRENT_VERSION" = "$OLLAMA_VERSION" ]; then
         echo "Ollama v$OLLAMA_VERSION is already installed in ./bin."
 
