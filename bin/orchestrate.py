@@ -209,7 +209,7 @@ def main():
       # Export a clean space-separated list without artificial quotes.
       # The env_instantiate.py script will format the .env file safely, allowing the Makefile to parse
       # multiple models without passing them as a single word to the ollama CLI.
-      env_data["OLLAMA_TARGET_MODELS"] = " ".join(list(dict.fromkeys(models_to_pull)))
+      env_data["OLLAMA_TARGET_MODELS"] = '"' + " ".join(list(dict.fromkeys(models_to_pull))) + '"'
       seeded = True
 
     elif provider == "litellm":
