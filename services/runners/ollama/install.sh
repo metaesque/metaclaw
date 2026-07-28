@@ -38,11 +38,51 @@ if [ -x "ollama" ]; then
     if [ "$CURRENT_VERSION" = "$OLLAMA_VERSION" ]; then
         echo "Ollama v$OLLAMA_VERSION is already installed in ./bin."
 
-        # We parse the array using IFS to safely detect the target model without quoting issues
-        IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
+        # ==============================================================================
+        # CUSTOM MODEL TEMPLATE INJECTION (FIX FOR LLAMA4-SCOUT JSON LEAK)
+        # ==============================================================================
+        # Strip literal quotes for safe array parsing
+        MODELS_CLEAN=$(echo "$OLLAMA_TARGET_MODELS" | tr -d '"')
+        IFS=' ' read -r -a models <<< "$MODELS_CLEAN"
         for model in "${models[@]}"; do
             if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
-                echo "Compute Node Detected. Model template patching has been removed in favor of native LiteLLM stop sequences."
+                echo "Compute Node Detected. Patching llama4-scout tool template..."
+
+                # Start a temporary daemon in the background to build the model if it's not running
+                DAEMON_STARTED=0
+                if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
+                    echo "Starting temporary Ollama daemon for model patching..."
+                    OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
+                    DAEMON_PID=$!
+                    DAEMON_STARTED=1
+                    sleep 5
+                fi
+
+                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
+
+                # Apply explicit Llama 4 syntax tags to prevent the assistant stream leak
+                cat << 'EOF' > Modelfile.llama4-fixed
+FROM ingu627/llama4-scout-q4:109b
+PARAMETER stop "<|start_header_id|>"
+PARAMETER stop "<|end_header_id|>"
+PARAMETER stop "<|eot_id|>"
+TEMPLATE """{{ if .System }}<|start_header_id|>system<|end_header_id|>
+
+{{ .System }}<|eot_id|>{{ end }}{{ if .Prompt }}<|start_header_id|>user<|end_header_id|>
+
+{{ .Prompt }}<|eot_id|>{{ end }}<|start_header_id|>assistant<|end_header_id|>
+
+"""
+EOF
+
+                echo "Building metaclaw-llama4-scout..."
+                OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
+                rm Modelfile.llama4-fixed
+
+                if [ $DAEMON_STARTED -eq 1 ]; then
+                    echo "Stopping temporary daemon..."
+                    kill $DAEMON_PID 2>/dev/null || true
+                fi
                 break
             fi
         done
@@ -87,7 +127,7 @@ if [ -f "/usr/local/bin/ollama" ]; then
     sudo systemctl disable ollama 2>/dev/null || true
 fi
 
-# Safely extract the binary
+# Safely extract the binary without trashing existing framework lib/ files
 if [ -f "tmp_extract/bin/ollama" ]; then
     mv tmp_extract/bin/ollama .
 fi
@@ -105,11 +145,46 @@ rm -rf tmp_extract ollama.archive
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
 
-# Re-run IFS parsing for first-time installation detection logging
-IFS=' ' read -r -a models <<< "$OLLAMA_TARGET_MODELS"
+# Re-run IFS parsing for first-time installation deployment
+MODELS_CLEAN=$(echo "$OLLAMA_TARGET_MODELS" | tr -d '"')
+IFS=' ' read -r -a models <<< "$MODELS_CLEAN"
 for model in "${models[@]}"; do
     if [[ "$model" == *"ingu627/llama4-scout-q4:109b"* ]]; then
-        echo "Compute Node Detected. Model template patching has been removed in favor of native LiteLLM stop sequences."
+        echo "Compute Node Detected. Patching llama4-scout tool template..."
+
+        DAEMON_STARTED=0
+        if ! curl -s http://127.0.0.1:${OLLAMA_PORT:-11434}/api/tags > /dev/null; then
+            echo "Starting temporary Ollama daemon for model patching..."
+            OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} OLLAMA_MODELS=${EXTERNAL_DRIVE_PATH:-/tmp}/ollama-models ./ollama serve > /dev/null 2>&1 &
+            DAEMON_PID=$!
+            DAEMON_STARTED=1
+            sleep 5
+        fi
+
+        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama pull ingu627/llama4-scout-q4:109b || true
+
+        cat << 'EOF' > Modelfile.llama4-fixed
+FROM ingu627/llama4-scout-q4:109b
+PARAMETER stop "<|start_header_id|>"
+PARAMETER stop "<|end_header_id|>"
+PARAMETER stop "<|eot_id|>"
+TEMPLATE """{{ if .System }}<|start_header_id|>system<|end_header_id|>
+
+{{ .System }}<|eot_id|>{{ end }}{{ if .Prompt }}<|start_header_id|>user<|end_header_id|>
+
+{{ .Prompt }}<|eot_id|>{{ end }}<|start_header_id|>assistant<|end_header_id|>
+
+"""
+EOF
+
+        echo "Building metaclaw-llama4-scout..."
+        OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT:-11434} ./ollama create metaclaw-llama4-scout -f Modelfile.llama4-fixed
+        rm Modelfile.llama4-fixed
+
+        if [ $DAEMON_STARTED -eq 1 ]; then
+            echo "Stopping temporary daemon..."
+            kill $DAEMON_PID 2>/dev/null || true
+        fi
         break
     fi
 done
