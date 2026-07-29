@@ -1,3 +1,10 @@
+../workspace/AGENTS.md
+../workspace/HEARTBEAT.md
+../workspace/IDENTITY.md
+../workspace/SOUL.md
+../workspace/TOOLS.md
+../workspace/USER.md
+
 ../workspace/agents/orchestrator/chat.yaml
 ../workspace/agents/orchestrator/chat/IDENTITY.md
 ../workspace/agents/orchestrator/chat/SECURITY.md
