@@ -77,15 +77,21 @@ def main():
                 except json.JSONDecodeError:
                     continue
 
-                if data.get("type") != "message":
-                    continue
-
-                msg = data.get("message", {})
-                role = msg.get("role")
-                timestamp = data.get("timestamp", "Unknown Time")
+                event_type = data.get("type")
 
                 if args.raw:
-                    # Clean up the raw JSON
+                    # Output non-message session events directly to preserve diagnostic context
+                    if event_type in ["model_change", "thinking_level_change"]:
+                        print(json.dumps(data, separators=(',', ':')))
+                        continue
+
+                    if event_type != "message":
+                        continue
+
+                    msg = data.get("message", {})
+                    role = msg.get("role")
+                    timestamp = data.get("timestamp", "Unknown Time")
+
                     cleaned_content = []
                     raw_content = msg.get("content")
                     if isinstance(raw_content, str):
@@ -100,7 +106,6 @@ def main():
                                     "args": item.get("arguments")
                                 })
                     elif role == "toolResult":
-                        # Attempt to extract text from tool results if possible
                         if isinstance(raw_content, list):
                              for item in raw_content:
                                  if item.get("type") == "text":
@@ -111,8 +116,22 @@ def main():
                         "timestamp": timestamp,
                         "content": cleaned_content
                     }
+                    if msg.get("model"):
+                        cleaned_data["model"] = msg.get("model")
+                    if msg.get("provider"):
+                        cleaned_data["provider"] = msg.get("provider")
+                    if msg.get("stopReason"):
+                        cleaned_data["stopReason"] = msg.get("stopReason")
+
                     print(json.dumps(cleaned_data, separators=(',', ':')))
                     continue
+
+                if event_type != "message":
+                    continue
+
+                msg = data.get("message", {})
+                role = msg.get("role")
+                timestamp = data.get("timestamp", "Unknown Time")
 
                 time_str = f"{COLOR_TIME}[{timestamp}]{COLOR_RESET}"
                 separator = "=" * 80

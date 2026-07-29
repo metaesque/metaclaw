@@ -1,5 +1,6 @@
 import sys
 import litellm
+from litellm.integrations.custom_logger import CustomLogger
 from litellm.router_strategy.auto_router.litellm_encoder import LiteLLMRouterEncoder
 from litellm.proxy.proxy_cli import run_server
 
@@ -26,8 +27,21 @@ def chunked_encode_queries(self, docs, **kwargs):
 
   return all_embeddings
 
-print("[PATCH] Injecting LiteLLMRouterEncoder.encode_queries monkey patch...")
-LiteLLMRouterEncoder.encode_queries = chunked_encode_queries
+# print("[PATCH] Injecting LiteLLMRouterEncoder.encode_queries monkey patch...")
+# LiteLLMRouterEncoder.encode_queries = chunked_encode_queries
+
+class ToolCallInterceptor(CustomLogger):
+  """
+  LiteLLM Post-Call Interceptor Stub.
+  Will intercept raw LLM completion responses and transform stringified JSON tool outputs
+  into standard OpenAI tool_calls objects before returning to OpenClaw.
+  """
+  async def async_post_call_success_hook(self, user_api_key, original_response, start_time, end_time):
+    # Stub: Currently passes through without mutation to allow observing base model behavior
+    return original_response
+
+print("[PATCH] Registering ToolCallInterceptor callback stub with LiteLLM...")
+litellm.callbacks = [ToolCallInterceptor()]
 
 if __name__ == "__main__":
   run_server()
