@@ -136,6 +136,9 @@ litellm_settings:
   # Directs the 'json_logs' success callback to output to our mapped persistent volume
   # for the Auditor agent to parse and calculate cumulative spend.
   success_callbacks: ["json_logs"]
+  # Explicitly register the custom callback class loaded from the patch file
+  custom_callbacks:
+    - advanced.patch_entrypoint.ToolCallInterceptor
 
 router_settings:
   routing_strategy: usage-based-routing-v2

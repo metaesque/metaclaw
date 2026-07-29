@@ -100,9 +100,9 @@ def setdefault_path(d, path_keys):
 gw = setdefault_path(data, ['gateway'])
 gw['mode'] = 'local'
 
-# Enforce experimental Lean Mode to prevent small local models from choking on tool bloat
+# Disable experimental Lean Mode to prevent OpenClaw from hiding tools behind 'tool_search'
 experimental = setdefault_path(data, ['agents', 'defaults', 'experimental'])
-experimental['localModelLean'] = True
+experimental['localModelLean'] = False
 
 # ==============================================================================
 # METACLAW ADMIN SECURITY GATE

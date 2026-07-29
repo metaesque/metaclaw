@@ -32,16 +32,20 @@ def chunked_encode_queries(self, docs, **kwargs):
 
 class ToolCallInterceptor(CustomLogger):
   """
-  LiteLLM Post-Call Interceptor Stub.
-  Will intercept raw LLM completion responses and transform stringified JSON tool outputs
-  into standard OpenAI tool_calls objects before returning to OpenClaw.
+  LiteLLM Post-Call Interceptor.
+  Designed to intercept raw LLM completion responses and transform stringified
+  JSON tool outputs into standard OpenAI tool_calls objects before returning to OpenClaw.
   """
-  async def async_post_call_success_hook(self, user_api_key, original_response, start_time, end_time):
-    # Stub: Currently passes through without mutation to allow observing base model behavior
-    return original_response
+  async def async_post_call_success_hook(self, data, user_api_key_dict, response):
+    try:
+      print(f"[INTERCEPTOR] async_post_call_success_hook fired for model: {data.get('model', 'unknown')}", flush=True)
+      # Stub: Return the original response without mutation for now to observe base behavior.
+      return response
+    except Exception as e:
+      print(f"[INTERCEPTOR] Error during execution: {e}", flush=True)
+      return response
 
-print("[PATCH] Registering ToolCallInterceptor callback stub with LiteLLM...")
-litellm.callbacks = [ToolCallInterceptor()]
+print("[PATCH] ToolCallInterceptor loaded into environment. Awaiting config.yaml registration...")
 
 if __name__ == "__main__":
   run_server()
