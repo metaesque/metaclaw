@@ -12,6 +12,7 @@ bin/cluster_setup.py
 bin/cluster_status.py
 bin/compare_config.sh
 bin/compile_md.py
+bin/create_modelfile.py
 bin/customize.py
 bin/env_instantiate.py
 bin/fetch_arena.py
