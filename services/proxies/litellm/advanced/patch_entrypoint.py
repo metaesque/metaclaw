@@ -39,13 +39,19 @@ class ToolCallInterceptor(CustomLogger):
   async def async_post_call_success_hook(self, data, user_api_key_dict, response):
     try:
       print(f"[INTERCEPTOR] async_post_call_success_hook fired for model: {data.get('model', 'unknown')}", flush=True)
-      # Stub: Return the original response without mutation for now to observe base behavior.
+      try:
+          if hasattr(response, 'choices') and len(response.choices) > 0:
+              content = response.choices[0].message.content
+              print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{content}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+      except Exception as inner_e:
+          print(f"[INTERCEPTOR] Could not extract raw payload for logging: {inner_e}", flush=True)
       return response
     except Exception as e:
       print(f"[INTERCEPTOR] Error during execution: {e}", flush=True)
       return response
 
-print("[PATCH] ToolCallInterceptor loaded into environment. Awaiting config.yaml registration...")
+print("[PATCH] ToolCallInterceptor loaded into environment. Registering callback...")
+litellm.callbacks = [ToolCallInterceptor()]
 
 if __name__ == "__main__":
   run_server()
