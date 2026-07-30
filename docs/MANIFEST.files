@@ -34,6 +34,7 @@ bin/sysprofile.py
 bin/todo.py
 bin/wizard_cluster.py
 docs/.MANIFEST.files.ignore
+docs/AGENTS.md
 docs/ARCHITECTURE.md
 docs/CHANGELOG.md
 docs/DEMOS.md
