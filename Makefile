@@ -520,3 +520,7 @@ tmp/workspace.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
 	$(PYTHON_BIN) ./bin/newcode.py -s docs/WORKSPACE.files > tmp/workspace.txt
 	@echo "Workspace manifest generated at: tmp/workspace.txt"
+
+wksplist: docs/WORKSPACE.files
+docs/WORKSPACE.files: FORCE
+	find ../workspace -name research -prune -false -o -name src -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort > docs/WORKSPACE.files
