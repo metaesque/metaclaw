@@ -16,3 +16,4 @@ yt_dlp
 youtube_transcript_api
 google-genai
 litellm
+google-cloud-storage
