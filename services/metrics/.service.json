@@ -1,0 +1,8 @@
+{
+  "uid": "metric",
+  "uids": "metrics",
+  "name": "Time-Series Database",
+  "names": "Time-Series Databases",
+  "category": "Observability & Telemetry Forwarding",
+  "purpose": "The central storage and query engine optimized specifically for high-frequency, structured numerical metrics (e.g., CPU temperature, Power wattage). It periodically scrapes localized edge exporters."
+}

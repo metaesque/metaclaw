@@ -89,6 +89,11 @@ services/events/Makefile
 services/events/hookdeck/.provider.json
 services/events/ngrok/.provider.json
 services/events/svix/.provider.json
+services/exporters/.service.json
+services/exporters/node-exporter/.env.template
+services/exporters/node-exporter/.provider.json
+services/exporters/node-exporter/Makefile
+services/exporters/node-exporter/docker-compose.yml
 services/fetchers/.service.json
 services/fetchers/Makefile
 services/fetchers/browseai/.provider.json
@@ -107,7 +112,6 @@ services/forwarders/fluentbit/.env.template
 services/forwarders/fluentbit/.provider.json
 services/forwarders/fluentbit/Makefile
 services/forwarders/fluentbit/docker-compose.yml
-services/forwarders/fluentbit/fluent-bit.conf
 services/forwarders/logstash/.provider.json
 services/forwarders/vector/.provider.json
 services/gateways/.service.json
@@ -157,6 +161,11 @@ services/memories/postgres/init-roles.sh
 services/memories/qdrant/.provider.json
 services/memories/sqlite/.provider.json
 services/memories/weaviate/.provider.json
+services/metrics/.service.json
+services/metrics/victoriametrics/.env.template
+services/metrics/victoriametrics/.provider.json
+services/metrics/victoriametrics/Makefile
+services/metrics/victoriametrics/docker-compose.yml
 services/networks/.service.json
 services/networks/cloudflare-tunnels/.provider.json
 services/networks/tailscale/.env.template
@@ -250,3 +259,8 @@ services/tracers/phoenix/.provider.json
 services/tracers/signoz/.provider.json
 services/vcses/.service.json
 services/vcses/Makefile
+services/visualizers/.service.json
+services/visualizers/grafana/.env.template
+services/visualizers/grafana/.provider.json
+services/visualizers/grafana/Makefile
+services/visualizers/grafana/docker-compose.yml

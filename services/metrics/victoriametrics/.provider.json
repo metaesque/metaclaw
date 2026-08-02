@@ -1,0 +1,10 @@
+{
+  "uid": "victoriametrics",
+  "name": "VictoriaMetrics",
+  "overview": "The ultra-efficient TSDB default. Provides seamless compatibility with the Prometheus ecosystem while consuming a fraction of the RAM and storage.",
+  "details": [
+    "VictoriaMetrics is a fast, cost-effective, and highly scalable time-series database. It serves as a direct, drop-in replacement for Prometheus, meaning it fully supports the PromQL querying language and natively accepts metrics from standard Prometheus Exporters.",
+    "Its primary advantage is architectural efficiency. It compresses time-series arrays aggressively, resulting in significantly lower disk I/O and RAM overhead compared to competitors. For the MetaClaw ecosystem, deploying the single-node version of VictoriaMetrics on the Archive plane allows the cluster to absorb millions of high-frequency hardware readings (from smart plugs, GPUs, and CPUs) without starving the primary LLM inference engines of resources."
+  ],
+  "diagnostics": "1. **HTTP API Health:** You should see `OK`"
+}

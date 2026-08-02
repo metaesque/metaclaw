@@ -524,3 +524,4 @@ tmp/workspace.txt: FORCE | $(PYTHON_BIN)
 wksplist: docs/WORKSPACE.files
 docs/WORKSPACE.files: FORCE
 	find ../workspace -name research -prune -false -o -name src -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort > docs/WORKSPACE.files
+	find ../workspace/src/projects/kasa/bin -name __pycache__ -prune -false -o -name '*kasa*' >> docs/WORKSPACE.files

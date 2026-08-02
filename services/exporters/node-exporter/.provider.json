@@ -1,0 +1,9 @@
+{
+  "uid": "node-exporter",
+  "name": "Prometheus Node Exporter",
+  "overview": "The industry standard for hardware telemetry extraction. It exposes a vast array of system metrics (CPU, RAM, disk I/O, network) via a lightweight HTTP endpoint.",
+  "details": [
+    "Node Exporter is a stateless, pull-based daemon developed by the Prometheus team. It reads deep Linux kernel metrics (such as CPU core utilization, memory bandwidth, and NVMe wear states) and exposes them on a dedicated `/metrics` endpoint.",
+    "For the MetaClaw ecosystem, Node Exporter is deployed across all nodes in the cluster. Because it operates on a pull-based model, it consumes almost zero CPU cycles until the central TSDB (VictoriaMetrics) explicitly requests a scrape. This makes it exceptionally safe to run alongside heavy LLM inference workloads on the blast-zone."
+  ]
+}

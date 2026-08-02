@@ -1,0 +1,8 @@
+{
+  "uid": "exporter",
+  "uids": "exporters",
+  "name": "Telemetry Exporter",
+  "names": "Telemetry Exporters",
+  "category": "Observability & Telemetry Forwarding",
+  "purpose": "Lightweight, stateless edge daemons that translate host hardware telemetry or external application state into standard exposition formats. They sit idle until polled by a centralized Time-Series Database (TSDB)."
+}
