@@ -384,6 +384,8 @@
 ../workspace/agents/sre/thermal/IDENTITY.md
 ../workspace/agents/sre/thermal/MEMORY.md
 ../workspace/agents/sre/thermal/SOUL.md
+../workspace/src/projects/DESIGN.md
+../workspace/src/projects/kasa/docs/DESIGN.md
 ../workspace/src/projects/kasa/bin/test_power_kasa.py
 ../workspace/src/projects/kasa/bin/kasa_alert.sh
 ../workspace/src/projects/kasa/bin/power_kasa.py

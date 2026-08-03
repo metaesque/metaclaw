@@ -15,26 +15,24 @@ barrier for autonomous AI agents: the immense initial hardware overhead. The
 framework is built on a philosophy of **"Incremental Expansion without Hardware
 Waste."**
 
-Non-technical users are not required to build a distributed data center on Day
-
-1. Instead, the architecture allows users to validate the utility of personal AI
-   agents on their existing dual-use laptops. As their reliance on the system
-   grows, they can incrementally expand into dedicated hardware. Each new
-   hardware purchase targets a specific functional bottleneck, cleanly taking
-   over a subset of services without rendering previous hardware obsolete.
+Users of MetaClaw (often non-technical) are not expected to build a distributed
+compute farm on Day 1. Instead, the architecture allows users to validate the
+utility of personal AI agents on their existing dual-use laptops. As their
+reliance on the system grows, they can incrementally expand into dedicated
+hardware. Each new hardware purchase targets a specific functional bottleneck,
+cleanly taking over a subset of services without rendering previous hardware
+obsolete.
 
 ### The "Zero Straight-Jacket" Principle
 
-Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated. Previous
-iterations required aggressive workarounds, monkey-patches, and strict
-architectural straight-jackets to force the ecosystem to function safely. As
-OpenClaw has matured (2026.6.8+), Meta<Claw> has shed this cruft.
-
-Our primary directive is to provide a seamless, robust provisioning pipeline
-that sets up the ecosystem for non-technical users and then **gets completely
-out of the way**. We make it incredibly easy to get up and running, but we do
-not put users in a straight-jacket. The framework does not dictate your agent
-logic, your prompt structures, or your internal UI configurations.
+Meta<Claw> is explicitly designed to be unobtrusive and un-opinionated about
+what happens *inside* OpenClaw (that is deemed "user space"). Our primary
+directive is to provide a seamless, robust provisioning pipeline that sets up
+the ecosystem for non-technical users and then **gets completely out of the
+way**. We make it incredibly easy to get up and running, but we do not put users
+in a straight-jacket. The framework does not dictate your agent logic, your
+prompt structures, or your internal UI configurations, but does provide
+examples and options to get you "up and running" quickly.
 
 ### The 4 Functional Hardware Planes
 
@@ -99,8 +97,9 @@ Meta<Claw> draws a strict architectural distinction between a "Tier" and a
   many will decide not to go any further, content to use cloud-based LLMs and
   surviving within the constrained footprints provided by Tiers 0 and 1.
 
-* Some users will explore Tiers 2, 3 and 4 (which can occur in any order and
-  independent of one another).
+* Some users will explore Tiers 2, 3A, and 3E (which can occur in any order
+  and independent of one another), eventually reaching Tier 4 where all four
+  planes are on separate hosts.
 
 * **Tier 2** advances the cluster by adding a dedicated Compute Node (or nodes)
   for local LLM inference, moving that workload off the Control node to avoid
@@ -113,7 +112,8 @@ Meta<Claw> draws a strict architectural distinction between a "Tier" and a
 * **Tier 3E** advances the cluster by adding a dedicated Execution Node, whose
   hardware is heavily optimized for sandboxing and volatile CI workloads.
 
-* **Tier 4** represents the fully Distributed Farm, with at least 4 independent nodes natively handling their respective planes.
+* **Tier 4** represents the fully Distributed Farm, with at least 4 independent
+  nodes natively handling their respective planes.
 
 ## Physical Network Standards
 
@@ -187,15 +187,16 @@ the public internet is a massive security vulnerability. MetaClaw utilizes
   into a headless remote node, Tailscale **MUST** be installed natively on the
   bare-metal host OS. If run as a Docker container, a framework teardown (`make
   factory-reset-soft`) will sever your SSH tunnel and lock you out. This is
-  enforced systematically by generating a `.metal` flag inside `services/networks/tailscale`
-  when a native daemon is detected.
+  enforced systematically by generating a `.metal` flag inside
+  `services/networks/tailscale` when a native daemon is detected.
 
 * **Native SSH Over Python SSH:** Tailscale SSH authenticates users via their
-  machine identity, returning a `"none"` authentication response to standard OpenSSH
-  clients. Pure-Python SSH libraries (like `paramiko` and `fabric`) aggressively
-  reject `"none"` auth as a security vulnerability. Therefore, MetaClaw deployment
-  scripts must **always** use `subprocess` to call the host OS's native `ssh` and
-  `scp` binaries rather than relying on Python libraries for cluster orchestration.
+  machine identity, returning a `"none"` authentication response to standard
+  OpenSSH clients. Pure-Python SSH libraries (like `paramiko` and `fabric`)
+  aggressively reject `"none"` auth as a security vulnerability. Therefore,
+  MetaClaw deployment scripts must **always** use `subprocess` to call the host
+  OS's native `ssh` and `scp` binaries rather than relying on Python libraries
+  for cluster orchestration.
 
 ## Bare-Metal Node Provisioning
 
@@ -227,21 +228,47 @@ before executing `make wizard-batch` or `make apply`.**
 
 Running state-of-the-art LLMs natively on edge hardware often requires navigating proprietary GPU drivers. MetaClaw embraces open-source runners (like Ollama), but special architectural care is required for APUs (like the AMD Strix Halo).
 
-1. **The Linux HWE Requirement:** Standard LTS Linux kernels often lack drivers for bleeding-edge silicon. If an APU is present but undetected, you **must** upgrade the Linux Kernel to the Hardware Enablement (HWE) stack (e.g., `linux-generic-hwe-24.04` for Linux 7.0+). Without it, inference falls back to CPU, increasing TTFT (Time-To-First-Token) latency from sub-seconds to 70+ seconds.
-2. **The Vulkan Workaround:** Ollama's bundled ROCm/HIP binaries strictly check PCI IDs. They frequently reject novel architectures like RDNA 3.5 (`gfx1151`). Furthermore, the Linux `amdgpu` driver enforces strict Shared Virtual Memory (SVM) limits that can cause catastrophic swap thrashing when loading massive models into UMA frame buffers. To force acceleration and bypass these limits, MetaClaw injects `OLLAMA_VULKAN=1`, `OLLAMA_IGPU_ENABLE=1`, and `ROCR_VISIBLE_DEVICES=none` to utilize the universal Vulkan compute engine.
-3. **The Blanking Mandate:** You must **never** inject `HIP_VISIBLE_DEVICES=-1` to bypass ROCm. Doing so blinds the hardware enumeration scanner entirely, causing Ollama to instantly abort initialization and fall back to CPU.
+1. **The Linux HWE Requirement:** Standard LTS Linux kernels often lack drivers
+   for bleeding-edge silicon. If an APU is present but undetected, you **must**
+   upgrade the Linux Kernel to the Hardware Enablement (HWE) stack (e.g.,
+   `linux-generic-hwe-24.04` for Linux 7.0+). Without it, inference falls back
+   to CPU, increasing TTFT (Time-To-First-Token) latency from sub-seconds to 70+
+   seconds.
+2. **The Vulkan Workaround:** Ollama's bundled ROCm/HIP binaries strictly check
+   PCI IDs. They frequently reject novel architectures like RDNA 3.5
+   (`gfx1151`). Furthermore, the Linux `amdgpu` driver enforces strict Shared
+   Virtual Memory (SVM) limits that can cause catastrophic swap thrashing when
+   loading massive models into UMA frame buffers. To force acceleration and
+   bypass these limits, MetaClaw injects `OLLAMA_VULKAN=1`,
+   `OLLAMA_IGPU_ENABLE=1`, and `ROCR_VISIBLE_DEVICES=none` to utilize the
+   universal Vulkan compute engine.
+3. **The Blanking Mandate:** You must **never** inject `HIP_VISIBLE_DEVICES=-1`
+   to bypass ROCm. Doing so blinds the hardware enumeration scanner entirely,
+   causing Ollama to instantly abort initialization and fall back to CPU.
 
 ## Telemetry Decoupling (Observability Stack)
 
-MetaClaw enforces a strict SRE architectural boundary between data storage, collection, and visualization. Logs (unstructured text) and Metrics (structured time-series numbers) are explicitly separated in the taxonomy.
+MetaClaw enforces a strict SRE architectural boundary between data storage,
+collection, and visualization. Logs (unstructured text) and Metrics (structured
+time-series numbers) are explicitly separated in the taxonomy.
 
-1. **Loggers & TSDBs (Storage):** Services like VictoriaLogs (Logs) and VictoriaMetrics (Time-Series Databases) reside centrally on the `Archive` or `Control` plane. They are the heavy databases optimized for high-speed ingestion and querying.
+1. **Loggers & TSDBs (Storage):** Services like VictoriaLogs (Logs) and
+   VictoriaMetrics (Time-Series Databases) reside centrally on the `Archive` or
+   `Control` plane. They are the heavy databases optimized for high-speed
+   ingestion and querying.
 
-2. **Forwarders & Collectors (Collection):** Edge daemons deployed globally across *every* node in the cluster.
-   - **Forwarders** (e.g., Fluent Bit) tail raw log files and stream unstructured text back to the Logger.
-   - **Collectors** (e.g., Telegraf) execute local scripts (like `power_kasa.py`), scrape host hardware stats, and push numerical arrays back to the TSDB.
+2. **Forwarders & Collectors (Collection):** Edge daemons deployed globally
+   across *every* node in the cluster.
+   - **Forwarders** (e.g., Fluent Bit) tail raw log files and stream
+     unstructured text back to the Logger.
+   - **Collectors** (e.g., Telegraf) execute local scripts (like
+     `power_kasa.py`), scrape host hardware stats, and push numerical arrays
+     back to the TSDB.
 
-3. **Visualizers (Dashboarding):** Services like Grafana run on the `Control` plane to provide human-readable 'panes of glass'. They query the central TSDBs and Loggers to generate real-time charts and alerts, entirely decoupled from the storage layer.
+3. **Visualizers (Dashboarding):** Services like Grafana run on the `Control`
+   plane to provide human-readable 'panes of glass'. They query the central
+   TSDBs and Loggers to generate real-time charts and alerts, entirely decoupled
+   from the storage layer.
 
 ## Binary Localization (The Ollama Path Invariant)
 
@@ -352,7 +379,7 @@ infrastructure from consciousness.
 
 To maintain strict structural parity across the cluster, all LLMs and human
 operators are mandated to refer to agents exclusively by their ID format:
-`<team>_<member>` (e.g., `software_architect`, `health_lead`, `software_qa`).
+`<team>_<member>` (e.g., `sre_incident`, `health_lead`, `software_qa`).
 
 Furthermore, the `orchestrator_{chat,code,image,video}` agents serve a
 specialized role. They are explicitly designed as top-level agents that the user
@@ -605,20 +632,27 @@ local micro-model (`judge-model`) evaluates the prompt's computational
 difficulty. The proxy then dynamically binds the optimal model tier based on the
 judge's assessment.
 
-Semantic-Predictive Routing delivers ultra-low latency, extreme cost efficiency,
-and exceptional accuracy. By separating categorical domain intent (which is
-handled flawlessly by vector math) from computational difficulty (handled
-efficiently by a fast LLM Judge), it minimizes `frontier` API costs by allowing
-the local Judge to strictly gatekeep when hyperscaler models are permitted to
-execute.
+Semantic-Predictive Routing claims to deliver ultra-low latency, extreme cost
+efficiency, and exceptional accuracy. However, in practice, the existing
+skill signatures do not create a vector space that is sufficiently robust to
+properly map arbitrary prompts to the correct agent (leading to catastrophic
+failure when a prompt is given to a team with no understanding of the prompt
+in question).
 
-The primary weakness of this approach is the operational overhead of maintaining
-and periodically recompiling the semantic embedding index whenever agent skill
-signatures are modified. Additionally, the Judge model itself must be kept "hot"
-24/7 on the Control plane, consuming valuable baseline RAM/VRAM. Operators must
-also be careful with similarity thresholds; misconfigured cutoffs can route
-niche technical queries to generalist agents, requiring periodic tuning. It
-remains uncertain how dynamically the embedding database can update its cluster
+By separating categorical domain intent (which is handled by vector math) from
+computational difficulty (handled efficiently by a fast LLM Judge), it minimizes
+`frontier` API costs by allowing the local Judge to strictly gatekeep when
+hyperscaler models are permitted to execute.
+
+The primary "theoritical" weakness of this approach is the operational overhead
+of maintaining and periodically recompiling the semantic embedding index
+whenever agent skill signatures are modified. The primary "practical" weakness
+is the current inability of the approach to perform accurate prompt-to-agent
+mapping. Additionally, the Judge model itself must be kept "hot" 24/7 on the
+Control plane, consuming valuable baseline RAM/VRAM. Operators must also be
+careful with similarity thresholds; misconfigured cutoffs can route niche
+technical queries to generalist agents, requiring periodic tuning. It remains
+uncertain how dynamically the embedding database can update its cluster
 boundaries when new agents are added without requiring a full offline
 recompilation cycle.
 
@@ -633,25 +667,43 @@ taxonomy is divided into:
 *   **Agent:**
 *   **Chat:**
     *   **Text:**
-        *   **Categories:** Overall, Expert, Occupational (Software & IT Services, Writing/Literature/Language, Life/Physical/Social Science, Business/Management/Financial, Entertainment/Sports/Media, Mathematical, Legal & Government, Medicine & Healthcare), Math, Instruction Following, Multi-Turn, Creative Writing, Coding, Hard Prompts, Hard Prompts (English), Longer Query, Language (English, Non-English, Chinese, French, German, Spanish, Russian, Japanese, Korean, Polish), Exclude Ties.
-        *   **Filters:** Adjustments, License Type, Score Range, Input Price, Output Price, Context Length.
+        *   **Categories:** Overall, Expert, Occupational (Software & IT
+            Services, Writing/Literature/Language, Life/Physical/Social Science,
+            Business/Management/Financial, Entertainment/Sports/Media,
+            Mathematical, Legal & Government, Medicine & Healthcare), Math,
+            Instruction Following, Multi-Turn, Creative Writing, Coding, Hard
+            Prompts, Hard Prompts (English), Longer Query, Language (English,
+            Non-English, Chinese, French, German, Spanish, Russian, Japanese,
+            Korean, Polish), Exclude Ties.
+        *   **Filters:** Adjustments, License Type, Score Range, Input Price,
+            Output Price, Context Length.
     *   **Search:**
-        *   **Filters:** Adjustments, License Type, Score Range, Input Price, Output Price, Context Length.
+        *   **Filters:** Adjustments, License Type, Score Range, Input Price,
+            Output Price, Context Length.
     *   **Vision:**
-        *   **Categories:** Overall, English, Chinese, Captioning, Creative Writing, Diagram, Entity Recognition, Homework, Humor, OCR.
-        *   **Filters:** Style Control, License Type, Score Range, Input Price, Output Price, Context Length.
+        *   **Categories:** Overall, English, Chinese, Captioning,
+            Creative Writing, Diagram, Entity Recognition, Homework, Humor, OCR.
+        *   **Filters:** Style Control, License Type, Score Range, Input Price,
+            Output Price, Context Length.
     *   **Document:**
-        *   **Filters:** Style Control, License Type, Score Range, Input Price, Output Price, Context Length.
+        *   **Filters:** Style Control, License Type, Score Range, Input Price,
+            Output Price, Context Length.
 *   **Code:**
     *   **WebDev:**
         *   **Template:** Overall, HTML, React.
-        *   **Domain:** Brand & Marketing, Reference-Based Design, Data & Analytics, Consumer Product, Gaming, Simulations, Content Creation Tools.
-        *   **Filters:** License Type, Score Range, Input Price, Output Price, Context Length.
+        *   **Domain:** Brand & Marketing, Reference-Based Design, Data &
+            Analytics, Consumer Product, Gaming, Simulations, Content Creation
+            Tools.
+        *   **Filters:** License Type, Score Range, Input Price, Output Price,
+            Context Length.
     *   **Image-to-WebDev:**
-        *   **Filters:** License Type, Score Range, Input Price, Output Price, Context Length.
+        *   **Filters:** License Type, Score Range, Input Price, Output Price,
+            Context Length.
 *   **Image:**
     *   **Text-to-Image:**
-        *   **Categories:** Overall, Product/Branding & Commercial Design, 3D Imaging & Modeling, Cartoon/Anime & Fantasy, Photorealistic & Cinematic Imagery, Art, Portraits, Text Rendering.
+        *   **Categories:** Overall, Product/Branding & Commercial Design,
+            3D Imaging & Modeling, Cartoon/Anime & Fantasy, Photorealistic &
+            Cinematic Imagery, Art, Portraits, Text Rendering.
         *   **Filters:** License Type, Score Range.
     *   **Image Edit:**
         *   **Categories:** Single-Image Edit, Multi-Image Edit.
@@ -701,8 +753,13 @@ tasks to preserve maximum system throughput.
 
 A Directed Acyclic Graph (DAG) represents a sequence of sub-tasks where the
 execution of one task strictly depends on the output of previous tasks,
-preventing circular logic or infinite loops. In OpenClaw, Team Leads (like the
-`software_architect`) operate as DAG planners to organize agent swarms.
+preventing circular logic or infinite loops. In OpenClaw, we are exploring
+multiple ways to implement agents, including one in which Team orchestrators
+(e.g. `software_orchestrator`) operate as DAG planners to organize agent
+swarms. So far, this approach has NOT yielded good results because the
+orchestrator has to be taught how to create and format the DAG, diluting their
+attention away from DAG creation. A more promising path is to hardcode the
+team-specific DAG into the team-member prompts.
 
 **Example Prompt:** *"Write a flutter app that provides a dashboard showing the
 battery status of registered devices, that will run on Android and iOS phones as
@@ -710,19 +767,50 @@ well as within Chrome browsers."*
 
 **DAG Generation:**
 
-Instead of trying to write the entire app itself, the `software_architect`
+Instead of trying to write the entire app itself, the `software_orchestrator`
 decomposes the problem and generates a structured dependency graph:
 
-1.  **Task A (Design):** `software_architect` drafts the Flutter widget hierarchy, state management approach (e.g., Riverpod), and battery API interfaces. (Delegated to itself, `complex-model`).
-2.  **Task B (Implementation):** `software_dev` receives Task A's output and writes the Dart code for the iOS/Android platform channels and web abstractions. (Depends on A, `medium-model`).
-3.  **Task C (Testing):** `software_qa` writes unit tests for the state manager and mocks the battery API responses. (Depends on B, `medium-model`).
-4.  **Task D (Review):** `software_pm` reviews the final codebase against the user's initial prompt requirements before presenting the final output. (Depends on C, `simple-model`).
+1.  **Task A (Design):** `software_orchestrator` drafts the Flutter widget
+    hierarchy, state management approach (e.g., Riverpod), and battery API
+    interfaces. (Delegated to itself, `complex-model`).
+2.  **Task B (Implementation):** `software_dev` receives Task A's output and
+    writes the Dart code for the iOS/Android platform channels and web
+    abstractions. (Depends on A, `medium-model`).
+3.  **Task C (Testing):** `software_qa` writes unit tests for the state manager
+    and mocks the battery API responses. (Depends on B, `medium-model`).
+4.  **Task D (Review):** `software_pm` reviews the final codebase against the
+    user's initial prompt requirements before presenting the final output.
+    (Depends on C, `simple-model`).
+
+Note however that agents do not do a good job of creating such DAGs as there are
+many details that need to be addressed (how does the orchestrator agent specify
+which actions are sequential and which are parallel, how are agents allowed to
+iterate on sub-tasks, etc). For the `software` team especially, the desired DAG
+almost always looks the same regardless of the project being developed, so
+rather than having the `software_orchestrator` create the DAG, we are exploring
+configurations in which the agents' prompts basically implement a hardcoded DAG
+instead. For example, the `software_orchestrator` checks the project's
+`DESIGN.md` doc and `ROADMAP.md` doc and establishes how the `software_dev` can
+move the project forward, giving the `software_dev` an appropriate prompt. The
+`software_dev` receives this prompt, which is appended to its own system prompt,
+which allows it to iterate (write some code and unit tests, execute the unit
+tests, rewrite code if tests fail, until working code is obtained or failure
+limits are exceeded). The `software_dev` agent knows to send its results to the
+`software_qa` agent, which verifies that unit tests are passing, performs
+additional end-to-end testing (redirecting back to the `software_dev` if tests
+fail, and responding to the `software_orchestrator` on success). In this
+configuration, the `software_pm` and `software_auditor` aren't part of the
+"active" DAG, instead being asynchronous agents driven by cron or heartbeat that
+perform role-specific actions on the existing project, updating the ROADMAP.md
+so that the next time the `software_orchestrator` is tasked with moving the
+project forward, it sees the results of these async agents and takes them into
+consideration.
 
 **Collaborative vs. Autonomous Coding:**
 
 *   **Collaborative (Human-in-the-Loop):** The DAG pauses at predefined
-    waypoints. The `software_architect` presents the structural design (Task A)
-    to the human user for approval. If approved, the DAG resumes execution,
+    waypoints. The `software_orchestrator` presents the structural design (Task
+    A) to the human user for approval. If approved, the DAG resumes execution,
     allowing the developer to write the code. Fast Time-To-First-Token (TTFT) is
     critical here to keep the human engaged.
 

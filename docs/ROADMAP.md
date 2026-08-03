@@ -5,54 +5,120 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 ## Phase 1: Foundation (Current)
 *   [x] Establish the `openclaw-network` mesh.
 *   [x] Implement `profile.json` dynamic orchestration.
-*   [x] Establish Tier 0 (Minilith) and Tier 2 (Compute Farm) baseline topologies.
+*   [x] Establish Tier 0 (Minilith) and Tier 2 (Compute Farm) baseline
+        topologies.
 *   [x] Implement LiteLLM fallback chains (`medium-model` -> `gemini-2.5-flash`).
-*   [x] Distribute workloads via Tailscale SSH integration using native `subprocess`.
-*   [x] Introduce the `tsdb` (Time-Series Database), `collector` (Metrics Collector), and `visualizer` (Data Visualizer) services.
+*   [x] Distribute workloads via Tailscale SSH integration using native
+        `subprocess`.
+*   [x] Introduce the `tsdb` (Time-Series Database), `collector`
+        (Metrics Collector), and `visualizer` (Data Visualizer) services.
 
 ## Hardware Optimization (Pending Actions)
 *   **[TODO] Reclaim UMA Frame Buffer RAM:**
-    The GMKtec K8 Plus currently reserves ~3.78GB of RAM for the integrated Radeon 780M graphics (UMA Frame Buffer). Because the node runs headless (no display), this memory is wasted and hidden from the OS.
-    **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`), navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX Configuration -> UMA Frame buffer Size**, and change it to `Auto` or `512MB`. This will free up RAM for Docker services, while the GPU continues to dynamically allocate inference memory via GTT.
+    The GMKtec K8 Plus currently reserves ~3.78GB of RAM for the integrated
+    Radeon 780M graphics (UMA Frame Buffer). Because the node runs headless (no
+    display), this memory is wasted and hidden from the OS.
+    **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`),
+    navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX
+    Configuration -> UMA Frame buffer Size**, and change it to `Auto` or
+    `512MB`. This will free up RAM for Docker services, while the GPU continues
+    to dynamically allocate inference memory via GTT.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
 *   **[TODO] Refactor `power_kasa.py` as a Hardware Telemetry Collector:**
-    Expand the scope of the `workspace/src/projects/kasa/bin/power_kasa.py` script beyond legacy SQLite polling. Refactor it to gather comprehensive electrical, thermal, memory, compute, and mesh network metrics. Integrate this natively with the new `collector` service (Telegraf) via `inputs.exec`, pushing high-frequency data to the `tsdb` (VictoriaMetrics) for real-time visualization in `visualizer` (Grafana).
+    Expand the scope of the `workspace/src/projects/kasa/bin/power_kasa.py`
+    script beyond legacy SQLite polling. Refactor it to gather comprehensive
+    electrical, thermal, memory, compute, and mesh network metrics. Integrate
+    this natively with the new `collector` service (Telegraf) via `inputs.exec`,
+    pushing high-frequency data to the `tsdb` (VictoriaMetrics) for real-time
+    visualization in `visualizer` (Grafana).
 *   **[TODO] All-in-One Platform Providers:**
-    Address multi-service providers (such as SigNoz or OpenObserve) that span multiple service categories (`logger`, `tracer`, `visualizer`). Currently, MetaClaw treats every service as strictly orthogonal, which risks spinning up duplicate container stacks if the same provider is selected across multiple service roles.
+    Address multi-service providers (such as SigNoz or OpenObserve) that span
+    multiple service categories (`logger`, `tracer`, `visualizer`). Currently,
+    MetaClaw treats every service as strictly orthogonal, which risks spinning
+    up duplicate container stacks if the same provider is selected across
+    multiple service roles.
 *   **[TODO] Cross-Service Provider Entanglements & Dependencies:**
-    Implement declarative inter-provider coupling within `lib/metaclaw.py`. For example, selecting `victoriametrics` for the `tsdb` service should automatically bias default provider choices for `collector` (`telegraf`) and `visualizer` (`grafana`) to ensure maximum compatibility out-of-the-box.
+    Implement declarative inter-provider coupling within `lib/metaclaw.py`. For
+    example, selecting `victoriametrics` for the `tsdb` service should
+    automatically bias default provider choices for `collector` (`telegraf`) and
+    `visualizer` (`grafana`) to ensure maximum compatibility out-of-the-box.
 *   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
-    Currently, VictoriaLogs only aggregates Docker JSON logs from the local `control` node. We need to explicitly configure `fluent-bit.conf` to tail bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
+    Currently, VictoriaLogs only aggregates Docker JSON logs from the local
+    `control` node. We need to explicitly configure `fluent-bit.conf` to tail
+    bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy
+    lightweight Fluent Bit forwarders to all remote `compute` and `execution`
+    nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
+    IS THIS ALREADY DONE?
 *   **[TODO] Overcoming `num_ctx` Defaults:**
-    While models like `llama4-scout` have massive context limits, Ollama defaults API requests to 2048 tokens. OpenClaw Orchestrator prompts routinely exceed 7500 tokens. We must implement a centralized mechanism (via LiteLLM config or OpenClaw routing patches) to explicitly inject a high `num_ctx` (e.g., 16384) to prevent context truncation and subsequent cloud fallback.
+    While models like `llama4-scout` have massive context limits, Ollama
+    defaults API requests to 2048 tokens. OpenClaw Orchestrator prompts
+    routinely exceed 7500 tokens. We must implement a centralized mechanism (via
+    LiteLLM config or OpenClaw routing patches) to explicitly inject a high
+    `num_ctx` (e.g., 16384) to prevent context truncation and subsequent cloud
+    fallback.
 
 ## Phase 3: The Execution Plane (Sandboxing)
 *   **[TODO] Docker-out-of-Docker (DooD) Integration:**
-    Implement the secure workspace jails (`services/sandboxes/docker-dood`) to allow agents to write, execute, and iteratively debug code in isolated environments.
+    Implement the secure workspace jails (`services/sandboxes/docker-dood`) to
+    allow agents to write, execute, and iteratively debug code in isolated
+    environments.
 *   **[TODO] Browser Automation Automation:**
-    Integrate `browseruse` and `stagehand` to allow the research agents to autonomously navigate dynamic SPAs and scrape live documentation.
+    Integrate `browseruse` and `stagehand` to allow the research agents to
+    autonomously navigate dynamic SPAs and scrape live documentation.
 
 ## Phase 4: Data Sovereignty
 *   **[TODO] PostgreSQL High Availability:**
-    Transition the single-node pgvector instance to a clustered topology for Tier 4 deployments to ensure conversation history survives physical node failures.
+    Transition the single-node pgvector instance to a clustered topology for
+    Tier 4 deployments to ensure conversation history survives physical node
+    failures.
 *   **[TODO] Local Embedding Replacement:**
-    Currently, the OpenClaw `prompt-embedding-model` relies on Google Gemini. Transition this to a local, high-speed embedding model (e.g., `nomic-embed-text`) running natively on the `control` node to achieve 100% air-gapped privacy.
+    Currently, the OpenClaw `prompt-embedding-model` relies on Google Gemini.
+    Transition this to a local, high-speed embedding model (e.g.,
+    `nomic-embed-text`) running natively on the `control` node to achieve 100%
+    air-gapped privacy.
 *   **[TODO] Multi-Tenant Priority Proxying (LiteLLM):**
-    Implement Virtual Key management and rate limiting within the local LiteLLM proxy to allow external users (friends) to access the Compute Plane. Ensure the proxy maintains a priority queue that privileges internal owner prompts to prevent VRAM eviction of hot models during heavy external load.
+    Implement Virtual Key management and rate limiting within the local LiteLLM
+    proxy to allow external users (friends) to access the Compute Plane. Ensure
+    the proxy maintains a priority queue that privileges internal owner prompts
+    to prevent VRAM eviction of hot models during heavy external load.
 
 ## Phase 5: Templating Engine Migration (Jinja2)
 *   **[TODO] Transition .env Overrides to Jinja2 Compilation:**
     The current `.env.template` injection system requires complex, rigid Python logic (`orchestrate.py`) to map specific variables. We must replace this by implementing a `bin/compile_templates.py` engine that utilizes Jinja2 `.j2` template files. This will allow declarative rendering of Compose and Config files directly from `profile.json` node parameters (e.g., `{% if hardware.gpu_detected == "AMD APU" %}`), removing the need for error-prone `change_me_to_` prompt bypasses and global overrides.
 
 ## Phase 6: Arena-Driven Model Routing
-*   **[TODO] Deprecate Rigid 'Middle Reasoning' DAG:**
-    Move away from hardcoding specific models (`complex-model`, `medium-model`) in agent YAML definitions. The current multi-hop DAG approach introduces latency and arbitrary model assignments.
+*   **[TODO] Expand beyond 'Middle Reasoning' DAG:**
+    Although we want to maintain support for the 'Middle Reasoning' DAG approach
+    to agent orchestration (in which specific models like`complex-model` and `medium-model`
+    are explicitly specified in agent YAML definitions), we also want to explore
+    other implementations. Need to generalize the agent definitions so that
+    different implementations can be selected.
 *   **[TODO] Implement LMArena.ai Taxonomy Mapping:**
-    Utilize the `bin/fetch_arena.py` script to scrape the live Gradio JSON state from LMArena. Modify agent YAMLs to include an `arena_category` parameter (e.g., `Chat/Text/Legal & Government`). The Orchestrator will act as a single-shot Intent Classifier, passing the prompt to the appropriate agent, while MetaClaw's orchestration engine dynamically binds the #1 ranked ELO model for that category to the agent executing the task.
+    Utilize the `bin/fetch_arena.py` script to scrape the live Gradio JSON state
+    from LMArena. Modify agent YAMLs to include an `arena_category` parameter
+    (e.g., `Chat/Text/Legal & Government`). The Orchestrator will act as a
+    single-shot Intent Classifier, passing the prompt to the appropriate agent,
+    while MetaClaw's orchestration engine dynamically binds the #1 ranked ELO
+    model for that category to the agent executing the task.
 *   **[TODO] Implement Runtime Semantic-Predictive Hook:**
-    Finish writing the javascript interceptor in `services/gateways/openclaw/modules/routing/semantic_predictive.js` to natively evaluate cosine similarity at runtime against the `router.json` embeddings and forcefully overwrite the `agentId` variable, fully activating the semantic routing architecture.
+    Finish writing the javascript interceptor in
+    `services/gateways/openclaw/modules/routing/semantic_predictive.js` to
+    natively evaluate cosine similarity at runtime against the `router.json`
+    embeddings and forcefully overwrite the `agentId` variable, fully activating
+    the semantic routing architecture.
 
 ## Phase 7: Unimplemented Services
 *   **[TODO] Select and Implement Providers for Unimplemented Services:**
-    The following services currently lack functional provider implementations (containing only metadata `.provider.json` stubs): `vcs` (Version Control System), `ci` (Continuous Integration), `iam` (Identity & Access Management), `secret` (Secrets Manager), `tracer` (Distributed Tracer), `queue` (Message Queue), `event` (Event Gateway), and `ingress` (Reverse Proxy). We need to select and fully implement default providers for each (e.g., Gitea for `vcs`, Woodpecker for `ci`, Authelia for `iam`, Doppler for `secret`, Phoenix for `tracer`, RabbitMQ for `queue`, Hookdeck for `event`, and Traefik for `ingress`) with working Docker Compose and Makefile infrastructure.
+    The following services currently lack functional provider implementations
+    (containing only metadata `.provider.json` stubs). We need to select and
+    fully implement default providers for each (indicating in [brackets] below
+    with working Docker Compose and Makefile infrastructure:
+    *   `vcs` (Version Control System) [Gitea]
+    *   `ci` (Continuous Integration) [Woodpecker]
+    *   `iam` (Identity & Access Management) [Authelia]
+    *   `secret` (Secrets Manager) [Doppler]
+    *   `tracer` (Distributed Tracer) [Phoenix]
+    *   `queue` (Message Queue) [RabbitMQ]
+    *   `event` (Event Gateway) [Hookdeck]
+    *   `ingress` (Reverse Proxy) [Traefix]
