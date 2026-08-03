@@ -13,6 +13,9 @@ export
 
 LOG_READY_SIGNAL = HTTP Server Listen
 
+# Force Make to trigger a recreate if this Makefile itself is updated
+RECREATE_DEPS += Makefile
+
 pre-up:
 	@echo "[$(SERVICE_TITLE)] Ensuring external data directory permissions..."
 	@if [ -n "$(EXTERNAL_DRIVE_PATH)" ]; then \
