@@ -1,5 +1,21 @@
 # MetaClaw Changelog
 
+## [2026-08-02] - Metrics Observability Stack
+
+### Added
+- Introduced the `tsdb` (Time-Series Database), `collector` (Metrics Collector), and `visualizer` (Data Visualizer) service categories.
+- Implemented `victoriametrics` provider for the `tsdb` service.
+- Implemented `telegraf` provider for the `collector` service.
+- Implemented `grafana` provider for the `visualizer` service.
+- Added stubs for various alternative providers across all three new services.
+
+### Changed
+- Updated `bin/orchestrate.py` and `bin/cluster_setup.py` to dynamically allocate TSDBs to the Archive plane and Visualizers to the Control plane, while globally distributing Collectors to all edge nodes.
+
+### Fixed
+- Fixed `grafana` startup crash caused by Docker root volume mount permissions by injecting an Alpine `grafana-init` container to run `chown -R 472:0` prior to boot.
+- Fixed `victoriametrics` syntax crash by updating the retention flag to `30d` instead of `1M`.
+
 ## [2026-07-28]
 
 ### Added

@@ -325,3 +325,68 @@ ingestion pipeline):
 5.  **Documentation Generation:** Run `python bin/compile_md.py --setup` to
     auto-generate the `index.md` files and update `docs/SERVICES.md` based on
     the new JSON structure.
+
+## Services
+
+MetaClaw abstracts its infrastructure into mutually exclusive "services." Only one provider for a given service runs at a time on any particular node.
+
+### Execution Sandbox (`sandboxes`)
+
+### Secrets Manager (`secrets`)
+
+### Overlay Network (`networks`)
+
+### Identity & Access Management (`iam`)
+
+### Log Aggregator (`loggers`)
+
+### Telemetry Forwarder (`forwarders`)
+
+### Distributed Tracer (`tracers`)
+
+### Time-Series Database (`tsdbs`)
+
+#### VictoriaMetrics
+VictoriaMetrics runs as the backend storage engine for numerical time-series metrics.
+- **UI Interaction:** Navigate to `http://[Your-Tailscale-IP]:8428/select/vmui` in your browser to access the `vmui` interface for writing PromQL/MetricsQL queries directly against the database.
+- **API Interaction:** You can query the database for raw JSON metrics directly using `curl` from your terminal:
+  `curl -s "http://localhost:8428/api/v1/query?query=system_uptime"`
+
+### Metrics Collector (`collectors`)
+
+#### Telegraf
+Telegraf is a background daemon that scrapes metrics from the host machine (or executes custom Python scripts) and pushes them upstream to VictoriaMetrics.
+- **Configuration:** Modify `services/collectors/telegraf/telegraf.conf` to add new inputs, such as executing custom Python hardware scrapers via `[[inputs.exec]]`.
+- **CLI Testing:** To test if Telegraf is correctly parsing your custom script's output without pushing junk data into the live database, you can force it to run a single test collection and print to standard output:
+  `docker exec telegraf telegraf --config /etc/telegraf/telegraf.conf --test`
+
+### Data Visualizer (`visualizers`)
+
+#### Grafana
+Grafana provides human-readable dashboards, graphs, and alerts for your observability stack.
+- **UI Interaction:** Navigate to `http://[Your-Tailscale-IP]:3000/` and log in with your configured admin credentials (defined during `make setup`).
+- **Setup:** To visualize your metrics, add a new "Prometheus" datasource pointing to the internal Docker network URL `http://active-tsdb:8428`. You can then create panels and write PromQL queries to build your dashboards.
+
+### Web Fetcher (`fetchers`)
+
+### Web Search API (`searchers`)
+
+### Browser Automation (`browsers`)
+
+### LLM Runner (`runners`)
+
+### Continuous Integration (`ci`)
+
+### Message Queue (`queues`)
+
+### Event Gateway (`events`)
+
+### Reverse Proxy (`proxies-reverse`)
+
+### AI Gateway (`gateways`)
+
+### AI Proxy (`proxies`)
+
+### Version Control System (`vcses`)
+
+### Long-Term Memory (`memories`)

@@ -231,20 +231,17 @@ Running state-of-the-art LLMs natively on edge hardware often requires navigatin
 2. **The Vulkan Workaround:** Ollama's bundled ROCm/HIP binaries strictly check PCI IDs. They frequently reject novel architectures like RDNA 3.5 (`gfx1151`). Furthermore, the Linux `amdgpu` driver enforces strict Shared Virtual Memory (SVM) limits that can cause catastrophic swap thrashing when loading massive models into UMA frame buffers. To force acceleration and bypass these limits, MetaClaw injects `OLLAMA_VULKAN=1`, `OLLAMA_IGPU_ENABLE=1`, and `ROCR_VISIBLE_DEVICES=none` to utilize the universal Vulkan compute engine.
 3. **The Blanking Mandate:** You must **never** inject `HIP_VISIBLE_DEVICES=-1` to bypass ROCm. Doing so blinds the hardware enumeration scanner entirely, causing Ollama to instantly abort initialization and fall back to CPU.
 
-## Telemetry Decoupling (Loggers vs Forwarders)
+## Telemetry Decoupling (Observability Stack)
 
-MetaClaw enforces a strict SRE architectural boundary between Log Storage and
-Log Collection. They are explicitly separated in the taxonomy.
+MetaClaw enforces a strict SRE architectural boundary between data storage, collection, and visualization. Logs (unstructured text) and Metrics (structured time-series numbers) are explicitly separated in the taxonomy.
 
-1. **Loggers (Storage):** Services like VictoriaLogs, Elasticsearch, or
-   Quickwit reside centrally on the `Archive` or `Control` plane. They are
-   databases optimized for full-text search.
+1. **Loggers & TSDBs (Storage):** Services like VictoriaLogs (Logs) and VictoriaMetrics (Time-Series Databases) reside centrally on the `Archive` or `Control` plane. They are the heavy databases optimized for high-speed ingestion and querying.
 
-2. **Forwarders (Collection):** Services like Fluent Bit or Vector are
-   deployed globally across *every* node in the cluster. They are stateless
-   daemons that tail local Docker and bare-metal files (e.g., `ollama.log`),
-   enrich them with the host's Tailscale IP, and route them over the mesh back
-   to the central Logger.
+2. **Forwarders & Collectors (Collection):** Edge daemons deployed globally across *every* node in the cluster.
+   - **Forwarders** (e.g., Fluent Bit) tail raw log files and stream unstructured text back to the Logger.
+   - **Collectors** (e.g., Telegraf) execute local scripts (like `power_kasa.py`), scrape host hardware stats, and push numerical arrays back to the TSDB.
+
+3. **Visualizers (Dashboarding):** Services like Grafana run on the `Control` plane to provide human-readable 'panes of glass'. They query the central TSDBs and Loggers to generate real-time charts and alerts, entirely decoupled from the storage layer.
 
 ## Binary Localization (The Ollama Path Invariant)
 

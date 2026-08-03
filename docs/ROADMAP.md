@@ -8,6 +8,7 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   [x] Establish Tier 0 (Minilith) and Tier 2 (Compute Farm) baseline topologies.
 *   [x] Implement LiteLLM fallback chains (`medium-model` -> `gemini-2.5-flash`).
 *   [x] Distribute workloads via Tailscale SSH integration using native `subprocess`.
+*   [x] Introduce the `tsdb` (Time-Series Database), `collector` (Metrics Collector), and `visualizer` (Data Visualizer) services.
 
 ## Hardware Optimization (Pending Actions)
 *   **[TODO] Reclaim UMA Frame Buffer RAM:**
@@ -15,6 +16,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`), navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX Configuration -> UMA Frame buffer Size**, and change it to `Auto` or `512MB`. This will free up RAM for Docker services, while the GPU continues to dynamically allocate inference memory via GTT.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
+*   **[TODO] Refactor `power_kasa.py` as a Hardware Telemetry Collector:**
+    Expand the scope of the `workspace/src/projects/kasa/bin/power_kasa.py` script beyond legacy SQLite polling. Refactor it to gather comprehensive electrical, thermal, memory, compute, and mesh network metrics. Integrate this natively with the new `collector` service (Telegraf) via `inputs.exec`, pushing high-frequency data to the `tsdb` (VictoriaMetrics) for real-time visualization in `visualizer` (Grafana).
 *   **[TODO] All-in-One Platform Providers:**
     Address multi-service providers (such as SigNoz or OpenObserve) that span multiple service categories (`logger`, `tracer`, `visualizer`). Currently, MetaClaw treats every service as strictly orthogonal, which risks spinning up duplicate container stacks if the same provider is selected across multiple service roles.
 *   **[TODO] Cross-Service Provider Entanglements & Dependencies:**
