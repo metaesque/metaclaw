@@ -262,3 +262,295 @@ agent's YAML file containing custom prompts, you can execute them directly:
 ```bash
 # Tests the 'simple-model' prompt explicitly defined in the pm.yaml file
 python bin/openclaw_test.py -t simple -a openclaw/software_pm
+```
+
+## Verifying Internal DNS (Aliases)
+
+When building providers that act as primary backends (e.g., `active-browser`,
+`active-fetcher`), you must verify that the internal Docker DNS aliases are
+successfully registered.
+
+Do NOT use `docker network inspect <network_name>` for this. The Docker daemon
+does not expose container-level aliases in the network's root `Containers` map;
+it only lists the primary container name and its assigned IP address.
+
+To accurately verify an alias, you must inspect the container's isolated network
+settings:
+
+1. Execute a targeted inspection:
+   `docker inspect <container_name> --format '{{json .NetworkSettings.Networks}}'`
+
+2. Alternatively, simply grep the raw configuration:
+   `docker inspect <container_name> | grep active-`
+
+If the alias is missing, verify that your `docker-compose.yml` nests the
+`aliases` array correctly beneath the specific network attachment block.
+
+## Managing the Graphical User Interface (GUI)
+
+The OpenClaw Web UI access has been streamlined to bypass manual pairing.
+
+* **Authentication:** A secure token is automatically injected into the
+  gateway via the `OPENCLAW_GATEWAY_TOKEN` environment variable (defaulting to
+  your `ACTIVE_PROXY_KEY`).
+
+* **Launch:** Running `make gui` from the framework root will instantly
+  launch the dashboard in your native browser using the injected token.
+
+* **First Run:** Running `make wizard` handles this sequence
+  automatically, opening the GUI once the backend is healthy and fully
+  configured.
+
+## Adding a New Service
+
+To introduce a fundamentally new architectural category (e.g., a dedicated RAG
+ingestion pipeline):
+
+1.  **Define the Taxonomy:** Open `bin/structure.json` and add a new key under
+    the `services` object. You must define the `uid`, `uids` (the plural
+    directory name), `name`, `category`, and `purpose`. Initialize the
+    `providers` object as empty.
+
+2.  **Create the Directory:** Create the physical path matching the `uids` value
+    (e.g., `mkdir -p services/ingestors`).
+
+3.  **Boot Sequence Integration:** Open the root `Makefile` and append the new
+    service directory to the `DOCKER_SUBDIRS` and `WIZARD_BOOT_ORDER` variables.
+    Add the corresponding `-include $(SERVICES_DIR)/<uid>/.env` directive at the
+    top of the file.
+
+4.  **Manifest Tracking:** Add the new `services/<uids>/Makefile` (once created)
+    to `docs/MANIFEST.files`.
+
+5.  **Documentation Generation:** Run `python bin/compile_md.py --setup` to
+    auto-generate the `index.md` files and update `docs/SERVICES.md` based on
+    the new JSON structure.
+
+## Services
+
+MetaClaw abstracts its infrastructure into mutually exclusive "services." Only
+one provider for a given service runs at a time on any particular node.
+
+### Execution Sandbox (`sandboxes`)
+
+#### Hardened Docker DooD
+
+The `docker-dood` provider offers a persistent, isolated Python execution
+environment for agent workflows.
+
+- **CLI Interaction:** You can manually test commands inside the sandbox by
+  running `docker exec -it docker-dood /bin/sh`.
+
+- **Configuration:** The container automatically attempts to install any Python
+  dependencies defined in your workspace at `workspace/src/requirements.txt`
+  upon startup.
+
+### Secrets Manager (`secrets`)
+
+### Overlay Network (`networks`)
+
+#### Tailscale
+
+Tailscale is the default zero-configuration mesh VPN.
+
+- **CLI Interaction:** To view your active cluster nodes and their assigned
+  `100.x.y.z` IP addresses, run `tailscale status` on your host machine.
+
+- **Exposing Webhooks:** To securely expose a local port (like 18789) to the
+  public internet for incoming webhooks, use the Funnel feature: `tailscale
+  serve --bg <port>`.
+
+### Identity & Access Management (`iam`)
+
+### Log Aggregator (`loggers`)
+
+#### VictoriaLogs
+
+VictoriaLogs is the ultra-lightweight full-text log search engine.
+
+- **UI Interaction:** Navigate to `http://[Your-Tailscale-IP]:9428/select/vmui`
+  to access the visual querying interface.
+
+- **API Interaction:** You can query the database for raw log lines directly via
+  the LogsQL API:
+  `curl -s "http://localhost:9428/select/logsql/query?query=_stream_id:*"`
+
+### Telemetry Forwarder (`forwarders`)
+
+#### Fluent Bit
+
+Fluent Bit is a background edge daemon that tails local logs and forwards them
+to VictoriaLogs.
+
+- **Configuration:** Modify `services/forwarders/fluentbit/fluent-bit.conf`
+  to add new log file paths or container filters.
+
+- **CLI Testing:** To verify log ingestion locally, tail the active container
+  output: `docker logs -f fluent-bit`
+
+### Distributed Tracer (`tracers`)
+
+### Time-Series Database (`tsdbs`)
+
+#### VictoriaMetrics
+
+VictoriaMetrics runs as the backend storage engine for numerical time-series
+metrics.
+
+- **UI Interaction:** Navigate to `http://[Your-Tailscale-IP]:8428/select/vmui`
+  in your browser to access the `vmui` interface for writing PromQL/MetricsQL
+  queries directly against the database.
+
+- **API Interaction:** You can query the database for raw JSON metrics directly
+  using `curl` from your terminal:
+  `curl -s "http://localhost:8428/api/v1/query?query=system_uptime"`
+
+### Metrics Collector (`collectors`)
+
+#### Telegraf
+
+Telegraf is a background daemon that scrapes metrics from the host machine (or
+executes custom Python scripts) and pushes them upstream to VictoriaMetrics.
+
+- **Configuration:** Modify `services/collectors/telegraf/telegraf.conf` to add
+  new inputs, such as executing custom Python hardware scrapers via
+  `[[inputs.exec]]`.
+
+- **CLI Testing:** To test if Telegraf is correctly parsing your custom script's
+  output without pushing junk data into the live database, you can force it to
+  run a single test collection and print to standard output:
+  `docker exec telegraf telegraf --config /etc/telegraf/telegraf.conf --test`
+
+### Data Visualizer (`visualizers`)
+
+#### Grafana
+
+Grafana provides human-readable dashboards, graphs, and alerts for your
+observability stack.
+
+- **UI Interaction:** Navigate to `http://[Your-Tailscale-IP]:3000/` and log in
+  with your configured admin credentials (defined during `make setup`).
+
+- **Setup:** To visualize your metrics, add a new "Prometheus" datasource
+  pointing to the internal Docker network URL `http://active-tsdb:8428`. You can
+  then create panels and write PromQL queries to build your dashboards.
+
+### Web Fetcher (`fetchers`)
+
+#### Crawl4AI
+
+Crawl4AI is an ultra-fast web crawler designed specifically for LLMs, extracting
+clean Markdown natively.
+
+- **API Interaction:** Crawl4AI exposes a REST API on port `11235`. You can
+  verify its health via `curl -s http://localhost:11235/health`.
+
+- **Usage:** Agents interact with it programmatically to fetch and parse
+  websites. If deployed securely, remember to pass the `CRAWL4AI_API_TOKEN` in
+  the Authorization header.
+
+### Web Search API (`searchers`)
+
+#### SearXNG
+
+SearXNG is a privacy-respecting metasearch engine that aggregates results from
+dozens of search engines.
+
+- **UI Interaction:** You can perform manual searches by navigating your
+  browser to `http://[Your-Tailscale-IP]:9003/`.
+
+- **API Interaction:** Agents query the `/search?q=...&format=json` endpoint
+  on port `9003` to retrieve structured search snippets.
+
+### Browser Automation (`browsers`)
+
+#### Browser Use
+
+Browser Use is an API that allows agents to autonomously control web browsers
+using natural language.
+
+- **API Interaction:** The REST API listens on port `8080`. Agents POST task
+  payloads to `http://localhost:8080/tasks`.
+
+- **UI Interaction (VNC):** You can visually watch the agent interact with the
+  web page in real-time by opening `http://[Your-Tailscale-IP]:8080/vnc.html` in
+  your browser.
+
+### LLM Runner (`runners`)
+
+#### Ollama
+
+Ollama is the local inference engine that runs GGUF models directly on
+bare-metal hardware.
+
+- **API Interaction:** Ollama listens on port `11434`. You can list loaded
+  models via `curl -s http://localhost:11434/api/tags` or generate text via the
+  `/api/generate` endpoint.
+
+- **CLI Interaction:** From the Compute Node, you can manually interact with
+  models by executing `./bin/ollama run <model_name>` within the
+  `services/runners/ollama/` directory.
+
+### Continuous Integration (`ci`)
+
+### Message Queue (`queues`)
+
+### Event Gateway (`events`)
+
+### Ingress (`ingresses`)
+
+### AI Gateway (`gateways`)
+
+#### OpenClaw
+
+OpenClaw is the primary agentic framework and multi-modal gateway.
+
+- **UI Interaction:** Access the primary web dashboard at
+  `http://[Your-Tailscale-IP]:18789`.
+
+- **CLI Interaction:** For direct terminal access to the agent streams,
+  execute: `docker exec -it openclaw-gateway openclaw tui`
+
+### AI Proxy (`proxies`)
+
+#### LiteLLM
+
+LiteLLM is the centralized proxy layer that routes traffic and calculates token
+costs.
+
+- **API Interaction:** Ensure models are loaded and available by querying
+  `curl -s -H "Authorization: Bearer $ACTIVE_PROXY_KEY" http://localhost:4000/v1/models`.
+
+- **CLI Testing:** To verify the routing logic is correctly passing payloads to
+  your chosen provider, run the diagnostic testing script:
+  `python bin/litellm_test.py -t complex`.
+
+### Version Control System (`vcses`)
+
+### Long-Term Memory (`memories`)
+
+#### PostgreSQL + pgvector
+
+PostgreSQL manages both the structured operational state of the cluster and the
+high-dimensional embedding vectors for agent semantic recall.
+
+- **CLI Interaction:** You can launch a Postgres shell directly into the primary
+  database: `docker exec -it postgres-db psql -U postgres -d openclaw_db`
+
+- **External Tooling:** The database is exposed locally on port `5432`. You can
+  connect external GUI tools (like DBeaver or pgAdmin) using the connection
+  string defined in your `services/memories/postgres/.env` file.
+
+### Real-Time Cache (`caches`)
+
+#### Redis
+
+Redis serves as the ultra-low latency key-value store for ephemeral session
+state, rate limiting, and pub/sub agent communication.
+
+- **CLI Interaction:** You can interact with the Redis cache natively from
+  your host terminal using the Docker exec command:
+  `docker exec -it redis-cache redis-cli`
+
+- **Commands:** Once inside the CLI, you can verify connectivity (`PING`) or
+  inspect the current keyspace (`KEYS *`).

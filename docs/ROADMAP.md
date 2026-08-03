@@ -53,6 +53,6 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Implement Runtime Semantic-Predictive Hook:**
     Finish writing the javascript interceptor in `services/gateways/openclaw/modules/routing/semantic_predictive.js` to natively evaluate cosine similarity at runtime against the `router.json` embeddings and forcefully overwrite the `agentId` variable, fully activating the semantic routing architecture.
 
-## Phase 7: Unimplemented Services (VCS, CI, IAM)
+## Phase 7: Unimplemented Services
 *   **[TODO] Select and Implement Providers for Unimplemented Services:**
-    The `vcs` (Version Control System), `ci` (Continuous Integration), and `iam` (Identity & Access Management) services currently lack functional provider implementations (containing only metadata `.provider.json` stubs). We need to select and fully implement default providers for each (e.g., Gitea for `vcs`, Woodpecker for `ci`, and Authelia for `iam`) with working Docker Compose and Makefile infrastructure.
+    The following services currently lack functional provider implementations (containing only metadata `.provider.json` stubs): `vcs` (Version Control System), `ci` (Continuous Integration), `iam` (Identity & Access Management), `secret` (Secrets Manager), `tracer` (Distributed Tracer), `queue` (Message Queue), `event` (Event Gateway), and `ingress` (Reverse Proxy). We need to select and fully implement default providers for each (e.g., Gitea for `vcs`, Woodpecker for `ci`, Authelia for `iam`, Doppler for `secret`, Phoenix for `tracer`, RabbitMQ for `queue`, Hookdeck for `event`, and Traefik for `ingress`) with working Docker Compose and Makefile infrastructure.
