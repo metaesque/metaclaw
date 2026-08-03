@@ -149,6 +149,12 @@ services/iam/Makefile
 services/iam/authelia/.provider.json
 services/iam/authentik/.provider.json
 services/iam/keycloak/.provider.json
+services/ingresses/.service.json
+services/ingresses/Makefile
+services/ingresses/caddy/.provider.json
+services/ingresses/haproxy/.provider.json
+services/ingresses/nginx/.provider.json
+services/ingresses/traefik/.provider.json
 services/loggers/.service.json
 services/loggers/graylog/.provider.json
 services/loggers/loki/.provider.json
@@ -175,12 +181,6 @@ services/networks/tailscale/.provider.json
 services/networks/tailscale/Makefile
 services/networks/tailscale/docker-compose.yml
 services/networks/zerotier/.provider.json
-services/proxies-reverse/.service.json
-services/proxies-reverse/Makefile
-services/proxies-reverse/caddy/.provider.json
-services/proxies-reverse/haproxy/.provider.json
-services/proxies-reverse/nginx/.provider.json
-services/proxies-reverse/traefik/.provider.json
 services/proxies/.service.json
 services/proxies/bifrost/.provider.json
 services/proxies/helicone/.provider.json
@@ -263,7 +263,6 @@ services/tsdbs/.service.json
 services/tsdbs/Makefile
 services/tsdbs/greptimedb/.provider.json
 services/tsdbs/influxdb/.provider.json
-services/tsdbs/m3db/.provider.json
 services/tsdbs/prometheus/.provider.json
 services/tsdbs/questdb/.provider.json
 services/tsdbs/timescaledb/.provider.json

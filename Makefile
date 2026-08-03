@@ -5,9 +5,8 @@ SERVICES_DIR ?= services
 -include .env.cluster
 -include $(SERVICES_DIR)/network/.env
 -include $(SERVICES_DIR)/tsdb/.env
--include $(SERVICES_DIR)/collector/.env
--include $(SERVICES_DIR)/visualizer/.env
 -include $(SERVICES_DIR)/logger/.env
+-include $(SERVICES_DIR)/collector/.env
 -include $(SERVICES_DIR)/forwarder/.env
 -include $(SERVICES_DIR)/proxy/.env
 -include $(SERVICES_DIR)/gateway/.env
@@ -24,7 +23,7 @@ SERVICES_DIR ?= services
 -include $(SERVICES_DIR)/secret/.env
 -include $(SERVICES_DIR)/tracer/.env
 -include $(SERVICES_DIR)/iam/.env
--include $(SERVICES_DIR)/proxy-reverse/.env
+-include $(SERVICES_DIR)/ingress/.env
 -include $(SERVICES_DIR)/queue/.env
 export
 
@@ -48,13 +47,13 @@ export OPEN_CMD
 PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
 
 # Teardown order (Reverse dependencies)
-DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/proxy-reverse $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/memory $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
+DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/memory $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
 GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
 # Boot order explicitly defined to capture initial logs before upstream
 # services start
-WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/collector $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/memory $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcses $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/proxy-reverse $(SERVICES_DIR)/gateway
+WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/collector $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/memory $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcses $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/ingress $(SERVICES_DIR)/gateway
 
 # Meta-level reasoning. Must be a directory relative to the directory this
 # Makefile resides in!
@@ -266,6 +265,8 @@ logs:
 	@tail -n $${N:-50} services/runners/ollama/ollama.log 2>/dev/null || echo "Log file not found on this node."
 	@$(call h2_title,"Fluent Bit Forwarder")
 	@docker logs --tail $${N:-50} fluent-bit 2>/dev/null || echo "Container not found on this node."
+	@$(call h2_title,"Telegraf Collector")
+	@docker logs --tail $${N:-50} telegraf 2>/dev/null || echo "Container not found on this node."
 
 # ==============================================================================
 # WIZARD BOOT SEQUENCE

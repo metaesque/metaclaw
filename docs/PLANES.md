@@ -11,7 +11,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
   INVARIANT: The runner service is included here explicitly so the Control Node
   can host the low-latency Judge Model locally, even in Tier 2 deployments.
 * **Services**: proxy-reverse, iam, proxy, gateway, secret, event, cache, queue,
-  runner
+  runner, visualizer
 
 ### Hardware Recommendations for The Control Plane
 
@@ -106,7 +106,7 @@ The MetaClaw architecture isolates infrastructure into functional planes based o
 * **Justification**: This plane manages all 'Trusted Data'. Vector databases
   ingest massive streams of data and require enormous RAM. Keeping these safe
   from untrusted execution workloads is a strict SRE requirement.
-* **Services**: memory, vcs, logger, tracer
+* **Services**: memory, vcs, logger, tracer, tsdb
 
 ### Hardware Recommendations for The Archive Plane
 

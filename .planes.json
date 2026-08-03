@@ -5,7 +5,7 @@
     "aka": "The Ingress & Routing Hub",
     "profile": "High network I/O, low CPU, low RAM.",
     "services": [
-      "proxy-reverse",
+      "ingress",
       "iam",
       "proxy",
       "gateway",

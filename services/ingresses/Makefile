@@ -1,5 +1,5 @@
-SERVICE_TITLE = Reverse Proxy Service
-SERVICE_NAME = reverse-proxy
+SERVICE_TITLE = Ingress Service
+SERVICE_NAME = ingresses
 
 FRAMEWORK_ROOT_REL = ../..
 FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
