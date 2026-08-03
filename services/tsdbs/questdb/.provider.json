@@ -3,5 +3,8 @@
   "name": "QuestDB",
   "tier": "2",
   "overview": "Phenomenal for hardware telemetry due to its low-latency ingestion. SQL syntax makes it easy for LLMs to query without learning PromQL or Flux.",
-  "details": []
+  "details": [
+    "QuestDB is built from the ground up for maximum ingestion throughput, often used in high-frequency trading and low-latency IoT networks.",
+    "Its primary advantage for an OpenClaw swarm is that it speaks native SQL. If an agent (like `sre_telemetry`) needs to query historical power constraints, writing SQL is significantly less prone to LLM hallucination than writing complex PromQL queries."
+  ]
 }

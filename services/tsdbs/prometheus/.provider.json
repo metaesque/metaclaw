@@ -3,5 +3,8 @@
   "name": "Prometheus",
   "tier": "1",
   "overview": "The industry standard for metric scraping. Excellent ecosystem support, but pull-based scraping requires explicit exporter configuration on all edge nodes.",
-  "details": []
+  "details": [
+    "Prometheus is the foundational tool of the cloud-native observability stack. It strictly operates on a pull-based model, gathering metrics from designated targets at regular intervals.",
+    "For OpenClaw, Prometheus is perfectly adequate for Tier 1 monolithic setups. However, as the cluster scales across multiple nodes, its storage engine becomes less efficient than purpose-built columnar TSDBs like VictoriaMetrics."
+  ]
 }

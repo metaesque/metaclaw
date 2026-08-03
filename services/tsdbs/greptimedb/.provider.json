@@ -3,5 +3,8 @@
   "name": "GreptimeDB",
   "tier": "2",
   "overview": "A Rust-based TSDB designed specifically for cloud-edge observability. It unifies metrics and logs in a single query engine.",
-  "details": []
+  "details": [
+    "GreptimeDB is engineered to handle massive scale while maintaining a very low footprint on edge devices. It utilizes a unified SQL/PromQL interface, making it highly versatile for developers.",
+    "For OpenClaw, it is an excellent Tier 2 alternative if you require native SQL access to your telemetry data rather than strictly relying on PromQL syntax."
+  ]
 }

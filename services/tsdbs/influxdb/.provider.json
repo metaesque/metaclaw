@@ -3,5 +3,8 @@
   "name": "InfluxDB",
   "tier": "1",
   "overview": "A popular, high-performance time-series database with a strong ecosystem and real-time analytics capabilities.",
-  "details": []
+  "details": [
+    "InfluxDB excels in scenarios requiring complex downsampling and real-time data transformations via its Flux language.",
+    "While slightly heavier than VictoriaMetrics, it is deeply integrated into many IoT and home automation workflows, making it a viable Tier 1 alternative for users with existing InfluxData ecosystems."
+  ]
 }

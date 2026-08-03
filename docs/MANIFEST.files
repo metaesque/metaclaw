@@ -263,6 +263,7 @@ services/tsdbs/.service.json
 services/tsdbs/Makefile
 services/tsdbs/greptimedb/.provider.json
 services/tsdbs/influxdb/.provider.json
+services/tsdbs/m3db/.provider.json
 services/tsdbs/prometheus/.provider.json
 services/tsdbs/questdb/.provider.json
 services/tsdbs/timescaledb/.provider.json
@@ -272,3 +273,14 @@ services/tsdbs/victoriametrics/Makefile
 services/tsdbs/victoriametrics/docker-compose.yml
 services/vcses/.service.json
 services/vcses/Makefile
+services/visualizers/.service.json
+services/visualizers/Makefile
+services/visualizers/chronograf/.provider.json
+services/visualizers/grafana/.env.template
+services/visualizers/grafana/.provider.json
+services/visualizers/grafana/Makefile
+services/visualizers/grafana/docker-compose.yml
+services/visualizers/kibana/.provider.json
+services/visualizers/openobserve/.provider.json
+services/visualizers/perses/.provider.json
+services/visualizers/signoz/.provider.json

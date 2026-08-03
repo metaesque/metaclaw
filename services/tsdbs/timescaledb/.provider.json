@@ -3,5 +3,8 @@
   "name": "TimescaleDB",
   "tier": "3A",
   "overview": "Offers massive convenience since PostgreSQL is already running for the Memory plane. However, Timescale adds significant relational bloat compared to purpose-built columnar TSDBs.",
-  "details": []
+  "details": [
+    "TimescaleDB is implemented as a PostgreSQL extension, creating 'hypertables' that automatically partition time-series data while allowing full SQL JOINs against relational data.",
+    "While it provides ultimate convenience by unifying the stack, the memory overhead of maintaining standard relational guarantees makes it inappropriate for edge nodes. It requires the dedicated hardware of a Tier 3A Archive node to prevent starving the inference engine."
+  ]
 }
