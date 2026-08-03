@@ -256,7 +256,11 @@ services/tracers/phoenix/.provider.json
 services/tracers/signoz/.provider.json
 services/tsdbs/.service.json
 services/tsdbs/Makefile
+services/tsdbs/greptimedb/.provider.json
+services/tsdbs/influxdb/.provider.json
+services/tsdbs/m3db/.provider.json
 services/tsdbs/prometheus/.provider.json
+services/tsdbs/questdb/.provider.json
 services/tsdbs/timescaledb/.provider.json
 services/tsdbs/victoriametrics/.env.template
 services/tsdbs/victoriametrics/.provider.json

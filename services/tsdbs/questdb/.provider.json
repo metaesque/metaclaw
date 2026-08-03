@@ -1,0 +1,7 @@
+{
+  "uid": "questdb",
+  "name": "QuestDB",
+  "tier": "2",
+  "overview": "Phenomenal for hardware telemetry due to its low-latency ingestion. SQL syntax makes it easy for LLMs to query without learning PromQL or Flux.",
+  "details": []
+}

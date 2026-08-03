@@ -1,0 +1,7 @@
+{
+  "uid": "influxdb",
+  "name": "InfluxDB",
+  "tier": "1",
+  "overview": "A popular, high-performance time-series database with a strong ecosystem and real-time analytics capabilities.",
+  "details": []
+}

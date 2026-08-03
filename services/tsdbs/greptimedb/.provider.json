@@ -1,0 +1,7 @@
+{
+  "uid": "greptimedb",
+  "name": "GreptimeDB",
+  "tier": "2",
+  "overview": "A Rust-based TSDB designed specifically for cloud-edge observability. It unifies metrics and logs in a single query engine.",
+  "details": []
+}

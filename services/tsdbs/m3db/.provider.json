@@ -1,0 +1,7 @@
+{
+  "uid": "m3db",
+  "name": "M3DB",
+  "tier": "4",
+  "overview": "Built by Uber for massive distributed fault tolerance. The operational overhead to run this locally far outweighs the benefits for smaller clusters.",
+  "details": []
+}
