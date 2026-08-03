@@ -1,6 +1,7 @@
 {
   "uid": "jenkins",
   "name": "Jenkins",
+  "tier": "2",
   "overview": "",
   "details": []
 }

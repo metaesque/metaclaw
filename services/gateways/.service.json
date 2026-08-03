@@ -4,5 +4,6 @@
   "name": "AI Gateway",
   "names": "AI Gateways",
   "category": "Orchestration & Routing",
-  "purpose": "The core intelligence layer. This is the user-facing agent framework that handles tool definitions, semantic memory retrieval, workflow execution, and multi-agent routing."
+  "purpose": "The core intelligence layer. This is the user-facing agent framework that handles tool definitions, semantic memory retrieval, workflow execution, and multi-agent routing.",
+  "plane": "control"
 }

@@ -1,6 +1,7 @@
 {
   "uid": "jinareader",
   "name": "Jina AI Reader",
+  "tier": "0",
   "overview": "Jina AI Reader is an ultra-lightweight API tool that instantly converts any URL into LLM-friendly Markdown by simply prepending a specific prefix to the target address.",
   "details": [
     "Jina Reader requires absolutely no complex SDKs, local dependencies, or heavy browser installations. By simply prepending `https://r.jina.ai/` to a URL, the service's cloud infrastructure uses headless browsers to render the page, execute JavaScript, and apply readability algorithms to strip away ads and navigation menus.",

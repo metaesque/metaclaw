@@ -1,6 +1,7 @@
 {
   "uid": "ollama",
   "name": "Ollama",
+  "tier": "0",
   "overview": "Highest Utility. Ollama perfectly mirrors OpenClaw's daemon-based architectural philosophy. It runs headlessly, manages hardware gracefully, and is natively supported by OpenClaw's LiteLLM backend (`ollama/model`). It is the undisputed default for local OpenClaw deployments.",
   "details": [
     "Ollama is a lightweight, Go-based provider built as a wrapper around llama.cpp, designed to make running local models as easy as running Docker containers. It abstracts away the complex command-line arguments of llama.cpp, allowing users to download and execute models with simple commands like `ollama run gemma`. It operates as a background system daemon, automatically managing model weights, detecting available hardware acceleration (Metal, CUDA, ROCm), and dynamically loading or unloading models from memory as requests come in. It features a highly stable REST API that conforms closely to community standards.",

@@ -1,6 +1,7 @@
 {
   "uid": "tailscale",
   "name": "Tailscale",
+  "tier": "0",
   "overview": "Highest Utility. Tailscale is the optimal default for OpenClaw. It seamlessly handles both full-mesh cluster routing (giving every node a static `100.x.y.z` IP for internal communication) and public webhook ingress (via Tailscale Funnel). It requires almost zero configuration and provides end-to-end encrypted remote access to the OpenClaw dashboard and SSH terminals.",
   "details": [
     "Tailscale is a modern, zero-configuration Virtual Private Network (VPN) built on top of the open-source WireGuard protocol. Unlike traditional hub-and-spoke VPNs that route all traffic through a centralized server bottleneck, Tailscale creates a peer-to-peer mesh network. Devices authenticate via a centralized coordination server, but the actual data traffic flows directly and securely between the devices using shortest-path routing, resulting in exceptionally high throughput and low latency.",

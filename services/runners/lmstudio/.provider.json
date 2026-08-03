@@ -1,6 +1,7 @@
 {
   "uid": "lmstudio",
   "name": "LM Studio",
+  "tier": "0",
   "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
   "details": [
     "LM Studio is a highly polished, Electron-based desktop graphical user interface (GUI) application designed to make local AI accessible to non-technical users. It features a built-in model browser directly connected to Hugging Face, allowing users to search for, filter, and download GGUF models with a single click. Beyond model management, it provides a ChatGPT-like chat interface and visual resource monitoring tools that show exactly how much RAM and VRAM a model is consuming.",

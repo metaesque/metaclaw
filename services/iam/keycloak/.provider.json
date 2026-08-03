@@ -1,6 +1,7 @@
 {
   "uid": "keycloak",
   "name": "Keycloak",
+  "tier": "3A",
   "overview": "",
   "details": []
 }

@@ -1,0 +1,9 @@
+{
+  "uid": "kasa-exporter",
+  "name": "Kasa Power Exporter",
+  "tier": "1",
+  "overview": "A custom Prometheus exporter written in Python, designed to poll TP-Link Kasa HS300 power strips and expose instantaneous watts, volts, and amps.",
+  "details": [
+    "The Kasa Exporter replaces the legacy SQLite-based daemon. Instead of running continuous loops, it listens for HTTP requests on a `/metrics` endpoint. When scraped by VictoriaMetrics, it uses the `python-kasa` library to fetch the instantaneous power data from the local network and formats it into standard Prometheus exposition format."
+  ]
+}

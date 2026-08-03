@@ -1,6 +1,7 @@
 {
   "uid": "msty",
   "name": "Msty",
+  "tier": "0",
   "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
   "details": [
     "Msty is a relatively new, highly polished desktop application designed to bridge the gap between local models and cloud providers. It features a sleek, modern interface with a strong focus on prompt management, knowledge bases, and multi-model comparison. It allows users to download local models with ease while also plugging in API keys for models like Claude or GPT-4.",

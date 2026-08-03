@@ -1,6 +1,7 @@
 {
   "uid": "drone",
   "name": "Gitea/Drone",
+  "tier": "1",
   "overview": "",
   "details": []
 }

@@ -1,0 +1,7 @@
+{
+  "uid": "signoz",
+  "name": "SigNoz",
+  "tier": "3A",
+  "overview": "An OpenTelemetry-native platform featuring a powerful UI that unifies metrics, logs, and traces from a single ClickHouse datastore.",
+  "details": []
+}

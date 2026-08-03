@@ -1,6 +1,7 @@
 {
   "uid": "koboldcpp",
   "name": "KoboldCPP",
+  "tier": "1",
   "overview": "Moderate Utility. OpenClaw's heavy reliance on reading `MEMORY.md` and transcript history means context sizes get large quickly. KoboldCPP's ContextShift feature saves massive amounts of compute by not reprocessing the prompt on every turn, making OpenClaw noticeably more responsive on consumer hardware.",
   "details": [
     "KoboldCPP is a self-contained, C++-based executable originally forked from llama.cpp. It was historically developed to cater to the AI roleplay and storytelling communities, which require large context windows and rapid back-and-forth conversational capabilities. Its standout technical feature is \"ContextShift\" (or SmartContext). When a conversation grows long, standard inference engines often re-evaluate the entire prompt upon every new message.",

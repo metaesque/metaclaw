@@ -1,0 +1,7 @@
+{
+  "uid": "chronograf",
+  "name": "Chronograf",
+  "tier": "1",
+  "overview": "InfluxData's native visualization engine, heavily optimized for rendering real-time time-series data if the backend utilizes InfluxDB or Flux querying.",
+  "details": []
+}

@@ -1,6 +1,7 @@
 {
   "uid": "localai",
   "name": "LocalAI",
+  "tier": "1",
   "overview": "High Utility. OpenClaw uses tools heavily (Voice TTS, Vision, Image Generation). Because LocalAI serves as a drop-in OpenAI replacement for *all* these modalities, it allows a user to run a completely offline, full-featured OpenClaw deployment without configuring separate providers for every tool.",
   "details": [
     "LocalAI is an open-source, Golang-based drop-in replacement for the OpenAI REST API. Instead of just wrapping a single text generation engine, it acts as a unified hub that supports multiple backends\u2014including llama.cpp for text, Whisper for audio transcription, and Stable Diffusion for image generation.",

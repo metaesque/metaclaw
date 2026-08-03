@@ -1,6 +1,7 @@
 {
   "uid": "buildkite",
   "name": "Buildkite",
+  "tier": "0",
   "overview": "",
   "details": []
 }

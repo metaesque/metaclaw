@@ -1,6 +1,7 @@
 {
   "uid": "kafka",
   "name": "Apache Kafka",
+  "tier": "4",
   "overview": "",
   "details": []
 }

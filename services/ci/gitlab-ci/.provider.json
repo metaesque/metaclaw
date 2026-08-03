@@ -1,6 +1,7 @@
 {
   "uid": "gitlab-ci",
   "name": "GitLab CI/CD",
+  "tier": "1",
   "overview": "",
   "details": []
 }

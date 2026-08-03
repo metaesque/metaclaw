@@ -1,6 +1,7 @@
 {
   "uid": "victorialogs",
   "name": "VictoriaLogs",
+  "tier": "0",
   "overview": "The Ultimate Edge Database. Replaces Loki as the top choice due to its ability to perform full-text search while consuming 30x less RAM. Practically invisible to the host OS.",
   "details": [
     "VictoriaLogs is an ultra-lightweight, high-performance log management provider from the VictoriaMetrics team. Engineered for extreme efficiency, it operates as a single zero-configuration executable that consumes up to 30x less RAM and 15x less disk space compared to traditional systems like Elasticsearch or even Grafana Loki. It utilizes its own intuitive querying language (LogsQL) for full-text search and easily integrates with existing collectors like Promtail or Fluent Bit.",

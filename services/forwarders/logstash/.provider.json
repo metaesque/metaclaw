@@ -1,6 +1,7 @@
 {
   "uid": "logstash",
   "name": "Logstash Collector",
+  "tier": "3A",
   "overview": "Heavy JVM-driven streaming data pipeline plugin infrastructure.",
   "details": []
 }

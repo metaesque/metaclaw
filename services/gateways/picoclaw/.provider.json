@@ -1,6 +1,7 @@
 {
   "uid": "picoclaw",
   "name": "PicoClaw",
+  "tier": "0",
   "overview": "These are exceptional alternatives for users deploying on constrained hardware (like a Raspberry Pi or a cheap VPS). They deliver the core OpenClaw experience with a fraction of the overhead, boasting sub-second boot times and minimal RAM usage.",
   "details": [
     "PicoClaw is an open-source, ultra-lightweight personal AI assistant tailored specifically for embedded Linux boards and resource-constrained environments. Written in Go, the gateway boasts a memory footprint of under 10MB and boots in less than a second. It is distributed as a portable binary across ARM, x86_64, and RISC-V architectures, making it incredibly easy to deploy on low-cost edge devices.",

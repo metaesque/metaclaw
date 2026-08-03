@@ -1,6 +1,7 @@
 {
   "uid": "knolliai",
   "name": "Knolli AI",
+  "tier": "3E",
   "overview": "These platforms are designed for large-scale enterprise orchestration and product design workflows. For an individual running personal local agents, their heavy compliance structures and corporate architectures introduce unnecessary friction.",
   "details": [
     "Knolli AI is an enterprise-grade AI orchestration platform designed to coordinate complex workflows across LLMs, autonomous agents, SaaS applications, and human decision points. It acts as the intelligent connective tissue for organizations, routing tasks, applying business logic, and embedding strict governance into automated processes.",

@@ -5,6 +5,7 @@
   "names": "Web Fetchers",
   "category": "Intelligence Execution",
   "purpose": "Bypasses anti-bot measures to fetch, render, and extract clean, LLM-ready markdown or JSON from specific URLs.",
+  "plane": "execution",
   "matrix": {
     "tier-0": {
       "Darwin": {

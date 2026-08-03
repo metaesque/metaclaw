@@ -1,6 +1,7 @@
 {
   "uid": "traefik",
   "name": "Traefik",
+  "tier": "1",
   "overview": "",
   "details": []
 }

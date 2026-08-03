@@ -1,6 +1,7 @@
 {
   "uid": "gpt4all",
   "name": "GPT4All",
+  "tier": "0",
   "overview": "Lowest Utility. While excellent for CPU-only privacy enthusiasts, its ecosystem is highly curated and restrictive compared to the open Wild West of Hugging Face. Its API is functional for OpenClaw, but Ollama or native llama.cpp generally handle CPU fallbacks better with vastly superior model selection.",
   "details": [
     "GPT4All is an ecosystem developed by Nomic AI, focused intensely on making AI accessible to everyday users without expensive hardware. It emphasizes privacy and the ability to run highly compressed models specifically tailored for standard consumer CPUs (though it supports GPUs as well). It provides desktop applications, Python SDKs, and a curated hub of models that have been heavily quantized and vetted to ensure they can run on basic laptops with 8GB of RAM.",

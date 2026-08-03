@@ -1,6 +1,7 @@
 {
   "uid": "trustclaw",
   "name": "TrustClaw",
+  "tier": "3A",
   "overview": "Best suited for cloud-first users who need their agent to securely connect to thousands of SaaS applications via OAuth without managing local infrastructure or worrying about leaking raw API keys.",
   "details": [
     "TrustClaw is a cloud-native adaptation of the OpenClaw philosophy, fundamentally rebuilt around OAuth authentication and enterprise-grade sandboxed execution. While OpenClaw prioritizes local-first, bare-metal deployment, TrustClaw embraces the cloud to offer seamless, secure integrations with over a thousand external SaaS applications and tools out of the box.",

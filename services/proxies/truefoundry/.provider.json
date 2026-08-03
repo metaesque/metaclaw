@@ -1,6 +1,7 @@
 {
   "uid": "truefoundry",
   "name": "TrueFoundry",
+  "tier": "4",
   "overview": "",
   "details": [
     "TrueFoundry is a comprehensive Machine Learning Operations (MLOps) platform that includes a robust, enterprise-focused LLM Gateway as one of its core services. While it functions as an AI proxy to standardize access to public models like OpenAI and Anthropic, its broader purpose is to unify an organization's entire AI infrastructure. It provides a centralized access and governance layer for managing both external APIs and internal, self-hosted models.",

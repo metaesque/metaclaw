@@ -1,6 +1,7 @@
 {
   "uid": "nullclaw",
   "name": "NullClaw",
+  "tier": "0",
   "overview": "These are exceptional alternatives for users deploying on constrained hardware (like a Raspberry Pi or a cheap VPS). They deliver the core OpenClaw experience with a fraction of the overhead, boasting sub-second boot times and minimal RAM usage.",
   "details": [
     "NullClaw pushes the limits of minimalist AI infrastructure, built entirely in the low-level systems programming language Zig. The result is a staggering 678-kilobyte static binary that boots in under 2 milliseconds and uses approximately 1MB of peak RAM. It is the smallest and fastest runtime in the extended OpenClaw ecosystem, targeting cheap hardware and tiny cloud instances.",

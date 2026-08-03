@@ -1,6 +1,7 @@
 {
   "uid": "bitbucket-pipelines",
   "name": "BitBucket Pipelines",
+  "tier": "0",
   "overview": "",
   "details": []
 }

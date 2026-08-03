@@ -1,6 +1,7 @@
 {
   "uid": "opensearch",
   "name": "OpenSearch",
+  "tier": "3A",
   "overview": "The Enterprise Standard. Provides massive analytical depth but requires dedicated infrastructure. An open-source alternative to ELK.",
   "details": [
     "OpenSearch is a community-driven, open-source fork of Elasticsearch and Kibana, maintained primarily by AWS. It offers the same distributed, full-text search engine capabilities, powerful aggregations, and rich visualization dashboards as the ELK stack, but guarantees a permissive open-source licensing model.",

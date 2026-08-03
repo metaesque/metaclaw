@@ -1,6 +1,7 @@
 {
   "uid": "lavague",
   "name": "LaVague",
+  "tier": "1",
   "overview": "LaVague is a Large Action Model (LAM) framework that translates your natural language goals directly into executable web automation code.",
   "details": [
     "Instead of just acting as a simple browser, LaVague utilizes a 'World Model' to understand the visual state of a webpage and an 'Action Engine' to compile that understanding into standard automation scripts (like Selenium or Playwright). It effectively acts as an autonomous QA engineer that writes its own code on the fly to achieve an objective.",

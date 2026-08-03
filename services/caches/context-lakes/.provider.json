@@ -1,6 +1,7 @@
 {
   "uid": "context-lakes",
   "name": "Context Lakes",
+  "tier": "3A",
   "overview": "Low Utility (for real-time). Context Lakes are powerful for deep, historical RAG pipelines, but they are batch-oriented storage architectures rather than real-time memory caches. They feed the agent's long-term knowledge but do not provide the fast, transient execution memory required for fluid, real-time agent interactions.",
   "details": [
     "A Context Lake is an architectural pattern and emerging class of data infrastructure designed to ingest massive volumes of unstructured, semi-structured, and structured data specifically for AI retrieval. Like a traditional data lake, it stores everything\u2014chat logs, raw documents, telemetry, and biometrics\u2014but is optimized to feed generative AI contexts via continuous embedding pipelines.",

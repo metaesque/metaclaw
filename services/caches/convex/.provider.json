@@ -1,6 +1,7 @@
 {
   "uid": "convex",
   "name": "Convex",
+  "tier": "0",
   "overview": "Moderate/Low Utility. The reactive, TypeScript-native nature of Convex is excellent, but it fundamentally shifts the architecture to a Cloud-backend model. OpenClaw agents are typically designed to run close to the metal (or in local containers). Relying on Convex moves the memory core to a centralized cloud, which may violate privacy or local-execution preferences.",
   "details": [
     "Convex is a reactive backend-as-a-service designed for modern full-stack TypeScript applications. It unifies a database, serverless functions, and real-time state synchronization via WebSockets into a single platform. When data changes in the Convex database, those changes are immediately and reactively pushed to connected clients without the need for polling.",

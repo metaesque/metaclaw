@@ -1,6 +1,7 @@
 {
   "uid": "moltis",
   "name": "Moltis",
+  "tier": "1",
   "overview": "Highly recommended for Rust-native enthusiasts prioritizing security. Its single-binary deployment and extreme sandboxing (forcing every tool execution into an isolated container) make it a paranoid, secure alternative for critical local tasks.",
   "details": [
     "Moltis is a personal AI assistant built entirely in Rust, focusing on providing a secure, local-first environment with zero runtime dependencies. It compiles the entire assistant stack\u2014including the web UI, model routing, memory, and tool execution\u2014into a single 60MB executable. This architecture eliminates the overhead of Node.js or Python environments, resulting in an exceptionally fast and resource-efficient gateway.",

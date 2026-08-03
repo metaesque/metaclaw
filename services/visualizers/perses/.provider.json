@@ -1,0 +1,7 @@
+{
+  "uid": "perses",
+  "name": "Perses",
+  "tier": "2",
+  "overview": "A CNCF sandbox project specifically built to be a GitOps-friendly, Kubernetes-native dashboarding alternative to Grafana, supporting Prometheus, Loki, and Tempo natively.",
+  "details": []
+}

@@ -1,0 +1,7 @@
+{
+  "uid": "openobserve",
+  "name": "OpenObserve",
+  "tier": "2",
+  "overview": "A highly efficient Rust-based observability UI that dramatically compresses data and unifies logs, metrics, and traces into a single platform using SQL syntax instead of PromQL.",
+  "details": []
+}

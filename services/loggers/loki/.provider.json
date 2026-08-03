@@ -1,6 +1,7 @@
 {
   "uid": "loki",
   "name": "Grafana Loki",
+  "tier": "1",
   "overview": "The Standard Default. Excellent label-based log compression. Ideal if the user is already running Prometheus/Grafana on their local network.",
   "details": [
     "Grafana Loki is a highly scalable, multi-tenant log aggregation system heavily inspired by Prometheus. Instead of indexing the full text of every single log line, it indexes only the metadata (labels), compressing the raw log data into discrete chunks. Promtail acts as the dedicated agent, tailing log files, attaching the relevant labels, and forwarding them directly to Loki.",

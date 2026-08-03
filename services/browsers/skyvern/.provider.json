@@ -1,6 +1,7 @@
 {
   "uid": "skyvern",
   "name": "Skyvern",
+  "tier": "2",
   "overview": "Skyvern is a powerful open-source platform that uses computer vision to automate browser workflows, allowing AI to literally 'see' a website just like a human does.",
   "details": [
     "Traditional automation tools read the hidden HTML code of a website to find buttons, which completely fails on modern, highly-secured websites that intentionally scramble their code to block bots. Skyvern bypasses the code entirely. It takes a screenshot of the page, passes it to a Vision LLM, and calculates the exact pixel coordinates to click based on visual appearance.",

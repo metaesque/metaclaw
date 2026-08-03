@@ -1,0 +1,7 @@
+{
+  "uid": "prometheus",
+  "name": "Prometheus",
+  "tier": "1",
+  "overview": "The industry standard for metric scraping. Excellent ecosystem support, but pull-based scraping requires explicit exporter configuration on all edge nodes.",
+  "details": []
+}

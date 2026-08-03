@@ -1,6 +1,7 @@
 {
   "uid": "zerotier",
   "name": "ZeroTier",
+  "tier": "1",
   "overview": "High Utility. ZeroTier is a highly performant, open-source-friendly alternative to Tailscale for building the internal cluster mesh. It operates at Layer 2/3 and is exceptional for linking multi-cloud or hybrid environments. However, it ranks below Tailscale because it lacks an integrated \"Funnel\" equivalent, making it difficult to receive external webhooks (like Telegram messages) without setting up a separate public VPS to bridge the traffic.",
   "details": [
     "ZeroTier is an advanced Software-Defined Wide Area Network (SD-WAN) platform that creates secure, programmable network overlays. It effectively functions as a smart virtual Ethernet switch for the internet, operating at both Layer 2 (Data Link) and Layer 3 (Network) of the OSI model. By combining the capabilities of VPNs and SD-WANs, it allows devices anywhere in the world to connect as if they were physically on the same local network, using cryptographic identities for authentication.",

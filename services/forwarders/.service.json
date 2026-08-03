@@ -4,5 +4,6 @@
   "name": "Telemetry Forwarder",
   "names": "Telemetry Forwarders",
   "category": "Observability & Telemetry Forwarding",
-  "purpose": "Lightweight edge daemons that process local container logs and bare-metal files on the fly, streaming parsed metrics and JSON buffers directly back to the active log aggregator backend."
+  "purpose": "Lightweight edge daemons that process local container logs and bare-metal files on the fly, streaming parsed metrics and JSON buffers directly back to the active log aggregator backend.",
+  "plane": "archive"
 }

@@ -1,6 +1,7 @@
 {
   "uid": "redis-streams",
   "name": "Redis Streams",
+  "tier": "0",
   "overview": "",
   "details": []
 }

@@ -1,6 +1,7 @@
 {
   "uid": "weaviate",
   "name": "Weaviate",
+  "tier": "3A",
   "overview": "Moderate Utility. Weaviate's strength lies in its built-in ML modules and automatic vectorization. However, because OpenClaw typically routes embedding generation through the LiteLLM proxy pipeline, Weaviate's native vectorization features can introduce redundancy into the framework's architecture.",
   "details": [
     "Weaviate is an open-source, Go-based vector database that stands out by offering built-in machine learning modules and a flexible GraphQL API. It can automatically vectorize text on ingestion if configured to do so, bridging the gap between raw data storage and embedding generation.",

@@ -1,6 +1,7 @@
 {
   "uid": "sqlite",
   "name": "SQLite",
+  "tier": "0",
   "overview": "",
   "details": []
 }

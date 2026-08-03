@@ -1,6 +1,7 @@
 {
   "uid": "docker",
   "name": "Docker",
+  "tier": "0",
   "overview": "Unsafe for Code Execution. Perfect for packaging the OpenClaw framework itself, but fatally flawed for agent code execution due to shared host kernel vulnerabilities.",
   "details": [
     "Docker is the industry-standard platform for developing, shipping, and running applications in lightweight containers. It isolates processes using Linux kernel features like namespaces and cgroups, ensuring that applications run consistently regardless of the host environment. Its ubiquitous adoption and massive ecosystem make it the default deployment mechanism for almost all modern microservices.",

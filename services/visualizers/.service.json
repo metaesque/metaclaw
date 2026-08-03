@@ -1,0 +1,9 @@
+{
+  "uid": "visualizer",
+  "uids": "visualizers",
+  "name": "Data Visualizer",
+  "names": "Data Visualizers",
+  "category": "Observability & Telemetry Forwarding",
+  "purpose": "The UI layer for querying and displaying metric and log data. Connects to TSDBs and Log Aggregators to provide real-time analytical dashboards.",
+  "plane": "control"
+}

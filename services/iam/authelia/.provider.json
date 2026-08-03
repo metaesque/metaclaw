@@ -1,6 +1,7 @@
 {
   "uid": "authelia",
   "name": "Authelia",
+  "tier": "1",
   "overview": "",
   "details": []
 }

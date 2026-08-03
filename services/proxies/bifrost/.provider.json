@@ -1,6 +1,7 @@
 {
   "uid": "bifrost",
   "name": "Bifrost",
+  "tier": "2",
   "overview": "",
   "details": [
     "Bifrost is a high-performance, open-source LLM gateway written in Go, specifically engineered for extreme speed and low latency. It provides the standard unified API layer\u2014normalizing various AI providers into a single OpenAI-compatible endpoint\u2014but distinguishes itself through its underlying system architecture. By utilizing Go rather than Python, Bifrost aims to drastically minimize the internal processing overhead that the proxy layer adds to each API call.",

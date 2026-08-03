@@ -4,5 +4,6 @@
   "name": "Log Aggregator",
   "names": "Log Aggregators",
   "category": "Observability & Telemetry Forwarding",
-  "purpose": "The central database storage engine managing structured records, analytical data pools, and log metrics for retrospective full-text query pipelines."
+  "purpose": "The central database storage engine managing structured records, analytical data pools, and log metrics for retrospective full-text query pipelines.",
+  "plane": "archive"
 }

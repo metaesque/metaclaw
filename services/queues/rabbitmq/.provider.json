@@ -1,6 +1,7 @@
 {
   "uid": "rabbitmq",
   "name": "RabbitMQ",
+  "tier": "1",
   "overview": "",
   "details": []
 }

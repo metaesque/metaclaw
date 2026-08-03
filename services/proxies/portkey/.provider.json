@@ -1,6 +1,7 @@
 {
   "uid": "portkey",
   "name": "Portkey",
+  "tier": "3A",
   "overview": "",
   "details": [
     "Portkey is an enterprise-grade AI gateway designed to serve as a comprehensive production control plane for Generative AI applications. It abstracts the complexities of connecting to over 1,600 different models, providing a unified API interface. However, its primary focus extends far beyond basic routing, aiming to provide the security, governance, and reliability required by large organizations deploying AI systems at scale.",

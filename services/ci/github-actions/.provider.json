@@ -1,6 +1,7 @@
 {
   "uid": "github-actions",
   "name": "GitHub Actions",
+  "tier": "0",
   "overview": "",
   "details": []
 }

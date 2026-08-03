@@ -1,0 +1,7 @@
+{
+  "uid": "timescaledb",
+  "name": "TimescaleDB",
+  "tier": "3A",
+  "overview": "Offers massive convenience since PostgreSQL is already running for the Memory plane. However, Timescale adds significant relational bloat compared to purpose-built columnar TSDBs.",
+  "details": []
+}

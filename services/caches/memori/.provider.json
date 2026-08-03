@@ -1,6 +1,7 @@
 {
   "uid": "memori",
   "name": "Memori Labs",
+  "tier": "1",
   "overview": "Moderate/High Utility. This technology solves the hardest part of agent memory: cognitive synthesis. It abstracts entity extraction and memory decay, making the OpenClaw agent vastly more intelligent out of the box. However, it ranks lower than Turso and Redis because OpenClaw's current design philosophy leans toward transparent, file-based (`MEMORY.md`) local control rather than opaque, API-driven external synthesis.",
   "details": [
     "Memory-as-a-Service platforms (like Mem0, often associated with Memori concepts) provide an intelligent, API-driven memory layer specifically built for Large Language Models. Instead of just storing raw text or vectors, these platforms actively extract entities, facts, and user preferences from conversations. They handle the synthesis, deduplication, and decay of information automatically.",

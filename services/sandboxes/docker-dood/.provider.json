@@ -1,6 +1,7 @@
 {
   "uid": "docker-dood",
   "name": "Hardened Docker DooD",
+  "tier": "0",
   "overview": "Provides a hardened, sterile execution environment for the Sandbox service. If your OpenClaw agent hallucinates a dangerous Python or Bash script, or is tricked via prompt injection into running malicious code, this environment ensures the code cannot escape and compromise your host machine.",
   "details": [
     "This provider creates a hardened, sterile execution environment for the Sandbox service. If your OpenClaw agent hallucinates a dangerous Python or Bash script, or is tricked via prompt injection into running malicious code, this environment ensures the code cannot escape and compromise your host machine. By utilizing Docker-out-of-Docker (DooD) principles, the main gateway routes all code execution requests into this isolated container rather than executing them internally.",

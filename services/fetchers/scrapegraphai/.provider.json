@@ -1,6 +1,7 @@
 {
   "uid": "scrapegraphai",
   "name": "ScrapeGraphAI",
+  "tier": "1",
   "overview": "ScrapeGraphAI is a Python library and API that utilizes LLMs and direct graph logic to dynamically construct scraping pipelines from natural language prompts.",
   "details": [
     "Traditional web scrapers require developers to hardcode specific XPath or CSS selectors. If the target website changes its layout, the scraper immediately breaks. ScrapeGraphAI solves this by using AI to analyze the DOM and intelligently locate the requested information, regardless of the underlying HTML structure.",

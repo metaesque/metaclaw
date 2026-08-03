@@ -1,6 +1,7 @@
 {
   "uid": "cloudflare-tunnels",
   "name": "Cloudflare Tunnels",
+  "tier": "1",
   "overview": "Moderate Utility. This is an enterprise-grade solution for exposing internal services to the public internet via a standard URL. It is phenomenal for webhook ingress and provides industry-leading DDoS protection. However, it is not a true mesh VPN. It cannot be used to easily SSH between your cluster nodes or securely hide your OpenClaw dashboard behind a private, un-routable IP space. Furthermore, Cloudflare terminates TLS at their edge, meaning they technically have access to your decrypted webhook traffic.",
   "details": [
     "Cloudflare Tunnels (powered by the `cloudflared` daemon) provides a secure way to expose local web servers and applications to the internet without opening any incoming ports on a router or firewall. Instead of listening for connections, the daemon creates an outbound, encrypted connection to the Cloudflare global network. External users hit a standard Cloudflare URL, and the traffic is routed securely back down the tunnel to the local machine.",

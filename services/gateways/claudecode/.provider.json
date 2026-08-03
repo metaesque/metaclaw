@@ -1,6 +1,7 @@
 {
   "uid": "claudecode",
   "name": "Claude Code",
+  "tier": "0",
   "overview": "Phenomenal for pure software engineering and repository refactoring. However, its strict limitation to developer workflows makes it unsuitable as a general-purpose, multi-channel personal assistant.",
   "details": [
     "Claude Code is Anthropic's official, agentic coding system designed to operate directly within a developer's terminal. Rather than functioning as a general-purpose chat gateway, it is a surgical tool that reads codebases, traces dependencies, executes multi-file refactors, and runs tests autonomously. It interfaces natively with CLI tools like Git to deliver committed, working code.",

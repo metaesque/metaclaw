@@ -1,6 +1,7 @@
 {
   "uid": "steel",
   "name": "Steel Browser",
+  "tier": "1",
   "overview": "Steel is an open-source browser API that specializes in long-running, persistent cloud browser sessions for AI applications.",
   "details": [
     "Many automated web tasks fail because websites log the user out or require complex two-factor authentication (2FA) that an AI cannot easily bypass on its own. Steel solves this by allowing users to maintain persistent browser states, saving authentication cookies and session data so the AI can pick up exactly where it left off yesterday.",

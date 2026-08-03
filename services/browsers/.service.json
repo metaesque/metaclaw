@@ -5,6 +5,7 @@
   "names": "Browser Automations",
   "category": "Intelligence Execution",
   "purpose": "Provides advanced, AI-driven DOM interaction, visual interpretation, and self-healing autonomous navigation capabilities.",
+  "plane": "execution",
   "matrix": {
     "tier-0": {
       "Darwin": {

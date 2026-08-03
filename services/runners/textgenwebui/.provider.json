@@ -1,6 +1,7 @@
 {
   "uid": "textgenwebui",
   "name": "Text-Gen-WebUI",
+  "tier": "2",
   "overview": "Moderate Utility. While the UI is irrelevant to OpenClaw, its support for the ExLlamaV2 loader is crucial. For users with high-end Nvidia GPUs who want the absolute fastest tokens-per-second on local hardware, pointing OpenClaw at the WebUI API running an EXL2 model is the power-user optimal path.",
   "details": [
     "Text-Gen-WebUI, affectionately known in the community as \"Oobabooga\", is a Gradio-based web interface that serves as the Swiss Army knife of local LLMs. It is designed for power users, researchers, and enthusiasts who want granular control over every aspect of model inference.",

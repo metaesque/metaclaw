@@ -1,6 +1,7 @@
 {
   "uid": "crawl4ai",
   "name": "Crawl4AI",
+  "tier": "0",
   "overview": "Crawl4AI is an open-source, ultra-fast web crawler designed specifically for LLMs and AI agents, returning clean Markdown and structured extraction natively.",
   "details": [
     "Crawl4AI simplifies the RAG ingestion pipeline by rendering JavaScript-heavy pages via an internal browser, executing dynamic interaction hooks (like 'Load More'), and converting the DOM directly into optimized Markdown.",

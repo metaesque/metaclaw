@@ -1,6 +1,7 @@
 {
   "uid": "caddy",
   "name": "Caddy",
+  "tier": "0",
   "overview": "",
   "details": []
 }

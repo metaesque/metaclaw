@@ -1,6 +1,7 @@
 {
   "uid": "octoparse",
   "name": "Octoparse",
+  "tier": "0",
   "overview": "Octoparse is a powerful no-code web scraping platform that excels at large-scale, structured data extraction across paginated and highly dynamic websites.",
   "details": [
     "Originally built as a visual desktop tool for human researchers, Octoparse allows users to 'point and click' to create scraping templates. Its cloud platform can then execute these templates programmatically, handling complex tasks like infinite scrolling, dropdown menus, and batch URL processing.",

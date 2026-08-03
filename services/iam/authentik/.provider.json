@@ -1,6 +1,7 @@
 {
   "uid": "authentik",
   "name": "Authentik",
+  "tier": "2",
   "overview": "",
   "details": []
 }

@@ -1,6 +1,7 @@
 {
   "uid": "manisai",
   "name": "Manis AI",
+  "tier": "2",
   "overview": "These platforms are designed for large-scale enterprise orchestration and product design workflows. For an individual running personal local agents, their heavy compliance structures and corporate architectures introduce unnecessary friction.",
   "details": [
     "Manis AI is a no-code portal and workflow automation tool focused primarily on accelerating app development and strategic planning. While it incorporates AI elements to assist with presentation structuring, design, and logic flows, it functions more as an intelligent builder than a traditional autonomous agent gateway.",

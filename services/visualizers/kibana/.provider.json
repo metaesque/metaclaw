@@ -1,0 +1,7 @@
+{
+  "uid": "kibana",
+  "name": "Kibana",
+  "tier": "3A",
+  "overview": "The traditional visualization layer for the ELK stack; while unparalleled for deep full-text log exploration, its metric visualization options are less flexible than Grafana.",
+  "details": []
+}

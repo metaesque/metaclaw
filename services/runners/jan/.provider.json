@@ -1,6 +1,7 @@
 {
   "uid": "jan",
   "name": "Jan.ai",
+  "tier": "0",
   "overview": "Moderate/Low Utility. These are desktop GUI applications first, and API servers second. While their local APIs work perfectly fine with OpenClaw, running an entire Electron/React desktop app just to serve an API to a background agent framework is inefficient and counter to OpenClaw's architecture. They are great for testing models, but poor for permanent OpenClaw integration.",
   "details": [
     "Jan.ai is a privacy-first, open-source desktop application positioned as a direct, transparent alternative to closed-source GUIs like LM Studio. Built with Electron and React, it provides a clean, modern interface for downloading and interacting with local models entirely offline.",

@@ -1,6 +1,7 @@
 {
   "uid": "woodpecker",
   "name": "Woodpecker CI",
+  "tier": "1",
   "overview": "",
   "details": []
 }

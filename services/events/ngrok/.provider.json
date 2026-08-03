@@ -1,6 +1,7 @@
 {
   "uid": "ngrok",
   "name": "Custom ngrok endpoints",
+  "tier": "0",
   "overview": "",
   "details": []
 }

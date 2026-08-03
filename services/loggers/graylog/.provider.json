@@ -1,6 +1,7 @@
 {
   "uid": "graylog",
   "name": "Graylog",
+  "tier": "2",
   "overview": "The Security Backstop. Valuable only if the agent is given root access and requires immediate, automated kill-switches via SIEM alerting.",
   "details": [
     "Graylog is a centralized log management platform that focuses heavily on security information and event management (SIEM) and compliance alerting. It relies on Elasticsearch or OpenSearch under the hood for raw data storage but replaces Logstash and Kibana with its own highly tuned processing pipelines and a distinctly user-friendly, security-focused interface.",

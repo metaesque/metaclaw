@@ -1,6 +1,7 @@
 {
   "uid": "browseai",
   "name": "Browse AI",
+  "tier": "0",
   "overview": "Browse AI is a no-code web scraping and monitoring platform that allows users to train a cloud robot to extract data or monitor site changes in minutes.",
   "details": [
     "Browse AI relies on a visual recording interface. A human user performs the scraping steps once (clicking, selecting data), and the platform generates a persistent, automated API endpoint for that specific task. It excels at scheduled execution and detecting changes on a page.",

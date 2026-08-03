@@ -1,6 +1,7 @@
 {
   "uid": "nginx",
   "name": "Nginx",
+  "tier": "1",
   "overview": "",
   "details": []
 }

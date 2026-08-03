@@ -1,6 +1,7 @@
 {
   "uid": "nats",
   "name": "NATS",
+  "tier": "2",
   "overview": "",
   "details": []
 }

@@ -1,6 +1,7 @@
 {
   "uid": "opentelemetry",
   "name": "OpenTelemetry Collector + Jaeger",
+  "tier": "3A",
   "overview": "",
   "details": []
 }

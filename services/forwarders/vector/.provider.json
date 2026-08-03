@@ -1,6 +1,7 @@
 {
   "uid": "vector",
   "name": "Vector Pipeline",
+  "tier": "2",
   "overview": "Rust-powered streaming log and metric transformation engine.",
   "details": []
 }

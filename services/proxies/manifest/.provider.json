@@ -1,6 +1,7 @@
 {
   "uid": "manifest",
   "name": "Manifest",
+  "tier": "2",
   "overview": "Manifest takes the top spot because it was specifically engineered with AI agents like OpenClaw in mind. Its session-aware routing prevents \"tier oscillation\" (where a multi-turn task bounces between a smart model and a dumb model mid-thought), which is crucial for OpenClaw's chain-of-thought tool calling. It is the most native-feeling routing solution for agentic workflows.",
   "details": [
     "Manifest is an open-source LLM router and AI proxy built specifically with AI agents and complex orchestration workflows in mind. It acts as an intermediary layer that not only translates API requests but actively scores and routes them based on a sophisticated multi-dimensional algorithm. Manifest is designed to optimize interactions by determining the most cost-effective and capable model for any given prompt in real-time, aiming to drastically reduce API costs.",

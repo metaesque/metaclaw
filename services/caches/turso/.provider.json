@@ -1,6 +1,7 @@
 {
   "uid": "turso",
   "name": "Turso",
+  "tier": "1",
   "overview": "Highest Utility. Turso perfectly bridges OpenClaw's local-first philosophy with distributed needs. Its libSQL foundation means agents interact with it like a local file (zero network latency for immediate recall), but it automatically syncs across all of a user's OpenClaw nodes. The built-in vector support handles semantic search effortlessly within a highly portable architecture.",
   "details": [
     "Turso is a distributed, edge-hosted database built on libSQL, which is an open-source fork of SQLite. It is designed to push data as close to the compute layer as possible, allowing for microsecond read latencies. Turso supports embedded replicas, meaning an application can read from a local SQLite file while Turso seamlessly syncs changes to and from a global edge network. It also natively supports vector embeddings.",

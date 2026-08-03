@@ -1,6 +1,7 @@
 {
   "uid": "langfuse",
   "name": "Langfuse",
+  "tier": "1",
   "overview": "",
   "details": []
 }

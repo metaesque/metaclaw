@@ -1,6 +1,7 @@
 {
   "uid": "quickwit",
   "name": "Quickwit",
+  "tier": "2",
   "overview": "The Context Lake Engine. Best for dumping petabytes of long-term agent telemetry to cheap S3/external storage while maintaining sub-second search.",
   "details": [
     "Quickwit is an open-source, cloud-native search engine written in Rust, specifically optimized for massive, append-only observability datasets like logs and distributed traces. Its defining architectural trait is the complete decoupling of compute and storage; it indexes data directly into highly compressed columnar formats and stores them on cheap object storage (like AWS S3 or local equivalents), while remaining capable of executing sub-second full-text searches.",

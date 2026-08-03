@@ -1,6 +1,7 @@
 {
   "uid": "haproxy",
   "name": "HAProxy",
+  "tier": "2",
   "overview": "",
   "details": []
 }

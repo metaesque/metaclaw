@@ -1,6 +1,7 @@
 {
   "uid": "vllm",
   "name": "vLLM",
+  "tier": "4",
   "overview": "High Utility (Niche). If you are running OpenClaw on a dedicated VPS with A100s and relying heavily on sub-agent swarms (`sessions_spawn`), vLLM is unmatched. Its PagedAttention algorithm will handle the concurrent agent tasks faster than anything else on the market.",
   "details": [
     "vLLM is a high-throughput, memory-efficient serving engine designed specifically for large language models. Its core innovation is PagedAttention, an algorithm that manages attention keys and values like an operating system manages virtual memory. This prevents memory fragmentation and allows the engine to batch significantly more requests concurrently than standard inference engines.",
