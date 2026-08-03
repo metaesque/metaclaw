@@ -13,16 +13,6 @@ export
 
 LOG_READY_SIGNAL = HTTP Server Listen
 
-# Force Make to trigger a recreate if this Makefile itself is updated
-RECREATE_DEPS += Makefile
-
-pre-up:
-	@echo "[$(SERVICE_TITLE)] Ensuring external data directory permissions..."
-	@if [ -n "$(EXTERNAL_DRIVE_PATH)" ]; then \
-		mkdir -p $(EXTERNAL_DRIVE_PATH)/grafana-data; \
-		docker run --rm -v $(EXTERNAL_DRIVE_PATH)/grafana-data:/mnt alpine chown -R 472:0 /mnt 2>/dev/null || true; \
-	fi
-
 post-check-status:
 	@echo "Running diagnostic suite..."
 	@echo "--- 1. Dashboard Health ---" > verification.log

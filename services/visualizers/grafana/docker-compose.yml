@@ -1,9 +1,28 @@
 services:
+  grafana-init:
+    # WHAT THIS IS: A short-lived initialization container.
+    # WHY IT EXISTS: Docker Compose creates host-mounted volumes as root by default.
+    # This container preemptively chowns the directory to uid 472 (Grafana's internal user)
+    # to prevent Permission Denied crash-loops, working uniformly across all host OS platforms.
+    image: alpine:3.19
+    container_name: grafana-init
+    command: >
+      /bin/sh -c "mkdir -p /var/lib/grafana && chown -R 472:0 /var/lib/grafana"
+    volumes:
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/grafana-data:/var/lib/grafana
+    networks:
+      - shared-network
+
   grafana:
     # WHAT THIS IS: A powerful UI for visualizing time-series metrics and logs.
     image: grafana/grafana:${GRAFANA_VERSION}
     container_name: grafana
     restart: unless-stopped
+    depends_on:
+      grafana-init:
+        # WHAT THIS DOES: Forces Docker Compose to wait until the init container
+        # finishes fixing the permissions before attempting to boot Grafana.
+        condition: service_completed_successfully
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
     environment:
