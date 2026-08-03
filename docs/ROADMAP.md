@@ -52,3 +52,7 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Utilize the `bin/fetch_arena.py` script to scrape the live Gradio JSON state from LMArena. Modify agent YAMLs to include an `arena_category` parameter (e.g., `Chat/Text/Legal & Government`). The Orchestrator will act as a single-shot Intent Classifier, passing the prompt to the appropriate agent, while MetaClaw's orchestration engine dynamically binds the #1 ranked ELO model for that category to the agent executing the task.
 *   **[TODO] Implement Runtime Semantic-Predictive Hook:**
     Finish writing the javascript interceptor in `services/gateways/openclaw/modules/routing/semantic_predictive.js` to natively evaluate cosine similarity at runtime against the `router.json` embeddings and forcefully overwrite the `agentId` variable, fully activating the semantic routing architecture.
+
+## Phase 7: Unimplemented Services (VCS, CI, IAM)
+*   **[TODO] Select and Implement Providers for Unimplemented Services:**
+    The `vcs` (Version Control System), `ci` (Continuous Integration), and `iam` (Identity & Access Management) services currently lack functional provider implementations (containing only metadata `.provider.json` stubs). We need to select and fully implement default providers for each (e.g., Gitea for `vcs`, Woodpecker for `ci`, and Authelia for `iam`) with working Docker Compose and Makefile infrastructure.
