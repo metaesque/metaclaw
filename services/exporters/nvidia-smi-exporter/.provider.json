@@ -1,9 +1,0 @@
-{
-  "uid": "nvidia-smi-exporter",
-  "name": "NVIDIA SMI Exporter",
-  "tier": "2",
-  "overview": "A specialized exporter that parses `nvidia-smi` output to expose VRAM utilization, GPU temperatures, and Tensor Core loads.",
-  "details": [
-    "Essential for Compute Plane monitoring. It allows the SRE orchestrator to detect VRAM saturation before catastrophic OOM kills, and monitors GPU junction temperatures to warn of impending thermal throttling."
-  ]
-}
