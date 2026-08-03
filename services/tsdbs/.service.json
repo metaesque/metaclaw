@@ -1,6 +1,6 @@
 {
-  "uid": "metric",
-  "uids": "metrics",
+  "uid": "tsdb",
+  "uids": "tsdbs",
   "name": "Time-Series Database",
   "names": "Time-Series Databases",
   "category": "Observability & Telemetry Forwarding",

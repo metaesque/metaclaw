@@ -1,9 +1,0 @@
-{
-  "uid": "grafana",
-  "name": "Grafana",
-  "overview": "The industry standard observability dashboard. Seamlessly connects to VictoriaMetrics, PostgreSQL, and VictoriaLogs.",
-  "details": [
-    "Grafana is the premier open-source visualization tool for time-series data. It excels at translating complex PromQL queries into highly customizable, real-time dashboards, heatmaps, and alert panels.",
-    "For the MetaClaw ecosystem, Grafana acts as the unified 'pane of glass' for the Control Plane. By deploying Grafana, the human operator (and SRE agents via API) can visually monitor the cluster's health, tracking everything from specific LLM inference latencies in Postgres to live solar-yield wattage scraped from the K8 Plus power strips."
-  ]
-}
