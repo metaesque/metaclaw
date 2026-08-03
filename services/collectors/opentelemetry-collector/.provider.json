@@ -1,0 +1,7 @@
+{
+  "uid": "opentelemetry-collector",
+  "name": "OpenTelemetry Collector",
+  "tier": "3A",
+  "overview": "The CNCF industry standard for telemetry collection, offering immense flexibility but requiring complex configurations.",
+  "details": []
+}

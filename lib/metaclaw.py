@@ -229,6 +229,12 @@ class MetaClaw:
         # scale to run on ALL cluster nodes to guarantee distributed log capture back to control.
         assigned_services.add("forwarder")
 
+        # DYNAMIC TSDB/COLLECTOR INJECTION
+        if n.get("enable_metrics", False):
+            assigned_services.add("collector")
+            if "archive" in n_planes:
+                assigned_services.add("tsdb")
+
         new_providers = {}
         for svc_key in assigned_services:
             svc_data = struct.get('services', {}).get(svc_key, {})
@@ -251,6 +257,8 @@ class MetaClaw:
                     "proxy": "litellm",
                     "logger": "victorialogs",
                     "forwarder": "fluentbit",
+                    "tsdb": "victoriametrics",
+                    "collector": "telegraf",
                     "cache": "redis",
                     "memory": "postgres",
                     "runner": "ollama",

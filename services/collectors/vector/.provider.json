@@ -1,0 +1,7 @@
+{
+  "uid": "vector",
+  "name": "Vector",
+  "tier": "2",
+  "overview": "A high-performance observability router capable of operating as both a log forwarder and a metrics collector.",
+  "details": []
+}

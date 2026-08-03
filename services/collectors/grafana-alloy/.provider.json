@@ -1,0 +1,7 @@
+{
+  "uid": "grafana-alloy",
+  "name": "Grafana Alloy",
+  "tier": "2",
+  "overview": "Grafana's OpenTelemetry-based collector, highly capable of routing complex metrics and parsing external script executions.",
+  "details": []
+}

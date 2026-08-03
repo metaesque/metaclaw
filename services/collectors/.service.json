@@ -1,0 +1,9 @@
+{
+  "uid": "collector",
+  "uids": "collectors",
+  "name": "Metrics Collector",
+  "names": "Metrics Collectors",
+  "category": "Observability & Telemetry Forwarding",
+  "purpose": "A unified agent running on every node that executes scripts and scrapes local hardware metrics, securely transmitting them to the central TSDB.",
+  "plane": "all"
+}

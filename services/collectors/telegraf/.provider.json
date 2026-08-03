@@ -1,0 +1,11 @@
+{
+  "uid": "telegraf",
+  "name": "Telegraf",
+  "tier": "0",
+  "overview": "A mature, lightweight agent developed by InfluxData. Highly extensible, natively runs Python scripts via the exec plugin, and outputs natively to VictoriaMetrics.",
+  "details": [
+    "Telegraf operates as a single unified collector daemon. It can execute local Python scripts (like power_kasa.py) on a cron-like interval, scrape host-level CPU and memory, and push the combined telemetry directly to VictoriaMetrics.",
+    "This eliminates the need to run standalone Python HTTP servers or isolated Prometheus Exporters, heavily reducing the footprint on edge nodes."
+  ],
+  "diagnostics": "1. **Container Check:** You should see `SUCCESS: Telegraf is running.`"
+}

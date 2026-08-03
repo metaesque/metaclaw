@@ -324,37 +324,22 @@ def main():
         profile["semantic_granularity"] = semantic_granularity
         print(f"  -> Semantic Granularity saved: {semantic_granularity}")
 
+    print("\nEnable Time-Series Metrics (TSDB) Collection?")
+    print("  This will deploy a TSDB on the Archive Node, and Collectors across the cluster.")
+    tsdb_choice = input("Deploy metrics stack? [y/N]: ").strip().lower()
+    enable_metrics = tsdb_choice in ['y', 'yes']
+
     ssh_key = None
     if tier_choice == "2":
-        # Check if the user wants to enable TSDB metrics for Tier 2
-        print("\nEnable Time-Series Metrics (TSDB) Collection?")
-        print("  This will deploy VictoriaMetrics and Grafana on the Control Node,")
-        print("  and Node Exporters across the cluster.")
-        # TODO: Extend this prompt to other tiers in future iterations
-        tsdb_choice = input("Deploy metrics stack? [y/N]: ").strip().lower()
-        enable_metrics = tsdb_choice in ['y', 'yes']
-
-        control_planes = ["control", "execution", "archive"]
-
-        # We explicitly map specific providers to planes in profile.json so that orchestrate.py can parse them.
-        # This will be refined as the implementation of orchestrate.py scales to handle the new services.
-        providers_dict = {}
-
-        if enable_metrics:
-             print("  -> Enabling TSDB metrics stack on Control Node.")
-             # Add the visualizer to the control node where the human interacts.
-             # Add the TSDB to the archive plane which the control node hosts.
-             # The exporter will be added automatically to all nodes by orchestrate.py's global logic.
-
         profile["nodes"].append({
             "hostname": local_host,
             "tier": 2,
-            "planes": control_planes,
+            "planes": ["control", "execution", "archive"],
             "require_wan": True,
             "ssh_user": os.getlogin(),
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw,
-            "enable_metrics": enable_metrics # Store flag for future orchestrator updates
+            "enable_metrics": enable_metrics
         })
 
         print("\nEnter remote Compute node network coordinates:")
@@ -396,10 +381,9 @@ def main():
             "ssh_user": ssh_user,
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": compute_hw,
-            "enable_metrics": enable_metrics # Propagate the flag
+            "enable_metrics": enable_metrics
         })
     else:
-        # TODO: Add TSDB prompt for Tier 0, 1, 3, 4
         profile["nodes"].append({
             "hostname": local_host,
             "tier": int(tier_choice),
@@ -407,7 +391,8 @@ def main():
             "require_wan": False,
             "ssh_user": os.getlogin(),
             "order_prefs": ["cost", "safety", "resources"],
-            "hardware": local_hw
+            "hardware": local_hw,
+            "enable_metrics": enable_metrics
         })
 
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))

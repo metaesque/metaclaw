@@ -1,0 +1,7 @@
+{
+  "uid": "prometheus-agent",
+  "name": "Prometheus Agent",
+  "tier": "1",
+  "overview": "A lightweight scrape-and-forward mode of the main Prometheus server, used to scrape local endpoints and remote-write to a central TSDB.",
+  "details": []
+}

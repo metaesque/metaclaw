@@ -1,0 +1,7 @@
+{
+  "uid": "datadog-agent",
+  "name": "Datadog Agent",
+  "tier": "4",
+  "overview": "An enterprise-grade collector designed to securely push metrics and logs to Datadog's cloud infrastructure.",
+  "details": []
+}

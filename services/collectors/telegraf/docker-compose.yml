@@ -1,0 +1,23 @@
+services:
+  telegraf:
+    image: telegraf:${TELEGRAF_VERSION}
+    container_name: telegraf
+    restart: unless-stopped
+    environment:
+      - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-active-tsdb}
+      - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      # Mount workspace to execute local Python scripts like power_kasa.py
+      - ${OPENCLAW_WORKSPACE:-/tmp}:/workspace:ro
+    networks:
+      shared-network:
+        aliases:
+          - active-collector
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true
