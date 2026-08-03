@@ -324,11 +324,6 @@ def main():
         profile["semantic_granularity"] = semantic_granularity
         print(f"  -> Semantic Granularity saved: {semantic_granularity}")
 
-    print("\nEnable Time-Series Metrics (TSDB) Collection?")
-    print("  This will deploy a TSDB on the Archive Node, and Collectors across the cluster.")
-    tsdb_choice = input("Deploy metrics stack? [y/N]: ").strip().lower()
-    enable_metrics = tsdb_choice in ['y', 'yes']
-
     ssh_key = None
     if tier_choice == "2":
         profile["nodes"].append({
@@ -338,8 +333,7 @@ def main():
             "require_wan": True,
             "ssh_user": os.getlogin(),
             "order_prefs": ["cost", "safety", "resources"],
-            "hardware": local_hw,
-            "enable_metrics": enable_metrics
+            "hardware": local_hw
         })
 
         print("\nEnter remote Compute node network coordinates:")
@@ -380,8 +374,7 @@ def main():
             "require_wan": True,
             "ssh_user": ssh_user,
             "order_prefs": ["cost", "safety", "resources"],
-            "hardware": compute_hw,
-            "enable_metrics": enable_metrics
+            "hardware": compute_hw
         })
     else:
         profile["nodes"].append({
@@ -391,8 +384,7 @@ def main():
             "require_wan": False,
             "ssh_user": os.getlogin(),
             "order_prefs": ["cost", "safety", "resources"],
-            "hardware": local_hw,
-            "enable_metrics": enable_metrics
+            "hardware": local_hw
         })
 
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))

@@ -15,6 +15,10 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     **Action Required:** Reboot the K8 Plus, enter the BIOS (`Del` or `F2`), navigate to **Advanced -> AMD CBS -> NBIO Common Options -> GFX Configuration -> UMA Frame buffer Size**, and change it to `Auto` or `512MB`. This will free up RAM for Docker services, while the GPU continues to dynamically allocate inference memory via GTT.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
+*   **[TODO] All-in-One Platform Providers:**
+    Address multi-service providers (such as SigNoz or OpenObserve) that span multiple service categories (`logger`, `tracer`, `visualizer`). Currently, MetaClaw treats every service as strictly orthogonal, which risks spinning up duplicate container stacks if the same provider is selected across multiple service roles.
+*   **[TODO] Cross-Service Provider Entanglements & Dependencies:**
+    Implement declarative inter-provider coupling within `lib/metaclaw.py`. For example, selecting `victoriametrics` for the `tsdb` service should automatically bias default provider choices for `collector` (`telegraf`) and `visualizer` (`grafana`) to ensure maximum compatibility out-of-the-box.
 *   **[TODO] Distributed Logging (VictoriaLogs & Fluent Bit):**
     Currently, VictoriaLogs only aggregates Docker JSON logs from the local `control` node. We need to explicitly configure `fluent-bit.conf` to tail bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy lightweight Fluent Bit forwarders to all remote `compute` and `execution` nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
 *   **[TODO] Overcoming `num_ctx` Defaults:**

@@ -225,15 +225,13 @@ class MetaClaw:
         if n_wan:
             assigned_services.add("network")
 
-        # INVARIANT MESH MANDATE: The 'forwarder' tracking agent must automatically
-        # scale to run on ALL cluster nodes to guarantee distributed log capture back to control.
+        # INVARIANT MESH MANDATE: The 'forwarder' and 'collector' tracking agents
+        # must automatically scale to run on ALL cluster nodes to guarantee distributed data capture.
         assigned_services.add("forwarder")
 
-        # DYNAMIC TSDB/COLLECTOR INJECTION
-        if n.get("enable_metrics", False):
+        # Metrics stack collection is enabled for Tier 1 and above
+        if n_tier >= 1:
             assigned_services.add("collector")
-            if "archive" in n_planes:
-                assigned_services.add("tsdb")
 
         new_providers = {}
         for svc_key in assigned_services:
@@ -259,6 +257,7 @@ class MetaClaw:
                     "forwarder": "fluentbit",
                     "tsdb": "victoriametrics",
                     "collector": "telegraf",
+                    "visualizer": "grafana",
                     "cache": "redis",
                     "memory": "postgres",
                     "runner": "ollama",
