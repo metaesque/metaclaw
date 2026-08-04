@@ -69,12 +69,12 @@ def main():
             json.dump(profile, f, indent=2)
         print(f"  -> Routing Strategy saved: {routing_strategy}")
 
-        # 2. Workspace Provisioning (Saved to service-level cache to bypass prompting)
+        # 2. Workspace Provisioning (Saved to global cache to bypass prompting)
         # We calculate the absolute path based on the user's current working directory
         # so they clearly see where the workspace will be placed relative to the system root.
         default_ws_abs = os.path.abspath(os.path.join(os.getcwd(), "..", "workspace"))
 
-        print(f"\nEnter path for your persistent OpenClaw workspace directory [{default_ws_abs}]: ")
+        print(f"\nEnter path for your persistent MetaClaw workspace directory [{default_ws_abs}]: ")
         ws_choice = input("> ").strip()
         if not ws_choice:
             ws_choice = default_ws_abs
@@ -93,22 +93,21 @@ def main():
                 print(f"  -> Creating empty workspace directory: {abs_ws_path}")
                 os.makedirs(abs_ws_path)
 
-        # Save to gateway's .env.json so env_instantiate picks it up automatically
-        gw_env_json = "services/gateways/openclaw/.env.json"
-        os.makedirs(os.path.dirname(gw_env_json), exist_ok=True)
+        # Save to root .env.json so env_instantiate picks it up automatically globally
+        root_env_json = ".env.json"
         env_data = {}
-        if os.path.exists(gw_env_json):
-            with open(gw_env_json, 'r') as f:
+        if os.path.exists(root_env_json):
+            with open(root_env_json, 'r') as f:
                 try:
                     env_data = json.load(f)
                 except json.JSONDecodeError:
                     pass
 
-        env_data["OPENCLAW_WORKSPACE"] = abs_ws_path
-        with open(gw_env_json, 'w') as f:
+        env_data["METACLAW_WORKSPACE"] = abs_ws_path
+        with open(root_env_json, 'w') as f:
             json.dump(env_data, f, indent=2)
 
-        print(f"  -> Workspace path saved to OpenClaw configuration.")
+        print(f"  -> Workspace path saved to global MetaClaw configuration.")
     else:
         print("Node does not operate the Control plane. Skipping Gateway customizations.")
 

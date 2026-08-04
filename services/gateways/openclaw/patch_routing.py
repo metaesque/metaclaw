@@ -23,13 +23,7 @@ port = os.environ.get('OPENCLAW_PORT', '18789')
 proxy_key = os.environ.get('ACTIVE_PROXY_KEY', 'metaclaw_secure_bypass_token')
 
 # Find the workspace dir
-workspace_dir = None
-if os.path.exists(env_path):
-  with open(env_path, 'r') as f:
-    for line in f:
-      if line.startswith('OPENCLAW_WORKSPACE='):
-        workspace_dir = line.strip().split('=', 1)[1]
-        break
+workspace_dir = os.environ.get('METACLAW_WORKSPACE')
 
 if not workspace_dir:
   workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'workspace'))

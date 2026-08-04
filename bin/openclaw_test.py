@@ -55,7 +55,7 @@ def get_agent_test_prompt(agent_arg, prompt_type):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.dirname(script_dir)
-    workspace_dir = os.environ.get('OPENCLAW_WORKSPACE')
+    workspace_dir = os.environ.get('METACLAW_WORKSPACE')
 
     if not workspace_dir:
         workspace_dir = os.path.abspath(os.path.join(repo_root, '..', 'workspace'))

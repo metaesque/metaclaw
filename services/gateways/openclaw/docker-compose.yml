@@ -30,7 +30,7 @@ services:
       # WHAT THIS DOES:
       #   Mounts the agent workspace sandbox so agents can read/write files
       #   without accessing your entire hard drive.
-      - ${OPENCLAW_WORKSPACE}:${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw/workspace
+      - ${METACLAW_WORKSPACE}:${OPENCLAW_INTERNAL_HOME:-/home/node}/.openclaw/workspace
       # WHAT THIS DOES:
       #   Mounts the host's Docker socket and the dynamically downloaded static
       #   Docker CLI.

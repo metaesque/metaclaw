@@ -404,7 +404,7 @@ class MetaClaw:
             env_vars[var_name] = val
 
             # --- AUTO-PROVISIONING INJECTION FOR WORKSPACE ---
-            if var_name == "OPENCLAW_WORKSPACE" and val:
+            if var_name == "METACLAW_WORKSPACE" and val:
                 expanded_val = os.path.expanduser(val)
                 if not os.path.exists(expanded_val):
                     template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.workspace.template'))

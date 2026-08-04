@@ -9,25 +9,25 @@ services:
       - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-active-tsdb}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
     # WHAT THIS DOES: Safely executes a multi-line shell script as a single argument.
-    # It installs Python as root, builds the venv, changes ownership to the telegraf user,
-    # and then manually invokes the original entrypoint to safely drop privileges and start the daemon.
+    # It installs Python, C-compilers for psutil, builds the venv, changes ownership,
+    # and invokes the original entrypoint to safely drop privileges.
     entrypoint:
       - /bin/sh
       - -c
       - |
-        apk add --no-cache python3 py3-pip
+        apk add --no-cache python3 py3-pip gcc musl-dev linux-headers python3-dev
         python3 -m venv /tmp/venv
-        /tmp/venv/bin/pip install python-kasa pyyaml
+        /tmp/venv/bin/pip install python-kasa pyyaml psutil
         chown -R telegraf:telegraf /tmp/venv
         exec /entrypoint.sh telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/hostfs:ro
-      # Mount workspace to execute local Python scripts like power_kasa.py
-      - ${OPENCLAW_WORKSPACE:-/tmp}:/workspace:ro
+      # Mount workspace using dynamic METACLAW_WORKSPACE variable mapped from root .env
+      - ${METACLAW_WORKSPACE:-/tmp}:/workspace:ro
       # Mount the dynamic agent configuration directory
-      - ${OPENCLAW_WORKSPACE:-/tmp}/.telegraf.d:/etc/telegraf/telegraf.d:ro
+      - ${METACLAW_WORKSPACE:-/tmp}/.telegraf.d:/etc/telegraf/telegraf.d:ro
     networks:
       shared-network:
         aliases:
