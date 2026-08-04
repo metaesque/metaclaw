@@ -16,3 +16,6 @@
 /secret
 /vcs
 /tracer
+/tsdb
+/collector
+/visualizer

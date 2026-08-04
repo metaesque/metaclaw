@@ -391,7 +391,6 @@
 ../workspace/src/projects/DESIGN.md
 ../workspace/src/bin/hardware.py
 ../workspace/src/data/hardware.json
-../workspace/src/projects/kasa/bin/apply_infrastructure_patches.sh
 ../workspace/src/projects/kasa/bin/gpu_telemetry.py
 ../workspace/src/projects/kasa/bin/host_gpu_telemetry.sh
 ../workspace/src/projects/kasa/bin/kasa_alert.sh
