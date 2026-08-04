@@ -5,14 +5,21 @@ services:
     restart: unless-stopped
     # WHAT THIS DOES: Forces the container to start as root so we can install packages.
     user: root
-    # WHAT THIS DOES: Bypasses the default entrypoint so it doesn't drop privileges before our script runs.
-    entrypoint: ["/bin/sh", "-c"]
-    # WHAT THIS DOES: Installs Python as root, builds the venv, changes ownership to the telegraf user,
-    # and then manually invokes the original entrypoint to safely drop privileges and start the daemon.
-    command: "apk add --no-cache python3 py3-pip && python3 -m venv /tmp/venv && /tmp/venv/bin/pip install python-kasa pyyaml && chown -R telegraf:telegraf /tmp/venv && exec /entrypoint.sh telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d"
     environment:
       - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-active-tsdb}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
+    # WHAT THIS DOES: Safely executes a multi-line shell script as a single argument.
+    # It installs Python as root, builds the venv, changes ownership to the telegraf user,
+    # and then manually invokes the original entrypoint to safely drop privileges and start the daemon.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache python3 py3-pip
+        python3 -m venv /tmp/venv
+        /tmp/venv/bin/pip install python-kasa pyyaml
+        chown -R telegraf:telegraf /tmp/venv
+        exec /entrypoint.sh telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
