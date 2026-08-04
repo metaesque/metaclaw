@@ -6,6 +6,9 @@ services:
     environment:
       - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-active-tsdb}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
+    # WHAT THIS DOES: Installs Python inside the Alpine container on boot before starting the Telegraf daemon.
+    # WHY IT MATTERS: Required to execute power_kasa.py via the inputs.exec plugin.
+    command: /bin/sh -c "apk add --no-cache python3 py3-pip && python3 -m venv /tmp/venv && /tmp/venv/bin/pip install python-kasa pyyaml && exec telegraf"
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
