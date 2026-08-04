@@ -122,3 +122,7 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     *   `queue` (Message Queue) [RabbitMQ]
     *   `event` (Event Gateway) [Hookdeck]
     *   `ingress` (Reverse Proxy) [Traefix]
+
+## Phase 8: Technical Debt & Standardization
+*   **[TODO] Standardize Docker Container Naming:**
+    Update all `docker-compose.yml` files and Makefiles to enforce the `<provider>-<service>` naming convention. Currently, early services (like `openclaw-gateway`, `litellm-proxy`, `redis-cache`) are compliant, but others are wrong. Note: `postgres-db` must be renamed to `postgres-memory`.
