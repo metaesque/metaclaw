@@ -184,6 +184,11 @@ ensuring strict integration with:
     `software_qa`). Do not use colloquial names (like `qa_engineer` or
     `project_manager`) in code, documentation, or when interacting with OpenClaw
     tools.
+*   **Provider & Hardware Agnosticism:** You must NEVER hardcode project logic
+    to a specific infrastructure provider (e.g., assuming VictoriaMetrics instead
+    of a generic TSDB) or to specific hardware constraints (e.g., assuming a
+    GMKtec K8 Plus or DGX Spark). Implementations must utilize abstraction layers
+    (the Services API) to ensure swapping providers does not break agents.
 
 ## 10. Formatting and Output Protocol
 

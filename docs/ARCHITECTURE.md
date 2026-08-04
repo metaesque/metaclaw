@@ -270,6 +270,20 @@ time-series numbers) are explicitly separated in the taxonomy.
    TSDBs and Loggers to generate real-time charts and alerts, entirely decoupled
    from the storage layer.
 
+### Provider-Agnostic Abstraction (The Services API)
+
+MetaClaw's core mandate is to ensure that specific infrastructure providers
+(like VictoriaMetrics, Telegraf, or Grafana) are abstracted away from the
+projects running inside OpenClaw. A future 'Services API' layer will guarantee
+that if a user swaps their TSDB to InfluxDB, their agent scripts continue to
+function without modification. Projects must interface with the generic service
+contract (e.g., querying "the TSDB"), not the provider-specific implementation.
+
+Furthermore, the architecture must never hardcode assumptions about specific
+hardware nodes (e.g., expecting an EVO-X2 or DGX Spark to be explicitly present);
+hardware availability and capabilities must be queried dynamically from the
+`profile.json` registry or abstracted through the Services API.
+
 ## Binary Localization (The Ollama Path Invariant)
 
 To ensure the framework does not clobber host-level binaries or create global
@@ -333,7 +347,7 @@ MetaClaw enforces strict data provenance:
 
 OpenClaw manages internal onboarding state via `workspace-state.json` files
 located in nested `.openclaw/` directories within the workspace. The
-`setupCompletedAt` timestamp tells the Gateway whether the agent has completed
+`setupCompletedAt` timestamp tells the Gateway whether the Gateway whether the agent has completed
 its "First Run" onboarding ritual. If this timestamp is missing, OpenClaw
 injects a `[Bootstrap pending]` directive into the agent's system prompt.
 

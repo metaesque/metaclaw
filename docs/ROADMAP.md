@@ -7,12 +7,10 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Restructured the `workspace/src/projects/kasa/grafana` directory to map
     correctly to `/etc/grafana/provisioning` schemas. The mount itself is
     handled via `apply_infrastructure_patches.sh`.
-*   **[TODO] Finalize GPU Telemetry Isolation:**
-    Telegraf has been patched to use a Debian base image to solve `glibc`
-    linkage errors, but we must finalize the telemetry pipeline. Either map the
-    physical hardware (`/dev/dri`, `/dev/kfd`) into the container, or
-    orchestrate the `host_gpu_telemetry.sh` script via bare-metal
-    `systemd`/`cron`.
+*   **[x] Finalize GPU Telemetry Isolation:**
+    Telegraf has been patched to use a Debian base image. The `gpu_telemetry.py`
+    script has been rewritten to natively read `/sys/class/drm/` metrics from
+    the kernel, completely eliminating the need for `cron` or brittle CLI binaries.
 
 ## Phase 1: Foundation (Current)
 *   [x] Establish the `openclaw-network` mesh.
@@ -138,3 +136,12 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 ## Phase 8: Technical Debt & Standardization
 *   **[TODO] Standardize Docker Container Naming:**
     Update all `docker-compose.yml` files and Makefiles to enforce the `<provider>-<service>` naming convention. Currently, early services (like `openclaw-gateway`, `litellm-proxy`, `redis-cache`) are compliant, but others are wrong. Note: `postgres-db` must be renamed to `postgres-memory`.
+
+## Phase 9: Provider-Agnostic Services API
+*   **[TODO] Hardcoding Assessment:** Evaluate the MetaClaw codebase to identify
+    where projects or agents make hardcoded assumptions about specific hardware
+    (e.g., K8 Plus, EVO-X2, DGX Spark) or specific providers (e.g., VictoriaMetrics, Telegraf, Grafana).
+*   **[TODO] Build Services API:** Develop a generic MetaClaw Services API (Python/REST)
+    that allows OpenClaw projects to interact with 'the TSDB', 'the Logger', or 'the Collector' without
+    knowing the underlying provider implementation. This isolates projects from changes
+    to the MetaClaw infrastructure plane.
