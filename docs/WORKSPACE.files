@@ -1,4 +1,5 @@
 ../workspace/.gitignore
+../workspace/.telegraf.d/kasa.conf
 ../workspace/AGENTS.md
 ../workspace/HEARTBEAT.md
 ../workspace/IDENTITY.md
@@ -259,6 +260,7 @@
 ../workspace/agents/social/lead/SOUL.md
 ../workspace/agents/social/linkedin.yaml
 ../workspace/agents/social/linkedin/AGENTS.md
+../workspace/agents/social/linkedin/IDENTITY.md
 ../workspace/agents/social/linkedin/MEMORY.md
 ../workspace/agents/social/linkedin/SOUL.md
 ../workspace/agents/social/orchestrator.yaml
@@ -268,6 +270,7 @@
 ../workspace/agents/social/orchestrator/SOUL.md
 ../workspace/agents/social/pinterest.yaml
 ../workspace/agents/social/pinterest/AGENTS.md
+../workspace/agents/social/pinterest/IDENTITY.md
 ../workspace/agents/social/pinterest/MEMORY.md
 ../workspace/agents/social/pinterest/SOUL.md
 ../workspace/agents/social/reddit.yaml
@@ -277,18 +280,22 @@
 ../workspace/agents/social/reddit/SOUL.md
 ../workspace/agents/social/snapchat.yaml
 ../workspace/agents/social/snapchat/AGENTS.md
+../workspace/agents/social/snapchat/IDENTITY.md
 ../workspace/agents/social/snapchat/MEMORY.md
 ../workspace/agents/social/snapchat/SOUL.md
 ../workspace/agents/social/tiktok.yaml
 ../workspace/agents/social/tiktok/AGENTS.md
+../workspace/agents/social/tiktok/IDENTITY.md
 ../workspace/agents/social/tiktok/MEMORY.md
 ../workspace/agents/social/tiktok/SOUL.md
 ../workspace/agents/social/twitter.yaml
 ../workspace/agents/social/twitter/AGENTS.md
+../workspace/agents/social/twitter/IDENTITY.md
 ../workspace/agents/social/twitter/MEMORY.md
 ../workspace/agents/social/twitter/SOUL.md
 ../workspace/agents/social/youtube.yaml
 ../workspace/agents/social/youtube/AGENTS.md
+../workspace/agents/social/youtube/IDENTITY.md
 ../workspace/agents/social/youtube/MEMORY.md
 ../workspace/agents/social/youtube/SOUL.md
 ../workspace/agents/software/auditor.yaml
@@ -382,7 +389,6 @@
 ../workspace/src/bin/hardware.py
 ../workspace/src/bin/project.py
 ../workspace/src/data/hardware.json
-../workspace/src/data/harwdware.json
 ../workspace/src/projects/AGENTS.md
 ../workspace/src/projects/DECISIONS.md
 ../workspace/src/projects/DESIGN.md
