@@ -1,4 +1,5 @@
 ../workspace/.gitignore
+../workspace/.telegraf.d/host.conf
 ../workspace/.telegraf.d/kasa.conf
 ../workspace/AGENTS.md
 ../workspace/HEARTBEAT.md
@@ -392,7 +393,9 @@
 ../workspace/src/projects/AGENTS.md
 ../workspace/src/projects/DECISIONS.md
 ../workspace/src/projects/DESIGN.md
+../workspace/src/projects/kasa/bin/gpu_telemetry.py
 ../workspace/src/projects/kasa/bin/power_kasa.py
+../workspace/src/projects/kasa/bin/test_gpu_telemetry.py
 ../workspace/src/projects/kasa/bin/test_power_kasa.py
 ../workspace/src/projects/kasa/data/alerts.yaml
 ../workspace/src/projects/kasa/data/dashboard.json

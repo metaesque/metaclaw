@@ -4,25 +4,30 @@ services:
     container_name: telegraf
     restart: unless-stopped
     user: root
-    # WHAT THIS DOES: Binds the container directly to the host network stack.
-    # WHY IT MATTERS: The Python Kasa discovery script relies on UDP broadcast packets (255.255.255.255).
-    # Docker bridge networks isolate and drop broadcast traffic. Host networking allows the packets to reach the LAN.
     network_mode: "host"
     environment:
       - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-127.0.0.1}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
+      # WHAT THIS DOES: Informs Telegraf's native plugins to look at the mounted host filesystem
+      # instead of the container's isolated filesystem for system metrics.
+      - HOST_PROC=/hostfs/proc
+      - HOST_SYS=/hostfs/sys
+      - HOST_ETC=/hostfs/etc
+      - HOST_MOUNT_PREFIX=/hostfs
     entrypoint:
       - /bin/sh
       - -c
       - |
         apk add --no-cache python3 py3-pip gcc musl-dev linux-headers python3-dev
         python3 -m venv /tmp/venv
-        /tmp/venv/bin/pip install python-kasa pyyaml psutil
+        /tmp/venv/bin/pip install python-kasa pyyaml
         chown -R telegraf:telegraf /tmp/venv
         exec /entrypoint.sh telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Expose host hardware telemetry to the container
       - /:/hostfs:ro
       - ../../../../workspace:/workspace:ro
       - ../../../../workspace/.telegraf.d:/etc/telegraf/telegraf.d:ro
+
