@@ -18,7 +18,7 @@ services:
       - /bin/sh
       - -c
       - |
-        apk add --no-cache python3 py3-pip gcc musl-dev linux-headers python3-dev
+        apt-get update && apt-get install -y python3 python3-pip python3-venv gcc python3-dev lm-sensors
         python3 -m venv /tmp/venv
         /tmp/venv/bin/pip install python-kasa pyyaml
         chown -R telegraf:telegraf /tmp/venv
