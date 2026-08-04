@@ -2,6 +2,18 @@
 
 This document outlines the strategic evolution of the MetaClaw framework, tracking technical debt, planned features, and architectural pivots identified during deployment testing.
 
+## Immediate Action Items (Transferred from Previous Session)
+*   **[TODO] Grafana Dashboard Static Provisioning:**
+    Update `services/visualizers/grafana/docker-compose.yml` to mount
+    `workspace/src/projects/kasa/grafana` to `/etc/grafana/provisioning`. This
+    eliminates the need for manual UI dashboard imports.
+*   **[TODO] Finalize GPU Telemetry Isolation:**
+    Telegraf has been patched to use a Debian base image to solve `glibc`
+    linkage errors, but we must finalize the telemetry pipeline. Either map the
+    physical hardware (`/dev/dri`, `/dev/kfd`) into the container, or
+    orchestrate the `host_gpu_telemetry.sh` script via bare-metal
+    `systemd`/`cron`.
+
 ## Phase 1: Foundation (Current)
 *   [x] Establish the `openclaw-network` mesh.
 *   [x] Implement `profile.json` dynamic orchestration.

@@ -194,7 +194,7 @@
 ../workspace/agents/orchestrator/video.yaml
 ../workspace/agents/orchestrator/video/AGENTS.md
 ../workspace/agents/orchestrator/video/IDENTITY.md
-../workspace/agents/orchestrator/video/MEMORY.md
+../workspace/orchestrator/video/MEMORY.md
 ../workspace/agents/orchestrator/video/SOUL.md
 ../workspace/agents/self/archivist.yaml
 ../workspace/agents/self/archivist/AGENTS.md
@@ -393,7 +393,9 @@
 ../workspace/src/projects/AGENTS.md
 ../workspace/src/projects/DECISIONS.md
 ../workspace/src/projects/DESIGN.md
+../workspace/src/projects/kasa/bin/apply_infrastructure_patches.sh
 ../workspace/src/projects/kasa/bin/gpu_telemetry.py
+../workspace/src/projects/kasa/bin/host_gpu_telemetry.sh
 ../workspace/src/projects/kasa/bin/power_kasa.py
 ../workspace/src/projects/kasa/bin/test_gpu_telemetry.py
 ../workspace/src/projects/kasa/bin/test_power_kasa.py
@@ -403,3 +405,5 @@
 ../workspace/src/projects/kasa/docs/DESIGN.md
 ../workspace/src/projects/kasa/docs/IMPLEMENTATION.md
 ../workspace/src/projects/kasa/docs/ROADMAP.md
+../workspace/src/projects/kasa/grafana/dashboards.yaml
+../workspace/src/projects/kasa/grafana/datasources.yaml
