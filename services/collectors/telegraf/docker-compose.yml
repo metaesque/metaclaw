@@ -2,22 +2,24 @@ services:
   telegraf:
     image: telegraf:${TELEGRAF_VERSION}
     container_name: telegraf
-    # WHAT THIS DOES: Elevates the container user to root.
-    # WHY IT MATTERS: Required to bypass "Permission denied" errors when running 'apk add' to provision the Python environment inside the Alpine image on boot.
-    user: root
     restart: unless-stopped
+    # WHAT THIS DOES: Forces the container to start as root so we can install packages.
+    user: root
+    # WHAT THIS DOES: Bypasses the default entrypoint so it doesn't drop privileges before our script runs.
+    entrypoint: ["/bin/sh", "-c"]
+    # WHAT THIS DOES: Installs Python as root, builds the venv, changes ownership to the telegraf user,
+    # and then manually invokes the original entrypoint to safely drop privileges and start the daemon.
+    command: "apk add --no-cache python3 py3-pip && python3 -m venv /tmp/venv && /tmp/venv/bin/pip install python-kasa pyyaml && chown -R telegraf:telegraf /tmp/venv && exec /entrypoint.sh telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d"
     environment:
       - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-active-tsdb}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
-    # WHAT THIS DOES: Installs Python, provisions a venv, and launches Telegraf with a dynamic config directory flag.
-    command: /bin/sh -c "apk add --no-cache python3 py3-pip && python3 -m venv /tmp/venv && /tmp/venv/bin/pip install python-kasa pyyaml && exec telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d"
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/hostfs:ro
+      # Mount workspace to execute local Python scripts like power_kasa.py
       - ${OPENCLAW_WORKSPACE:-/tmp}:/workspace:ro
-      # WHAT THIS DOES: Mounts the agent-managed drop-folder into the container.
-      # WHY IT MATTERS: Agents can dynamically add project-specific Telegraf configurations here without editing the MetaClaw framework files.
+      # Mount the dynamic agent configuration directory
       - ${OPENCLAW_WORKSPACE:-/tmp}/.telegraf.d:/etc/telegraf/telegraf.d:ro
     networks:
       shared-network:
