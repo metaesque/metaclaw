@@ -35,13 +35,11 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     to dynamically allocate inference memory via GTT.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
-*   **[TODO] Refactor `power_kasa.py` as a Hardware Telemetry Collector:**
-    Expand the scope of the `workspace/src/projects/kasa/bin/power_kasa.py`
-    script beyond legacy SQLite polling. Refactor it to gather comprehensive
-    electrical, thermal, memory, compute, and mesh network metrics. Integrate
-    this natively with the new `collector` service (Telegraf) via `inputs.exec`,
-    pushing high-frequency data to the `tsdb` (VictoriaMetrics) for real-time
-    visualization in `visualizer` (Grafana).
+*   **[TODO] Kasa Migration (From Project to Core SRE):**
+    Acknowledge that Kasa is not a standard workspace project, but a core
+    SRE capability that monitors host infrastructure. It must be migrated out
+    of the `workspace/src/projects` directory and fully absorbed into MetaClaw's
+    `services/collectors/telegraf/` configuration.
 *   **[TODO] All-in-One Platform Providers:**
     Address multi-service providers (such as SigNoz or OpenObserve) that span
     multiple service categories (`logger`, `tracer`, `visualizer`). Currently,
@@ -137,11 +135,14 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Standardize Docker Container Naming:**
     Update all `docker-compose.yml` files and Makefiles to enforce the `<provider>-<service>` naming convention. Currently, early services (like `openclaw-gateway`, `litellm-proxy`, `redis-cache`) are compliant, but others are wrong. Note: `postgres-db` must be renamed to `postgres-memory`.
 
-## Phase 9: Provider-Agnostic Services API
-*   **[TODO] Hardcoding Assessment:** Evaluate the MetaClaw codebase to identify
-    where projects or agents make hardcoded assumptions about specific hardware
-    (e.g., K8 Plus, EVO-X2, DGX Spark) or specific providers (e.g., VictoriaMetrics, Telegraf, Grafana).
+## Phase 9: Separation of State & Infrastructure Configuration
+*   **[TODO] Implement metacfg Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
+    from "Infrastructure Configuration". Introduce a `metacfg/` directory that distributes
+    Telegraf `.conf` files and Grafana `dashboards.json` files across the cluster.
 *   **[TODO] Build Services API:** Develop a generic MetaClaw Services API (Python/REST)
     that allows OpenClaw projects to interact with 'the TSDB', 'the Logger', or 'the Collector' without
     knowing the underlying provider implementation. This isolates projects from changes
     to the MetaClaw infrastructure plane.
+*   **[TODO] Implement Version Control Service (`vcs`):** Provision the `gitea` provider
+    to allow non-technical users to securely version-control their `workspace` and `metacfg`
+    repositories locally, removing the dependency on external GitHub configurations.

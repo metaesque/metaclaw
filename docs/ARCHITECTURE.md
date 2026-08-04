@@ -271,13 +271,12 @@ time-series numbers) are explicitly separated in the taxonomy.
    from the storage layer.
 
 ### Provider-Agnostic Abstraction (The Services API)
-
 MetaClaw's core mandate is to ensure that specific infrastructure providers
 (like VictoriaMetrics, Telegraf, or Grafana) are abstracted away from the
 projects running inside OpenClaw. A future 'Services API' layer will guarantee
 that if a user swaps their TSDB to InfluxDB, their agent scripts continue to
 function without modification. Projects must interface with the generic service
-contract (e.g., querying "the TSDB"), not the provider-specific implementation.
+contract (e.g. querying "the TSDB"), not the provider-specific implementation.
 
 Furthermore, the architecture must never hardcode assumptions about specific
 hardware nodes (e.g., expecting an EVO-X2 or DGX Spark to be explicitly present);
@@ -343,11 +342,29 @@ MetaClaw enforces strict data provenance:
    the configuration directory. MetaClaw guarantees the preservation of these
    files during teardowns (via automated archiving).
 
+### Separation of State vs Configuration (`workspace/` vs `metacfg/`)
+
+To support a distributed cluster without forcing complex Git workflows on
+non-technical users, MetaClaw strictly decouples **Agent Memory** from
+**Infrastructure Configuration**.
+
+*   **`workspace/` (The Brain):** This directory contains the agent's continuous
+    memory, raw chat transcripts, and identity files (`SOUL.md`). It is
+    **strictly centralized** and resides *only* on the Control Node. It does
+    not need to exist on distributed compute or edge execution nodes.
+*   **`metacfg/` (The Drop-Zone):** This is a lightweight, distributed directory
+    that exists on every node in the cluster. It contains static infrastructure
+    configurations (e.g., Grafana JSON dashboards, Telegraf `.conf` overrides).
+    OpenClaw agents can autonomously design infrastructure by writing to the
+    `metacfg/` Drop-Zone. When changes occur, agents instruct the human operator
+    to restart the relevant services via the CLI, keeping humans-in-the-loop for
+    destructive execution.
+
 ### Ephemeral Workspace State (`workspace-state.json`)
 
 OpenClaw manages internal onboarding state via `workspace-state.json` files
 located in nested `.openclaw/` directories within the workspace. The
-`setupCompletedAt` timestamp tells the Gateway whether the Gateway whether the agent has completed
+`setupCompletedAt` timestamp tells the Gateway whether the agent has completed
 its "First Run" onboarding ritual. If this timestamp is missing, OpenClaw
 injects a `[Bootstrap pending]` directive into the agent's system prompt.
 
