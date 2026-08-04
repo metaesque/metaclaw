@@ -3,14 +3,14 @@ services:
     image: telegraf:${TELEGRAF_VERSION}
     container_name: telegraf
     restart: unless-stopped
-    # WHAT THIS DOES: Forces the container to start as root so we can install packages.
     user: root
+    # WHAT THIS DOES: Binds the container directly to the host network stack.
+    # WHY IT MATTERS: The Python Kasa discovery script relies on UDP broadcast packets (255.255.255.255).
+    # Docker bridge networks isolate and drop broadcast traffic. Host networking allows the packets to reach the LAN.
+    network_mode: "host"
     environment:
-      - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-active-tsdb}
+      - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-127.0.0.1}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
-    # WHAT THIS DOES: Safely executes a multi-line shell script as a single argument.
-    # It installs Python, C-compilers for psutil, builds the venv, changes ownership,
-    # and invokes the original entrypoint to safely drop privileges.
     entrypoint:
       - /bin/sh
       - -c
@@ -24,16 +24,5 @@ services:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/hostfs:ro
-      # Mount workspace using dynamic METACLAW_WORKSPACE variable mapped from root .env
-      - ${METACLAW_WORKSPACE:-/tmp}:/workspace:ro
-      # Mount the dynamic agent configuration directory
-      - ${METACLAW_WORKSPACE:-/tmp}/.telegraf.d:/etc/telegraf/telegraf.d:ro
-    networks:
-      shared-network:
-        aliases:
-          - active-collector
-
-networks:
-  shared-network:
-    name: ${NETWORK_NAME:-openclaw-network}
-    external: true
+      - ../../../../workspace:/workspace:ro
+      - ../../../../workspace/.telegraf.d:/etc/telegraf/telegraf.d:ro
