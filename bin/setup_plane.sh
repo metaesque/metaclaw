@@ -30,17 +30,33 @@ if [ "$1" == "--deploy" ]; then
     echo "# METACLAW REMOTE DEPLOYMENT ORCHESTRATOR"
     echo "################################################################################"
     echo "[1/4] Copying bootstrap script to $TARGET..."
-    scp "$SCRIPT_PATH" "$TARGET:/tmp/setup_plane.sh"
+    if ! scp "$SCRIPT_PATH" "$TARGET:/tmp/setup_plane.sh"; then
+        echo -e "\n[!] FATAL ERROR: Failed to copy setup script to $TARGET. Deployment aborted."
+        exit 1
+    fi
 
-    echo "\n[2/4] Executing Phase 1 (Pre-Docker Setup) on $TARGET..."
-    # Execute Phase 1 remotely
-    ssh -t "$TARGET" "bash /tmp/setup_plane.sh --phase1 $NEW_HOSTNAME"
+    echo -e "\n[2/4] Executing Phase 1 (Pre-Docker Setup) on $TARGET..."
+    # Execute Phase 1 remotely and trap failures
+    if ! ssh -t "$TARGET" "bash /tmp/setup_plane.sh --phase1 $NEW_HOSTNAME"; then
+        echo -e "\n################################################################################"
+        echo "# FATAL ERROR: Phase 1 execution failed on $TARGET."
+        echo "# Deployment aborted."
+        echo "################################################################################"
+        exit 1
+    fi
 
-    echo "\n[3/4] Connection gracefully dropped to refresh Docker group permissions."
+    echo -e "\n[3/4] Connection gracefully dropped to refresh Docker group permissions."
     echo "      Reconnecting to execute Phase 2 (Tailscale Integration)..."
-    ssh -t "$TARGET" "bash /tmp/setup_plane.sh --phase2"
+    # Execute Phase 2 remotely and trap failures
+    if ! ssh -t "$TARGET" "bash /tmp/setup_plane.sh --phase2"; then
+        echo -e "\n################################################################################"
+        echo "# FATAL ERROR: Phase 2 (Tailscale) failed on $TARGET."
+        echo "# Review the errors above. Deployment aborted."
+        echo "################################################################################"
+        exit 1
+    fi
 
-    echo "\n################################################################################"
+    echo -e "\n################################################################################"
     echo "# DEPLOYMENT TO $NEW_HOSTNAME COMPLETE"
     echo "################################################################################"
     read -p "Would you like to SSH into your Control Node now to run 'make setup'? [y/N]: " ssh_choice
