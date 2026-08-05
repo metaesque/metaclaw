@@ -158,20 +158,11 @@ class MetaClaw:
   def hardware(self):
     """
     Loads and returns the hardware.json registry representing physical devices
-    known to the infrastructure.
+    known to the infrastructure via the centralized devices library.
     """
-    if self._hardware is not None:
-        return self._hardware
-
-    root_dir = self.rootdir()
-    hw_path = os.path.join(root_dir, 'features', 'kasa', 'data', 'hardware.json')
-
-    if os.path.exists(hw_path):
-        with open(hw_path, 'r', encoding='utf-8') as f:
-            self._hardware = json.load(f)
-    else:
-        self._hardware = {}
-
+    import devices
+    if self._hardware is None:
+        self._hardware = devices.get_hardware_registry()
     return self._hardware
 
   def map_nodes(self, profile_nodes):
@@ -460,6 +451,14 @@ class MetaClaw:
                         print(f"  [MetaClaw] Creating empty workspace directory: {expanded_val}")
                         os.makedirs(expanded_val)
 
+            # --- AUTO-PROVISIONING INJECTION FOR CONFIG ---
+            if var_name == "METACLAW_CONFIG" and val:
+                expanded_val = os.path.expanduser(val)
+                if not os.path.exists(expanded_val):
+                    print(f"  [MetaClaw] Creating config directory structure at: {expanded_val}")
+                    for sub in ['docs', 'bin', 'lib', 'data', 'data/grafana/provisioning/custom']:
+                        os.makedirs(os.path.join(expanded_val, sub), exist_ok=True)
+
           out_line = f"{var_name}={val}{suffix}\n"
           f_out.write(out_line)
 
@@ -554,7 +553,7 @@ class MetaClaw:
   def rootdir(self):
     """
     Determines the absolute path of the MetaClaw root directory.
-    Prioritizes OPENCLAW_ROOT from .env, falling back to the parent of the
+    Prioritizes METACLAW_ROOT from .env, falling back to the parent of the
     lib directory.
     """
     lib_dir = os.path.dirname(os.path.abspath(__file__))
@@ -566,7 +565,7 @@ class MetaClaw:
       with open(env_path, 'r', encoding='utf-8') as f:
         for line in f:
           line = line.strip()
-          if line.startswith('OPENCLAW_ROOT='):
+          if line.startswith('METACLAW_ROOT='):
             val = line.split('=', 1)[1].strip()
             # Handle potential quotes in the .env file
             if val.startswith('"') and val.endswith('"'):
@@ -876,4 +875,3 @@ class Markdown:
 
       index_path = f"services/{svc['uids']}/index.md"
       Inst.saveFile(index_path, '\n'.join(svc_md), backup=False)
-

@@ -30,8 +30,16 @@ class FakeStrip:
 
 class TestPowerKasa(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.fd, self.config_path = tempfile.mkstemp(suffix=".json")
-        test_data = {
+        pass
+
+    def tearDown(self):
+        pass
+
+    @patch('power_kasa.get_hardware_registry')
+    @patch('power_kasa.Discover.discover', new_callable=AsyncMock)
+    @patch('sys.stdout', new_callable=io.StringIO)
+    async def test_run_telegraf_export(self, mock_stdout, mock_discover, mock_hw):
+        mock_hw.return_value = {
             "test_node_valid": {
                 "type": "compute_node",
                 "price": {
@@ -56,18 +64,9 @@ class TestPowerKasa(unittest.IsolatedAsyncioTestCase):
                 }
             }
         }
-        with open(self.config_path, 'w') as f:
-            json.dump(test_data, f)
 
-    def tearDown(self):
-        os.close(self.fd)
-        os.remove(self.config_path)
-
-    @patch('power_kasa.Discover.discover', new_callable=AsyncMock)
-    @patch('sys.stdout', new_callable=io.StringIO)
-    async def test_run_telegraf_export(self, mock_stdout, mock_discover):
         mock_discover.return_value = {"192.168.1.100": FakeStrip("AA:BB")}
-        await power_kasa.run_telegraf_export(self.config_path)
+        await power_kasa.run_telegraf_export()
 
         out = mock_stdout.getvalue()
 

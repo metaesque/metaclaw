@@ -18,7 +18,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       # WHAT THIS DOES: Mounts the absolute root of the MetaClaw installation directory.
       # WHY IT MATTERS: This allows Fluent Bit to tail bare-metal logs (like Ollama's native log file) residing inside the repository structure.
-      - ${OPENCLAW_ROOT:-/home/node/repo}:/metaclaw:ro
+      - ${METACLAW_ROOT:-/home/node/repo}:/metaclaw:ro
     networks:
       - shared-network
 

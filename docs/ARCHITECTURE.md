@@ -299,7 +299,7 @@ hallucinated Docker CLI system commands.
 Furthermore, the architecture must never hardcode assumptions about specific
 hardware nodes (e.g., expecting an EVO-X2 or DGX Spark to be explicitly present);
 hardware availability and capabilities must be queried dynamically from the
-`profile.json` and `hardware.json` registries or abstracted through the
+`METACLAW_CONFIG/data/hardware.json` registry or abstracted through the
 Services API.
 
 ## Binary Localization (The Ollama Path Invariant)
@@ -361,7 +361,7 @@ MetaClaw enforces strict data provenance:
    the configuration directory. MetaClaw guarantees the preservation of these
    files during teardowns (via automated archiving).
 
-### Separation of State vs Configuration (`workspace/` vs `metacfg/`)
+### Separation of State vs Configuration (`workspace/` vs `config/`)
 
 To support a distributed cluster without forcing complex Git workflows on
 non-technical users, MetaClaw strictly decouples **Agent Memory** from
@@ -371,13 +371,27 @@ non-technical users, MetaClaw strictly decouples **Agent Memory** from
     memory, raw chat transcripts, and identity files (`SOUL.md`). It is
     **strictly centralized** and resides *only* on the Control Node. It does
     not need to exist on distributed compute or edge execution nodes.
-*   **`metacfg/` (The Drop-Zone):** This is a lightweight, distributed directory
-    that exists on every node in the cluster. It contains static infrastructure
-    configurations (e.g., Grafana JSON dashboards, Telegraf `.conf` overrides).
-    OpenClaw agents can autonomously design infrastructure by writing to the
-    `metacfg/` Drop-Zone. When changes occur, agents instruct the human operator
-    to restart the relevant services via the CLI, keeping humans-in-the-loop for
-    destructive execution.
+*   **`config/` (The Drop-Zone):** Defined by `$METACLAW_CONFIG`, this is a lightweight,
+    distributed directory that exists on every node in the cluster. Because it
+    resides *outside* the agent's workspace, it safely decouples global infrastructure
+    state (which must sync to all nodes) from localized agent memory. Agents cannot
+    blindly overwrite critical cluster files here; instead, they generate
+    configurations (like Grafana JSON dashboards or Telegraf `.conf` files) and
+    instruct the human to drop them into this zone, establishing a strict
+    human-in-the-loop security boundary.
+
+### Common Directory Structure (`docs/`, `bin/`, `lib/`, `data/`)
+
+Across the MetaClaw ecosystem, a consistent directory structure is enforced to provide
+predictable boundaries for agents and humans alike. This schema applies identically
+to the root repository (`$METACLAW_ROOT`), individual features (`features/<feature>/`),
+workspace projects (`$METACLAW_WORKSPACE/src/projects/<project>/`), and the
+distributed configuration drop-zone (`$METACLAW_CONFIG`):
+
+*   **`docs/`**: Markdown files, architectural decisions, and agent instructions.
+*   **`bin/`**: Executable scripts, daemon definitions, and CLI tools.
+*   **`lib/`**: Reusable modules and API abstraction layers (e.g., `devices.py`).
+*   **`data/`**: Static registries, JSON ledgers (like `hardware.json`), and YAML configs.
 
 ### MetaClaw Native Infrastructure (`features/`)
 

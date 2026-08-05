@@ -93,6 +93,22 @@ def main():
                 print(f"  -> Creating empty workspace directory: {abs_ws_path}")
                 os.makedirs(abs_ws_path)
 
+        # 3. Config Drop-Zone Provisioning
+        default_cfg_abs = os.path.abspath(os.path.join(os.getcwd(), "..", "config"))
+        print(f"\nEnter path for your persistent MetaClaw configuration directory [{default_cfg_abs}]: ")
+        cfg_choice = input("> ").strip()
+        if not cfg_choice:
+            cfg_choice = default_cfg_abs
+
+        abs_cfg_path = os.path.abspath(os.path.expanduser(cfg_choice))
+
+        if os.path.exists(abs_cfg_path):
+            print(f"  -> External config already exists at {abs_cfg_path}. Preserving user data.")
+        else:
+            print(f"  -> Creating empty config directory structure: {abs_cfg_path}")
+            for sub in ['docs', 'bin', 'lib', 'data', 'data/grafana/provisioning/custom']:
+                os.makedirs(os.path.join(abs_cfg_path, sub), exist_ok=True)
+
         # Save to root .env.json so env_instantiate picks it up automatically globally
         root_env_json = ".env.json"
         env_data = {}
@@ -104,10 +120,11 @@ def main():
                     pass
 
         env_data["METACLAW_WORKSPACE"] = abs_ws_path
+        env_data["METACLAW_CONFIG"] = abs_cfg_path
         with open(root_env_json, 'w') as f:
             json.dump(env_data, f, indent=2)
 
-        print(f"  -> Workspace path saved to global MetaClaw configuration.")
+        print(f"  -> Paths saved to global MetaClaw configuration.")
     else:
         print("Node does not operate the Control plane. Skipping Gateway customizations.")
 

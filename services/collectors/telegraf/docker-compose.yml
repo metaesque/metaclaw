@@ -14,6 +14,7 @@ services:
       - HOST_SYS=/hostfs/sys
       - HOST_ETC=/hostfs/etc
       - HOST_MOUNT_PREFIX=/hostfs
+      - METACLAW_CONFIG=${METACLAW_CONFIG:-/home/node/config}
     entrypoint:
       - /bin/sh
       - -c
@@ -28,6 +29,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Expose host hardware telemetry to the container
       - /:/hostfs:ro
-      - ${OPENCLAW_ROOT:-/home/node/repo}:/metaclaw:ro
-      - ${OPENCLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
+      - ${METACLAW_ROOT:-/home/node/repo}:/metaclaw:ro
+      - ${METACLAW_CONFIG:-/home/node/config}:/config:ro
+      - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
 

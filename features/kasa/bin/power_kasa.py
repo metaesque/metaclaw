@@ -15,19 +15,8 @@ lib_dir = os.path.abspath(os.path.join(script_dir, "..", "..", "..", "lib"))
 if lib_dir not in sys.path:
     sys.path.insert(0, lib_dir)
 
-try:
-    from metaclaw import Inst
-except ImportError as e:
-    print(f"Error importing metaclaw: {e}", file=sys.stderr)
-    Inst = None
-
+from devices import get_hardware_registry
 from kasa import Discover, DeviceType, Module
-
-def load_hardware_config(config_path):
-    if not os.path.exists(config_path):
-        return {}
-    with open(config_path, 'r') as f:
-        return json.load(f)
 
 def emit_hardware_metadata(devices):
     """
@@ -86,13 +75,13 @@ def is_control_plane():
 
     return False
 
-async def run_telegraf_export(config_path):
+async def run_telegraf_export():
     # Fast-fail constraint: Kasa discovery only needs to run on one node to prevent
     # duplicate network polling. We restrict this entirely to the Control Plane.
     if not is_control_plane():
         sys.exit(0)
 
-    devices = load_hardware_config(config_path)
+    devices = get_hardware_registry()
 
     # Establish the valid Grafana dashboard variables
     emit_hardware_metadata(devices)
@@ -144,9 +133,4 @@ async def run_telegraf_export(config_path):
             )
 
 if __name__ == "__main__":
-    candidates = [
-        os.path.join(script_dir, "..", "data", "hardware.json"),
-        os.path.join(script_dir, "..", "..", "..", "workspace", "src", "data", "hardware.json"),
-    ]
-    cfg_path = next((c for c in candidates if os.path.exists(c)), candidates[0])
-    asyncio.run(run_telegraf_export(cfg_path))
+    asyncio.run(run_telegraf_export())

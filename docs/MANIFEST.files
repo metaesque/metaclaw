@@ -62,7 +62,6 @@ features/kasa/bin/power_kasa.py
 features/kasa/bin/test_gpu_telemetry.py
 features/kasa/bin/test_power_kasa.py
 features/kasa/data/alerts.yaml
-features/kasa/data/hardware.json
 features/kasa/docs/AGENTS.md
 features/kasa/docs/DESIGN.md
 features/kasa/docs/IMPLEMENTATION.md
