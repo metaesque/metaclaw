@@ -1,5 +1,5 @@
 SERVICE_TITLE = VictoriaLogs Aggregator Service
-SERVICE_NAME = victorialogs
+SERVICE_NAME = victorialogs-logger
 DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -27,3 +27,4 @@ clobber-data:
 	@if [ -z "$(EXTERNAL_DRIVE_PATH)" ]; then echo "FATAL: EXTERNAL_DRIVE_PATH is undefined."; exit 1; fi
 	@echo "[$(SERVICE_TITLE)] Purging external VictoriaLogs database..."
 	@rm -rf $(EXTERNAL_DRIVE_PATH)/victorialogs-data
+

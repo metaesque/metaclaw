@@ -1,7 +1,7 @@
 services:
-  telegraf:
+  telegraf-collector:
     image: telegraf:${TELEGRAF_VERSION}
-    container_name: telegraf
+    container_name: telegraf-collector
     restart: unless-stopped
     user: root
     network_mode: "host"
@@ -30,3 +30,4 @@ services:
       - /:/hostfs:ro
       - ${OPENCLAW_ROOT:-/home/node/repo}:/metaclaw:ro
       - ${OPENCLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
+

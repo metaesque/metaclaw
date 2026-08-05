@@ -1,9 +1,9 @@
 services:
-  victorialogs:
+  victorialogs-logger:
     # WHAT THIS IS: A high-performance, ultra-lightweight full-text search database for logs.
     # WHY THIS TOOL: It uses 30x less RAM than Elasticsearch/Loki, preserving memory for your local LLM inference models (like Ollama).
     image: victoriametrics/victoria-logs:${VICTORIALOGS_VERSION}
-    container_name: victorialogs
+    container_name: victorialogs-logger
     restart: unless-stopped
     ports:
       # WHAT THIS DOES: Exposes the HTTP API and built-in UI for searching logs.
@@ -28,3 +28,4 @@ networks:
   shared-network:
     name: ${NETWORK_NAME:-openclaw-network}
     external: true
+

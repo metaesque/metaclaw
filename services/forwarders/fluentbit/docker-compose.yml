@@ -1,9 +1,9 @@
 services:
-  fluent-bit:
+  fluentbit-forwarder:
     # WHAT THIS IS: A lightweight C-based log processor and forwarder.
     # WHY THIS TOOL: It tails the raw Docker JSON logs and bare-metal files on the edge node, streaming them into VictoriaLogs seamlessly.
     image: fluent/fluent-bit:${FLUENTBIT_VERSION}
-    container_name: fluent-bit
+    container_name: fluentbit-forwarder
     restart: unless-stopped
     environment:
       # WHAT THIS DOES: Injects the current node's internal network identifier into the container.
@@ -26,3 +26,4 @@ networks:
   shared-network:
     name: ${NETWORK_NAME:-openclaw-network}
     external: true
+

@@ -1,5 +1,5 @@
 SERVICE_TITLE = Fluent Bit Forwarder Service
-SERVICE_NAME = fluent-bit
+SERVICE_NAME = fluentbit-forwarder
 DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -24,3 +24,4 @@ post-check-status:
 
 clobber-data:
 	@echo "[$(SERVICE_TITLE)] No local data to clobber."
+

@@ -264,9 +264,9 @@ logs:
 	@$(call h2_title,"Ollama Runner (Bare-metal)")
 	@tail -n $${N:-50} services/runners/ollama/ollama.log 2>/dev/null || echo "Log file not found on this node."
 	@$(call h2_title,"Fluent Bit Forwarder")
-	@docker logs --tail $${N:-50} fluent-bit 2>/dev/null || echo "Container not found on this node."
+	@docker logs --tail $${N:-50} fluentbit-forwarder 2>/dev/null || echo "Container not found on this node."
 	@$(call h2_title,"Telegraf Collector")
-	@docker logs --tail $${N:-50} telegraf 2>/dev/null || echo "Container not found on this node."
+	@docker logs --tail $${N:-50} telegraf-collector 2>/dev/null || echo "Container not found on this node."
 
 # ==============================================================================
 # WIZARD BOOT SEQUENCE
@@ -531,3 +531,4 @@ docs/WORKSPACE.files: FORCE
 	ls -1 ../workspace/src/projects/*.md >> docs/WORKSPACE.files
 	ls -1 ../workspace/src/{bin,data}/hardware* >> docs/WORKSPACE.files
 	find ../workspace/src/projects/kasa -name '*.py' -o -name '*.yaml' -o -name '*.json' -o -name '*.sh' -o -name '*.md' >> docs/WORKSPACE.files
+

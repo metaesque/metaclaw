@@ -1,18 +1,19 @@
 services:
-  victoriametrics:
-    # WHAT THIS IS: A high-performance time-series database (TSDB) and metrics scraper.
-    # WHY THIS TOOL: It acts as a drop-in replacement for Prometheus but uses vastly less RAM.
-    image: victoriametrics/victoria-metrics:${VICTORIAMETRICS_TSDB_VERSION}
-    container_name: victoriametrics
+  victoriametrics-tsdb:
+    # WHAT THIS IS: A high-performance, cost-effective time-series database.
+    # WHY THIS TOOL: It handles millions of high-cardinality metrics while using a fraction of the RAM required by InfluxDB or Prometheus.
+    image: victoriametrics/victoria-metrics:${VICTORIAMETRICS_VERSION}
+    container_name: victoriametrics-tsdb
     restart: unless-stopped
     ports:
-      - "${VICTORIAMETRICS_TSDB_PORT:-8428}:8428"
+      # WHAT THIS DOES: Exposes the HTTP API and built-in vmui UI for querying metrics.
+      - "${VICTORIAMETRICS_PORT}:8428"
     command:
       - "-storageDataPath=/victoria-metrics-data"
-      - "-retentionPeriod=${VICTORIAMETRICS_TSDB_RETENTION:-1M}"
-      # Add -promscrape.config=/etc/prometheus/prometheus.yml here in the future
-      # to enable native pull-scraping of edge node exporters.
+      - "-retentionPeriod=${VICTORIAMETRICS_RETENTION}"
+      - "-search.logSlowQueryDuration=5s"
     volumes:
+      # WHAT THIS DOES: Persists the highly compressed TSDB files.
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/victoriametrics-tsdb-data:/victoria-metrics-data
     networks:
       shared-network:
@@ -23,3 +24,4 @@ networks:
   shared-network:
     name: ${NETWORK_NAME:-openclaw-network}
     external: true
+

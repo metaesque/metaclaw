@@ -1,5 +1,5 @@
 SERVICE_TITLE = Telegraf Collector Service
-SERVICE_NAME = telegraf
+SERVICE_NAME = telegraf-collector
 DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -22,3 +22,4 @@ post-check-status:
 
 clobber-data:
 	@echo "[$(SERVICE_TITLE)] No persistent data to clobber."
+
