@@ -50,7 +50,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "kasa_power_watts",
+          "expr": "max by (device) (kasa_power_watts)",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
