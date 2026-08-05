@@ -1,8 +1,8 @@
 services:
-  docker-dood:
+  docker-dood-sandbox:
     # WHAT THIS IS: A persistent, isolated Python environment. Agents use 'docker exec' to run scripts inside this jail.
     image: python:3.11-slim
-    container_name: docker-dood
+    container_name: docker-dood-sandbox
     restart: unless-stopped
     volumes:
       # WHAT THIS DOES: Mounts the agent's workspace directly into the execution sandbox so it can access its own scripts and data.

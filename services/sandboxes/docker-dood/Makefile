@@ -1,5 +1,5 @@
 SERVICE_TITLE = Docker-out-of-Docker Sandbox
-SERVICE_NAME = docker-dood
+SERVICE_NAME = docker-dood-sandbox
 
 FRAMEWORK_ROOT_REL = ../../..
 FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
@@ -16,3 +16,4 @@ post-check-status:
 	@echo "--- 1. Sandbox Check ---" > verification.log
 	@echo "\nSUCCESS: Sandbox is active, sterile, and network-isolated." >> verification.log
 	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "SUCCESS: Sandbox is active, sterile, and network-isolated."
+

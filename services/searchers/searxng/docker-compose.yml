@@ -1,9 +1,9 @@
 services:
-  searxng:
+  searxng-searcher:
     # WHAT THIS IS: A privacy-respecting, hackable metasearch engine.
     # WHY THIS VERSION: Pinned to ensure immutable infrastructure.
     image: searxng/searxng:${SEARXNG_VERSION}
-    container_name: searxng
+    container_name: searxng-searcher
     # WHY UNLESS-STOPPED: Automatically restarts the background searcher on unexpected crashes,
     # ensuring the agent's real-time knowledge retrieval pipeline remains highly available.
     restart: unless-stopped
@@ -37,3 +37,4 @@ networks:
   openclaw-network:
     name: ${NETWORK_NAME}
     external: true
+

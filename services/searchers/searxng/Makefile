@@ -1,5 +1,5 @@
 SERVICE_TITLE = SearXNG Metasearch
-SERVICE_NAME = searxng
+SERVICE_NAME = searxng-searcher
 DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -29,3 +29,4 @@ clobber-data:
 	@if [ -z "$(EXTERNAL_DRIVE_PATH)" ]; then echo "FATAL: EXTERNAL_DRIVE_PATH is undefined."; exit 1; fi
 	@echo "[$(SERVICE_TITLE)] Purging external SearXNG data..."
 	@rm -rf $(EXTERNAL_DRIVE_PATH)/searxng-data
+
