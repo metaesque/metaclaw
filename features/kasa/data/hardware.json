@@ -3,13 +3,17 @@
     "name": "MacBook Air M4",
     "type": "nomadic_client",
     "description": "15-inch Apple MacBook Air M4 (16GB RAM, 256GB SSD)",
-    "location": "Ford Transit Van"
+    "location": "Ford Transit Van",
+    "mac_address": "F6:F2:FC:9B:0F:1F",
+    "tailscale_ip": "100.79.240.104"
   },
   "control": {
     "name": "GMKtec K8 Plus",
     "type": "compute_node",
     "description": "GMKtec Gaming Mini PC K8 Plus AMD Ryzen 7 8845HS Desktop Computer",
     "location": "AI Farm Basement",
+    "mac_address": "C8:FF:BF:0C:0B:6A",
+    "tailscale_ip": "100.123.133.121",
     "max_cluster_size": 2,
     "price": {
       "purchased": { "usd": 797.42, "cad": 1092.35, "date": "2026-04-05", "url": "https://www.amazon.com/dp/B0DHNTW3H6" },
@@ -33,6 +37,8 @@
     "type": "compute_node",
     "description": "GMKtec EVO-X2 AI Mini PC Ryzen Al Max+ 395",
     "location": "AI Farm Basement",
+    "mac_address": "84:47:09:88:7A:29",
+    "tailscale_ip": "100.116.216.4",
     "max_cluster_size": 2,
     "price": {
       "purchased": { "usd": 3370.00, "cad": 4744.95, "date": "2026-04-17", "url": "https://www.amazon.ca/dp/B0F53MLYQ6" },
@@ -55,6 +61,8 @@
     "type": "compute_node",
     "description": "ASUS Ascent GX10 AI Supercomputer, DGX Spark",
     "location": "AI Farm Basement",
+    "mac_address": "30:C5:99:BD:32:F8",
+    "tailscale_ip": "100.101.218.106",
     "max_cluster_size": 4,
     "price": {
       "purchased": { "usd": 4217.09, "cad": 5776.83, "date": "2026-07-16", "url": "https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044" },
@@ -81,6 +89,8 @@
     "type": "compute_node",
     "description": "ASUS Ascent GX10 AI Supercomputer, DGX Spark",
     "location": "AI Farm Basement",
+    "mac_address": "30:C5:99:BD:20:8C",
+    "tailscale_ip": "100.113.252.0",
     "max_cluster_size": 4,
     "price": {
       "purchased": { "usd": 4217.09, "cad": 5776.83, "date": "2026-07-16", "url": "https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044" },
@@ -118,4 +128,3 @@
     }
   }
 }
-
