@@ -56,17 +56,29 @@ def is_control_plane():
     profile_path = os.path.join(repo_root, "profile.json")
 
     if not os.path.exists(profile_path):
-        return False
+        return True # Fail-safe to ensure we don't lose data if profile is missing
 
     try:
         with open(profile_path, 'r') as f:
             profile = json.load(f)
-            current_host = os.environ.get("HOST_IDENTIFIER", socket.gethostname())
+
+            # Gather all possible network identities for this machine
+            local_identities = {socket.gethostname().lower()}
+            if "HOST_IDENTIFIER" in os.environ:
+                local_identities.add(os.environ["HOST_IDENTIFIER"].lower())
+
+            # Telegraf natively mounts the host's root filesystem to /hostfs
+            try:
+                with open('/hostfs/etc/hostname', 'r') as hf:
+                    local_identities.add(hf.read().strip().lower())
+            except Exception:
+                pass
 
             for node in profile.get("nodes", []):
-                # Match by hostname or the Tailscale IP injected by the orchestrator
-                node_ip = node.get("hardware", {}).get("ip_address", "")
-                if node.get("hostname") == current_host or node_ip == current_host:
+                node_hostname = node.get("hostname", "").lower()
+                node_ip = node.get("hardware", {}).get("ip_address", "").lower()
+
+                if node_hostname in local_identities or (node_ip and node_ip in local_identities):
                     if "control" in node.get("planes", []):
                         return True
     except Exception as e:
