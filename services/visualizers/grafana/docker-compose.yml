@@ -33,7 +33,7 @@ services:
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
     volumes:
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/grafana-data:/var/lib/grafana
-      - ${METACLAW_WORKSPACE:-/tmp}/src/projects/kasa/grafana:/etc/grafana/provisioning:ro
+      - ${OPENCLAW_ROOT:-/home/node/repo}/features/kasa/assets/visualizers/grafana:/etc/grafana/provisioning:ro
     networks:
       shared-network:
         aliases:
@@ -43,3 +43,4 @@ networks:
   shared-network:
     name: ${NETWORK_NAME:-openclaw-network}
     external: true
+

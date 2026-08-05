@@ -1,6 +1,4 @@
 ../workspace/.gitignore
-../workspace/.telegraf.d/host.conf
-../workspace/.telegraf.d/kasa.conf
 ../workspace/AGENTS.md
 ../workspace/HEARTBEAT.md
 ../workspace/IDENTITY.md
@@ -391,18 +389,3 @@
 ../workspace/src/projects/DESIGN.md
 ../workspace/src/bin/hardware.py
 ../workspace/src/data/hardware.json
-../workspace/src/projects/kasa/bin/gpu_telemetry.py
-../workspace/src/projects/kasa/bin/host_gpu_telemetry.sh
-../workspace/src/projects/kasa/bin/kasa_alert.sh
-../workspace/src/projects/kasa/bin/power_kasa.py
-../workspace/src/projects/kasa/bin/test_gpu_telemetry.py
-../workspace/src/projects/kasa/bin/test_power_kasa.py
-../workspace/src/projects/kasa/data/alerts.yaml
-../workspace/src/projects/kasa/data/kasa_config.yaml
-../workspace/src/projects/kasa/docs/AGENTS.md
-../workspace/src/projects/kasa/docs/DESIGN.md
-../workspace/src/projects/kasa/docs/IMPLEMENTATION.md
-../workspace/src/projects/kasa/docs/ROADMAP.md
-../workspace/src/projects/kasa/grafana/dashboards/dashboards.yaml
-../workspace/src/projects/kasa/grafana/dashboards/kasa/dashboard.json
-../workspace/src/projects/kasa/grafana/datasources/datasources.yaml

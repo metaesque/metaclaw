@@ -1,0 +1,121 @@
+{
+  "peridot": {
+    "name": "MacBook Air M4",
+    "type": "nomadic_client",
+    "description": "15-inch Apple MacBook Air M4 (16GB RAM, 256GB SSD)",
+    "location": "Ford Transit Van"
+  },
+  "control": {
+    "name": "GMKtec K8 Plus",
+    "type": "compute_node",
+    "description": "GMKtec Gaming Mini PC K8 Plus AMD Ryzen 7 8845HS Desktop Computer",
+    "location": "AI Farm Basement",
+    "max_cluster_size": 2,
+    "price": {
+      "purchased": { "usd": 797.42, "cad": 1092.35, "date": "2026-04-05", "url": "https://www.amazon.com/dp/B0DHNTW3H6" },
+      "current": { "usd": 797.42, "cad": 1092.35 }
+    },
+    "urls": [ "https://www.amazon.com/dp/B0DHNTW3H6" ],
+    "processing": { "cpu": 8, "gpu": 12, "apu": 1, "npu": 1, "tpu": 0, "arch": "Discrete blocks on shared die" },
+    "vram": { "size": 32, "arch": "Shared DDR5" },
+    "bandwidth": 89.6,
+    "compute": { "FP16": 8.0, "FP8": null, "FP4": null, "Int8": 8.0, "Int4": null },
+    "ssd": { "size": 1.0, "read_speed_gbps": 7.0, "arch": "PCIe 4.0 NVMe" },
+    "power": { "watts": 120.0, "arch": "External" },
+    "ports": [
+      { "type": "RJ45", "speed_gbps": 2.5, "count": 2, "class": "network" },
+      { "type": "USB4", "speed_gbps": 40.0, "count": 1, "class": "network" },
+      { "type": "Oculink", "speed_gbps": 63.0, "count": 1, "class": "expansion" }
+    ]
+  },
+  "compute": {
+    "name": "GMKtec EVO-X2",
+    "type": "compute_node",
+    "description": "GMKtec EVO-X2 AI Mini PC Ryzen Al Max+ 395",
+    "location": "AI Farm Basement",
+    "max_cluster_size": 2,
+    "price": {
+      "purchased": { "usd": 3370.00, "cad": 4744.95, "date": "2026-04-17", "url": "https://www.amazon.ca/dp/B0F53MLYQ6" },
+      "current": { "usd": 3730.00, "cad": 5250.00 }
+    },
+    "urls": [ "https://www.amazon.ca/dp/B0F53MLYQ6", "https://www.amazon.com/GMKtec-Computers-LPDDR5X-8000MHz-EVO-X2/dp/B0F53XL9DP" ],
+    "processing": { "cpu": 16, "gpu": 40, "apu": 1, "npu": 1, "tpu": 0, "arch": "Discrete blocks on shared die" },
+    "vram": { "size": 128, "arch": "Unified LPDDR5x" },
+    "bandwidth": 256.0,
+    "compute": { "FP16": 35.0, "FP8": null, "FP4": null, "Int8": 35.0, "Int4": null },
+    "ssd": { "size": 2.0, "read_speed_gbps": 7.0, "arch": "PCIe 4.0 NVMe" },
+    "power": { "watts": 230.0, "arch": "External" },
+    "ports": [
+      { "type": "RJ45", "speed_gbps": 2.5, "count": 2, "class": "network" },
+      { "type": "USB4", "speed_gbps": 40.0, "count": 2, "class": "network" }
+    ]
+  },
+  "spark1": {
+    "name": "ASUS DGX Spark 1",
+    "type": "compute_node",
+    "description": "ASUS Ascent GX10 AI Supercomputer, DGX Spark",
+    "location": "AI Farm Basement",
+    "max_cluster_size": 4,
+    "price": {
+      "purchased": { "usd": 4217.09, "cad": 5776.83, "date": "2026-07-16", "url": "https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044" },
+      "current": { "usd": 4217.09, "cad": 5776.83 },
+      "ssd": {
+        "purchased": { "usd": 730.00, "cad": 1000.00 },
+        "current": { "usd": 730.00, "cad": 1000.00 }
+      }
+    },
+    "urls": [ "https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044" ],
+    "processing": { "cpu": 20, "gpu": 6144, "apu": 0, "npu": 0, "tpu": 384, "arch": "CPU and GPU superchip integration" },
+    "vram": { "size": 128, "arch": "Unified LPDDR5x" },
+    "bandwidth": 273.0,
+    "compute": { "FP16": 250.0, "FP8": 500.0, "FP4": 1000.0, "Int8": 500.0, "Int4": 1000.0 },
+    "ssd": { "size": 1.0, "read_speed_gbps": 7.0, "arch": "PCIe 4.0 NVMe" },
+    "power": { "watts": 240.0, "arch": "External" },
+    "ports": [
+      { "type": "RJ45", "speed_gbps": 10.0, "count": 1, "class": "network" },
+      { "type": "QSFP56", "speed_gbps": 200.0, "count": 2, "class": "network" }
+    ]
+  },
+  "spark2": {
+    "name": "ASUS DGX Spark 2",
+    "type": "compute_node",
+    "description": "ASUS Ascent GX10 AI Supercomputer, DGX Spark",
+    "location": "AI Farm Basement",
+    "max_cluster_size": 4,
+    "price": {
+      "purchased": { "usd": 4217.09, "cad": 5776.83, "date": "2026-07-16", "url": "https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044" },
+      "current": { "usd": 4217.09, "cad": 5776.83 },
+      "ssd": {
+        "purchased": { "usd": 730.00, "cad": 1000.00 },
+        "current": { "usd": 730.00, "cad": 1000.00 }
+      }
+    },
+    "urls": [ "https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044" ],
+    "processing": { "cpu": 20, "gpu": 6144, "apu": 0, "npu": 0, "tpu": 384, "arch": "CPU and GPU superchip integration" },
+    "vram": { "size": 128, "arch": "Unified LPDDR5x" },
+    "bandwidth": 273.0,
+    "compute": { "FP16": 250.0, "FP8": 500.0, "FP4": 1000.0, "Int8": 500.0, "Int4": 1000.0 },
+    "ssd": { "size": 1.0, "read_speed_gbps": 7.0, "arch": "PCIe 4.0 NVMe" },
+    "power": { "watts": 240.0, "arch": "External" },
+    "ports": [
+      { "type": "RJ45", "speed_gbps": 10.0, "count": 1, "class": "network" },
+      { "type": "QSFP56", "speed_gbps": 200.0, "count": 2, "class": "network" }
+    ]
+  },
+  "kasa1": {
+    "name": "Kasa HS300 Strip 1",
+    "type": "power_strip",
+    "description": "Main rack power strip",
+    "mac_address": "48:22:54:30:02:D1",
+    "location": "AI Farm Basement",
+    "plugs": {
+      "0": "router",
+      "1": "solar",
+      "2": "empty",
+      "3": "compute",
+      "4": "control",
+      "5": "switch"
+    }
+  }
+}
+

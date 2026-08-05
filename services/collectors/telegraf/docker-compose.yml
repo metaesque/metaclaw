@@ -28,6 +28,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Expose host hardware telemetry to the container
       - /:/hostfs:ro
-      - ../../../../workspace:/workspace:ro
-      - ../../../../workspace/.telegraf.d:/etc/telegraf/telegraf.d:ro
+      - ${OPENCLAW_ROOT:-/home/node/repo}:/metaclaw:ro
+      - ./features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
 

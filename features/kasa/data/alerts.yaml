@@ -1,0 +1,30 @@
+groups:
+  - name: kasa_telemetry_alerts
+    rules:
+      - alert: HighPowerDraw
+        expr: sum(kasa_power_watts) > 1500
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit Overload Risk"
+          description: "The total power draw across monitored Kasa strips has exceeded 1500W for over 5 minutes. Risk of tripping the wall circuit."
+
+      - alert: HighHostTemperature
+        expr: host_telemetry_cpu_temp_c > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node Thermal Throttling Risk"
+          description: "Host {{ $labels.host }} CPU temperature has sustained above 85°C. Check cooling systems to prevent inference degradation."
+
+      - alert: HighMemoryUtilization
+        expr: host_telemetry_mem_percent > 95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Host Memory Exhaustion"
+          description: "Host {{ $labels.host }} is at 95% memory capacity. System is at severe risk of Linux kernel OOM kills or swap thrashing."
+
