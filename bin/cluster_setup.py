@@ -226,7 +226,7 @@ def configure_env_secrets(profile, ssh_key=None):
 
     # Broadcast secrets to other nodes via jq merging
     for node in profile.get("nodes", []):
-        if node["hostname"] != socket.gethostname() and node.get("tier") == 2:
+        if node["hostname"] != socket.gethostname() and (node.get("tier") == 2 or node.get("tier") == 4):
             ip = node["hardware"]["ip_address"]
             user = node.get("ssh_user", os.getlogin())
             print(f"  -> Pushing secrets to {node['hostname']} ({ip})...")
@@ -336,46 +336,51 @@ def main():
             "hardware": local_hw
         })
 
-        print("\nEnter remote Compute node network coordinates:")
-        compute_host = input("Compute Node Hostname [compute]: ").strip() or "compute"
-
-        default_ip = get_tailscale_ip(compute_host)
-        ip_prompt = f"Compute Node IP address [{default_ip}]: " if default_ip else "Compute Node IP address (e.g., 100.x.y.z): "
-        compute_ip = input(ip_prompt).strip()
-        if not compute_ip and default_ip:
-            compute_ip = default_ip
-
-        current_user = os.getlogin()
-        ssh_user = input(f"SSH Username for remote connection [{current_user}]: ").strip() or current_user
-
         ssh_key = get_required_ssh_key()
         print(f"Using enforced SSH identity: {ssh_key}")
 
-        print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
-        compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
+        while True:
+            print("\nEnter remote Compute node network coordinates:")
+            compute_host = input("Compute Node Hostname [compute]: ").strip() or "compute"
 
-        print(f"\n[Hardware Verification] Node: {compute_host}")
-        print(f"  Detected OS RAM: {compute_hw.get('ram_gb')} GB")
-        print(f"  Detected Hardware RAM: {compute_hw.get('ram_hardware_gb')} GB")
-        print(f"  Detected GPU: {compute_hw.get('gpu_detected')}")
+            default_ip = get_tailscale_ip(compute_host)
+            ip_prompt = f"Compute Node IP address [{default_ip}]: " if default_ip else "Compute Node IP address (e.g., 100.x.y.z): "
+            compute_ip = input(ip_prompt).strip()
+            if not compute_ip and default_ip:
+                compute_ip = default_ip
 
-        # CRITICAL FIX: Overwrite the hardware IP returned by sysprofile (which is the LAN IP)
-        # with the explicitly resolved Tailscale IP, so all downstream orchestration uses Tailscale SSH.
-        compute_hw['ip_address'] = compute_ip
+            current_user = os.getlogin()
+            ssh_user = input(f"SSH Username for remote connection [{current_user}]: ").strip() or current_user
 
-        c_default_hl = 'y' if compute_hw.get('tailscale_active') else 'y'
-        c_hl_input = input(f"Is Compute node '{compute_host}' running headless? [{c_default_hl}]: ").strip().lower()
-        compute_hw['headless'] = True if c_hl_input in ['y', 'yes'] else (False if c_hl_input in ['n', 'no'] else c_default_hl == 'y')
+            print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
+            compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
 
-        profile["nodes"].append({
-            "hostname": compute_host,
-            "tier": 2,
-            "planes": ["compute"],
-            "require_wan": True,
-            "ssh_user": ssh_user,
-            "order_prefs": ["cost", "safety", "resources"],
-            "hardware": compute_hw
-        })
+            print(f"\n[Hardware Verification] Node: {compute_host}")
+            print(f"  Detected OS RAM: {compute_hw.get('ram_gb')} GB")
+            print(f"  Detected Hardware RAM: {compute_hw.get('ram_hardware_gb')} GB")
+            print(f"  Detected GPU: {compute_hw.get('gpu_detected')}")
+
+            # CRITICAL FIX: Overwrite the hardware IP returned by sysprofile (which is the LAN IP)
+            # with the explicitly resolved Tailscale IP, so all downstream orchestration uses Tailscale SSH.
+            compute_hw['ip_address'] = compute_ip
+
+            c_default_hl = 'y' if compute_hw.get('tailscale_active') else 'y'
+            c_hl_input = input(f"Is Compute node '{compute_host}' running headless? [{c_default_hl}]: ").strip().lower()
+            compute_hw['headless'] = True if c_hl_input in ['y', 'yes'] else (False if c_hl_input in ['n', 'no'] else c_default_hl == 'y')
+
+            profile["nodes"].append({
+                "hostname": compute_host,
+                "tier": 2,
+                "planes": ["compute"],
+                "require_wan": True,
+                "ssh_user": ssh_user,
+                "order_prefs": ["cost", "safety", "resources"],
+                "hardware": compute_hw
+            })
+
+            add_another = input("\nAdd another Compute node to the cluster? [y/N]: ").strip().lower()
+            if add_another not in ['y', 'yes']:
+                break
     else:
         profile["nodes"].append({
             "hostname": local_host,
@@ -403,13 +408,17 @@ def main():
 
     # --- PHASE 3: Broadcast ---
     if tier_choice == "2":
-        print(f"\n[Phase 3] Broadcasting unified profile.json to cluster nodes...")
-        res = scp_remote(compute_ip, ssh_user, ssh_key, "profile.json", "repo/profile.json")
-        if res.returncode == 0:
-            print(f"  -> Successfully pushed to {compute_host}.")
-        else:
-            print(f"  -> WARNING: Failed to push profile.json: {res.stderr}")
-            print("  -> Run 'make sync-cluster' manually.")
+        print(f"\n[Phase 3] Broadcasting unified profile.json to all cluster nodes...")
+        for node in profile.get("nodes", []):
+            if node["hostname"] != socket.gethostname():
+                ip = node["hardware"]["ip_address"]
+                user = node.get("ssh_user", os.getlogin())
+                res = scp_remote(ip, user, ssh_key, "profile.json", "repo/profile.json")
+                if res.returncode == 0:
+                    print(f"  -> Successfully pushed to {node['hostname']}.")
+                else:
+                    print(f"  -> WARNING: Failed to push to {node['hostname']}: {res.stderr}")
+                    print("  -> Run 'make sync-cluster' manually later.")
 
     # --- PHASE 4: Global Secrets ---
     configure_env_secrets(profile, ssh_key)
