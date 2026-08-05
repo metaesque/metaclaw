@@ -6,14 +6,10 @@ Outputs telemetry in Influx Line Protocol format.
 
 import subprocess
 import os
-import socket
 import sys
 import glob
 
-def get_host():
-    return os.environ.get("HOST_IDENTIFIER", socket.gethostname())
-
-def poll_nvidia(host):
+def poll_nvidia():
     try:
         # Check if command exists gracefully
         import shutil
@@ -31,13 +27,13 @@ def poll_nvidia(host):
             if len(parts) == 5:
                 idx, util, temp, mem_used, mem_total = parts
                 print(
-                    f"gpu_telemetry,host={host},gpu_id=nvidia_{idx} "
+                    f"gpu_telemetry,gpu_id=nvidia_{idx} "
                     f"utilization={util},temp_c={temp},vram_used_mb={mem_used},vram_total_mb={mem_total}"
                 )
     except Exception as e:
         print(f"NVIDIA SMI parsing error: {e}", file=sys.stderr)
 
-def poll_amd_sysfs(host):
+def poll_amd_sysfs():
     """
     Hardware-agnostic AMD telemetry extraction. Bypasses rocm-smi entirely
     by reading directly from the Linux kernel's DRM SysFS endpoint.
@@ -97,14 +93,13 @@ def poll_amd_sysfs(host):
                 pass
 
             print(
-                f"gpu_telemetry,host={host},gpu_id=amd_{idx} "
+                f"gpu_telemetry,gpu_id=amd_{idx} "
                 f"utilization={util},temp_c={temp},vram_used_mb={vram_used_mb:.1f},vram_total_mb={vram_total_mb:.1f}"
             )
     except Exception as e:
         print(f"AMD SysFS parsing error: {e}", file=sys.stderr)
 
 if __name__ == "__main__":
-    host = get_host()
-    poll_nvidia(host)
-    poll_amd_sysfs(host)
+    poll_nvidia()
+    poll_amd_sysfs()
 

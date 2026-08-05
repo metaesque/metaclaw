@@ -50,7 +50,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "kasa_power_watts",
+          "expr": "max by (device) (kasa_power_watts)",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
@@ -214,14 +214,12 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 6,
+        "w": 24,
         "x": 0,
         "y": 32
       },
       "id": 6,
       "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
@@ -233,7 +231,7 @@
           "refId": "A"
         }
       ],
-      "title": "VRAM Used - $host",
+      "title": "VRAM Used",
       "type": "timeseries"
     }
   ],
@@ -281,3 +279,4 @@
   "uid": "kasa-telemetry",
   "version": 5
 }
+

@@ -19,11 +19,11 @@ class TestGpuTelemetry(unittest.TestCase):
 
         mock_run.side_effect = [mock_which, mock_query]
 
-        gpu_telemetry.poll_nvidia("test_host")
+        gpu_telemetry.poll_nvidia()
         out = mock_stdout.getvalue()
 
-        self.assertIn("gpu_id=nvidia_0 utilization=45,temp_c=65,vram_used_mb=4000,vram_total_mb=24000", out)
-        self.assertIn("gpu_id=nvidia_1 utilization=99,temp_c=82,vram_used_mb=23000,vram_total_mb=24000", out)
+        self.assertIn("gpu_telemetry,gpu_id=nvidia_0 utilization=45,temp_c=65,vram_used_mb=4000,vram_total_mb=24000", out)
+        self.assertIn("gpu_telemetry,gpu_id=nvidia_1 utilization=99,temp_c=82,vram_used_mb=23000,vram_total_mb=24000", out)
 
     @patch('os.path.exists')
     @patch('glob.glob')
@@ -49,11 +49,10 @@ class TestGpuTelemetry(unittest.TestCase):
             raise FileNotFoundError(filename)
 
         with patch('builtins.open', side_effect=custom_open):
-            gpu_telemetry.poll_amd_sysfs("test_host")
+            gpu_telemetry.poll_amd_sysfs()
 
         out = mock_stdout.getvalue()
-        self.assertIn("gpu_id=amd_0 utilization=100.0,temp_c=70.0,vram_used_mb=1000.0,vram_total_mb=2400.0", out)
+        self.assertIn("gpu_telemetry,gpu_id=amd_0 utilization=100.0,temp_c=70.0,vram_used_mb=1000.0,vram_total_mb=2400.0", out)
 
 if __name__ == '__main__':
     unittest.main()
-
