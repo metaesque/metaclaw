@@ -12,6 +12,7 @@ services:
       - "-storageDataPath=/victoria-metrics-data"
       - "-retentionPeriod=${VICTORIAMETRICS_TSDB_RETENTION}"
       - "-search.logSlowQueryDuration=5s"
+      - "-downsampling.period=30d:5m,180d:1h,2y:1d"
     volumes:
       # WHAT THIS DOES: Persists the highly compressed TSDB files.
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/victoriametrics-tsdb-data:/victoria-metrics-data
