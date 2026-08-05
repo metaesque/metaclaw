@@ -29,5 +29,4 @@ services:
       # Expose host hardware telemetry to the container
       - /:/hostfs:ro
       - ${OPENCLAW_ROOT:-/home/node/repo}:/metaclaw:ro
-      - ./features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
-
+      - ${OPENCLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
