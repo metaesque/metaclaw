@@ -339,7 +339,7 @@ The `docker-dood` provider offers a persistent, isolated Python execution
 environment for agent workflows.
 
 - **CLI Interaction:** You can manually test commands inside the sandbox by
-  running `docker exec -it docker-dood /bin/sh`.
+  running `docker exec -it docker-dood-sandbox /bin/sh`.
 
 - **Configuration:** The container automatically attempts to install any Python
   dependencies defined in your workspace at `workspace/src/requirements.txt`
@@ -386,7 +386,7 @@ to VictoriaLogs.
   to add new log file paths or container filters.
 
 - **CLI Testing:** To verify log ingestion locally, tail the active container
-  output: `docker logs -f fluent-bit`
+  output: `docker logs -f fluentbit-forwarder`
 
 ### Distributed Tracer (`tracers`)
 
@@ -419,7 +419,7 @@ executes custom Python scripts) and pushes them upstream to VictoriaMetrics.
 - **CLI Testing:** To test if Telegraf is correctly parsing your custom script's
   output without pushing junk data into the live database, you can force it to
   run a single test collection and print to standard output:
-  `docker exec telegraf telegraf --config /etc/telegraf/telegraf.conf --test`
+  `docker exec telegraf-collector telegraf --config /etc/telegraf/telegraf.conf --test`
 
 ### Data Visualizer (`visualizers`)
 
@@ -535,7 +535,7 @@ PostgreSQL manages both the structured operational state of the cluster and the
 high-dimensional embedding vectors for agent semantic recall.
 
 - **CLI Interaction:** You can launch a Postgres shell directly into the primary
-  database: `docker exec -it postgres-db psql -U postgres -d openclaw_db`
+  database: `docker exec -it postgres-memory psql -U postgres -d openclaw_db`
 
 - **External Tooling:** The database is exposed locally on port `5432`. You can
   connect external GUI tools (like DBeaver or pgAdmin) using the connection
@@ -554,3 +554,4 @@ state, rate limiting, and pub/sub agent communication.
 
 - **Commands:** Once inside the CLI, you can verify connectivity (`PING`) or
   inspect the current keyspace (`KEYS *`).
+

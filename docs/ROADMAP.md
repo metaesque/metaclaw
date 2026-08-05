@@ -132,8 +132,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     *   `ingress` (Reverse Proxy) [Traefix]
 
 ## Phase 8: Technical Debt & Standardization
-*   **[TODO] Standardize Docker Container Naming:**
-    Update all `docker-compose.yml` files and Makefiles to enforce the `<provider>-<service>` naming convention. Currently, early services (like `openclaw-gateway`, `litellm-proxy`, `redis-cache`) are compliant, but others are wrong. Note: `postgres-db` must be renamed to `postgres-memory`.
+*   **[x] Standardize Docker Container Naming:**
+    Updated all `docker-compose.yml` files, Makefiles, and documentation references across the repository to enforce the `<provider>-<service>` naming convention (e.g., `telegraf-collector`, `postgres-memory`, `fluentbit-forwarder`).
 
 ## Phase 9: Separation of State & Infrastructure Configuration
 *   **[TODO] Implement metacfg Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
@@ -146,3 +146,4 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Implement Version Control Service (`vcs`):** Provision the `gitea` provider
     to allow non-technical users to securely version-control their `workspace` and `metacfg`
     repositories locally, removing the dependency on external GitHub configurations.
+

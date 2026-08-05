@@ -14,7 +14,8 @@ class Service:
         self.provider_uid = provider_uid
         # To be populated by orchestrator mappings
         self.is_dockerized = True
-        self.container_name = provider_uid
+        self.service_uid = self.__class__.__name__.lower()
+        self.container_name = f"{self.provider_uid}-{self.service_uid}"
 
     def log(self, tail=50):
         """
