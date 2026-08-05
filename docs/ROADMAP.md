@@ -35,11 +35,11 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     to dynamically allocate inference memory via GTT.
 
 ## Phase 2: Distributed State & Observability (Upcoming)
-*   **[TODO] Kasa Migration (From Project to Core SRE):**
+*   **[x] Kasa Migration (From Project to Core SRE):**
     Acknowledge that Kasa is not a standard workspace project, but a core
-    SRE capability that monitors host infrastructure. It must be migrated out
-    of the `workspace/src/projects` directory and fully absorbed into MetaClaw's
-    `services/collectors/telegraf/` configuration.
+    SRE capability that monitors host infrastructure. It has been successfully
+    migrated out of the `workspace/` repository and embedded natively into
+    MetaClaw's `features/kasa/` module.
 *   **[TODO] All-in-One Platform Providers:**
     Address multi-service providers (such as SigNoz or OpenObserve) that span
     multiple service categories (`logger`, `tracer`, `visualizer`). Currently,
@@ -57,7 +57,6 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     bare-metal log files (e.g., `services/runners/ollama/ollama.log`) and deploy
     lightweight Fluent Bit forwarders to all remote `compute` and `execution`
     nodes to push telemetry back to the centralized `ACTIVE_LOGGER_HOST`.
-    IS THIS ALREADY DONE?
 *   **[TODO] Overcoming `num_ctx` Defaults:**
     While models like `llama4-scout` have massive context limits, Ollama
     defaults API requests to 2048 tokens. OpenClaw Orchestrator prompts
@@ -139,10 +138,9 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Implement metacfg Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
     from "Infrastructure Configuration". Introduce a `metacfg/` directory that distributes
     Telegraf `.conf` files and Grafana `dashboards.json` files across the cluster.
-*   **[TODO] Build Services API:** Develop a generic MetaClaw Services API (Python/REST)
+*   **[~] Build Services API:** Develop a generic MetaClaw Services API (Python/REST)
     that allows OpenClaw projects to interact with 'the TSDB', 'the Logger', or 'the Collector' without
-    knowing the underlying provider implementation. This isolates projects from changes
-    to the MetaClaw infrastructure plane.
+    knowing the underlying provider implementation. Initial stubs (`lib/services.py`, `lib/devices.py`) have been drafted.
 *   **[TODO] Implement Version Control Service (`vcs`):** Provision the `gitea` provider
     to allow non-technical users to securely version-control their `workspace` and `metacfg`
     repositories locally, removing the dependency on external GitHub configurations.

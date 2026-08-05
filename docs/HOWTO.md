@@ -183,6 +183,33 @@ database records, vector embeddings, and stored API keys.
     all your API credentials as if you were installing the framework for the
     first time.
 
+## Troubleshooting Telemetry & Dashboards
+
+If your Grafana hardware dashboards are missing data or displaying incorrect,
+overlapping anomalies, consult the following diagnostic paths.
+
+### 1. Duplicate Lines in Grafana Legends
+If you observe duplicate legend entries (e.g., 2 compute devices, 2 routers) in
+the "Power Draw per Device" panel, it means multiple nodes in your cluster are
+simultaneously successfully completing UDP broadcast discoveries.
+*   **The Fix:** Ensure your PromQL query uses the `max by (device)` aggregation
+    to automatically collapse duplicated metrics into a single logical line (e.g., `max by (device) (kasa_power_watts)`).
+
+### 2. Utilizing the Services API (Python)
+MetaClaw provides a programmatic abstraction layer for system introspection. If
+you need to verify if the Telegraf collector or the logging daemon is running
+programmatically (e.g., inside an agent's sandbox script), you can utilize the
+Services API:
+```python
+import sys
+sys.path.insert(0, '/metaclaw/lib')
+from services import Collector, Forwarder
+
+telegraf = Collector("telegraf")
+print(telegraf.status()) # Output: running
+print(telegraf.log(tail=5))
+```
+
 ## Troubleshooting Local GPU Inference (Ollama)
 
 Running large models on edge hardware (like AMD APUs) often encounters
@@ -554,4 +581,3 @@ state, rate limiting, and pub/sub agent communication.
 
 - **Commands:** Once inside the CLI, you can verify connectivity (`PING`) or
   inspect the current keyspace (`KEYS *`).
-

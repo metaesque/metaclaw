@@ -224,6 +224,18 @@ workload reassignment (such as observability agents). **You must run `make
 install-docker` and log out/log back in to refresh your user session permissions
 before executing `make wizard-batch` or `make apply`.**
 
+## Docker Container Naming Convention
+
+To ensure deterministic deployment, conflict-free upgrades, and ease of
+troubleshooting, MetaClaw enforces a strict container naming standard across
+all services and providers.
+
+All Docker containers orchestrated by the framework MUST be explicitly named
+using the `<provider>-<service>` format (e.g., `telegraf-collector`,
+`searxng-searcher`, `postgres-memory`). Legacy ambiguous names (like `fluent-bit`
+or `grafana`) are strictly forbidden, as they complicate log parsing and
+introduce cognitive overhead when debugging overlapping technologies.
+
 ## Compute Plane Quirks & APU Acceleration
 
 Running state-of-the-art LLMs natively on edge hardware often requires navigating proprietary GPU drivers. MetaClaw embraces open-source runners (like Ollama), but special architectural care is required for APUs (like the AMD Strix Halo).
@@ -278,10 +290,17 @@ that if a user swaps their TSDB to InfluxDB, their agent scripts continue to
 function without modification. Projects must interface with the generic service
 contract (e.g. querying "the TSDB"), not the provider-specific implementation.
 
+To fulfill this mandate, MetaClaw provides a programmatic Python library
+(`lib/services.py` and `lib/devices.py`). OpenClaw agents can securely import
+this library to interrogate their own infrastructure stack natively (e.g.,
+calling `Collector("telegraf").status()`), entirely removing the need for
+hallucinated Docker CLI system commands.
+
 Furthermore, the architecture must never hardcode assumptions about specific
 hardware nodes (e.g., expecting an EVO-X2 or DGX Spark to be explicitly present);
 hardware availability and capabilities must be queried dynamically from the
-`profile.json` registry or abstracted through the Services API.
+`profile.json` and `hardware.json` registries or abstracted through the
+Services API.
 
 ## Binary Localization (The Ollama Path Invariant)
 
@@ -359,6 +378,19 @@ non-technical users, MetaClaw strictly decouples **Agent Memory** from
     `metacfg/` Drop-Zone. When changes occur, agents instruct the human operator
     to restart the relevant services via the CLI, keeping humans-in-the-loop for
     destructive execution.
+
+### MetaClaw Native Infrastructure (`features/`)
+
+Projects that explicitly monitor or orchestrate the underlying infrastructure
+hardware (such as SRE telemetry agents or power-draw scanners) are distinct
+from generic OpenClaw user-space tasks.
+
+These projects do not belong in the `workspace/` repository. They are
+fundamental capabilities of the cluster. MetaClaw maintains a top-level
+`features/` directory (e.g., `features/kasa/`) to permanently house the source
+code, Provider Asset drops, and documentation for these internal tools. When
+`make apply` is executed, the respective MetaClaw services automatically mount
+the necessary integration files directly from the `features/` directory.
 
 ### Ephemeral Workspace State (`workspace-state.json`)
 
