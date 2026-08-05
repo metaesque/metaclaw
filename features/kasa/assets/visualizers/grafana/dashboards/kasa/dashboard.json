@@ -50,7 +50,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "max by (device) (kasa_power_watts)",
+          "expr": "kasa_power_watts",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
@@ -178,14 +178,12 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 6,
+        "w": 12,
         "x": 0,
         "y": 24
       },
       "id": 5,
       "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
       "targets": [
         {
           "datasource": {
@@ -197,7 +195,7 @@
           "refId": "A"
         }
       ],
-      "title": "GPU Utilization - $host",
+      "title": "GPU Utilization",
       "type": "timeseries"
     },
     {
@@ -214,9 +212,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 32
+        "w": 12,
+        "x": 12,
+        "y": 24
       },
       "id": 6,
       "options": {},
@@ -279,4 +277,3 @@
   "uid": "kasa-telemetry",
   "version": 5
 }
-
