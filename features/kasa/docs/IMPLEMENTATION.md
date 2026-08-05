@@ -12,7 +12,7 @@ plugin.
 The `power_kasa.py` script no longer utilizes a complex `argparse` CLI. Upon
 execution, it performs the following linear steps:
 
-1.  Reads the static device mappings from `data/kasa_config.yaml`.
+1.  Reads the static device mappings from `data/hardware.json`.
 2.  Utilizes the `psutil` library to extract current Host CPU %, Memory %,
     and CPU core temperatures.
 3.  Utilizes the `python-kasa` library to broadcast a UDP discovery packet

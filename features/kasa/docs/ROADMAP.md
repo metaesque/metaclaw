@@ -22,9 +22,9 @@ stack (Telegraf + VictoriaMetrics).
     *   Removed the entire `PowerDB` SQLite backend and legacy CLI commands.
 
 *   [x] **Task 2: Decouple Configuration from State**
-    *   Extracted the "Device to Plug" mappings into a static YAML file
-        (`data/kasa_config.yaml`).
-    *   The script reads this config on execution to tag the metrics
+    *   Extracted the "Device to Plug" mappings into the canonical registry
+        (`data/hardware.json`).
+    *   The script reads this registry on execution to tag the metrics
         correctly, allowing it to be entirely stateless.
 
 *   [x] **Task 3: Expand Telemetry Scope (Host Metrics)**
@@ -45,4 +45,3 @@ routing.
     *   Configured VictoriaMetrics vmalert rules in `data/alerts.yaml` to
         detect threshold breaches (e.g., "CPU Temp > 85C" or "Power Draw >
         1500W").
-

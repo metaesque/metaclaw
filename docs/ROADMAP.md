@@ -40,6 +40,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     SRE capability that monitors host infrastructure. It has been successfully
     migrated out of the `workspace/` repository and embedded natively into
     MetaClaw's `features/kasa/` module.
+*   **[TODO] Implement VictoriaMetrics Timeseries Rewriter:**
+    Develop a general-purpose Python script utilizing the VictoriaMetrics `/api/v1/export` and `/api/v1/admin/tsdb/delete_series` endpoints to correct bad data (e.g., retroactively fixing mistaken device alias allocations).
 *   **[TODO] All-in-One Platform Providers:**
     Address multi-service providers (such as SigNoz or OpenObserve) that span
     multiple service categories (`logger`, `tracer`, `visualizer`). Currently,

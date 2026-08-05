@@ -63,7 +63,6 @@ features/kasa/bin/test_gpu_telemetry.py
 features/kasa/bin/test_power_kasa.py
 features/kasa/data/alerts.yaml
 features/kasa/data/hardware.json
-features/kasa/data/kasa_config.yaml
 features/kasa/docs/AGENTS.md
 features/kasa/docs/DESIGN.md
 features/kasa/docs/IMPLEMENTATION.md
@@ -304,4 +303,3 @@ services/visualizers/kibana/.provider.json
 services/visualizers/openobserve/.provider.json
 services/visualizers/perses/.provider.json
 services/visualizers/signoz/.provider.json
-

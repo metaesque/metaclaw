@@ -110,8 +110,8 @@
     "location": "AI Farm Basement",
     "plugs": {
       "0": "router",
-      "1": "solar",
-      "2": "empty",
+      "1": "spark1",
+      "2": "spark2",
       "3": "compute",
       "4": "control",
       "5": "switch"
