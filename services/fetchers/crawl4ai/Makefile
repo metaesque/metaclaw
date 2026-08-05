@@ -1,5 +1,5 @@
 SERVICE_TITLE = Crawl4AI Fetcher
-SERVICE_NAME = crawl4ai
+SERVICE_NAME = crawl4ai-fetcher
 DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -27,3 +27,4 @@ clobber-data:
 	@if [ -z "$(EXTERNAL_DRIVE_PATH)" ]; then echo "FATAL: EXTERNAL_DRIVE_PATH is undefined."; exit 1; fi
 	@echo "[$(SERVICE_TITLE)] Purging external Crawl4AI session data..."
 	@rm -rf $(EXTERNAL_DRIVE_PATH)/crawl4ai-data
+

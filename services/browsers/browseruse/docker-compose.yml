@@ -1,9 +1,9 @@
 services:
-  browseruse:
+  browseruse-browser:
     # WHAT THIS IS: A REST API wrapper enabling AI-powered browser automation via the Browser Use library.
     # WHY THIS VERSION: Pinned to ${BROWSERUSE_VERSION} (currently 'latest' due to upstream release limitations).
     image: reqeique/browser-use-api:${BROWSERUSE_VERSION}
-    container_name: browseruse
+    container_name: browseruse-browser
     # WHY UNLESS-STOPPED: Automatically restarts the browser manager on unexpected crashes,
     # keeping the agent's web execution pipeline online.
     restart: unless-stopped
@@ -42,3 +42,4 @@ networks:
   openclaw-network:
     name: ${NETWORK_NAME}
     external: true
+
