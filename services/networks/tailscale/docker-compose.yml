@@ -1,5 +1,5 @@
 services:
-  tailscale:
+  tailscale-network:
     # ==============================================================================
     # SUPER CRITICAL: REMOTE SSH PRESERVATION MANDATE
     # ==============================================================================
@@ -13,7 +13,7 @@ services:
     # WHY THIS TOOL: It allows your entire AI farm to communicate securely as if they were
     # on the same physical switch, and bypasses Starlink/residential CGNAT firewalls.
     image: tailscale/tailscale:latest
-    container_name: tailscale
+    container_name: tailscale-network
     restart: unless-stopped
     # WHAT THIS DOES: Forces the container to use the host's networking stack directly.
     # WHY IT MATTERS: Instead of just putting the isolated container on the Tailnet,

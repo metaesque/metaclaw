@@ -1,5 +1,5 @@
 SERVICE_TITLE = PostgreSQL Database Service
-SERVICE_NAME = postgres-db
+SERVICE_NAME = postgres-memory
 DOCKER_SHELL_CMD = psql -U $(POSTGRES_SUPER_USER) -d postgres
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -34,3 +34,4 @@ clobber-data:
 	@if [ -z "$(EXTERNAL_DRIVE_PATH)" ]; then echo "FATAL: EXTERNAL_DRIVE_PATH is undefined."; exit 1; fi
 	@echo "[$(SERVICE_TITLE)] Purging external Postgres data..."
 	@rm -rf $(EXTERNAL_DRIVE_PATH)/openclaw-postgres-data
+

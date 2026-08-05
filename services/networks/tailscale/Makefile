@@ -9,7 +9,7 @@
 # when native infrastructure is detected.
 
 SERVICE_TITLE = Tailscale Network Service
-SERVICE_NAME = tailscale
+SERVICE_NAME = tailscale-network
 DOCKER_SHELL_CMD = sh
 
 FRAMEWORK_ROOT_REL = ../../..
@@ -46,3 +46,4 @@ post-check-status:
 
 clean-state::
 	@echo "[$(SERVICE_TITLE)] Cleaned state."
+

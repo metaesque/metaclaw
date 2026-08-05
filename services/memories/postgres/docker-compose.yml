@@ -1,9 +1,9 @@
 services:
-  postgres-db:
+  postgres-memory:
     # WHAT THIS IS: The relational database managing both standard relational data and high-dimensional vectors.
     # WHY PGVECTOR: OpenClaw requires semantic similarity search to recall memory. Pgvector provides native indexing within the standard Postgres engine.
     image: ${PGVECTOR_IMAGE}
-    container_name: postgres-db
+    container_name: postgres-memory
     # WHY UNLESS-STOPPED: Ensures state persistence across host reboots or daemon crashes.
     restart: unless-stopped
     ports:
@@ -45,3 +45,4 @@ networks:
     # WHAT THIS DOES: Links the database to the globally instantiated Docker bridge.
     name: ${NETWORK_NAME:-openclaw-network}
     external: true
+
