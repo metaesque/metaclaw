@@ -2,15 +2,15 @@ services:
   victoriametrics-tsdb:
     # WHAT THIS IS: A high-performance, cost-effective time-series database.
     # WHY THIS TOOL: It handles millions of high-cardinality metrics while using a fraction of the RAM required by InfluxDB or Prometheus.
-    image: victoriametrics/victoria-metrics:${VICTORIAMETRICS_VERSION}
+    image: victoriametrics/victoria-metrics:${VICTORIAMETRICS_TSDB_VERSION}
     container_name: victoriametrics-tsdb
     restart: unless-stopped
     ports:
       # WHAT THIS DOES: Exposes the HTTP API and built-in vmui UI for querying metrics.
-      - "${VICTORIAMETRICS_PORT}:8428"
+      - "${VICTORIAMETRICS_TSDB_PORT}:8428"
     command:
       - "-storageDataPath=/victoria-metrics-data"
-      - "-retentionPeriod=${VICTORIAMETRICS_RETENTION}"
+      - "-retentionPeriod=${VICTORIAMETRICS_TSDB_RETENTION}"
       - "-search.logSlowQueryDuration=5s"
     volumes:
       # WHAT THIS DOES: Persists the highly compressed TSDB files.
@@ -24,4 +24,3 @@ networks:
   shared-network:
     name: ${NETWORK_NAME:-openclaw-network}
     external: true
-
