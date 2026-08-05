@@ -42,6 +42,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     MetaClaw's `features/kasa/` module.
 *   **[TODO] Implement VictoriaMetrics Timeseries Rewriter:**
     Develop a general-purpose Python script utilizing the VictoriaMetrics `/api/v1/export` and `/api/v1/admin/tsdb/delete_series` endpoints to correct bad data (e.g., retroactively fixing mistaken device alias allocations).
+*   **[TODO] Monitor Host Storage and Log Sizes:**
+    Add support to the monitoring feature to track the physical size of log files (VictoriaLogs) and general disk usage footprint incurred by MetaClaw on the host machines, to ensure SSDs do not reach capacity unnoticed.
 *   **[TODO] All-in-One Platform Providers:**
     Address multi-service providers (such as SigNoz or OpenObserve) that span
     multiple service categories (`logger`, `tracer`, `visualizer`). Currently,
@@ -135,6 +137,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 ## Phase 8: Technical Debt & Standardization
 *   **[x] Standardize Docker Container Naming:**
     Updated all `docker-compose.yml` files, Makefiles, and documentation references across the repository to enforce the `<provider>-<service>` naming convention (e.g., `telegraf-collector`, `postgres-memory`, `fluentbit-forwarder`).
+*   **[TODO] Rename the Kasa Feature:**
+    Rename the current `features/kasa/` module to `features/metamon/` (MetaMon) to more accurately reflect its role as the comprehensive MetaClaw telemetry and monitoring engine, rather than just a power strip polling script.
 
 ## Phase 9: Separation of State & Infrastructure Configuration
 *   **[TODO] Implement metacfg Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
@@ -143,6 +147,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[~] Build Services API:** Develop a generic MetaClaw Services API (Python/REST)
     that allows OpenClaw projects to interact with 'the TSDB', 'the Logger', or 'the Collector' without
     knowing the underlying provider implementation. Initial stubs (`lib/services.py`, `lib/devices.py`) have been drafted.
+*   **[TODO] Expand Centralized Device Registry:**
+    Expand `./lib/services.py` and `./lib/devices.py` to handle all physical hardware registry tracking. Refactor edge scripts (like `features/kasa/bin/power_kasa.py`) to query this unified library instead of manually opening and parsing the raw `hardware.json` mapping files on every execution loop.
 *   **[TODO] Implement Version Control Service (`vcs`):** Provision the `gitea` provider
     to allow non-technical users to securely version-control their `workspace` and `metacfg`
     repositories locally, removing the dependency on external GitHub configurations.
