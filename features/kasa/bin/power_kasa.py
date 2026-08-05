@@ -7,6 +7,20 @@ import asyncio
 import os
 import sys
 import json
+import socket
+
+# Dynamically append the lib directory to the path so we can import MetaClaw tools
+script_dir = os.path.dirname(os.path.abspath(__file__))
+lib_dir = os.path.abspath(os.path.join(script_dir, "..", "..", "..", "lib"))
+if lib_dir not in sys.path:
+    sys.path.insert(0, lib_dir)
+
+try:
+    from metaclaw import Inst
+except ImportError as e:
+    print(f"Error importing metaclaw: {e}", file=sys.stderr)
+    Inst = None
+
 from kasa import Discover, DeviceType, Module
 
 def load_hardware_config(config_path):
@@ -34,7 +48,38 @@ def emit_hardware_metadata(devices):
             # Emits: host_metadata_active{host="compute"} 1
             print(f"host_metadata,host={dev_uid} active=1i")
 
+def is_control_plane():
+    """
+    Determines if the current host implements the 'control' plane.
+    """
+    repo_root = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+    profile_path = os.path.join(repo_root, "profile.json")
+
+    if not os.path.exists(profile_path):
+        return False
+
+    try:
+        with open(profile_path, 'r') as f:
+            profile = json.load(f)
+            current_host = os.environ.get("HOST_IDENTIFIER", socket.gethostname())
+
+            for node in profile.get("nodes", []):
+                # Match by hostname or the Tailscale IP injected by the orchestrator
+                node_ip = node.get("hardware", {}).get("ip_address", "")
+                if node.get("hostname") == current_host or node_ip == current_host:
+                    if "control" in node.get("planes", []):
+                        return True
+    except Exception as e:
+        print(f"Error parsing profile.json: {e}", file=sys.stderr)
+
+    return False
+
 async def run_telegraf_export(config_path):
+    # Fast-fail constraint: Kasa discovery only needs to run on one node to prevent
+    # duplicate network polling. We restrict this entirely to the Control Plane.
+    if not is_control_plane():
+        sys.exit(0)
+
     devices = load_hardware_config(config_path)
 
     # Establish the valid Grafana dashboard variables
@@ -87,11 +132,9 @@ async def run_telegraf_export(config_path):
             )
 
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     candidates = [
         os.path.join(script_dir, "..", "data", "hardware.json"),
         os.path.join(script_dir, "..", "..", "..", "workspace", "src", "data", "hardware.json"),
     ]
     cfg_path = next((c for c in candidates if os.path.exists(c)), candidates[0])
     asyncio.run(run_telegraf_export(cfg_path))
-

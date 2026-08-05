@@ -19,6 +19,7 @@ class MetaClaw:
   def __init__(self):
     self._structure = None
     self._timestamp = 0
+    self._hardware = None
 
   def subpath(self, service=None, provider=None, subdir=None, base=None):
     """Returns a path within the Meta<Claw> directory hierarchy.
@@ -153,6 +154,50 @@ class MetaClaw:
     self._structure = struct
     self._timestamp = max_mtime
     return struct
+
+  def hardware(self):
+    """
+    Loads and returns the hardware.json registry representing physical devices
+    known to the infrastructure.
+    """
+    if self._hardware is not None:
+        return self._hardware
+
+    root_dir = self.rootdir()
+    hw_path = os.path.join(root_dir, 'features', 'kasa', 'data', 'hardware.json')
+
+    if os.path.exists(hw_path):
+        with open(hw_path, 'r', encoding='utf-8') as f:
+            self._hardware = json.load(f)
+    else:
+        self._hardware = {}
+
+    return self._hardware
+
+  def map_nodes(self, profile_nodes):
+    """
+    Cross-references nodes from the dynamic profile.json with the static
+    hardware.json registry to establish unified identity mappings.
+    Returns a dictionary of matched physical hardware data keyed by hostname.
+    """
+    hw_registry = self.hardware()
+    mappings = {}
+
+    for node in profile_nodes:
+        hostname = node.get("hostname")
+        if not hostname:
+            continue
+
+        # Attempt to find the hostname in the hardware registry directly by key
+        if hostname in hw_registry:
+            mappings[hostname] = hw_registry[hostname]
+        else:
+            # Fallback to checking the "name" property within hardware.json entries
+            for hw_key, hw_data in hw_registry.items():
+                if isinstance(hw_data, dict) and hw_data.get("name", "").lower() == hostname.lower():
+                    mappings[hostname] = hw_data
+                    break
+    return mappings
 
   def updateCluster(
     self,
@@ -831,3 +876,4 @@ class Markdown:
 
       index_path = f"services/{svc['uids']}/index.md"
       Inst.saveFile(index_path, '\n'.join(svc_md), backup=False)
+
