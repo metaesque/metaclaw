@@ -84,6 +84,24 @@ else
     echo "[*] Swapfile already provisioned. Skipping."
 fi
 
+# 6. DGX Spark / GB10 Superchip Specific Overrides
+if [ -f /etc/os-release ] && grep -qi "dgx" /etc/os-release; then
+    echo "[*] NVIDIA DGX OS detected. Applying Superchip ecosystem overrides..."
+
+    echo "  -> Masking sleep/hibernation targets to prevent offline model eviction..."
+    sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+
+    echo "  -> Enforcing iptables-legacy for Docker bridge network compatibility..."
+    sudo apt-get install -y iptables
+    sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+    sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+
+    if command -v nvidia-ctk >/dev/null 2>&1; then
+        echo "  -> Configuring Docker to utilize NVIDIA Container Toolkit..."
+        sudo nvidia-ctk runtime configure --runtime=docker || true
+    fi
+fi
+
 echo "################################################################################"
 echo "# BOOTSTRAP COMPLETE"
 echo "################################################################################"
