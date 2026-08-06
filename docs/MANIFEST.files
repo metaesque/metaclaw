@@ -21,6 +21,7 @@ bin/highlight.py
 bin/install_docker.sh
 bin/litellm_test.py
 bin/newcode.py
+bin/node_setup.py
 bin/openclaw_test.py
 bin/orchestrate.py
 bin/parse_prompts_gem.py

@@ -458,14 +458,21 @@ def main():
     configure_env_secrets(profile, ssh_key)
 
     # --- PHASE 5: Remote Execution Pipeline ---
-    print("\n[Phase 5] Executing remote cluster setup tasks...")
+    print("\n[Phase 5] Executing local and remote cluster setup tasks...")
+
+    print(f"  -> Triggering 'node_setup.py' on local orchestrator node...")
+    local_env = os.environ.copy()
+    local_env["PYTHONPATH"] = os.getcwd()
+    subprocess.run(["bin/.venv/bin/python", "bin/node_setup.py"], env=local_env)
+
     for node in profile.get("nodes", []):
         if node["hostname"] != socket.gethostname():
             ip = node["hardware"]["ip_address"]
             user = node.get("ssh_user", os.getlogin())
-            print(f"  -> Triggering 'make setup-local' on remote node {node['hostname']} ({ip})...")
+            print(f"  -> Triggering setup pipeline on remote node {node['hostname']} ({ip})...")
             # Using run_remote with hide=False inherits the TTY and displays interactive streams natively
-            res = run_remote(ip, user, ssh_key, "cd ~/repo && make setup-local", hide=False, prefix=node['hostname'])
+            cmd = "cd ~/repo && PYTHONPATH=. bin/.venv/bin/python bin/node_setup.py && make setup-local"
+            res = run_remote(ip, user, ssh_key, cmd, hide=False, prefix=node['hostname'])
             if res.returncode != 0:
                 print(f"  -> WARNING: Remote setup failed on {node['hostname']}.")
 
