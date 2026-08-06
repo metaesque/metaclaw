@@ -455,8 +455,19 @@ tmp/metaclaw.zip: FORCE | $(PYTHON_BIN)
 txt: tmp/metaclaw.txt
 tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	$(PYTHON_BIN) ./bin/newcode.py -s docs/MANIFEST.files > tmp/metaclaw.txt
+	$(PYTHON_BIN) ./bin/newcode.py -s docs/MANIFEST.files -o tmp/metaclaw.txt -l 6000
 	@echo "Manifest generated at: tmp/metaclaw.txt"
+
+# WHAT IT DOES: Concatenates the workspace agents into a single `.txt` payload for injection into an LLM context window.
+wksp: tmp/workspace.txt
+tmp/workspace.txt: FORCE | $(PYTHON_BIN)
+	@mkdir -p tmp
+	$(PYTHON_BIN) ./bin/newcode.py -s docs/WORKSPACE.files -o tmp/workspace.txt -l 6000
+	@echo "Workspace manifest generated at: tmp/workspace.txt"
+
+wksplist: docs/WORKSPACE.files
+docs/WORKSPACE.files: FORCE
+	find ../workspace -name legacy -prune -false -o -name fixme -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort | grep -v -- '-huge.json' > docs/WORKSPACE.files
 
 # WHAT IT DOES: Parses a block of AI-generated Markdown and writes the files back to disk atomically.
 newcode: | $(PYTHON_BIN)
@@ -523,18 +534,4 @@ FORCE:
 
 tst:
 	echo "PYTHON_BIN=$(PYTHON_BIN)"
-
-# WHAT IT DOES: Concatenates the workspace agents into a single `.txt` payload for injection into an LLM context window.
-wksp: tmp/workspace.txt
-tmp/workspace.txt: FORCE | $(PYTHON_BIN)
-	@mkdir -p tmp
-	$(PYTHON_BIN) ./bin/newcode.py -s docs/WORKSPACE.files > tmp/workspace.txt
-	@echo "Workspace manifest generated at: tmp/workspace.txt"
-
-wksplist: docs/WORKSPACE.files
-docs/WORKSPACE.files: FORCE
-	find ../workspace -name research -prune -false -o -name src -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort > docs/WORKSPACE.files
-	ls -1 ../workspace/src/projects/*.md >> docs/WORKSPACE.files
-	ls -1 ../workspace/src/{bin,data}/hardware* >> docs/WORKSPACE.files
-	find ../workspace/src/projects/kasa -name '*.py' -o -name '*.yaml' -o -name '*.json' -o -name '*.sh' -o -name '*.md' >> docs/WORKSPACE.files
 

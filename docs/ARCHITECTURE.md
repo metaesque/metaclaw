@@ -282,6 +282,19 @@ time-series numbers) are explicitly separated in the taxonomy.
    TSDBs and Loggers to generate real-time charts and alerts, entirely decoupled
    from the storage layer.
 
+### Host Hardware Introspection (Container Escapes)
+
+To effectively monitor and query deep host-level hardware telemetry (such as
+direct GPU polling without installing heavy global driver packages on the host
+OS), edge collectors (like Telegraf) must perform safe "container escapes."
+
+This is achieved by deploying the collector daemon with `privileged: true` to
+bypass Linux CGroup restrictions, enabling full visibility of character devices
+(e.g., `/dev/nvidiactl`). Furthermore, by mounting the host root filesystem as
+read-only to `/hostfs`, the daemon can utilize a `chroot /hostfs` wrapper to
+execute native host binaries and dynamically link driver libraries entirely from
+within the container boundary.
+
 ### Provider-Agnostic Abstraction (The Services API)
 MetaClaw's core mandate is to ensure that specific infrastructure providers
 (like VictoriaMetrics, Telegraf, or Grafana) are abstracted away from the

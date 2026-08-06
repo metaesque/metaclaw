@@ -1,5 +1,38 @@
 # MetaClaw Changelog
 
+## [2026-08-06] - Edge Hardware Telemetry & Container Escapes
+
+### Added
+
+*   **Hardware-Agnostic Polling:** Implemented `poll_amd_sysfs()` to read GPU
+    telemetry natively from `/sys/class/drm/card*`, bypassing the need for
+    external drivers on AMD nodes. Created `poll_nvidia()` for GB10 Spark
+    nodes.
+*   **Dashboard Integration:** Updated Grafana's `dashboard.json` to plot
+    `gpu_telemetry_utilization` and `gpu_telemetry_vram_used_mb`, dynamically
+    mapping PromQL variables to cluster hosts.
+
+### Changed
+
+*   **Container Escape via Chroot:** Updated the `gpu_telemetry.py` Python
+    script to utilize a `chroot /hostfs` wrapper. This allows the Telegraf
+    Docker container to execute the host OS's native binaries (like
+    `nvidia-smi`) and dynamically link host driver libraries.
+*   **CGroup Bypassing:** Elevated the Telegraf container to `privileged: true`
+    to bypass strict Linux CGroup policies, granting it full hardware
+    visibility and access to `/dev/nvidiactl` character devices.
+*   **The Telegraf Entrypoint Paradox:** Overrode the default Docker
+    `entrypoint.sh` for Telegraf (which forcibly dropped root privileges to UID
+    999) by setting `entrypoint: ["telegraf"]` and `user: root`. This restores
+    the permissions necessary to run the chroot syscall for the background
+    daemon.
+
+### Fixed
+
+*   **YAML Syntax Escaping:** Fixed a container boot failure in the Grafana
+    visualizer by correctly escaping backslashes (`\\s*`) within double-quoted
+    YAML scalars in the healthcheck regex.
+
 ## [2026-08-02] - Metrics Observability Stack
 
 ### Added
