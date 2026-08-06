@@ -109,6 +109,7 @@ services/collectors/opentelemetry-collector/.provider.json
 services/collectors/prometheus-agent/.provider.json
 services/collectors/telegraf/.env.template
 services/collectors/telegraf/.provider.json
+services/collectors/telegraf/Dockerfile
 services/collectors/telegraf/Makefile
 services/collectors/telegraf/docker-compose.yml
 services/collectors/telegraf/telegraf.conf

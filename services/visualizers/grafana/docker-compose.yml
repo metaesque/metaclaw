@@ -33,8 +33,13 @@ services:
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
     volumes:
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/grafana-data:/var/lib/grafana
-      - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/visualizers/grafana:/etc/grafana/provisioning/kasa:ro
-      - ${METACLAW_CONFIG:-/home/node/config}/data/grafana/provisioning/custom:/etc/grafana/provisioning/custom:ro
+      # Explicitly mount the exact YAML pointers into Grafana's strict provisioning directories
+      - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/visualizers/grafana/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards/kasa_dashboards.yaml:ro
+      - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/visualizers/grafana/datasources/datasources.yaml:/etc/grafana/provisioning/datasources/kasa_datasources.yaml:ro
+      # Mount the actual dashboard JSON files into the folder referenced by dashboards.yaml
+      - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/visualizers/grafana/dashboards/kasa:/etc/grafana/provisioning/dashboards/kasa:ro
+      # Mount the user's custom drop-zone configurations
+      - ${METACLAW_CONFIG:-/home/node/config}/data/grafana/provisioning/custom:/etc/grafana/provisioning/dashboards/custom:ro
     healthcheck:
       # WHAT THIS DOES: Ensures the database is completely migrated and initialized before the framework proceeds.
       test: ["CMD-SHELL", "curl -s http://localhost:3000/api/health | grep '\"database\":\"ok\"' || exit 1"]

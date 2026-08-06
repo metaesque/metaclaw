@@ -1,6 +1,13 @@
 services:
   telegraf-collector:
-    image: telegraf:${TELEGRAF_VERSION}
+    # ARCHITECTURAL SHIFT: We now build a custom image locally to cache the Python
+    # virtual environment and `lm-sensors` installation, resolving the 45+ second
+    # cold-boot delay during container recreation.
+    build:
+      context: .
+      args:
+        TELEGRAF_VERSION: ${TELEGRAF_VERSION}
+    image: metaclaw-telegraf:${TELEGRAF_VERSION}
     container_name: telegraf-collector
     restart: unless-stopped
     user: root
@@ -14,17 +21,7 @@ services:
       - HOST_SYS=/hostfs/sys
       - HOST_ETC=/hostfs/etc
       - HOST_MOUNT_PREFIX=/hostfs
-      # WHAT THIS DOES: Hardcodes the internal mount point for scripts running inside the container.
       - METACLAW_CONFIG=/config
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        apt-get update && apt-get install -y python3 python3-pip python3-venv gcc python3-dev lm-sensors
-        python3 -m venv /tmp/venv
-        /tmp/venv/bin/pip install python-kasa pyyaml
-        chown -R telegraf:telegraf /tmp/venv
-        exec /entrypoint.sh telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

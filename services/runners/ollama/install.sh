@@ -82,8 +82,10 @@ if [ -d "/usr/local/lib/ollama" ]; then
 fi
 
 if getent group ollama > /dev/null 2>&1; then
-    echo "WARNING: Global 'ollama' group detected. Removing $USER and deleting group..."
-    sudo gpasswd -d $USER ollama 2>/dev/null || true
+    echo "WARNING: Global 'ollama' group detected. Removing user and deleting group..."
+    # The global installer creates a dedicated 'ollama' user whose primary group is 'ollama'.
+    # A groupdel command will fail silently if the group is still set as a user's primary group.
+    sudo userdel -r ollama 2>/dev/null || true
     sudo groupdel ollama 2>/dev/null || true
 fi
 
@@ -105,3 +107,4 @@ rm -rf tmp_extract ollama.archive
 
 chmod +x ollama
 echo "Ollama v$OLLAMA_VERSION installation complete."
+
