@@ -8,6 +8,9 @@ services:
       args:
         TELEGRAF_VERSION: ${TELEGRAF_VERSION}
     image: metaclaw-telegraf:${TELEGRAF_VERSION}
+    # WHAT THIS DOES: Forces Docker to build from source or use the local cache,
+    # suppressing "pull access denied" warnings from Docker Hub.
+    pull_policy: build
     container_name: telegraf-collector
     restart: unless-stopped
     user: root
@@ -30,4 +33,3 @@ services:
       - ${METACLAW_ROOT:-/home/node/repo}:/metaclaw:ro
       - ${METACLAW_CONFIG:-/home/node/config}:/config:ro
       - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
-

@@ -1,4 +1,4 @@
-ARG TELEGRAF_VERSION
+ARG TELEGRAF_VERSION=1.31
 FROM telegraf:${TELEGRAF_VERSION}
 
 # Switch to root to install dependencies
