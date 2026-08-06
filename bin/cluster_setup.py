@@ -224,6 +224,30 @@ def configure_env_secrets(profile, ssh_key=None):
     with open(local_env_json, "w") as f:
         json.dump(env_data, f, indent=2)
 
+    # -------------------------------------------------------------------------
+    # TAILSCALE AUTH KEY SYNCHRONIZATION
+    # -------------------------------------------------------------------------
+    ts_env_dir = os.path.join("services", "networks", "tailscale")
+    local_ts_json = os.path.join(ts_env_dir, ".env.json")
+    ts_data = {}
+    if os.path.exists(local_ts_json):
+        try:
+            with open(local_ts_json, "r") as f:
+                ts_data = json.load(f)
+        except:
+            pass
+
+    ts_key = ts_data.get("TAILSCALE_AUTHKEY", "")
+    ts_input = input(f"  -> Enter TAILSCALE_AUTHKEY [{ts_key or 'None'}]: ").strip()
+    if ts_input:
+        ts_key = ts_input
+
+    if ts_key:
+        ts_data["TAILSCALE_AUTHKEY"] = ts_key
+        os.makedirs(ts_env_dir, exist_ok=True)
+        with open(local_ts_json, "w") as f:
+            json.dump(ts_data, f, indent=2)
+
     # Broadcast secrets to other nodes via jq merging
     for node in profile.get("nodes", []):
         if node["hostname"] != socket.gethostname() and (node.get("tier") == 2 or node.get("tier") == 4):
@@ -231,7 +255,7 @@ def configure_env_secrets(profile, ssh_key=None):
             user = node.get("ssh_user", os.getlogin())
             print(f"  -> Pushing secrets to {node['hostname']} ({ip})...")
 
-            # This complex jq string safely creates the file if missing, then merges the keys
+            # This complex jq string safely creates the proxy file if missing, then merges the keys
             jq_cmd = f"mkdir -p ~/repo/services/proxies/litellm && " \
                      f"touch ~/repo/services/proxies/litellm/.env.json && " \
                      f"jq -n 'inputs | .ACTIVE_PROXY_KEY=\"{active_key}\" | .GEMINI_API_KEY=\"{gemini_key}\"' " \
@@ -241,7 +265,18 @@ def configure_env_secrets(profile, ssh_key=None):
 
             res = run_remote(ip, user, ssh_key, jq_cmd, hide=True)
             if res.returncode != 0:
-                print(f"  -> WARNING: Failed to push secrets. Is jq installed on the remote host? Error: {res.stderr}")
+                print(f"  -> WARNING: Failed to push Proxy secrets. Is jq installed on the remote host? Error: {res.stderr}")
+
+            if ts_key:
+                ts_jq_cmd = f"mkdir -p ~/repo/services/networks/tailscale && " \
+                            f"touch ~/repo/services/networks/tailscale/.env.json && " \
+                            f"jq -n 'inputs | .TAILSCALE_AUTHKEY=\"{ts_key}\"' " \
+                            f"~/repo/services/networks/tailscale/.env.json > ~/repo/tmp_ts.json 2>/dev/null || " \
+                            f"echo '{{\"TAILSCALE_AUTHKEY\":\"{ts_key}\"}}' > ~/repo/tmp_ts.json && " \
+                            f"mv ~/repo/tmp_ts.json ~/repo/services/networks/tailscale/.env.json"
+                res_ts = run_remote(ip, user, ssh_key, ts_jq_cmd, hide=True)
+                if res_ts.returncode != 0:
+                    print(f"  -> WARNING: Failed to push Tailscale secrets.")
 
 def main():
     print("==================================================")

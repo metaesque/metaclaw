@@ -25,10 +25,17 @@ def poll_nvidia():
             if not line: continue
             parts = [p.strip() for p in line.split(',')]
             if len(parts) == 5:
-                idx, util, temp, mem_used, mem_total = parts
+                idx, util_str, temp_str, mem_used_str, mem_total_str = parts
+
+                def sanitize(val):
+                    try:
+                        return float(val)
+                    except ValueError:
+                        return 0.0
+
                 print(
                     f"gpu_telemetry,gpu_id=nvidia_{idx} "
-                    f"utilization={util},temp_c={temp},vram_used_mb={mem_used},vram_total_mb={mem_total}"
+                    f"utilization={sanitize(util_str)},temp_c={sanitize(temp_str)},vram_used_mb={sanitize(mem_used_str)},vram_total_mb={sanitize(mem_total_str)}"
                 )
     except Exception as e:
         print(f"NVIDIA SMI parsing error: {e}", file=sys.stderr)
@@ -102,4 +109,3 @@ def poll_amd_sysfs():
 if __name__ == "__main__":
     poll_nvidia()
     poll_amd_sysfs()
-

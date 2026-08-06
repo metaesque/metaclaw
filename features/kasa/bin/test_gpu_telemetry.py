@@ -22,8 +22,8 @@ class TestGpuTelemetry(unittest.TestCase):
         gpu_telemetry.poll_nvidia()
         out = mock_stdout.getvalue()
 
-        self.assertIn("gpu_telemetry,gpu_id=nvidia_0 utilization=45,temp_c=65,vram_used_mb=4000,vram_total_mb=24000", out)
-        self.assertIn("gpu_telemetry,gpu_id=nvidia_1 utilization=99,temp_c=82,vram_used_mb=23000,vram_total_mb=24000", out)
+        self.assertIn("gpu_telemetry,gpu_id=nvidia_0 utilization=45.0,temp_c=65.0,vram_used_mb=4000.0,vram_total_mb=24000.0", out)
+        self.assertIn("gpu_telemetry,gpu_id=nvidia_1 utilization=99.0,temp_c=82.0,vram_used_mb=23000.0,vram_total_mb=24000.0", out)
 
     @patch('os.path.exists')
     @patch('glob.glob')
