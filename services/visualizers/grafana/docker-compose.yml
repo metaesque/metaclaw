@@ -35,6 +35,12 @@ services:
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/grafana-data:/var/lib/grafana
       - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/visualizers/grafana:/etc/grafana/provisioning/kasa:ro
       - ${METACLAW_CONFIG:-/home/node/config}/data/grafana/provisioning/custom:/etc/grafana/provisioning/custom:ro
+    healthcheck:
+      # WHAT THIS DOES: Ensures the database is completely migrated and initialized before the framework proceeds.
+      test: ["CMD-SHELL", "curl -s http://localhost:3000/api/health | grep '\"database\":\"ok\"' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       shared-network:
         aliases:
