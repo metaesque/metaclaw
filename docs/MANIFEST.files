@@ -286,10 +286,10 @@ services/tsdbs/.service.json
 services/tsdbs/Makefile
 services/tsdbs/greptimedb/.provider.json
 services/tsdbs/influxdb/.provider.json
+services/tsdbs/m3db/.provider.json
 services/tsdbs/prometheus/.provider.json
 services/tsdbs/questdb/.provider.json
 services/tsdbs/timescaledb/.provider.json
-services/tsdbs/m3db/.provider.json
 services/tsdbs/victoriametrics/.env.template
 services/tsdbs/victoriametrics/.provider.json
 services/tsdbs/victoriametrics/Makefile
@@ -307,3 +307,5 @@ services/visualizers/kibana/.provider.json
 services/visualizers/openobserve/.provider.json
 services/visualizers/perses/.provider.json
 services/visualizers/signoz/.provider.json
+tests/test_devices.py
+tests/test_metaclaw.py
