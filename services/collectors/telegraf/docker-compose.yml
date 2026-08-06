@@ -15,6 +15,11 @@ services:
     restart: unless-stopped
     user: root
     network_mode: "host"
+    # WHAT THIS DOES: Bypasses strict Linux CGroup device restrictions.
+    # WHY IT MATTERS: Allows the container's chroot environment to successfully open
+    # character devices like /dev/nvidiactl for telemetry polling without requiring
+    # architecture-specific --device flags that would break AMD/macOS nodes.
+    privileged: true
     environment:
       - ACTIVE_TSDB_HOST=${ACTIVE_TSDB_HOST:-127.0.0.1}
       - HOST_IDENTIFIER=${ACTIVE_COLLECTOR_HOST:-unknown}
