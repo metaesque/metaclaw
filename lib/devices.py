@@ -4,6 +4,8 @@
 
 import os
 import json
+import socket
+import subprocess
 
 def get_hardware_registry():
     """
@@ -46,6 +48,16 @@ def get_all_devices():
             devices[uid] = ComputeNode(uid, dev_data)
         elif dtype == 'power_strip':
             devices[uid] = PowerStrip(uid, dev_data)
+        elif dtype == 'external_ssd':
+            devices[uid] = ExternalSSD(uid, dev_data)
+        elif dtype == 'network_uplink':
+            devices[uid] = NetworkUplink(uid, dev_data)
+        elif dtype == 'mobile_power':
+            devices[uid] = MobilePower(uid, dev_data)
+        elif dtype == 'power_asset':
+            devices[uid] = PowerAsset(uid, dev_data)
+        elif dtype == 'nomadic_client':
+            devices[uid] = NomadicClient(uid, dev_data)
         else:
             devices[uid] = Device(uid, dev_data)
     return devices
@@ -69,6 +81,21 @@ class Device:
             "location": self.location
         }
 
+class ExternalSSD(Device):
+    pass
+
+class NetworkUplink(Device):
+    pass
+
+class MobilePower(Device):
+    pass
+
+class PowerAsset(Device):
+    pass
+
+class NomadicClient(Device):
+    pass
+
 class ComputeNode(Device):
     """
     Represents a device capable of providing compute resources (e.g., CPU, GPU).
@@ -79,6 +106,69 @@ class ComputeNode(Device):
             "vram": self.data.get("vram", {}),
             "bandwidth_gbps": self.data.get("bandwidth", 0.0)
         }
+
+    def update_data(self):
+        """
+        Verifies the execution context matches the node identity and executes system
+        commands to discover and append real-time hardware telemetry to self.data.
+        """
+        current_hostname = socket.gethostname().lower()
+        if current_hostname not in self.uid.lower() and current_hostname not in self.name.lower():
+            raise Exception(f"Execution context mismatch. Cannot update node '{self.uid}' from host '{current_hostname}'.")
+
+        # Gather Block Device Topology
+        try:
+            res = subprocess.run(['lsblk', '-J', '-o', 'NAME,SIZE,FSTYPE,MOUNTPOINT,UUID'], capture_output=True, text=True)
+            if res.returncode == 0:
+                self.data['_live_lsblk'] = json.loads(res.stdout)
+        except Exception:
+            pass
+
+        # Gather USB Bus Topology
+        try:
+            res = subprocess.run(['lsusb', '-t'], capture_output=True, text=True)
+            if res.returncode == 0:
+                self.data['_live_lsusb'] = res.stdout.strip()
+        except Exception:
+            pass
+
+        # Gather System Memory
+        try:
+            res = subprocess.run(['free', '-m'], capture_output=True, text=True)
+            if res.returncode == 0:
+                self.data['_live_memory_mb'] = res.stdout.strip()
+        except Exception:
+            pass
+
+    def mount_storage(self):
+        """
+        Idempotently maps and mounts SSD volumes defined in the hardware registry.
+        """
+        mounts = self.data.get("mounts", [])
+        for m in mounts:
+            mp = m.get("mountpoint")
+            uuid = m.get("uuid")
+            fstype = m.get("fstype")
+
+            if not mp or not uuid:
+                continue
+
+            # Idempotency check: Is it already mounted?
+            if os.path.ismount(mp):
+                continue
+
+            os.makedirs(mp, exist_ok=True)
+
+            # Execute Mount
+            cmd = ['sudo', 'mount']
+            if fstype:
+                cmd.extend(['-t', fstype])
+            cmd.extend([f"UUID={uuid}", mp])
+
+            try:
+                subprocess.run(cmd, check=True, capture_output=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to mount UUID {uuid} to {mp}: {e.stderr.decode()}")
 
 class PowerStrip(Device):
     """

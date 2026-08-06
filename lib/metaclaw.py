@@ -20,6 +20,16 @@ class MetaClaw:
     self._structure = None
     self._timestamp = 0
     self._hardware = None
+    self._devices = None
+
+  def devices(self):
+    """
+    Lazy-loads and returns the full dictionary of instantiated Device objects.
+    """
+    if self._devices is None:
+        import devices
+        self._devices = devices.get_all_devices()
+    return self._devices
 
   def subpath(self, service=None, provider=None, subdir=None, base=None):
     """Returns a path within the Meta<Claw> directory hierarchy.
