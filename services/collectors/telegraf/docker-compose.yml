@@ -14,7 +14,8 @@ services:
       - HOST_SYS=/hostfs/sys
       - HOST_ETC=/hostfs/etc
       - HOST_MOUNT_PREFIX=/hostfs
-      - METACLAW_CONFIG=${METACLAW_CONFIG:-/home/node/config}
+      # WHAT THIS DOES: Hardcodes the internal mount point for scripts running inside the container.
+      - METACLAW_CONFIG=/config
     entrypoint:
       - /bin/sh
       - -c

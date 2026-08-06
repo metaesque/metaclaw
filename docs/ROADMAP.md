@@ -139,6 +139,10 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Updated all `docker-compose.yml` files, Makefiles, and documentation references across the repository to enforce the `<provider>-<service>` naming convention (e.g., `telegraf-collector`, `postgres-memory`, `fluentbit-forwarder`).
 *   **[TODO] Rename the Kasa Feature:**
     Rename the current `features/kasa/` module to `features/metamon/` (MetaMon) to more accurately reflect its role as the comprehensive MetaClaw telemetry and monitoring engine, rather than just a power strip polling script.
+*   **[TODO] Python Library Resolution Refactor:**
+    Clean up hacky Python library resolution across the codebase. Replace brittle `sys.path.insert` relative path injections and hardcoded data directories with a robust virtual environment path resolution strategy (e.g., `.pth` files or `pip install -e .` editable installs during environment bootstrap).
+*   **[TODO] Python Package Namespacing:**
+    Move existing library files from `lib/*.py` to `lib/metaclaw/*.py` and introduce `__init__.py` modules. This will allow clean, namespace-bound imports (e.g., `import metaclaw.devices` or `import metaclaw.core`) consistently across all cluster nodes and custom scripts.
 
 ## Phase 9: Separation of State & Infrastructure Configuration
 *   **[TODO] Implement metacfg Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
@@ -152,4 +156,3 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Implement Version Control Service (`vcs`):** Provision the `gitea` provider
     to allow non-technical users to securely version-control their `workspace` and `metacfg`
     repositories locally, removing the dependency on external GitHub configurations.
-
