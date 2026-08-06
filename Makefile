@@ -59,7 +59,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg
 
 define h1_title
 	echo ""; \
@@ -462,12 +462,15 @@ tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 wksp: tmp/workspace.txt
 tmp/workspace.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	$(PYTHON_BIN) ./bin/newcode.py -s docs/WORKSPACE.files -o tmp/workspace.txt -l 6000
+	$(PYTHON_BIN) ./bin/newcode.py -s docs/WORKSPACE.files > tmp/workspace.txt
 	@echo "Workspace manifest generated at: tmp/workspace.txt"
 
 wksplist: docs/WORKSPACE.files
 docs/WORKSPACE.files: FORCE
-	find ../workspace -name legacy -prune -false -o -name fixme -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort | grep -v -- '-huge.json' > docs/WORKSPACE.files
+	find ../workspace -name research -prune -false -o -name src -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort > docs/WORKSPACE.files
+	ls -1 ../workspace/src/projects/*.md >> docs/WORKSPACE.files
+	ls -1 ../workspace/src/{bin,data}/hardware* >> docs/WORKSPACE.files
+	find ../workspace/src/projects/kasa -name '*.py' -o -name '*.yaml' -o -name '*.json' -o -name '*.sh' -o -name '*.md' >> docs/WORKSPACE.files
 
 # WHAT IT DOES: Concatenates the entire framework into a single `.txt` payload for injection into an LLM context window.
 cfg: tmp/config.txt

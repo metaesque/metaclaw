@@ -27,6 +27,7 @@ bin/parse_prompts_gem.py
 bin/parse_prompts_oc.py
 bin/postgres_analysis.py
 bin/pull_sync.py
+bin/render_templates.py
 bin/requirements.txt
 bin/setup_plane.sh
 bin/sync_cluster.py
@@ -54,6 +55,7 @@ docs/TIERS.md
 docs/WORKSPACE.files
 docs/index.md
 docs/personal/Wade.md
+docs/personal/Wade.md.j2
 features/kasa/assets/collectors/telegraf/kasa.conf
 features/kasa/assets/visualizers/grafana/dashboards/dashboards.yaml
 features/kasa/assets/visualizers/grafana/dashboards/kasa/dashboard.json
