@@ -101,25 +101,60 @@ def process_block(text, batch=False):
       if apply:
         metaclaw.Inst.saveFile(filename, content)
 
-def generate_setup_output(setup_file):
+def generate_setup_output(setup_file, output_file='', lines_limit=0):
   if not os.path.exists(setup_file):
-    print(f"Error: Setup file '{setup_file}' not found.")
+    print(f"Error: Setup file '{setup_file}' not found.", file=sys.stderr)
     sys.exit(1)
 
   with open(setup_file, 'r', encoding='utf-8') as f:
     filepaths = [line.strip() for line in f if line.strip()]
 
+  out_f = None
+  file_index = 1
+  current_lines = 0
+
+  def open_next_file():
+    nonlocal out_f, file_index, current_lines
+    if out_f:
+      out_f.close()
+      file_index += 1
+      current_lines = 0
+    if file_index == 1:
+      fname = output_file
+    else:
+      root, ext = os.path.splitext(output_file)
+      fname = f"{root}{file_index}{ext}"
+    out_f = open(fname, 'w', encoding='utf-8')
+    print(f"Writing to {fname}...", file=sys.stderr)
+
+  if output_file:
+    open_next_file()
+
   for filepath in filepaths:
     if not os.path.exists(filepath):
-      print(f"Warning: File '{filepath}' not found. Skipping.")
+      print(f"Warning: File '{filepath}' not found. Skipping.", file=sys.stderr)
       continue
 
-    print(f"====> {filepath} <====")
+    header = f"====> {filepath} <====\n"
     with open(filepath, 'r', encoding='utf-8') as file_obj:
       content = file_obj.read()
+
+    if not content.endswith('\n'):
+      content += '\n'
+
+    if out_f:
+      out_f.write(header)
+      out_f.write(content)
+      current_lines += header.count('\n') + content.count('\n')
+
+      if lines_limit > 0 and current_lines >= lines_limit:
+        open_next_file()
+    else:
+      print(header, end='')
       print(content, end='')
-      if not content.endswith('\n'):
-        print()
+
+  if out_f:
+    out_f.close()
 
 def verify_structure(input_file):
   struct_file = 'docs/MANIFEST.files'
@@ -226,6 +261,8 @@ if __name__ == "__main__":
   parser.add_argument('input_file', nargs='?', default=None, help="Input file containing markdown blocks.")
   parser.add_argument('-s', '--setup', type=str, default='', help="Path to a file containing a list of files to package.")
   parser.add_argument('-b', '--batch', action='store_true', help="Run in batch mode (no prompts). Defaults to False.")
+  parser.add_argument('-o', '--output', type=str, default='', help="Output file when running with --setup.")
+  parser.add_argument('-l', '--lines', type=int, default=0, help="Line limit per file when writing output.")
 
   args = parser.parse_args()
 
@@ -234,6 +271,8 @@ if __name__ == "__main__":
     args.input_file = os.path.abspath(args.input_file)
   if args.setup:
     args.setup = os.path.abspath(args.setup)
+  if args.output:
+    args.output = os.path.abspath(args.output)
 
   # Force working directory to the MetaClaw root so all relative paths
   # in processed blocks anchor correctly, regardless of invoke location.
@@ -241,7 +280,7 @@ if __name__ == "__main__":
   os.chdir(root_dir)
 
   if args.setup:
-    generate_setup_output(args.setup)
+    generate_setup_output(args.setup, args.output, args.lines)
     sys.exit(0)
 
   if not args.input_file:

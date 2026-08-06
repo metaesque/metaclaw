@@ -70,7 +70,7 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     fallback.
 
 ## Phase 3: The Execution Plane (Sandboxing)
-*   **[TODO] Docker-out-of-Docker (DooD) Integration:**
+*   **[TODO] Docker-out-of-Docker (DooD Integration):**
     Implement the secure workspace jails (`services/sandboxes/docker-dood`) to
     allow agents to write, execute, and iteratively debug code in isolated
     environments.
@@ -145,8 +145,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     Move existing library files from `lib/*.py` to `lib/metaclaw/*.py` and introduce `__init__.py` modules. This will allow clean, namespace-bound imports (e.g., `import metaclaw.devices` or `import metaclaw.core`) consistently across all cluster nodes and custom scripts.
 
 ## Phase 9: Separation of State & Infrastructure Configuration
-*   **[TODO] Implement metacfg Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
-    from "Infrastructure Configuration". Introduce a `metacfg/` directory that distributes
+*   **[TODO] Implement METACLAW_CONFIG Drop-Zones:** Fully decouple "Agent Memory" (`workspace/`)
+    from "Infrastructure Configuration". Introduce a `METACLAW_CONFIG` directory that distributes
     Telegraf `.conf` files and Grafana `dashboards.json` files across the cluster.
 *   **[~] Build Services API:** Develop a generic MetaClaw Services API (Python/REST)
     that allows OpenClaw projects to interact with 'the TSDB', 'the Logger', or 'the Collector' without
@@ -154,5 +154,5 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
 *   **[TODO] Expand Centralized Device Registry:**
     Expand `./lib/services.py` and `./lib/devices.py` to handle all physical hardware registry tracking. Refactor edge scripts (like `features/kasa/bin/power_kasa.py`) to query this unified library instead of manually opening and parsing the raw `hardware.json` mapping files on every execution loop.
 *   **[TODO] Implement Version Control Service (`vcs`):** Provision the `gitea` provider
-    to allow non-technical users to securely version-control their `workspace` and `metacfg`
+    to allow non-technical users to securely version-control their `workspace` and `METACLAW_CONFIG`
     repositories locally, removing the dependency on external GitHub configurations.
