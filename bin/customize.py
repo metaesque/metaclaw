@@ -85,13 +85,7 @@ def main():
         if os.path.exists(abs_ws_path):
             print(f"  -> External workspace already exists at {abs_ws_path}. Preserving user data.")
         else:
-            template_dir = os.path.abspath(".workspace.template")
-            if os.path.exists(template_dir):
-                print(f"  -> Auto-provisioning workspace from template into: {abs_ws_path}")
-                shutil.copytree(template_dir, abs_ws_path)
-            else:
-                print(f"  -> Creating empty workspace directory: {abs_ws_path}")
-                os.makedirs(abs_ws_path)
+            print(f"  -> Workspace directory does not exist at {abs_ws_path}. Please provision it manually.")
 
         # 3. Config Drop-Zone Provisioning
         default_cfg_abs = os.path.abspath(os.path.join(os.getcwd(), "..", "config"))
