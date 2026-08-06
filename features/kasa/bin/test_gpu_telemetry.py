@@ -6,18 +6,15 @@ import gpu_telemetry
 
 class TestGpuTelemetry(unittest.TestCase):
 
+    @patch('shutil.which', return_value="/usr/bin/nvidia-smi")
     @patch('subprocess.run')
     @patch('sys.stdout', new_callable=io.StringIO)
-    def test_poll_nvidia(self, mock_stdout, mock_run):
-        # Mock 'which' check passing
-        mock_which = MagicMock()
-        mock_which.returncode = 0
-
+    def test_poll_nvidia(self, mock_stdout, mock_run, mock_which):
         # Mock query results
         mock_query = MagicMock()
         mock_query.stdout = "0, 45, 65, 4000, 24000\n1, 99, 82, 23000, 24000"
 
-        mock_run.side_effect = [mock_which, mock_query]
+        mock_run.return_value = mock_query
 
         gpu_telemetry.poll_nvidia()
         out = mock_stdout.getvalue()
@@ -25,15 +22,14 @@ class TestGpuTelemetry(unittest.TestCase):
         self.assertIn("gpu_telemetry,gpu_id=nvidia_0 utilization=45.0,temp_c=65.0,vram_used_mb=4000.0,vram_total_mb=24000.0", out)
         self.assertIn("gpu_telemetry,gpu_id=nvidia_1 utilization=99.0,temp_c=82.0,vram_used_mb=23000.0,vram_total_mb=24000.0", out)
 
+    @patch('shutil.which', return_value="/usr/bin/nvidia-smi")
     @patch('subprocess.run')
     @patch('sys.stdout', new_callable=io.StringIO)
     @patch('os.cpu_count', return_value=8)
-    def test_poll_nvidia_unified_memory(self, mock_cpu, mock_stdout, mock_run):
-        mock_which = MagicMock()
-        mock_which.returncode = 0
+    def test_poll_nvidia_unified_memory(self, mock_cpu, mock_stdout, mock_run, mock_which):
         mock_query = MagicMock()
         mock_query.stdout = "0, [N/A], 65, [N/A], [N/A]\n"
-        mock_run.side_effect = [mock_which, mock_query]
+        mock_run.return_value = mock_query
 
         file_data = {
             "/hostfs/proc/meminfo": "MemTotal: 131072000 kB\nMemAvailable: 31072000 kB\n",

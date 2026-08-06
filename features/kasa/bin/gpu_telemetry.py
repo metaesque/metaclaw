@@ -40,16 +40,25 @@ def get_host_cpu_util():
 
 def poll_nvidia():
     try:
-        # Check if command exists gracefully
         import shutil
-        if not shutil.which("nvidia-smi"):
-            # NVIDIA sysfs is locked down; if CLI fails, silently return.
+        cmd_base = []
+
+        # 1. Native execution (Bare-metal)
+        if shutil.which("nvidia-smi"):
+            cmd_base = ["nvidia-smi"]
+        # 2. Container execution (Docker) - Chroot into the mounted host filesystem
+        elif os.path.exists("/hostfs/usr/bin/nvidia-smi"):
+            cmd_base = ["chroot", "/hostfs", "nvidia-smi"]
+        else:
             return
 
+        cmd = cmd_base + ["--query-gpu=index,utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"]
+
         result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=index,utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"],
+            cmd,
             capture_output=True, text=True, check=True
         )
+
         for line in result.stdout.strip().split('\n'):
             if not line: continue
             parts = [p.strip() for p in line.split(',')]
