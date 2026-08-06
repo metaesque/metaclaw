@@ -1,9 +1,20 @@
 # MetaClaw Changelog
 
-## [2026-08-06] - Edge Hardware Telemetry & Container Escapes
+## [2026-08-06] - Storage, Jinja2 Templating, and Container Escapes
 
 ### Added
 
+*   **Context Optimization:** Created `docs/MANIFEST-core.files` and
+    `docs/MANIFEST-extra.files` to efficiently split framework boundaries for
+    LLM context ingestion.
+*   **Configuration Payloads:** Added `docs/CONFIG.files` and a new `make cfg`
+    target to the root `Makefile` to compile JSON data into LLM payloads.
+*   **Jinja2 Templating:** Introduced `docs/personal/Wade.md.j2` and
+    `bin/render_templates.py` to programmatically render markdown
+    documentation directly from the `hardware.json` registry.
+*   **Hardware Registry Mounts:** Added external Samsung T7/T9 SSDs and
+    network/power assets to `config/data/hardware.json`. Introduced a `mounts`
+    array schema to explicitly map filesystem UUIDs and block sizes.
 *   **Hardware-Agnostic Polling:** Implemented `poll_amd_sysfs()` to read GPU
     telemetry natively from `/sys/class/drm/card*`, bypassing the need for
     external drivers on AMD nodes. Created `poll_nvidia()` for GB10 Spark
@@ -14,10 +25,12 @@
 
 ### Changed
 
-*   **Container Escape via Chroot:** Updated the `gpu_telemetry.py` Python
-    script to utilize a `chroot /hostfs` wrapper. This allows the Telegraf
-    Docker container to execute the host OS's native binaries (like
-    `nvidia-smi`) and dynamically link host driver libraries.
+*   **Workspace Optimization:** Updated the `make wksp` target to explicitly
+    exclude `-huge.json` files to prevent context bloat.
+*   **Container Escape via Chroot:** Updated the `gpu_telemetry.py` script to
+    utilize a `chroot /hostfs` wrapper. This allows the Telegraf Docker
+    container to execute the host OS's native binaries (like `nvidia-smi`) and
+    dynamically link host driver libraries.
 *   **CGroup Bypassing:** Elevated the Telegraf container to `privileged: true`
     to bypass strict Linux CGroup policies, granting it full hardware
     visibility and access to `/dev/nvidiactl` character devices.

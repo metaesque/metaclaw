@@ -139,20 +139,13 @@ physical constraints.
 ### Host & Compute Assets
 
 
-
 #### MacBook Air M4
 
 * **Date Bought:** N/A
 * **Price Spent:** $Unknown
 * **Title/Description:** 15-inch Apple MacBook Air M4 (16GB RAM, 256GB SSD)
 * **Source URL:** N/A
-* **Detailed Specifications:** N/A. N/A.
-* **VRAM:** None
-* **Memory bandwidth:** N/A
-* **Interconnect:** 
-
-
-
+* **Detailed Specifications:** Apple M4 Architecture, 16GB Unified Memory, 256GB NVMe SSD, running macOS Sequoia Version 15.7.5 (24G624).
 
 #### GMKtec K8 Plus
 
@@ -160,13 +153,7 @@ physical constraints.
 * **Price Spent:** $797.42
 * **Title/Description:** GMKtec Gaming Mini PC K8 Plus AMD Ryzen 7 8845HS Desktop Computer
 * **Source URL:** https://www.amazon.com/dp/B0DHNTW3H6
-* **Detailed Specifications:** Discrete blocks on shared die. Shared DDR5.
-* **VRAM:** 32GB
-* **Memory bandwidth:** 89.6 GB/s
-* **Interconnect:** 2.5 Gbps RJ45, 40.0 Gbps USB4, 
-
-
-
+* **Detailed Specifications:** AMD Ryzen 7 8845HS (8 Cores, 16 Threads, Base 3.8GHz, Boost up to 5.1GHz, 16MB L3 Cache, 45W TDP). 32GB DDR5 Dual-Channel RAM. 1TB PCIe 4.0 M.2 2280 NVMe SSD. Dual 2.5 Gbps Ethernet RJ45 ports. 1x USB4 (40Gbps/PD/DP), 2x HDMI 2.1, 1x Oculink port (PCIe 4.0 x4), Wi-Fi 6E, Bluetooth 5.2.
 
 #### GMKtec EVO-X2
 
@@ -174,13 +161,7 @@ physical constraints.
 * **Price Spent:** $3370.0
 * **Title/Description:** GMKtec EVO-X2 AI Mini PC Ryzen Al Max+ 395
 * **Source URL:** https://www.amazon.ca/dp/B0F53MLYQ6
-* **Detailed Specifications:** Discrete blocks on shared die. Unified LPDDR5x.
-* **VRAM:** 128GB
-* **Memory bandwidth:** 256.0 GB/s
-* **Interconnect:** 2.5 Gbps RJ45, 40.0 Gbps USB4
-
-
-
+* **Detailed Specifications:** AMD Ryzen AI Max+ 395 (16 Cores, 32 Threads, up to 5.1GHz). Integrated AMD Radeon 8060S GPU (40 Compute Units). 128GB LPDDR5X 8000MHz (16GB x 8 configuration) Unified Memory layout. 2TB PCIe 4.0 NVMe SSD. Dual 2.5G LAN ports, WiFi 7, Bluetooth 5.4, USB4 interfaces, SD Card Reader 4.0, support for Quad Screen 8K Displays.
 
 #### ASUS DGX Spark 1
 
@@ -188,13 +169,7 @@ physical constraints.
 * **Price Spent:** $4217.09
 * **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark
 * **Source URL:** https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044
-* **Detailed Specifications:** CPU and GPU superchip integration. Unified LPDDR5x.
-* **VRAM:** 128GB
-* **Memory bandwidth:** 273.0 GB/s
-* **Interconnect:** 10.0 Gbps RJ45, 200.0 Gbps QSFP56
-
-
-
+* **Detailed Specifications:** NVIDIA GB10 Grace Blackwell Superchip (Arm v9.2-A 20-core CPU, integrated Blackwell GPU with 6144 Cores and 384 Tensor Cores). 128GB unified LPDDR5x memory (273 GB/s bandwidth). 1TB PCIe 4.0 NVMe SSD. Networking: 1x RJ45 10GbE LAN, 2x QSFP 200G ConnectX-7 SmartNIC ports. Wi-Fi 7, Bluetooth 5.4. Supports up to 1 PetaFLOP (FP4) AI compute. Draws up to 180W via 240W USB-C PD 3.1 EPR adapter.
 
 #### ASUS DGX Spark 2
 
@@ -202,36 +177,84 @@ physical constraints.
 * **Price Spent:** $4217.09
 * **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark
 * **Source URL:** https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044
-* **Detailed Specifications:** CPU and GPU superchip integration. Unified LPDDR5x.
-* **VRAM:** 128GB
-* **Memory bandwidth:** 273.0 GB/s
-* **Interconnect:** 10.0 Gbps RJ45, 200.0 Gbps QSFP56
+* **Detailed Specifications:** NVIDIA GB10 Grace Blackwell Superchip (Arm v9.2-A 20-core CPU, integrated Blackwell GPU with 6144 Cores and 384 Tensor Cores). 128GB unified LPDDR5x memory (273 GB/s bandwidth). 1TB PCIe 4.0 NVMe SSD. Networking: 1x RJ45 10GbE LAN, 2x QSFP 200G ConnectX-7 SmartNIC ports. Wi-Fi 7, Bluetooth 5.4.
+
+### Network & Uplink Assets
 
 
+#### Kasa HS300 Strip 1
 
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Main rack power strip
+* **Source URL:** N/A
+* **Detailed Specifications:** 6 Individually controlled smart outlets, 3 USB ports. Built-in surge protection. Maximum physical load: 15A / 1800W. Features per-outlet energy monitoring (emeter) accessible via local network API.
 
+#### Kasa HS300 Strip 2
 
+* **Date Bought:** 2026-07-30
+* **Price Spent:** $101.07
+* **Title/Description:** Kasa Smart Plug Power Strip HS300, Surge Protector with 6 Individually Controlled Outlets and 3 USB Ports
+* **Source URL:** https://www.walmart.ca/en/ip/Kasa-Smart-Plug-Power-Strip-HS300-Surge-Protector-6-Individually-Controlled-Outlets-3-USB-Ports-Works-Alexa-Google-Home-No-Hub-Required-White/34XV3645UCJM
+* **Detailed Specifications:** 6 Individually controlled smart outlets, 3 USB ports. Built-in surge protection. Maximum physical load: 15A / 1800W. Features per-outlet energy monitoring (emeter) accessible via local network API.
 
+#### Arris SURFboard SB8200
 
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Arris SURFboard SB8200 Cable Modem
+* **Source URL:** N/A
+* **Detailed Specifications:** DOCSIS 3.1 cable modem (Backward compatible with DOCSIS 3.0). 2x2 OFDM/ OFDMA DOCSIS 3.1 channels and/or 32x8 SCQAM. Dual Gigabit Ethernet Ports with Link Aggregation support. Serial Number: 18G4H7FHEA00798. CM MAC: C0943571CE53. Max Theoretical Download: 10 Gbps. Max Theoretical Upload: 2 Gbps.
 
+#### Binardat 8 Port 10G Switch
 
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Binardat 8 Port 10 Gigabit Managed Switch Metal Small Network Switch
+* **Source URL:** N/A
+* **Detailed Specifications:** Layer 3 Web Managed engine. 160Gbps total backplane switching bandwidth. Physical layout: 4x 10G RJ45 Copper Ethernet ports + 4x 10G SFP+ Fiber interface cages. Native NBASE-T auto-negotiation support (10G/5G/2.5G/1G/100M).
 
+#### YuanLey 6 Port 10G Switch
 
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** YuanLey 6 Port 10G Ethernet Switch Unmanaged
+* **Source URL:** N/A
+* **Detailed Specifications:** 4 x 2.5G Base-T Ports, 2 x 10Gb RJ45 Ports. Compatible with 100/1000/2500Mbps, Metal Fanless, VLAN support. Used strictly for management traffic.
+
+#### CyberPower CP1500PFCLCD UPS
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** CyberPower CP1500PFCLCD PFC Sinewave UPS System, 1500VA/1000W, 12 Outlets, AVR, Mini Tower, Black
+* **Source URL:** N/A
+* **Detailed Specifications:** 1500VA / 1000W output capacity. Pure Sine Wave output (compatible with Active PFC power supplies). 12 NEMA 5-15R Outlets (6 battery-backed & surge protected, 6 surge protected only). Automatic Voltage Regulation (AVR). Includes USB data port for NUT server integration.
+
+#### Mikrotik S+RJ10 Transceiver (x2)
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Mikrotik S+RJ10 10Gbps Ethernet Module for MikroTik Devices with SFP+ Ports
+* **Source URL:** N/A
+* **Detailed Specifications:** 10GBASE-T Copper Transceiver. Converts SFP+ cage to standard RJ45 port. Operates at 10Mbps/100Mbps/1Gbps/2.5Gbps/5Gbps/10Gbps. Maximum cable distance: 30m on Cat6a. Premium thermal throttling mitigation over generic brands.
+
+#### TRANSUTON 200G QSFP56 DAC
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** TRANSUTON 200G QSFP56 to QSFP56 PAM4 DAC Cable Ethernet Passive Direct Attach Copper Twinax Cable
+* **Source URL:** N/A
+* **Detailed Specifications:** 0.5-meter passive Direct Attach Copper cable with integrated Mellanox EEPROM signatures to bypass vendor-lock.
+
+#### GearIT Cat 6 Ethernet Cables
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** GearIT Cat 6 Ethernet Cable 5 ft (10-Pack)
+* **Source URL:** N/A
+* **Detailed Specifications:** 10-pack of 5-foot Category 6 stranded copper patch cables. Supports 10 Gigabit Ethernet (10GBASE-T) over short distances up to 55 meters. Unshielded Twisted Pair (UTP) design with RJ45 connectors.
 
 ### External Storage Assets
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #### Samsung T7 1TB
@@ -242,9 +265,6 @@ physical constraints.
 * **Source URL:** https://www.amazon.com/dp/B0874XN4D8
 * **Detailed Specifications:** 1.0TB USB 3.2 Gen 2 (8.4 Gbps Read Speed)
 
-
-
-
 #### Samsung T9 2TB
 
 * **Date Bought:** 2025-11-16
@@ -252,9 +272,6 @@ physical constraints.
 * **Title/Description:** SAMSUNG T9 2TB Portable SSD, Black (MU-PG2T0B/AM)
 * **Source URL:** https://www.amazon.ca/dp/B0CHFS9K14
 * **Detailed Specifications:** 2.0TB USB 3.2 Gen 2x2 (16.0 Gbps Read Speed)
-
-
-
 
 #### Samsung T9 1TB
 
@@ -264,8 +281,64 @@ physical constraints.
 * **Source URL:** https://www.amazon.ca/dp/B0CHFSWM2P
 * **Detailed Specifications:** 1.0TB USB 3.2 Gen 2x2 (16.0 Gbps Read Speed)
 
+### Mobile Power & Storage Assets (Van Footprint)
 
 
+#### Renogy 12V 100Ah LiFePO4
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Renogy 12V 100Ah Lithium LiFePO4 Deep Cycle Battery with Bluetooth
+* **Source URL:** N/A
+* **Detailed Specifications:** 12.8V Nominal Voltage, 100Ah Rated Capacity (1280Wh total energy). Integrated Bluetooth 5.0 module for local app readout. 2000+ deep cycles. Built-in smart Battery Management System (BMS) protection loops. Weight: ~26 lbs.
+
+#### Mighty Max ML100-12 AGM
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Mighty Max ML100-12 - 12 Volt 100 AH Internal Thread (INT) Terminal Rechargeable SLA AGM Battery
+* **Source URL:** N/A
+* **Detailed Specifications:** 12V Nominal Voltage, 100Ah capacity. Sealed Lead Acid (SLA) Absorbed Glass Mat (AGM) chemistry. Heavy structure (~60+ lbs). Note: Legacy status. Exhibiting active capacity degradation, severe weight penalty, lack of internal state telemetry readout.
+
+#### NOCO GENIUS10 Charger
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** NOCO GENIUS10: 10A 6V/12V Smart Battery Charger, Automatic Maintainer & Trickle Charger
+* **Source URL:** N/A
+* **Detailed Specifications:** 10-Amp dynamic output charging capacity for 6V and 12V systems. Supports Lead-Acid, AGM, and Lithium-Ion LiFePO4 profiles. Integrated automatic temperature compensation loops, desulfation algorithms, and overcharge tracking protection.
+
+#### POTEK 750W Inverter
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** POTEK 750W Power Inverter 12V DC to 110V AC Car Adapter
+* **Source URL:** N/A
+* **Detailed Specifications:** 750 Watts continuous power allocation (1500 Watts peak surge boundary). Translates 12V DC input to 110V AC output. 2x standard AC outlets, 2x USB charging ports (5V/2A). Built-in cooling fans and high/low voltage protection gates. Used exclusively to charge client laptop, communications gear, and drive a daily 30-second blender run.
+
+#### Renogy 100W Solar Kit (Alpha)
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Renogy 100W Portable Solar Panel Kit with 20A Charge Controller
+* **Source URL:** N/A
+* **Detailed Specifications:** 100W foldable Monocrystalline N-Type array layout. 25% cell efficiency metric. Tempered glass shell. Pre-wired with a 20A PWM charge controller. Telemetry state: Mechanical support legs broken, local digital status display fully functional.
+
+#### Renogy 100W Solar Kit (Beta)
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Renogy 100W Portable Solar Panel Kit with 20A Charge Controller
+* **Source URL:** N/A
+* **Detailed Specifications:** 100W foldable Monocrystalline N-Type array layout. 25% cell efficiency metric. Tempered glass shell. Pre-wired with a 20A PWM charge controller. Telemetry state: Mechanical support legs fully operational, local digital status display completely non-functional due to Burning Man rain flooding.
+
+#### Jackery Explorer 500 v2
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** Jackery Explorer 500 v2 Portable Power Station
+* **Source URL:** N/A
+* **Detailed Specifications:** 512Wh LiFePO4 battery storage, 500W AC output engine. **STATUS: DECOMMISSIONED/NON-FUNCTIONAL.** Completely corroded and rendered inoperable due to Burning Man alkaline playa dust infiltration.
 
 ### Comparative Hardware Metrics for Local LLM Inference
 
@@ -282,277 +355,6 @@ physical constraints.
 | **Mac Studio M4 Max (16C/40G)** | [$3,949.00 USD](https://www.apple.com/shop/buy-mac/mac-studio) | 64GB | Unified Memory | 546 | ~30-40 | None | Thunderbolt 5 |
 | **Mac Studio M3 Ultra (32C/80G)** | [$9,749.00 USD](https://www.apple.com/shop/buy-mac/mac-studio) | 96GB | Unified Memory | 800 | ~50-60 | None | Thunderbolt 4 |
 | **Mac Studio M5 Ultra (Projected)** | [TBD](https://www.macworld.com/article/2973459/2026-mac-studio-m5-release-date-specs-price-rumors.html) | 96GB+ | Unified Memory | 800+ | ~50-80 | None | Thunderbolt 5 RDMA |
-
-### Network & Uplink Assets
-
-#### ISP Core Modem
-* **Date Bought:** N/A (Provided by ISP - Shaw)
-* **Price Spent:** N/A (Potential monthly rental fee)
-* **Title/Description:** Arris SURFboard SB8200 Cable Modem
-* **Source URL:** N/A
-* **Detailed Specifications:** DOCSIS 3.1 cable modem (Backward compatible
-  with DOCSIS 3.0). 2x2 OFDM/ OFDMA DOCSIS 3.1 channels and/or 32x8 SCQAM. Dual
-  Gigabit Ethernet Ports with Link Aggregation support. Serial Number:
-  18G4H7FHEA00798. CM MAC: C0943571CE53. Max Theoretical Download: 10 Gbps. Max
-  Theoretical Upload: 2 Gbps.
-
-#### Core Farm Network Switch
-* **Date Bought:** Mid-2026
-* **Price Spent:** Unknown
-* **Title/Description:** Binardat 8 Port 10 Gigabit Managed Switch Metal Small
-  Network Switch
-* **Source URL:** https://www.amazon.ca/dp/B0DQ77BS64
-* **Detailed Specifications:** Layer 3 Web Managed engine. 160Gbps total
-  backplane switching bandwidth. Physical layout: 4x 10G RJ45 Copper Ethernet
-  ports + 4x 10G SFP+ Fiber interface cages. Native NBASE-T auto-negotiation
-  support (10G/5G/2.5G/1G/100M).
-
-#### Mac Management Network Switch
-* **Date Bought:** 2026-10-20
-* **Price Spent:** $112.00 CAD
-* **Title/Description:** YuanLey 6 Port 10G Ethernet Switch Unmanaged
-* **Source URL:** https://www.amazon.ca/Port-Unmanaged-RJ45-Compatible-YuanLey/dp/B0F13DYZ8K
-* **Detailed Specifications:** 4 x 2.5G Base-T Ports, 2 x 10Gb RJ45 Ports.
-  Compatible with 100/1000/2500Mbps, Metal Fanless, VLAN support. Used strictly for management traffic.
-
-#### Kasa Smart Plug Power Strip HS300 (Strip 1)
-* **Date Bought:** 2023-06-01
-* **Price Spent:** $46.99 USD
-* **Title/Description:** Kasa Smart Plug Power Strip HS300, Surge Protector
-  with 6 Individually Controlled Smart Outlets and 3 USB Ports, Works with Alexa
-  & Google Home, No Hub Required , White
-* **Detailed Specifications:** 6 Individually controlled smart outlets, 3 USB
-  ports. Built-in surge protection. Maximum physical load: 15A / 1800W. Features
-  per-outlet energy monitoring (emeter) accessible via local network API.
-
-#### Kasa Smart Plug Power Strip HS300 (Strip 2)
-* **Date Bought:** 2026-07-30
-* **Price Spent:** $101.07 CAD
-* **Title/Description:** Kasa Smart Plug Power Strip HS300, Surge Protector with 6 Individually Controlled Outlets and 3 USB Ports
-* **Source URL:** https://www.walmart.ca/en/ip/Kasa-Smart-Plug-Power-Strip-HS300-Surge-Protector-6-Individually-Controlled-Outlets-3-USB-Ports-Works-Alexa-Google-Home-No-Hub-Required-White/34XV3645UCJM
-* **Detailed Specifications:** 6 Individually controlled smart outlets, 3 USB ports. Built-in surge protection. Maximum physical load: 15A / 1800W. Features per-outlet energy monitoring (emeter) accessible via local network API.
-
-#### Core Farm UPS
-* **Date Bought:** 2026-07-22
-* **Price Spent:** $293.00 CAD
-* **Title/Description:** CyberPower CP1500PFCLCD PFC Sinewave UPS System,
-  1500VA/1000W, 12 Outlets, AVR, Mini Tower, Black
-* **Source URL:** https://www.amazon.ca/CyberPower-CP1500PFCLCD-Sinewave-Outlets-Mini-Tower/dp/B00429N19W
-* **Detailed Specifications:** 1500VA / 1000W output capacity. Pure Sine Wave
-  output (compatible with Active PFC power supplies). 12 NEMA 5-15R Outlets (6
-  battery-backed & surge protected, 6 surge protected only). Automatic Voltage
-  Regulation (AVR). Includes USB data port for NUT server integration.
-
-#### SFP+ to RJ45 Transceiver (x2)
-* **Date Bought:** 2026-07-22
-* **Price Spent:** $210.00 CAD ($105.00 each)
-* **Title/Description:** Mikrotik S+RJ10 10Gbps Ethernet Module for MikroTik
-  Devices with SFP+ Ports, Up to 200m over RJ45, Active/Passive Cooling
-  Compatible
-* **Source URL:** https://www.amazon.ca/Mikrotik-S-RJ10-MikroTik/dp/B078SNK1MY
-* **Detailed Specifications:** 10GBASE-T Copper Transceiver. Converts SFP+ cage
-  to standard RJ45 port. Operates at 10Mbps/100Mbps/1Gbps/2.5Gbps/5Gbps/10Gbps.
-  Maximum cable distance: 30m on Cat6a. Premium thermal throttling mitigation
-  over generic brands.
-
-#### DGX Spark Interconnect Cable
-* **Date Bought:** 2026-07-23
-* **Price Spent:** $204.00 CAD
-* **Title/Description:** TRANSUTON 200G QSFP56 to QSFP56 PAM4 DAC Cable
-  Ethernet Passive Direct Attach Copper Twinax Cable Compatible with
-  NVIDIA/Mellanox MCP1650-V00AE30 (0.5m / 1.64ft)
-* **Source URL:** https://www.amazon.ca/TRANSUTON-Ethernet-Compatible-Mellanox-MCP1650-V00AE30/dp/B0FX57YZXR
-* **Detailed Specifications:** 0.5-meter passive Direct Attach Copper cable
-  with integrated Mellanox EEPROM signatures to bypass vendor-lock.
-
-#### Core Farm Ethernet Cabling
-* **Date Bought:** 2026-07-23
-* **Price Spent:** $37.00 CAD
-* **Title/Description:** GearIT Cat 6 Ethernet Cable 5 ft (10-Pack) - Cat6
-  Patch Cable, Network Cable, Internet Cable - Blue 5 Feet
-* **Source URL:** https://www.amazon.ca/dp/B00D8N6UQ4
-* **Detailed Specifications:** 10-pack of 5-foot Category 6 stranded copper
-  patch cables. Supports 10 Gigabit Ethernet (10GBASE-T) over short distances up
-  to 55 meters. Unshielded Twisted Pair (UTP) design with RJ45 connectors.
-
-### Network Topology
-
-**Power Architecture & Load Constraints**
-
-The entire system runs off a single bedroom wall circuit capped at 15A / 1800W.
-
-1. **Wall Outlet (Receptacle 1):** Plugs directly into the CyberPower UPS.
-
-   - *Constraint:* The UPS battery-backed inverter is hard-limited to **1000W**.
-     If the simultaneous hardware draw exceeds 1000W, the UPS will sound an
-     alarm and immediately cut power to protect itself, crashing the farm.
-
-2. **UPS Battery-Backed Outlets:**
-
-   - Kasa HS300 Power Strip #1.
-   - Kasa HS300 Power Strip #2.
-
-3. **Kasa HS300 Strip #1:**
-
-   - Node 01 (GMKtec K8 Plus) — ~45W
-   - Node 02 (GMKtec EVO-X2) — ~100W
-   - Node 03 (DGX Spark #1) — ~180W max
-   - Node 04 (DGX Spark #2) — ~180W max
-   - Arris SURFboard Cable Modem — ~15W
-
-4. **Kasa HS300 Strip #2:**
-
-   - Node 05 (Mac Studio M5 Ultra #1) — ~150W max
-   - Node 06 (Mac Studio M5 Ultra #2) — ~150W max
-   - Binardat 10Gb Switch — ~15W
-   - YuanLey Management Switch — ~10W
-
-**Ethernet Cabling Architecture (Management & Basic API)**
-
-- **WAN Uplink:** Arris Modem connects to Binardat Switch (SFP+ Port 5) using
-  a **GearIT Cat6 Cable** plugged into a **MikroTik S+RJ10 Transceiver**.
-
-- **Core Fabric (Binardat Switch RJ45):**
-   - RJ45 Port 1 -> **GearIT Cat6 Cable** -> Node 01 (GMKtec K8 Plus).
-   - RJ45 Port 2 -> **GearIT Cat6 Cable** -> Node 02 (GMKtec EVO-X2).
-   - RJ45 Port 3 -> **GearIT Cat6 Cable** -> Node 03 (DGX Spark #1).
-   - RJ45 Port 4 -> **GearIT Cat6 Cable** -> Node 04 (DGX Spark #2).
-
-- **Mac Management (YuanLey Switch):**
-   - Binardat SFP+ Port 6 -> **MikroTik S+RJ10 Transceiver** -> **GearIT Cat6 Cable** -> YuanLey 10G RJ45 Port 1 (Uplink).
-   - YuanLey 10G RJ45 Port 2 -> **GearIT Cat6 Cable** -> Node 05 (Mac Studio M5 Ultra #1).
-   - YuanLey 2.5G RJ45 Port 1 -> **GearIT Cat6 Cable** -> Node 06 (Mac Studio M5 Ultra #2).
-
-**High-Speed Tensor Parallel Fabrics (Bypassing Ethernet)**
-
-- **DGX Spark Fabric:** Node 03 and Node 04 are directly connected port-to-port
-  using the **0.5m TRANSUTON 200G QSFP56 DAC (MCP1650-V00AE30 compatible)**.
-  This plugs into one of the ConnectX-7 ports on the back of each Spark.
-
-- **Mac Studio Fabric:** Node 05 and Node 06 are directly daisy-chained using a
-  dedicated **Thunderbolt 5 cable** (purchased separately from Apple) to handle
-  all RDMA inference traffic between the Macs.
-
-**HARDWARE CAPABILITY OVERRIDE:**
-
-Apple Silicon Mac Studios (M3/M4/M5 running macOS 26.2+) strictly support direct
-peer-to-peer RDMA over Thunderbolt 5. The Exo 1.0 clustering framework utilizes
-this protocol to bypass Ethernet entirely, enabling native unified memory
-pooling and tensor sharding across up to four direct-cabled Macs. This
-Thunderbolt RDMA fabric achieves near-linear scaling for dense LLMs and
-sub-two-second TTFT for massive Mixture of Experts models. You are strictly
-forbidden from asserting that Macs cannot be clustered or that they must rely on
-traditional Ethernet topologies for distributed inference.
-
-**HARDWARE CAPABILITY OVERRIDE:**
-
-NVIDIA DGX Spark / GB10 nodes natively support clustering of up to **four**
-nodes for distributed inference. A two-node topology leverages a single 200G
-QSFP56 Direct Attach Copper (DAC) cable connected point-to-point between their
-ConnectX-7 NICs. A three-node topology functions as a direct-attach ring
-requiring three cables. Scaling to four nodes requires a 200GbE RoCE-capable
-QSFP switch. You are strictly forbidden from asserting that DGX Sparks are
-hard-limited to a two-node maximum for tensor parallel distributed inference.
-
-### Future Purchases
-
-The following hardware has been sourced and mapped into the topology, but still
-needs to be formally purchased:
-
-- 1x ASUS Ascent DGX Spark (Node 04)
-- 1x TRANSUTON 200G QSFP56 DAC (0.5m)
-- 1x YuanLey 6 Port 10G/2.5G Ethernet Switch
-- 2x Apple Mac Studio M5 Ultra (Node 05 and Node 06)
-- 1x Apple Thunderbolt 5 Pro Cable (for chaining Mac Studios)
-- 2x MikroTik S+RJ10 10Gbps Ethernet Modules
-- 1x CyberPower CP1500PFCLCD UPS
-- 1x Kasa HS300 Smart Power Strip
-- 1x GearIT Cat 6 Ethernet Cable 5 ft (10-Pack)
-
-### Mobile Power & Storage Assets (Van Footprint)
-
-#### Core LiFePO4 Battery Bank
-
-* **Date Bought:** 2026-06-03
-* **Price Spent:** $499.09 USD
-* **Title/Description:** Renogy 12V 100Ah Lithium LiFePO4 Deep Cycle Battery
-  with Bluetooth
-* **Source URL:** https://www.amazon.com/dp/B09F9NNGN8
-* **Detailed Specifications:** 12.8V Nominal Voltage, 100Ah Rated Capacity
-  (1280Wh total energy). Integrated Bluetooth 5.0 module for local app readout.
-  2000+ deep cycles. Built-in smart Battery Management System (BMS) protection
-  loops. Weight: ~26 lbs.
-
-#### Legacy AGM Battery Bank
-
-* **Date Bought:** 2020-11-30
-* **Price Spent:** $175.00 USD
-* **Title/Description:** Mighty Max ML100-12 - 12 Volt 100 AH Internal Thread
-  (INT) Terminal Rechargeable SLA AGM Battery
-* **Source URL:** https://www.amazon.com/dp/B00S1QCK94
-* **Detailed Specifications:** 12V Nominal Voltage, 100Ah capacity. Sealed
-  Lead Acid (SLA) Absorbed Glass Mat (AGM) chemistry. Heavy structure (~60+
-  lbs). Note: Legacy status. Exhibiting active capacity degradation, severe
-  weight penalty, lack of internal state telemetry readout.
-
-#### Smart Shore Charger / Maintainer
-
-* **Date Bought:** 2020-11-30
-* **Price Spent:** $65.00 USD
-* **Title/Description:** NOCO GENIUS10: 10A 6V/12V Smart Battery Charger,
-  Automatic Maintainer & Trickle Charger
-* **Source URL:** https://www.amazon.com/dp/B07W3QT226
-* **Detailed Specifications:** 10-Amp dynamic output charging capacity for
-  6V and 12V systems. Supports Lead-Acid, AGM, and Lithium-Ion LiFePO4 profiles.
-  Integrated automatic temperature compensation loops, desulfation algorithms,
-  and overcharge tracking protection.
-
-#### DC-to-AC Vehicle Power Inverter
-
-* **Date Bought:** 2023-09-10
-* **Price Spent:** $59.99 USD
-* **Title/Description:** POTEK 750W Power Inverter 12V DC to 110V AC Car Adapter
-* **Source URL:** https://www.amazon.com/dp/B01FEUD9OO
-* **Detailed Specifications:** 750 Watts continuous power allocation (1500 Watts
-  peak surge boundary). Translates 12V DC input to 110V AC output. 2x standard
-  AC outlets, 2x USB charging ports (5V/2A). Built-in cooling fans and high/low
-  voltage protection gates. Used exclusively to charge client laptop,
-  communications gear, and drive a daily 30-second blender run.
-
-#### Portable Solar Panel Array Kit (Alpha)
-
-* **Date Bought:** 2021-06-30
-* **Price Spent:** $220.00 USD
-* **Title/Description:** Renogy 100W Portable Solar Panel Kit with 20A Charge
-  Controller
-* **Source URL:** https://www.amazon.com/dp/B079JVBVL3
-* **Detailed Specifications:** 100W foldable Monocrystalline N-Type array
-  layout. 25% cell efficiency metric. Tempered glass shell. Pre-wired with a 20A
-  PWM charge controller. Telemetry state: Mechanical support legs broken, local
-  digital status display fully functional.
-
-#### Portable Solar Panel Array Kit (Beta)
-
-* **Date Bought:** 2018-12-02
-* **Price Spent:** $275.00 USD
-* **Title/Description:** Renogy 100W Portable Solar Panel Kit with 20A Charge
-  Controller
-* **Source URL:** https://www.amazon.com/dp/B079JVBVL3
-* **Detailed Specifications:** 100W foldable Monocrystalline N-Type array
-  layout. 25% cell efficiency metric. Tempered glass shell. Pre-wired with a 20A
-  PWM charge controller. Telemetry state: Mechanical support legs fully
-  operational, local digital status display completely non-functional due to
-  Burning Man rain flooding.
-
-#### Legacy Decommissioned Power Station
-
-* **Date Bought:** 2024-05-08
-* **Price Spent:** $319.00 USD
-* **Title/Description:** Jackery Explorer 500 v2 Portable Power Station
-* **Source URL:** https://www.amazon.com/dp/B0FR555DVH
-* **Detailed Specifications:** 512Wh LiFePO4 battery storage, 500W AC output
-  engine. **STATUS: DECOMMISSIONED/NON-FUNCTIONAL.** Completely corroded and
-  rendered inoperable due to Burning Man alkaline playa dust infiltration.
 
 ## Equipment Acquisition Pipeline
 

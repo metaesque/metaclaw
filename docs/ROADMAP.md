@@ -79,6 +79,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     autonomously navigate dynamic SPAs and scrape live documentation.
 
 ## Phase 4: Data Sovereignty
+*   **[TODO] Automate Cross-Cluster Disk Mounting (NFS/Autofs):**
+    To ensure true data fluidity across the compute farm, we must dynamically map the `mounts` array within `hardware.json` to automatically generate server-side NFS `/etc/exports` and client-side `/etc/auto.nfs` maps. This abstracts the physical location of the SSDs, allowing seamless access to models, workspaces, and quantified-self archives across all nodes via the Tailscale subnet without saturating bandwidth during idle times.
 *   **[TODO] PostgreSQL High Availability:**
     Transition the single-node pgvector instance to a clustered topology for
     Tier 4 deployments to ensure conversation history survives physical node
@@ -95,8 +97,8 @@ This document outlines the strategic evolution of the MetaClaw framework, tracki
     to prevent VRAM eviction of hot models during heavy external load.
 
 ## Phase 5: Templating Engine Migration (Jinja2)
-*   **[TODO] Transition .env Overrides to Jinja2 Compilation:**
-    The current `.env.template` injection system requires complex, rigid Python logic (`orchestrate.py`) to map specific variables. We must replace this by implementing a `bin/compile_templates.py` engine that utilizes Jinja2 `.j2` template files. This will allow declarative rendering of Compose and Config files directly from `profile.json` node parameters (e.g., `{% if hardware.gpu_detected == "AMD APU" %}`), removing the need for error-prone `change_me_to_` prompt bypasses and global overrides.
+*   **[~] Transition .env Overrides to Jinja2 Compilation:**
+    The current `.env.template` injection system requires complex, rigid Python logic (`orchestrate.py`) to map specific variables. We have begun addressing this by implementing a `bin/render_templates.py` engine that utilizes Jinja2 `.j2` template files for documentation (`Wade.md.j2`). We must now extend this pattern to allow declarative rendering of Compose and Config files directly from `profile.json` node parameters (e.g., `{% if hardware.gpu_detected == "AMD APU" %}`), removing the need for error-prone `change_me_to_` prompt bypasses and global overrides.
 
 ## Phase 6: Arena-Driven Model Routing
 *   **[TODO] Expand beyond 'Middle Reasoning' DAG:**

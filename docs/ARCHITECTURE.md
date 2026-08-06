@@ -224,6 +224,52 @@ workload reassignment (such as observability agents). **You must run `make
 install-docker` and log out/log back in to refresh your user session permissions
 before executing `make wizard-batch` or `make apply`.**
 
+## Distributed Storage & Cluster Mounts
+
+A functional AI compute farm requires data fluidity across physically isolated
+nodes. External SSDs and internal NVMe arrays must be shared securely over the
+LAN to prevent storage silos and duplicate data copying.
+
+### Storage Data Taxonomy
+
+To prevent I/O bottlenecks and extend the lifespan of Flash memory, data MUST
+be categorized and placed according to its access profile:
+
+1. **Vector Embeddings & Databases (pgvector/VictoriaLogs):** Characterized by
+   extreme random I/O and microsecond latency requirements. These databases
+   must reside on the **internal NVMe** of the Control Node.
+2. **Agent Workspaces & Git:** Millions of tiny files heavily susceptible to
+   block-size waste. This repository state must reside on the **internal NVMe**
+   of the Control Node.
+3. **Local LLM Models:** Massive, static files (`.gguf`, `.safetensors`)
+   requiring high-speed sequential reads during model cold-starts. These should
+   be distributed across fast, external USB 3.2/USB4 SSDs directly attached to
+   the Compute Nodes (e.g., `spark1`, `compute`) to prevent LAN bandwidth
+   saturation during weight loading.
+4. **Quantified Self & Media Archives:** Colossal, rarely modified data (e.g.,
+   Google Takeouts, video libraries). Consolidating archival data onto a
+   **single external SSD** attached to the Control Node allows idle USB buses
+   and mechanical drives across the farm to spin down or enter sleep states,
+   saving power and CPU interrupts.
+
+### The Autofs & NFS Strategy
+
+To share these drives dynamically across the cluster without relying on brittle
+auto-discovery tools (like mDNS) that fail in headless environments, MetaClaw
+utilizes an immutable Hardware Registry.
+
+The `config/data/hardware.json` explicitly defines a `mounts` array for each
+node. This establishes the true UUID, filesystem type, block size, and target
+mountpoint for every drive. During the cluster orchestration sequence, the
+framework generates:
+
+*   **Server-Side Exports:** An `/etc/exports` file on the physical host
+    exposing the drive directly to the Tailscale subnet (`100.64.0.0/10`) via NFS.
+*   **Client-Side Autofs:** An `/etc/auto.master` map on all other nodes. This
+    ensures drives are mounted strictly on-demand when an agent queries the
+    path, and automatically unmounted during inactivity. This preserves network
+    throughput and prevents stalled system locks if a node drops offline.
+
 ## Docker Container Naming Convention
 
 To ensure deterministic deployment, conflict-free upgrades, and ease of
