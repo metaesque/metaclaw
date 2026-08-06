@@ -163,6 +163,14 @@ sync-cluster: | $(PYTHON_BIN)
 	@echo "Synchronizing profile.json across cluster nodes..."
 	@$(PYTHON_BIN) ./bin/sync_cluster.py
 
+# WHAT IT DOES: Synchronizes the local configuration directory to a remote host.
+# WHY IT EXISTS: Pushes the METACLAW_CONFIG drop-zone to remote nodes without requiring a full git commit cycle.
+pushcfg-%:
+	@$(call h1_title,"PUSHING CONFIGURATION TO $*")
+	@echo "Rsyncing ../config to $*:~/config..."
+	@rsync -avzh --delete ../config/ $*:~/config/
+	@echo "Successfully synchronized config to $*."
+
 # WHAT IT DOES: Pulls updates and syncs configurations across the entire cluster overriding local changes.
 # WHY IT EXISTS: Simplifies maintaining codebase parity across 4+ distributed nodes.
 pull: | $(PYTHON_BIN)
@@ -550,4 +558,3 @@ FORCE:
 
 tst:
 	echo "PYTHON_BIN=$(PYTHON_BIN)"
-
