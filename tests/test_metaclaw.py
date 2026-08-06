@@ -3,8 +3,9 @@ from unittest.mock import patch, MagicMock, mock_open
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from lib.metaclaw import Error, MetaClaw, Markdown
+# Inject the lib directory directly to support local module imports (e.g., 'import devices')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
+from metaclaw import Error, MetaClaw, Markdown
 
 class TestError(unittest.TestCase):
     def test___init__(self):
@@ -21,7 +22,7 @@ class TestMetaClaw(unittest.TestCase):
         self.assertIsNone(self.mc._hardware)
         self.assertIsNone(self.mc._devices)
 
-    @patch('lib.devices.get_all_devices')
+    @patch('devices.get_all_devices')
     def test_devices(self, mock_get_all_devices):
         mock_get_all_devices.return_value = {"test": "device"}
         devs = self.mc.devices()
@@ -36,17 +37,17 @@ class TestMetaClaw(unittest.TestCase):
         path = self.mc.subpath(service="proxy", provider="litellm", base="config.yaml")
         self.assertTrue(path.endswith(os.path.join("services", "proxies", "litellm", "config.yaml")))
 
-    @patch('lib.metaclaw.os.path.exists', return_value=True)
-    @patch('lib.metaclaw.os.path.getmtime', return_value=12345)
+    @patch('metaclaw.os.path.exists', return_value=True)
+    @patch('metaclaw.os.path.getmtime', return_value=12345)
     @patch('builtins.open', new_callable=mock_open, read_data='{"test": "data"}')
-    @patch('lib.metaclaw.os.listdir', return_value=[])
+    @patch('metaclaw.os.listdir', return_value=[])
     def test_structure(self, mock_listdir, mock_file, mock_mtime, mock_exists):
         struct = self.mc.structure()
         self.assertIn("tiers", struct)
         self.assertIn("planes", struct)
         self.assertEqual(self.mc._timestamp, 12345)
 
-    @patch('lib.devices.get_hardware_registry')
+    @patch('devices.get_hardware_registry')
     def test_hardware(self, mock_get_hardware_registry):
         mock_get_hardware_registry.return_value = {"node1": {}}
         hw = self.mc.hardware()
@@ -68,7 +69,7 @@ class TestMetaClaw(unittest.TestCase):
         )
         self.assertEqual(updated["nodes"][0]["hostname"], "node1")
 
-    @patch('lib.metaclaw.os.path.exists', return_value=False)
+    @patch('metaclaw.os.path.exists', return_value=False)
     def test_envInstantiate(self, mock_exists):
         # Simply testing it doesn't crash on teardown
         self.mc.envInstantiate(teardown=True)
@@ -87,15 +88,15 @@ class TestMetaClaw(unittest.TestCase):
         self.mc.destructure(data)
         mock_saveFile.assert_called()
 
-    @patch('lib.metaclaw.os.path.exists', return_value=True)
+    @patch('metaclaw.os.path.exists', return_value=True)
     @patch('builtins.open', new_callable=mock_open, read_data='METACLAW_ROOT=/custom/path\n')
     def test_rootdir(self, mock_file, mock_exists):
         root = self.mc.rootdir()
         self.assertEqual(root, "/custom/path")
 
-    @patch('lib.metaclaw.shutil.move')
-    @patch('lib.metaclaw.os.makedirs')
-    @patch('lib.metaclaw.os.stat')
+    @patch('metaclaw.shutil.move')
+    @patch('metaclaw.os.makedirs')
+    @patch('metaclaw.os.stat')
     def test_backupFile(self, mock_stat, mock_makedirs, mock_move):
         mock_stat_result = MagicMock()
         mock_stat_result.st_mtime = 1234567890
@@ -103,16 +104,17 @@ class TestMetaClaw(unittest.TestCase):
         self.mc.backupFile("/tmp/test.txt")
         mock_move.assert_called()
 
+    @patch('metaclaw.os.path.exists', return_value=True)
     @patch.object(MetaClaw, 'backupFile')
-    @patch('lib.metaclaw.os.makedirs')
+    @patch('metaclaw.os.makedirs')
     @patch('builtins.open', new_callable=mock_open)
-    def test_saveFile(self, mock_file, mock_makedirs, mock_backupFile):
+    def test_saveFile(self, mock_file, mock_makedirs, mock_backupFile, mock_exists):
         self.mc.saveFile("/tmp/test.txt", "content", backup=True)
         mock_backupFile.assert_called()
         mock_file().write.assert_called_with("content")
 
 class TestMarkdown(unittest.TestCase):
-    @patch('lib.metaclaw.os.path.exists', return_value=True)
+    @patch('metaclaw.os.path.exists', return_value=True)
     @patch('builtins.open', new_callable=mock_open, read_data='# Hello')
     def test___init__(self, mock_file, mock_exists):
         md = Markdown("test.md")

@@ -3,8 +3,9 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from lib.devices import (
+# Inject the lib directory directly to support module mapping
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
+from devices import (
     Device, ExternalSSD, NetworkUplink, MobilePower,
     PowerAsset, NomadicClient, ComputeNode, PowerStrip
 )
@@ -75,8 +76,8 @@ class TestComputeNode(unittest.TestCase):
         self.assertEqual(specs["vram"]["size"], 32)
         self.assertEqual(specs["bandwidth_gbps"], 100.0)
 
-    @patch('lib.devices.socket.gethostname', return_value='test_node')
-    @patch('lib.devices.subprocess.run')
+    @patch('devices.socket.gethostname', return_value='test_node')
+    @patch('devices.subprocess.run')
     def test_update_data(self, mock_run, mock_hostname):
         mock_result = MagicMock()
         mock_result.returncode = 0
@@ -86,9 +87,9 @@ class TestComputeNode(unittest.TestCase):
         self.node.update_data()
         self.assertIn('_live_lsblk', self.node.data)
 
-    @patch('lib.devices.os.path.ismount', return_value=False)
-    @patch('lib.devices.os.makedirs')
-    @patch('lib.devices.subprocess.run')
+    @patch('devices.os.path.ismount', return_value=False)
+    @patch('devices.os.makedirs')
+    @patch('devices.subprocess.run')
     def test_mount_storage(self, mock_run, mock_makedirs, mock_ismount):
         self.node.mount_storage()
         mock_makedirs.assert_called_with("/mnt/test", exist_ok=True)
