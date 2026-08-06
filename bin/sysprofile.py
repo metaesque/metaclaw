@@ -54,9 +54,14 @@ def _get_linux_gpu(ram_bytes=0):
     'nvidia-smi', '--query-gpu=name,memory.total', '--format=csv,noheader'
   ])
   if nvidia:
-    parts = nvidia.split(',')
+    first_line = nvidia.strip().split('\n')[0]
+    parts = first_line.split(',')
     name = parts[0].strip()
-    vram_mb = int(parts[1].replace('MiB', '').strip())
+    vram_str = parts[1].replace('MiB', '').strip() if len(parts) > 1 else "0"
+    try:
+        vram_mb = int(vram_str)
+    except ValueError:
+        vram_mb = 0
     return name, vram_mb * 1024 * 1024
 
   # Check AMD ROCm for dynamic VRAM mapping
@@ -192,6 +197,9 @@ def platform_details():
 
     if vram_bytes > 0:
       details['vram_gb'] = round(vram_bytes / (1024**3), 2)
+    elif 'GB10' in details['gpu_detected'] or 'Blackwell' in details['gpu_detected']:
+      details['unified_memory'] = True
+      details['vram_gb'] = details.get('ram_hardware_gb', details['ram_gb'])
 
   return details
 
