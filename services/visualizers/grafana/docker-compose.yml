@@ -42,7 +42,7 @@ services:
       - ${METACLAW_CONFIG:-/home/node/config}/data/grafana/provisioning/custom:/etc/grafana/provisioning/dashboards/custom:ro
     healthcheck:
       # WHAT THIS DOES: Ensures the database is completely migrated and initialized before the framework proceeds.
-      test: ["CMD-SHELL", "curl -s http://127.0.0.1:3000/api/health | grep -Eq '\"database\"\s*:\s*\"ok\"' || exit 1"]
+      test: ["CMD-SHELL", "curl -s http://127.0.0.1:3000/api/health | grep -Eq '\"database\"\\s*:\\s*\"ok\"' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 10
