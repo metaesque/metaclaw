@@ -70,6 +70,7 @@ features/kasa/docs/AGENTS.md
 features/kasa/docs/DESIGN.md
 features/kasa/docs/IMPLEMENTATION.md
 features/kasa/docs/ROADMAP.md
+lib/__init__.py
 lib/devices.py
 lib/metaclaw.py
 lib/services.py

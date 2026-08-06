@@ -8,11 +8,7 @@ import sys
 # This script MUST NEVER deploy Docker Tailscale on a node that relies on a bare-metal
 # Tailscale daemon for remote SSH access.
 
-# Ensure we can import metaclaw from the lib directory
-sys.path.insert(
-  0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib'))
-)
-import metaclaw
+from lib import metaclaw
 
 def get_tier_weight(t):
     """Safely translates string tiers (e.g., '3E') into integer weights for logic evaluation."""

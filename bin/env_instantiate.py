@@ -5,11 +5,7 @@ import json
 import re
 import shutil
 
-# Ensure we can import metaclaw from the lib directory
-sys.path.insert(
-  0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib'))
-)
-import metaclaw
+from lib import metaclaw
 
 
 def main():

@@ -9,8 +9,7 @@ import uuid
 import sys
 import re
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
-import metaclaw
+from lib import metaclaw
 
 def _get_ip_address():
   """Retrieves the primary LAN IP address for cross-node communication."""

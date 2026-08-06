@@ -2,6 +2,8 @@
 import os
 import sys
 
+from lib import metaclaw
+
 # Ensure sysprofile can be imported from the local bin directory
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import sysprofile
@@ -426,9 +428,6 @@ def main():
             "order_prefs": ["cost", "safety", "resources"],
             "hardware": local_hw
         })
-
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
-    import metaclaw
 
     profile = metaclaw.Inst.updateCluster(
         profile, local_host, int(tier_choice),

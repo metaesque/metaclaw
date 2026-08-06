@@ -27,7 +27,7 @@ class MetaClaw:
     Lazy-loads and returns the full dictionary of instantiated Device objects.
     """
     if self._devices is None:
-        import devices
+        from lib import devices
         self._devices = devices.get_all_devices()
     return self._devices
 
@@ -170,7 +170,7 @@ class MetaClaw:
     Loads and returns the hardware.json registry representing physical devices
     known to the infrastructure via the centralized devices library.
     """
-    import devices
+    from lib import devices
     if self._hardware is None:
         self._hardware = devices.get_hardware_registry()
     return self._hardware
@@ -377,7 +377,7 @@ class MetaClaw:
     pattern = re.compile(
       r'^(?P<var_name>[^=]+)='
       r'change_me_to_(?P<identifier>[A-Za-z0-9_]*)'
-      r'(?:\[(?P<default>.*?)\])?'
+      r'(?:(?P<default>.*))?'
       r'(?P<suffix>.*)$')
 
     # Ensure framework libraries (like newpwd) are in the path
