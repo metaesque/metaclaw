@@ -7,6 +7,7 @@ bin/cluster_setup.py
 bin/env_instantiate.py
 bin/orchestrate.py
 bin/sysprofile.py
+bin/setup_plane.py
 docs/ARCHITECTURE.md
 docs/ROADMAP.md
 docs/CHANGELOG.md
