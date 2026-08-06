@@ -25,6 +25,35 @@ class TestGpuTelemetry(unittest.TestCase):
         self.assertIn("gpu_telemetry,gpu_id=nvidia_0 utilization=45.0,temp_c=65.0,vram_used_mb=4000.0,vram_total_mb=24000.0", out)
         self.assertIn("gpu_telemetry,gpu_id=nvidia_1 utilization=99.0,temp_c=82.0,vram_used_mb=23000.0,vram_total_mb=24000.0", out)
 
+    @patch('subprocess.run')
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('os.cpu_count', return_value=8)
+    def test_poll_nvidia_unified_memory(self, mock_cpu, mock_stdout, mock_run):
+        mock_which = MagicMock()
+        mock_which.returncode = 0
+        mock_query = MagicMock()
+        mock_query.stdout = "0, [N/A], 65, [N/A], [N/A]\n"
+        mock_run.side_effect = [mock_which, mock_query]
+
+        file_data = {
+            "/hostfs/proc/meminfo": "MemTotal: 131072000 kB\nMemAvailable: 31072000 kB\n",
+            "/hostfs/proc/loadavg": "4.00 3.00 2.00 1/100 1234\n"
+        }
+        def custom_open(filename, *args, **kwargs):
+            if filename in file_data:
+                from unittest.mock import mock_open
+                return mock_open(read_data=file_data[filename])()
+            raise FileNotFoundError(filename)
+
+        with patch('builtins.open', side_effect=custom_open):
+            gpu_telemetry.poll_nvidia()
+
+        out = mock_stdout.getvalue()
+        # Total MB = 131072000 / 1024 = 128000.0
+        # Used MB = (131072000 - 31072000) / 1024 = 97656.25 -> 97656.2
+        # CPU util = (4.0 / 8) * 100 = 50.0
+        self.assertIn("gpu_telemetry,gpu_id=nvidia_0 utilization=50.0,temp_c=65.0,vram_used_mb=97656.2,vram_total_mb=128000.0", out)
+
     @patch('os.path.exists')
     @patch('glob.glob')
     @patch('sys.stdout', new_callable=io.StringIO)

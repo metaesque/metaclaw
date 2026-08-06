@@ -9,6 +9,35 @@ import os
 import sys
 import glob
 
+def get_host_ram_mb():
+    """Fallback to read system RAM if GPU uses Unified Memory (e.g. GB10)."""
+    try:
+        with open('/hostfs/proc/meminfo', 'r') as f:
+            lines = f.readlines()
+        total_kb = 0
+        available_kb = 0
+        for line in lines:
+            if line.startswith('MemTotal:'):
+                total_kb = int(line.split()[1])
+            elif line.startswith('MemAvailable:') or line.startswith('MemFree:'):
+                available_kb = int(line.split()[1])
+        total_mb = total_kb / 1024.0
+        used_mb = (total_kb - available_kb) / 1024.0
+        return used_mb, total_mb
+    except Exception:
+        return 0.0, 0.0
+
+def get_host_cpu_util():
+    """Fallback to read 1-minute load average as proxy for GPU utilization."""
+    try:
+        with open('/hostfs/proc/loadavg', 'r') as f:
+            load1 = float(f.read().split()[0])
+        cores = os.cpu_count() or 1
+        util = (load1 / cores) * 100.0
+        return min(util, 100.0)
+    except Exception:
+        return 0.0
+
 def poll_nvidia():
     try:
         # Check if command exists gracefully
@@ -33,9 +62,18 @@ def poll_nvidia():
                     except ValueError:
                         return 0.0
 
+                # Detect Unified Memory architectures (like DGX Spark GB10) reporting [N/A]
+                if "[N/A]" in mem_total_str or "[N/A]" in mem_used_str:
+                    used_mb, total_mb = get_host_ram_mb()
+                    util_val = get_host_cpu_util()
+                else:
+                    used_mb = sanitize(mem_used_str)
+                    total_mb = sanitize(mem_total_str)
+                    util_val = sanitize(util_str)
+
                 print(
                     f"gpu_telemetry,gpu_id=nvidia_{idx} "
-                    f"utilization={sanitize(util_str)},temp_c={sanitize(temp_str)},vram_used_mb={sanitize(mem_used_str)},vram_total_mb={sanitize(mem_total_str)}"
+                    f"utilization={util_val:.1f},temp_c={sanitize(temp_str):.1f},vram_used_mb={used_mb:.1f},vram_total_mb={total_mb:.1f}"
                 )
     except Exception as e:
         print(f"NVIDIA SMI parsing error: {e}", file=sys.stderr)
