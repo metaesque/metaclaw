@@ -138,126 +138,134 @@ physical constraints.
 
 ### Host & Compute Assets
 
-#### Nomadic Client Laptop
 
-* **Date Bought:** 2026-02-26
-* **Price Spent:** $1,750.00 USD
-* **Title/Description:** 15-inch Apple MacBook Air M4
-* **Source URL:** N/A (Purchased retail in Buenos Aires, Argentina)
-* **Detailed Specifications:** Apple M4 Architecture, 16GB Unified Memory,
-  256GB NVMe SSD, running macOS Sequoia Version 15.7.5 (24G624).
 
-#### Node 01 (Control Plane Server)
+#### MacBook Air M4
+
+* **Date Bought:** N/A
+* **Price Spent:** $Unknown
+* **Title/Description:** 15-inch Apple MacBook Air M4 (16GB RAM, 256GB SSD)
+* **Source URL:** N/A
+* **Detailed Specifications:** N/A. N/A.
+* **VRAM:** None
+* **Memory bandwidth:** N/A
+* **Interconnect:** 
+
+
+
+
+#### GMKtec K8 Plus
 
 * **Date Bought:** 2026-04-05
-* **Price Spent:** $797.42 USD ($738.99 + $58.43)
-* **Title/Description:** GMKtec Gaming Mini PC K8 Plus AMD Ryzen 7 8845HS
-  Desktop Computer Dual NIC 2.5G
+* **Price Spent:** $797.42
+* **Title/Description:** GMKtec Gaming Mini PC K8 Plus AMD Ryzen 7 8845HS Desktop Computer
 * **Source URL:** https://www.amazon.com/dp/B0DHNTW3H6
-* **Detailed Specifications:** AMD Ryzen 7 8845HS (8 Cores, 16 Threads, Base
-  3.8GHz, Boost up to 5.1GHz, 16MB L3 Cache, 45W TDP). 32GB DDR5 Dual-Channel
-  RAM. 1TB PCIe 4.0 M.2 2280 NVMe SSD. Dual 2.5 Gbps Ethernet RJ45 ports. 1x
-  USB4 (40Gbps/PD/DP), 2x HDMI 2.1, 1x Oculink port (PCIe 4.0 x4), Wi-Fi 6E,
-  Bluetooth 5.2.
-* **VRAM:** Shared system RAM (32GB DDR5). No dedicated VRAM.
-* **Memory bandwidth:** ~89.6 GB/s (Dual-channel DDR5-5600).
-* **Compute Capability:** CPU only / Radeon 780M iGPU (~8 TFLOPS FP16).
-* **Precision Acceleration:** None native (relies on standard CPU AVX
-  instructions for INT8).
-* **Interconnect:** 2.5 Gbps Ethernet.
+* **Detailed Specifications:** Discrete blocks on shared die. Shared DDR5.
+* **VRAM:** 32GB
+* **Memory bandwidth:** 89.6 GB/s
+* **Interconnect:** 2.5 Gbps RJ45, 40.0 Gbps USB4, 
 
-#### Node 02 (Compute Plane Inference Server)
+
+
+
+#### GMKtec EVO-X2
 
 * **Date Bought:** 2026-04-17
-* **Price Spent:** $4,744.95 CAD
-* **Title/Description:** GMKtec EVO-X2 AI Mini PC Ryzen Al Max+ 395 Mini
-  Gaming Computer
+* **Price Spent:** $3370.0
+* **Title/Description:** GMKtec EVO-X2 AI Mini PC Ryzen Al Max+ 395
 * **Source URL:** https://www.amazon.ca/dp/B0F53MLYQ6
-* **Detailed Specifications:** AMD Ryzen AI Max+ 395 (16 Cores, 32 Threads,
-  up to 5.1GHz). Integrated AMD Radeon 8060S GPU (40 Compute Units). 128GB
-  LPDDR5X 8000MHz (16GB x 8 configuration) Unified Memory layout. 2TB PCIe 4.0
-  NVMe SSD. Dual 2.5G LAN ports, WiFi 7, Bluetooth 5.4, USB4 interfaces, SD Card
-  Reader 4.0, support for Quad Screen 8K Displays.
-* **VRAM:** 128GB LPDDR5X 8000MHz Unified Memory (Up to 96GB allocatable to GPU).
-* **Memory bandwidth:** 256 GB/s.
-* **Compute Capability:** Radeon 8060S iGPU (~30-40 TFLOPS FP16).
-* **Precision Acceleration:** Standard FP16/INT8. No native sub-INT8 hardware.
-* **Interconnect:** 2.5 Gbps Ethernet (Not suitable for tensor parallelism).
+* **Detailed Specifications:** Discrete blocks on shared die. Unified LPDDR5x.
+* **VRAM:** 128GB
+* **Memory bandwidth:** 256.0 GB/s
+* **Interconnect:** 2.5 Gbps RJ45, 40.0 Gbps USB4
 
-#### Node 03 (Compute Plane Inference Server)
+
+
+
+#### ASUS DGX Spark 1
 
 * **Date Bought:** 2026-07-16
-* **Price Spent:** $5776.83 CAD all-in (included free ASUS ROG Strik 27" QHD 2K
-  1440P 260Hz IPS Gaming Computer Monitor valued at $576 CAD)
-* **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark, NVIDIA
-  GB10 Superchip, 128GB LPDDR5x, 1TB PCIe Gen4 NVMe SSD, Wi-Fi 7 & BT5.4, DGX OS
+* **Price Spent:** $4217.09
+* **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark
 * **Source URL:** https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044
-* **Detailed Specifications:** NVIDIA GB10 Grace Blackwell Superchip (Arm
-  v9.2-A 20-core CPU, integrated Blackwell GPU with 6144 Cores and 384 Tensor
-  Cores). 128GB unified LPDDR5x memory (273 GB/s bandwidth). 1TB PCIe 4.0 NVMe
-  SSD. Networking: 1x RJ45 10GbE LAN, 2x QSFP 200G ConnectX-7 SmartNIC ports.
-  Wi-Fi 7, Bluetooth 5.4. Supports up to 1 PetaFLOP (FP4) AI compute. Draws up
-  to 180W via 240W USB-C PD 3.1 EPR adapter.
-* **VRAM:** 128GB unified LPDDR5x memory.
-* **Memory bandwidth:** 273 GB/s.
-* **Compute Capability:** Up to 1 PetaFLOP (FP4) via integrated Blackwell GPU
-  (6144 Cores, 384 Tensor Cores).
-* **Precision Acceleration:** Native hardware acceleration for FP8 and FP4 MoE
-  routing.
-* **Interconnect:** 200 Gbps (QSFP56 DAC). Natively scales up to 4 nodes.
+* **Detailed Specifications:** CPU and GPU superchip integration. Unified LPDDR5x.
+* **VRAM:** 128GB
+* **Memory bandwidth:** 273.0 GB/s
+* **Interconnect:** 10.0 Gbps RJ45, 200.0 Gbps QSFP56
 
-#### Node 04 (Compute Plane Inference Server)
 
-* **Date Bought:** 2026-08-06
-* **Price Spent:** $5776.83 CAD (All-in pricing matched to Node 03)
-* **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark, NVIDIA
-  GB10 Superchip, 128GB LPDDR5x, 1TB PCIe Gen4 NVMe SSD, Wi-Fi 7 & BT5.4, DGX OS
+
+
+#### ASUS DGX Spark 2
+
+* **Date Bought:** 2026-07-16
+* **Price Spent:** $4217.09
+* **Title/Description:** ASUS Ascent GX10 AI Supercomputer, DGX Spark
 * **Source URL:** https://www.newegg.ca/asus-ascent-gx10-mini-pc/p/N82E16859110044
-* **Detailed Specifications:** NVIDIA GB10 Grace Blackwell Superchip (Arm
-  v9.2-A 20-core CPU, integrated Blackwell GPU with 6144 Cores and 384 Tensor
-  Cores). 128GB unified LPDDR5x memory (273 GB/s bandwidth). 1TB PCIe 4.0 NVMe
-  SSD. Networking: 1x RJ45 10GbE LAN, 2x QSFP 200G ConnectX-7 SmartNIC ports.
-  Wi-Fi 7, Bluetooth 5.4.
-* **VRAM:** 128GB unified LPDDR5x memory.
-* **Memory bandwidth:** 273 GB/s.
-* **Compute Capability:** Up to 1 PetaFLOP (FP4) via integrated Blackwell GPU
-  (6144 Cores, 384 Tensor Cores).
-* **Precision Acceleration:** Native hardware acceleration for FP8 and FP4
-  MoE routing.
-* **Interconnect:** 200 Gbps (QSFP56 DAC). Natively scales up to 4 nodes.
+* **Detailed Specifications:** CPU and GPU superchip integration. Unified LPDDR5x.
+* **VRAM:** 128GB
+* **Memory bandwidth:** 273.0 GB/s
+* **Interconnect:** 10.0 Gbps RJ45, 200.0 Gbps QSFP56
 
-#### Node 05 (Compute Plane Inference Server)
 
-* **Date Bought:** 2026-10-20
-* **Price Spent:** TBD
-* **Title/Description:** Apple Mac Studio M5 Ultra (Projected)
-* **Source URL:** TBD
-* **Detailed Specifications:** Apple M5 Ultra SoC. Up to 36 CPU cores, 80 GPU cores. 96GB or 128GB Unified Memory baseline. 2TB baseline NVMe storage. Networking: 10GbE RJ45 port, multiple Thunderbolt 5 ports (120 Gbps bandwidth for RDMA inter-node tensor sharding), Wi-Fi 7, Bluetooth 6.
-* **VRAM:** 96GB or 128GB Unified Memory (Projected).
-* **Memory bandwidth:** 800+ GB/s (Projected).
-* **Compute Capability:** ~50-80 TFLOPS (FP16) via Apple GPU.
-* **Precision Acceleration:** Software quantization via MLX. Lacks native
-  hardware FP4 matrix cores.
-* **Interconnect:** 120 Gbps (RDMA over Thunderbolt 5). Supports up to 4 nodes
-  via Exo clustering.
 
-#### Node 06 (Compute Plane Inference Server)
 
-* **Date Bought:** 2026-10-20
-* **Price Spent:** TBD
-* **Title/Description:** Apple Mac Studio M5 Ultra (Projected)
-* **Source URL:** TBD
-* **Detailed Specifications:** Apple M5 Ultra SoC. Up to 36 CPU cores,
-  80 GPU cores. 96GB or 128GB Unified Memory baseline. 2TB baseline NVMe
-  storage. Networking: 10GbE RJ45 port, multiple Thunderbolt 5 ports (120 Gbps
-  bandwidth for RDMA inter-node tensor sharding), Wi-Fi 7, Bluetooth 6.
-* **VRAM:** 96GB or 128GB Unified Memory (Projected).
-* **Memory bandwidth:** 800+ GB/s (Projected).
-* **Compute Capability:** ~50-80 TFLOPS (FP16) via Apple GPU.
-* **Precision Acceleration:** Software quantization via MLX. Lacks native
-  hardware FP4 matrix cores.
-* **Interconnect:** 120 Gbps (RDMA over Thunderbolt 5). Supports up to 4 nodes
-  via Exo clustering.
+
+
+
+
+
+
+
+
+### External Storage Assets
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Samsung T7 1TB
+
+* **Date Bought:** 2023-06-01
+* **Price Spent:** $79.0
+* **Title/Description:** Samsung T7 Portable SSD 1TB Titan Gray (MU-PC1T0T/AM)
+* **Source URL:** https://www.amazon.com/dp/B0874XN4D8
+* **Detailed Specifications:** 1.0TB USB 3.2 Gen 2 (8.4 Gbps Read Speed)
+
+
+
+
+#### Samsung T9 2TB
+
+* **Date Bought:** 2025-11-16
+* **Price Spent:** $780.0
+* **Title/Description:** SAMSUNG T9 2TB Portable SSD, Black (MU-PG2T0B/AM)
+* **Source URL:** https://www.amazon.ca/dp/B0CHFS9K14
+* **Detailed Specifications:** 2.0TB USB 3.2 Gen 2x2 (16.0 Gbps Read Speed)
+
+
+
+
+#### Samsung T9 1TB
+
+* **Date Bought:** 2025-11-16
+* **Price Spent:** $315.0
+* **Title/Description:** SAMSUNG T9 1TB Portable SSD, Black (MU-PG1T0B/AM)
+* **Source URL:** https://www.amazon.ca/dp/B0CHFSWM2P
+* **Detailed Specifications:** 1.0TB USB 3.2 Gen 2x2 (16.0 Gbps Read Speed)
+
+
+
 
 ### Comparative Hardware Metrics for Local LLM Inference
 
@@ -320,7 +328,7 @@ physical constraints.
 #### Kasa Smart Plug Power Strip HS300 (Strip 2)
 * **Date Bought:** 2026-07-30
 * **Price Spent:** $101.07 CAD
-* **Title/Description:** Kasa Smart Plug Power Strip HS300, Surge Protector with 6 Individually Controlled Smart Outlets and 3 USB Ports
+* **Title/Description:** Kasa Smart Plug Power Strip HS300, Surge Protector with 6 Individually Controlled Outlets and 3 USB Ports
 * **Source URL:** https://www.walmart.ca/en/ip/Kasa-Smart-Plug-Power-Strip-HS300-Surge-Protector-6-Individually-Controlled-Outlets-3-USB-Ports-Works-Alexa-Google-Home-No-Hub-Required-White/34XV3645UCJM
 * **Detailed Specifications:** 6 Individually controlled smart outlets, 3 USB ports. Built-in surge protection. Maximum physical load: 15A / 1800W. Features per-outlet energy monitoring (emeter) accessible via local network API.
 
