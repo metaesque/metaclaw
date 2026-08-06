@@ -13,6 +13,27 @@ def get_required_ssh_key():
         sys.exit(1)
     return metaesque_key
 
+def print_disk_status(ip, ssh_user, ssh_key, is_local):
+    print("\n" + "=" * 60)
+    print(" DEVICE STATUS (ACCESSIBLE DISKS)")
+    print("=" * 60)
+    # Fetch the header and filter out ephemeral/pseudo filesystems for clarity
+    cmd = "df -Ph | head -n 1 && df -Ph | grep -vE '^Filesystem|tmpfs|devtmpfs|squashfs|overlay|loop|udev|map'"
+
+    if is_local:
+        subprocess.run(cmd, shell=True)
+    else:
+        ssh_cmd = [
+            "ssh", "-i", ssh_key,
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "UserKnownHostsFile=/dev/null",
+            "-o", "LogLevel=ERROR",
+            f"{ssh_user}@{ip}",
+            cmd
+        ]
+        subprocess.run(ssh_cmd)
+    print("")
+
 def main():
     print("==================================================")
     print(" MetaClaw Distributed Cluster Status")
@@ -32,15 +53,21 @@ def main():
         hostname = node.get("hostname")
         is_local = (hostname == local_host)
 
-        print(f"\n[Status] Node: {hostname} ({'Local' if is_local else 'Remote'})")
-        print("-" * 60)
+        # Reversing the emphasis: Massive banner for the Node transition
+        print("\n\n" + "#" * 80)
+        print(f"# 🖥️  NODE: {hostname.upper()} ({'LOCAL' if is_local else 'REMOTE'})")
+        print("#" * 80)
 
+        # Show accessible disks
+        ip = node.get("hardware", {}).get("ip_address")
+        ssh_user = node.get("ssh_user", os.getlogin())
+
+        print_disk_status(ip, ssh_user, ssh_key, is_local)
+
+        # Show status of local services
         if is_local:
             subprocess.run(["make", "status-local"])
         else:
-            ip = node.get("hardware", {}).get("ip_address")
-            ssh_user = node.get("ssh_user", os.getlogin())
-
             ssh_cmd = [
                 "ssh", "-i", ssh_key,
                 "-o", "StrictHostKeyChecking=no",

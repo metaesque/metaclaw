@@ -6,6 +6,7 @@ Makefile
 .Makefile.inherit
 bin/Makefile
 bin/cluster_setup.py
+bin/cluster_status.py
 bin/env_instantiate.py
 bin/orchestrate.py
 bin/sysprofile.py
