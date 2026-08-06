@@ -46,9 +46,9 @@ def poll_nvidia():
         # 1. Native execution (Bare-metal)
         if shutil.which("nvidia-smi"):
             cmd_base = ["nvidia-smi"]
-        # 2. Container execution (Docker) - Chroot into the mounted host filesystem
+        # 2. Container execution (Docker) - Chroot into the mounted host filesystem with absolute paths
         elif os.path.exists("/hostfs/usr/bin/nvidia-smi"):
-            cmd_base = ["chroot", "/hostfs", "nvidia-smi"]
+            cmd_base = ["/usr/sbin/chroot", "/hostfs", "/usr/bin/nvidia-smi"]
         else:
             return
 
