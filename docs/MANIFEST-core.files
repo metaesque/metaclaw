@@ -3,6 +3,8 @@
 .planes.json
 .tiers.json
 Makefile
+.Makefile.inherit
+bin/Makefile
 bin/cluster_setup.py
 bin/env_instantiate.py
 bin/orchestrate.py

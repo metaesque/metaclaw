@@ -1,3 +1,6 @@
+-include ../.env
+export
+
 .PHONY: install-code clean
 
 # The default target ensures the .venv is bootstrapped and dependencies are met.
@@ -14,6 +17,14 @@ install-code: .venv/.installed
 	.venv/bin/python -m pip install -r requirements.txt
 	@echo "Installing Playwright Chromium dependencies (this may take a moment)..."
 	.venv/bin/playwright install chromium
+	@echo "Injecting METACLAW_ROOT into Python path..."
+	@ROOT_PATH="$${METACLAW_ROOT:-$(abspath ..)}"; \
+	for d in .venv/lib/python*/site-packages; do \
+		if [ -d "$$d" ]; then \
+			echo "$$ROOT_PATH" > "$$d/metaclaw.pth"; \
+			echo "Linked $$ROOT_PATH in $$d/metaclaw.pth"; \
+		fi; \
+	done
 	@touch .venv/.installed
 
 clean:
