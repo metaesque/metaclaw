@@ -8,10 +8,17 @@ bin/env_instantiate.py
 bin/orchestrate.py
 bin/sysprofile.py
 docs/ARCHITECTURE.md
+docs/ROADMAP.md
+docs/CHANGELOG.md
 docs/LLM.md
 docs/PLANES.md
 docs/SERVICES.md
 docs/TIERS.md
+docs/MANIFEST-core.files
+docs/MANIFEST.files
+docs/WORKSPACE.files
+docs/CONFIG.files
+docs/personal/Wade.md
 lib/devices.py
 lib/metaclaw.py
 lib/services.py

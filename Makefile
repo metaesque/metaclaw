@@ -458,6 +458,15 @@ tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 	$(PYTHON_BIN) ./bin/newcode.py -s docs/MANIFEST.files -o tmp/metaclaw.txt -l 6000
 	@echo "Manifest generated at: tmp/metaclaw.txt"
 
+core: tmp/metacore.txt
+tmp/metacore.txt: FORCE | $(PYTHON_BIN)
+	@mkdir -p tmp
+	cat docs/MANIFEST-core.files > tmp.files
+	find ../config -type f >> tmp.files
+	find ../workspace/agents/software -type f >> tmp.files
+	$(PYTHON_BIN) ./bin/newcode.py -s tmp.files -o tmp/metacore.txt -l 6000
+	@echo "Manifest generated at: tmp/metacore.txt"
+
 # WHAT IT DOES: Concatenates the workspace agents into a single `.txt` payload for injection into an LLM context window.
 wksp: tmp/workspace.txt
 tmp/workspace.txt: FORCE | $(PYTHON_BIN)
