@@ -37,6 +37,7 @@ docs/.MANIFEST.files.ignore
 docs/AGENTS.md
 docs/ARCHITECTURE.md
 docs/CHANGELOG.md
+docs/CONFIG.files
 docs/DEMOS.md
 docs/HOWTO.md
 docs/LLM.md

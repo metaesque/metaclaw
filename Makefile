@@ -469,6 +469,13 @@ wksplist: docs/WORKSPACE.files
 docs/WORKSPACE.files: FORCE
 	find ../workspace -name legacy -prune -false -o -name fixme -prune -false -o -name .git -prune -false -o -name user -prune -false -o -name .openclaw -prune -false -o -type f | sort | grep -v -- '-huge.json' > docs/WORKSPACE.files
 
+# WHAT IT DOES: Concatenates the entire framework into a single `.txt` payload for injection into an LLM context window.
+cfg: tmp/config.txt
+tmp/config.txt: FORCE | $(PYTHON_BIN)
+	@mkdir -p tmp
+	$(PYTHON_BIN) ./bin/newcode.py -s docs/CONFIG.files -o tmp/config.txt -l 6000
+	@echo "Manifest generated at: tmp/config.txt"
+
 # WHAT IT DOES: Parses a block of AI-generated Markdown and writes the files back to disk atomically.
 newcode: | $(PYTHON_BIN)
 	@echo "Applying AI-generated changes from ./input..."
