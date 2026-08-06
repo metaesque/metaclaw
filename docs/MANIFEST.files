@@ -5,6 +5,7 @@
 .tiers.json
 Makefile
 bin/.gitignore
+bin/data/.gitignore
 bin/Makefile
 bin/browser.py
 bin/check_config.sh
@@ -26,6 +27,8 @@ bin/orchestrate.py
 bin/parse_prompts_gem.py
 bin/parse_prompts_oc.py
 bin/postgres_analysis.py
+bin/power_kasa.py
+bin/pull_sync.py
 bin/requirements.txt
 bin/setup_plane.sh
 bin/sync_cluster.py

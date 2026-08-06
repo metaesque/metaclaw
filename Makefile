@@ -59,7 +59,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs
 
 define h1_title
 	echo ""; \
@@ -162,6 +162,12 @@ symlinks: | $(PYTHON_BIN)
 sync-cluster: | $(PYTHON_BIN)
 	@echo "Synchronizing profile.json across cluster nodes..."
 	@$(PYTHON_BIN) ./bin/sync_cluster.py
+
+# WHAT IT DOES: Pulls updates and syncs configurations across the entire cluster overriding local changes.
+# WHY IT EXISTS: Simplifies maintaining codebase parity across 4+ distributed nodes.
+pull: | $(PYTHON_BIN)
+	@$(call h1_title,"PULLING UPDATES ACROSS CLUSTER")
+	@$(PYTHON_BIN) ./bin/pull_sync.py
 
 # WHAT IT DOES: Initializes symlinks and establishes the internal Docker bridge network.
 bootstrap: symlinks network
