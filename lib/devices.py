@@ -308,7 +308,7 @@ class ComputeNode(Device):
         # ======================================================================
         # PHASE 0: DEPENDENCY INJECTION
         # ======================================================================
-        if self.data.get('os') == 'Linux':
+        if platform.system() == 'Linux':
             missing_pkgs = []
             if not shutil.which("exportfs"):
                 missing_pkgs.append("nfs-kernel-server")
@@ -424,11 +424,11 @@ class ComputeNode(Device):
         autofs_map_lines = []
 
         for uid, dev in all_devices.items():
-            # Remote Node Home Directories -> /mnt/cluster/<hostname>
+            # Remote Node Home Directories -> /mnt/cluster/<hostname>/home/metaclaw
             if dev.device_type == 'node' and uid != self.uid and uid != "peridot":
                 ip = dev.data.get('tailscale_ip')
                 if ip:
-                    autofs_map_lines.append(f"/mnt/cluster/{uid} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:/home/metaclaw")
+                    autofs_map_lines.append(f"/mnt/cluster/{uid}/home/metaclaw -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:/home/metaclaw")
 
             # Remote External SSDs -> /mnt/cluster/ext/<ssd_name>
             elif dev.device_type == 'ssd':
@@ -442,9 +442,11 @@ class ComputeNode(Device):
                             if ip and mp and mp.startswith("/mnt/cluster/ext/"):
                                 autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:{mp}")
 
-        # Local Node Home Directory Symlink (Ensures local consistency without AutoFS loopback)
+        # Local Node Home Directory Symlink (Ensures absolute local consistency)
         try:
-            symlink_target = f"/mnt/cluster/{self.uid}"
+            base_dir = f"/mnt/cluster/{self.uid}/home"
+            subprocess.run(['sudo', 'mkdir', '-p', base_dir], check=False)
+            symlink_target = f"{base_dir}/metaclaw"
             if not os.path.exists(symlink_target) and not os.path.islink(symlink_target):
                 subprocess.run(['sudo', 'ln', '-s', '/home/metaclaw', symlink_target], check=True)
         except Exception as e:
