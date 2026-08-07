@@ -339,7 +339,49 @@ class ComputeNode(Device):
         subprocess.run(['sudo', 'mkdir', '-p', '/mnt/cluster/ext'], check=False)
 
         # ======================================================================
-        # PHASE 1: LOCAL PHYSICAL MOUNTS
+        # PHASE 0.5: DAC NETWORK INTERFACE CONFIGURATION
+        # ======================================================================
+        my_dac_ip = self.data.get('dac_ip')
+        if my_dac_ip and platform.system() == 'Linux':
+            best_iface = None
+            try:
+                for iface in os.listdir('/sys/class/net/'):
+                    if iface in ['lo'] or iface.startswith('docker') or iface.startswith('veth') or iface.startswith('tailscale'):
+                        continue
+
+                    # Target ConnectX-7 Mellanox Vendor ID (0x15b3) or strictly verified 100Gbps+ links
+                    vendor_path = f'/sys/class/net/{iface}/device/vendor'
+                    speed_path = f'/sys/class/net/{iface}/speed'
+
+                    if os.path.exists(vendor_path):
+                        with open(vendor_path, 'r') as f:
+                            if f.read().strip() == '0x15b3':
+                                best_iface = iface
+                                break
+
+                    if os.path.exists(speed_path):
+                        try:
+                            with open(speed_path, 'r') as f:
+                                speed_str = f.read().strip()
+                                if speed_str.isdigit() and int(speed_str) >= 100000:
+                                    best_iface = iface
+                                    break
+                        except OSError:
+                            pass
+            except Exception as e:
+                print(f"DIAGNOSTIC: Error searching for DAC network interface: {e}")
+
+            if best_iface:
+                check_ip = subprocess.run(['ip', 'addr', 'show', best_iface], capture_output=True, text=True)
+                if my_dac_ip not in check_ip.stdout:
+                    print(f"Assigning DAC IP {my_dac_ip}/24 to high-speed interface {best_iface}...")
+                    subprocess.run(['sudo', 'ip', 'addr', 'add', f"{my_dac_ip}/24", 'dev', best_iface], check=False)
+                    subprocess.run(['sudo', 'ip', 'link', 'set', 'dev', best_iface, 'up'], check=False)
+            else:
+                print(f"DIAGNOSTIC: Could not auto-detect a 100Gbps+ or Mellanox network interface for DAC IP {my_dac_ip}.")
+
+        # ======================================================================
+        # PHASE 1: LOCAL PHYSICAL MOUNTS & PERMISSIONS
         # ======================================================================
         local_mounts = []
         attached_uuids = set()
@@ -385,10 +427,16 @@ class ComputeNode(Device):
                 cmd = ['sudo', 'mount']
                 if fstype:
                     cmd.extend(['-t', fstype])
+                # Direct immediate UID 1000 ownership for non-POSIX drives
+                if fstype in ['exfat', 'vfat']:
+                    cmd.extend(['-o', 'uid=1000,gid=1000,umask=000'])
                 cmd.extend([f"UUID={uuid}", mp])
                 try:
                     subprocess.run(cmd, check=True, capture_output=True, text=True)
                     print(f"Mounted local physical drive: {uuid} to {mp}")
+                    # Enforce UID 1000 permissions for standard POSIX drives post-mount
+                    if fstype not in ['exfat', 'vfat']:
+                        subprocess.run(['sudo', 'chown', '-R', '1000:1000', mp], check=False)
                 except subprocess.CalledProcessError as e:
                     print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Error: {e.stderr.strip()}")
 
@@ -398,8 +446,6 @@ class ComputeNode(Device):
         print(f"Configuring NFS Exports for local drives on {self.uid}...")
         exports_lines = []
         fsid_counter = 1
-
-        my_dac_ip = self.data.get('dac_ip')
 
         # Export the local home directory (/home/metaclaw)
         if self.device_type == 'node' and self.uid != "peridot":
