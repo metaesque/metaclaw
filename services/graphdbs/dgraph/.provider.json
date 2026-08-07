@@ -1,0 +1,7 @@
+{
+  "uid": "dgraph",
+  "name": "Dgraph",
+  "tier": "2",
+  "overview": "An open-source distributed graph database with a GraphQL-native development model.",
+  "details": []
+}

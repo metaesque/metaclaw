@@ -1,0 +1,11 @@
+{
+  "uid": "neo4j",
+  "name": "Neo4j",
+  "tier": "2",
+  "overview": "The industry standard graph database, ideal for building complex Knowledge Graphs and executing topological GraphRAG queries.",
+  "details": [
+    "Neo4j is a native graph database built to store and process highly connected data using nodes and relationships. It uses Cypher, a powerful query language optimized for graph traversals.",
+    "Within MetaClaw, Neo4j serves as the backbone for GraphRAG (Graph Retrieval-Augmented Generation). While vector databases like Qdrant excel at fuzzy semantic matching, Neo4j excels at strict topological queries, allowing agents to understand explicit dependencies (e.g., 'Which files import this function?')."
+  ],
+  "diagnostics": "1. **HTTP API Health:** You should see HTTP 200 OK from the 7474 endpoint."
+}

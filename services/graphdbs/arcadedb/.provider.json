@@ -1,0 +1,7 @@
+{
+  "uid": "arcadedb",
+  "name": "ArcadeDB",
+  "tier": "2",
+  "overview": "A fully open-source, multi-model database that supports SQL, Cypher, Gremlin, and GraphQL under an Apache 2.0 license.",
+  "details": []
+}

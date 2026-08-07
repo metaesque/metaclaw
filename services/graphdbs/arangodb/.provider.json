@@ -1,0 +1,7 @@
+{
+  "uid": "arangodb",
+  "name": "ArangoDB",
+  "tier": "2",
+  "overview": "A native multi-model database supporting graph, document, and key/value models.",
+  "details": []
+}

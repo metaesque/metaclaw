@@ -13,6 +13,7 @@ SERVICES_DIR ?= services
 -include $(SERVICES_DIR)/cache/.env
 -include $(SERVICES_DIR)/reldb/.env
 -include $(SERVICES_DIR)/vectordb/.env
+-include $(SERVICES_DIR)/graphdb/.env
 -include $(SERVICES_DIR)/runner/.env
 -include $(SERVICES_DIR)/sandbox/.env
 -include $(SERVICES_DIR)/browser/.env
@@ -48,13 +49,13 @@ export OPEN_CMD
 PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
 
 # Teardown order (Reverse dependencies)
-DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
+DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
 GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
 # Boot order explicitly defined to capture initial logs before upstream
 # services start
-WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/collector $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcses $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/ingress $(SERVICES_DIR)/gateway
+WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/collector $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcses $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/ingress $(SERVICES_DIR)/gateway
 
 # Meta-level reasoning. Must be a directory relative to the directory this
 # Makefile resides in!

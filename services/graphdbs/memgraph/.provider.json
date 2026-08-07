@@ -1,0 +1,7 @@
+{
+  "uid": "memgraph",
+  "name": "Memgraph",
+  "tier": "2",
+  "overview": "An in-memory, Cypher-compatible graph database optimized for real-time analytics and streaming data.",
+  "details": []
+}

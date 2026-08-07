@@ -1,0 +1,9 @@
+{
+  "uid": "graphdb",
+  "uids": "graphdbs",
+  "name": "Graph Database",
+  "names": "Graph Databases",
+  "category": "Data & State Management",
+  "purpose": "A dedicated engine for storing nodes, edges, and properties, optimized for traversing highly connected data and executing GraphRAG queries.",
+  "plane": "archive"
+}

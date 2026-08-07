@@ -168,6 +168,16 @@ services/gateways/openclaw/patch_routing.py
 services/gateways/picoclaw/.provider.json
 services/gateways/trustclaw/.provider.json
 services/gateways/zeroclaw/.provider.json
+services/graphdbs/.service.json
+services/graphdbs/Makefile
+services/graphdbs/arcadedb/.provider.json
+services/graphdbs/arangodb/.provider.json
+services/graphdbs/dgraph/.provider.json
+services/graphdbs/memgraph/.provider.json
+services/graphdbs/neo4j/.env.template
+services/graphdbs/neo4j/.provider.json
+services/graphdbs/neo4j/Makefile
+services/graphdbs/neo4j/docker-compose.yml
 services/iam/.service.json
 services/iam/Makefile
 services/iam/authelia/.provider.json
