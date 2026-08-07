@@ -346,7 +346,7 @@ class ComputeNode(Device):
             best_iface = None
             try:
                 for iface in os.listdir('/sys/class/net/'):
-                    if iface in ['lo'] or iface.startswith('docker') or iface.startswith('veth') or iface.startswith('tailscale'):
+                    if iface in ['lo'] or iface.startswith('docker') or iface.startswith('veth') or iface.startswith('tailscale') or iface.startswith('br-'):
                         continue
 
                     # Target ConnectX-7 Mellanox Vendor ID (0x15b3) or strictly verified 100Gbps+ links
@@ -374,9 +374,33 @@ class ComputeNode(Device):
             if best_iface:
                 check_ip = subprocess.run(['ip', 'addr', 'show', best_iface], capture_output=True, text=True)
                 if my_dac_ip not in check_ip.stdout:
-                    print(f"Assigning DAC IP {my_dac_ip}/24 to high-speed interface {best_iface}...")
-                    subprocess.run(['sudo', 'ip', 'addr', 'add', f"{my_dac_ip}/24", 'dev', best_iface], check=False)
-                    subprocess.run(['sudo', 'ip', 'link', 'set', 'dev', best_iface, 'up'], check=False)
+                    print(f"Assigning persistent DAC IP {my_dac_ip}/24 to high-speed interface {best_iface} via Netplan...")
+
+                    # 1. Decouple from NetworkManager to prevent aggressive flushing
+                    if shutil.which("nmcli"):
+                        subprocess.run(['sudo', 'nmcli', 'dev', 'set', best_iface, 'managed', 'no'], check=False, stderr=subprocess.DEVNULL)
+
+                    # 2. Generate and apply canonical Netplan configuration
+                    netplan_yaml = f"""network:
+  version: 2
+  ethernets:
+    {best_iface}:
+      addresses: [{my_dac_ip}/24]
+      dhcp4: false
+      dhcp6: false
+      optional: true
+"""
+                    yaml_path = f"/tmp/99-dac-{best_iface}.yaml"
+                    with open(yaml_path, 'w') as f:
+                        f.write(netplan_yaml)
+
+                    try:
+                        subprocess.run(['sudo', 'mv', yaml_path, f'/etc/netplan/99-dac-{best_iface}.yaml'], check=True)
+                        subprocess.run(['sudo', 'chmod', '600', f'/etc/netplan/99-dac-{best_iface}.yaml'], check=True)
+                        subprocess.run(['sudo', 'netplan', 'apply'], check=True)
+                        print(f"Netplan applied successfully for {best_iface}.")
+                    except Exception as e:
+                        print(f"DIAGNOSTIC: Failed to apply netplan configuration: {e}")
             else:
                 print(f"DIAGNOSTIC: Could not auto-detect a 100Gbps+ or Mellanox network interface for DAC IP {my_dac_ip}.")
 
