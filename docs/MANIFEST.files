@@ -16,6 +16,7 @@ bin/create_modelfile.py
 bin/customize.py
 bin/env_instantiate.py
 bin/fetch_arena.py
+bin/fetch_hardware_state.py
 bin/gateway-logs.py
 bin/highlight.py
 bin/install_docker.sh

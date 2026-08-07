@@ -61,7 +61,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull fetchcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg
 
 define h1_title
 	echo ""; \
@@ -180,6 +180,12 @@ pushcfg-%:
 pull: | $(PYTHON_BIN)
 	@$(call h1_title,"PULLING UPDATES ACROSS CLUSTER")
 	@$(PYTHON_BIN) ./bin/pull_sync.py
+
+# WHAT IT DOES: Pulls updated hardware JSON registries from cluster nodes back to the local source-of-truth.
+# WHY IT EXISTS: Marshals distributed telemetry state (like dynamically discovered SSD mounts) back to the laptop.
+fetchcfg: | $(PYTHON_BIN)
+	@$(call h1_title,"FETCHING HARDWARE STATE FROM CLUSTER")
+	@$(PYTHON_BIN) ./bin/fetch_hardware_state.py
 
 # WHAT IT DOES: Initializes symlinks and establishes the internal Docker bridge network.
 bootstrap: symlinks network
