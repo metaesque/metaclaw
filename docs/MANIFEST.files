@@ -58,6 +58,7 @@ docs/personal/Wade.md
 docs/personal/Wade.md.j2
 features/DECISIONS.md
 features/DESIGN.md
+features/clawdisk/bin/clawdisk_setup.py
 features/clawdisk/docs/DESIGN.md
 features/kasa/assets/collectors/telegraf/kasa.conf
 features/kasa/assets/visualizers/grafana/dashboards/dashboards.yaml

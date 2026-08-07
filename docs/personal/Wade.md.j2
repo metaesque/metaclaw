@@ -5,6 +5,20 @@ multi-agent ecosystem. It defines the physical hardware distribution, the
 hierarchical agent topology, and the strict operational interdependencies
 required to prevent architectural regression.
 
+## For Agents: Operational Workflow & State Management
+
+**CRITICAL DIRECTIVE FOR AI AGENTS:** You must understand and respect the human operator's GitOps and synchronization workflow.
+
+1. **The Source of Truth:** The operator's laptop (`peridot`) is the definitive source of truth for:
+   * The public MetaClaw infrastructure repository (`$MC/repo`).
+   * The configuration drop-zone data (`../config`).
+   * The private agent definitions (`../workspace`).
+2. **Code Application:** When you generate file modifications, the operator copies them into a local `input` file and executes `make newcode` to apply the changes atomically.
+3. **Synchronization (Push):** The operator commits and pushes changes to the respective Git repositories. If files in `../config` are modified, the operator executes `make pushcfg-control`, which `rsync`s the config directory to `~/config` on the `control` node.
+4. **Synchronization (Pull):** The operator SSHs into the `control` node via Emacs TRAMP and executes `make pull` (which runs `bin/pull_sync.py`). This forces all other cluster nodes to pull the latest Git commits and `rsync`s the `~/config` directory from `control` out to all edge nodes (like `spark1` and `spark2`), ensuring absolute parity.
+5. **Enactment:** The operator then executes `make apply` (or `make factory-reset-soft` if necessary) to bounce the affected containers and apply the new configuration states.
+6. **Testing:** The operator runs manual tests and provides terminal output back to the agent for analysis. **Agents must never assume a fix worked without empirical verification from the operator.**
+
 ## Hardware Configuration & Split-Location Topology
 
 The current environment operates on a remote, split-location architecture. The
