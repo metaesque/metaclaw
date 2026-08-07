@@ -448,6 +448,11 @@ executes custom Python scripts) and pushes them upstream to VictoriaMetrics.
   run a single test collection and print to standard output:
   `docker exec telegraf-collector telegraf --config /etc/telegraf/telegraf.conf --test`
 
+- **Manual Script Execution:** To see what a specific sampling looks like natively
+  in Influx Line Protocol (bypassing the Telegraf wrapper), you can execute the
+  Python script directly within the container's environment:
+  `docker exec telegraf-collector /opt/venv/bin/python /metaclaw/features/kasa/bin/power_kasa.py`
+
 ### Data Visualizer (`visualizers`)
 
 #### Grafana

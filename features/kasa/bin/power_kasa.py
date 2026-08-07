@@ -27,6 +27,10 @@ def emit_hardware_metadata(devices):
         if not isinstance(dev_info, dict):
             continue
 
+        # Ensure we ONLY emit host metadata for actual compute nodes, not SSDs or power strips
+        if dev_info.get("type") not in ["node", "compute_node"]:
+            continue
+
         # Safely traverse the nested dictionary: price -> purchased -> date
         price = dev_info.get("price") or {}
         purchased = price.get("purchased") or {}
@@ -109,7 +113,8 @@ async def run_telegraf_export():
 
         strip_plugs = {}
         for dev_uid, dev_info in devices.items():
-            if isinstance(dev_info, dict) and dev_info.get("type") == "power_strip":
+            # Check for either 'power_strip' or 'power' (with a 'plugs' array) to correctly identify the strip
+            if isinstance(dev_info, dict) and dev_info.get("type") in ["power", "power_strip"] and "plugs" in dev_info:
                 hw_mac = dev_info.get("mac_address", "").upper().replace("-", ":")
                 if hw_mac == mac:
                     strip_plugs = dev_info.get("plugs", {})
