@@ -53,7 +53,7 @@ def main():
         remote_hardware_file = f"~/config/data/hardware/node/{hostname}.json"
 
         cmd = [
-            "rsync", "-avz", "--info=progress2",
+            "rsync", "-avz",
             "-e", ssh_rsync_opts,
             f"{user}@{ip}:{remote_hardware_file}",
             f"{local_node_dir}/"
