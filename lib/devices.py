@@ -301,6 +301,7 @@ class ComputeNode(Device):
         """
         Idempotently mounts local physical storage, configures local NFS exports,
         and builds AutoFS Direct client maps to mount all remote cluster SSDs dynamically.
+        Utilizes high-speed DAC routing automatically if node IPs are registered.
         """
         from lib import metaclaw
         all_devices = metaclaw.Inst.devices()
@@ -398,15 +399,23 @@ class ComputeNode(Device):
         exports_lines = []
         fsid_counter = 1
 
+        my_dac_ip = self.data.get('dac_ip')
+
         # Export the local home directory (/home/metaclaw)
         if self.device_type == 'node' and self.uid != "peridot":
-            exports_lines.append("/home/metaclaw 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)")
+            exports_lines.append(f"/home/metaclaw 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
+            if my_dac_ip:
+                # Assuming standard /24 subnet for Point-to-Point DAC routes
+                exports_lines.append(f"/home/metaclaw 10.99.0.0/24(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
+            fsid_counter += 1
 
         # Export physically attached external SSDs (Injecting fsid= to support exFAT/FUSE)
         for m in local_mounts:
             mp = m.get("mountpoint")
             if mp and mp.startswith("/mnt/cluster/ext/"):
                 exports_lines.append(f"{mp} 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
+                if my_dac_ip:
+                    exports_lines.append(f"{mp} 10.99.0.0/24(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
                 fsid_counter += 1
 
         exports_content = "\n".join(exports_lines) + "\n"
@@ -435,11 +444,18 @@ class ComputeNode(Device):
         autofs_map_lines = []
 
         for uid, dev in all_devices.items():
+
+            target_ip = dev.data.get('tailscale_ip')
+            target_dac_ip = dev.data.get('dac_ip')
+
+            # DAC Routing Optimization
+            if my_dac_ip and target_dac_ip:
+                target_ip = target_dac_ip
+
             # Remote Node Home Directories -> /mnt/cluster/<hostname>/home/metaclaw
             if dev.device_type == 'node' and uid != self.uid and uid != "peridot":
-                ip = dev.data.get('tailscale_ip')
-                if ip:
-                    autofs_map_lines.append(f"/mnt/cluster/{uid}/home/metaclaw -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:/home/metaclaw")
+                if target_ip:
+                    autofs_map_lines.append(f"/mnt/cluster/{uid}/home/metaclaw -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {target_ip}:/home/metaclaw")
 
             # Remote External SSDs -> /mnt/cluster/ext/<ssd_name>
             elif dev.device_type == 'ssd':
@@ -447,11 +463,17 @@ class ComputeNode(Device):
                 if current_host and current_host != self.uid:
                     host_dev = all_devices.get(current_host)
                     if host_dev:
-                        ip = host_dev.data.get('tailscale_ip')
+                        host_target_ip = host_dev.data.get('tailscale_ip')
+                        host_dac_ip = host_dev.data.get('dac_ip')
+
+                        # Re-verify DAC specifically for the host the nomadic drive is attached to
+                        if my_dac_ip and host_dac_ip:
+                            host_target_ip = host_dac_ip
+
                         for m in dev.data.get('mounts', []):
                             mp = m.get('mountpoint')
-                            if ip and mp and mp.startswith("/mnt/cluster/ext/"):
-                                autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:{mp}")
+                            if host_target_ip and mp and mp.startswith("/mnt/cluster/ext/"):
+                                autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {host_target_ip}:{mp}")
 
         # Local Node Home Directory Symlink (Ensures absolute local consistency)
         try:
