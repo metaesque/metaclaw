@@ -61,7 +61,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull fetchcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg
 
 define h1_title
 	echo ""; \
@@ -183,8 +183,8 @@ pull: | $(PYTHON_BIN)
 
 # WHAT IT DOES: Pulls updated hardware JSON registries from cluster nodes back to the local source-of-truth.
 # WHY IT EXISTS: Marshals distributed telemetry state (like dynamically discovered SSD mounts) back to the laptop.
-fetchcfg: | $(PYTHON_BIN)
-	@$(call h1_title,"FETCHING HARDWARE STATE FROM CLUSTER")
+pullcfg: | $(PYTHON_BIN)
+	@$(call h1_title,"PULLING HARDWARE STATE FROM CLUSTER")
 	@$(PYTHON_BIN) ./bin/fetch_hardware_state.py
 
 # WHAT IT DOES: Initializes symlinks and establishes the internal Docker bridge network.
@@ -419,7 +419,7 @@ factory-reset-soft: __undock clean-network
 	@$(MAKE) --no-print-directory clean-state
 	@$(call h2_title,"Removing .env files...")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
 	@$(call h2_title,"Purging global runtime state...")

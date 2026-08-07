@@ -30,9 +30,10 @@ def main():
         config_dir = os.path.abspath(os.path.join(repo_root, '..', 'config'))
 
     hardware_dir = os.path.join(config_dir, 'data', 'hardware')
+    local_node_dir = os.path.join(hardware_dir, 'node')
 
-    print(f"Synchronizing remote hardware state back to: {hardware_dir}")
-    os.makedirs(hardware_dir, exist_ok=True)
+    print(f"Synchronizing remote hardware state back to: {local_node_dir}")
+    os.makedirs(local_node_dir, exist_ok=True)
 
     for node in profile.get("nodes", []):
         hostname = node.get("hostname")
@@ -42,21 +43,20 @@ def main():
         if hostname == local_host or not ip or ip == "127.0.0.1":
             continue
 
-        print(f"\n[Fetch State] Pulling hardware configurations from {hostname} ({ip})...")
+        print(f"\n[Pull Config] Pulling hardware configuration from {hostname} ({ip})...")
 
         ssh_rsync_opts = "ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR"
         if ssh_key:
             ssh_rsync_opts += f" -i {ssh_key}"
 
-        # Sync back the hardware directory without --delete to ensure we merge the node's JSON
-        # into the master branch without overwriting data from other nodes.
-        remote_hardware_dir = "~/config/data/hardware/"
+        # Sync ONLY the specific node JSON file to prevent overwriting other node configs
+        remote_hardware_file = f"~/config/data/hardware/node/{hostname}.json"
 
         cmd = [
             "rsync", "-avz", "--info=progress2",
             "-e", ssh_rsync_opts,
-            f"{user}@{ip}:{remote_hardware_dir}",
-            f"{hardware_dir}/"
+            f"{user}@{ip}:{remote_hardware_file}",
+            f"{local_node_dir}/"
         ]
 
         try:
