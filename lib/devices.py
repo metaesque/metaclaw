@@ -249,6 +249,7 @@ class ComputeNode(Device):
     def mount_storage(self):
         """
         Idempotently maps and mounts SSD volumes defined in the hardware registry.
+        Gracefully handles disconnected drives or missing UUIDs.
         """
         mounts = self.data.get("mounts", [])
         for m in mounts:
@@ -263,6 +264,12 @@ class ComputeNode(Device):
             if os.path.ismount(mp):
                 continue
 
+            # Graceful Degradation: Check if the drive is physically attached
+            uuid_path = f"/dev/disk/by-uuid/{uuid}"
+            if not os.path.exists(uuid_path):
+                print(f"DIAGNOSTIC: UUID {uuid} for mountpoint {mp} does not exist in reality. hardware.json may be out-of-date or the drive is unplugged.")
+                continue
+
             os.makedirs(mp, exist_ok=True)
 
             # Execute Mount
@@ -272,9 +279,9 @@ class ComputeNode(Device):
             cmd.extend([f"UUID={uuid}", mp])
 
             try:
-                subprocess.run(cmd, check=True, capture_output=True)
+                subprocess.run(cmd, check=True, capture_output=True, text=True)
             except subprocess.CalledProcessError as e:
-                print(f"Failed to mount UUID {uuid} to {mp}: {e.stderr.decode()}")
+                print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Command returned {e.returncode}. Error: {e.stderr.strip()}")
 
 class PowerStrip(Device):
     """
