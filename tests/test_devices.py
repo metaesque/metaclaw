@@ -3,9 +3,11 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 
-from lib.devices import (
-    Device, ExternalSSD, NetworkUplink, MobilePower,
-    PowerAsset, NomadicClient, ComputeNode, PowerStrip
+# Inject the lib directory directly to support module mapping
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'lib')))
+from devices import (
+    Device, ExternalSSD, NetworkUplink,
+    PowerAsset, ComputeNode, PowerStrip
 )
 
 class TestDevice(unittest.TestCase):
@@ -28,34 +30,24 @@ class TestDevice(unittest.TestCase):
 
 class TestExternalSSD(unittest.TestCase):
     def test___init__(self):
-        dev = ExternalSSD("t7", {"type": "external_ssd"})
-        self.assertEqual(dev.device_type, "external_ssd")
+        dev = ExternalSSD("t7", {"type": "ssd"})
+        self.assertEqual(dev.device_type, "ssd")
 
 class TestNetworkUplink(unittest.TestCase):
     def test___init__(self):
-        dev = NetworkUplink("switch", {"type": "network_uplink"})
-        self.assertEqual(dev.device_type, "network_uplink")
-
-class TestMobilePower(unittest.TestCase):
-    def test___init__(self):
-        dev = MobilePower("battery", {"type": "mobile_power"})
-        self.assertEqual(dev.device_type, "mobile_power")
+        dev = NetworkUplink("switch", {"type": "network"})
+        self.assertEqual(dev.device_type, "network")
 
 class TestPowerAsset(unittest.TestCase):
     def test___init__(self):
-        dev = PowerAsset("ups", {"type": "power_asset"})
-        self.assertEqual(dev.device_type, "power_asset")
-
-class TestNomadicClient(unittest.TestCase):
-    def test___init__(self):
-        dev = NomadicClient("mac", {"type": "nomadic_client"})
-        self.assertEqual(dev.device_type, "nomadic_client")
+        dev = PowerAsset("ups", {"type": "power"})
+        self.assertEqual(dev.device_type, "power")
 
 class TestComputeNode(unittest.TestCase):
     def setUp(self):
         self.data = {
             "name": "test_node",
-            "type": "compute_node",
+            "type": "node",
             "processing": {"cpu": 8},
             "vram": {"size": 32},
             "bandwidth": 100.0,
@@ -74,8 +66,8 @@ class TestComputeNode(unittest.TestCase):
         self.assertEqual(specs["vram"]["size"], 32)
         self.assertEqual(specs["bandwidth_gbps"], 100.0)
 
-    @patch('lib.devices.socket.gethostname', return_value='test_node')
-    @patch('lib.devices.subprocess.run')
+    @patch('devices.socket.gethostname', return_value='test_node')
+    @patch('devices.subprocess.run')
     def test_update_data(self, mock_run, mock_hostname):
         mock_result = MagicMock()
         mock_result.returncode = 0
@@ -85,9 +77,9 @@ class TestComputeNode(unittest.TestCase):
         self.node.update_data()
         self.assertIn('_live_lsblk', self.node.data)
 
-    @patch('lib.devices.os.path.ismount', return_value=False)
-    @patch('lib.devices.os.makedirs')
-    @patch('lib.devices.subprocess.run')
+    @patch('devices.os.path.ismount', return_value=False)
+    @patch('devices.os.makedirs')
+    @patch('devices.subprocess.run')
     def test_mount_storage(self, mock_run, mock_makedirs, mock_ismount):
         self.node.mount_storage()
         mock_makedirs.assert_called_with("/mnt/test", exist_ok=True)

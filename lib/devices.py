@@ -11,8 +11,8 @@ import shutil
 
 def get_hardware_registry():
     """
-    Dynamically resolves and parses the hardware.json registry from the global
-    METACLAW_CONFIG drop-zone.
+    Dynamically resolves and parses the individual hardware JSON files
+    from the global METACLAW_CONFIG drop-zone.
     """
     config_dir = os.environ.get('METACLAW_CONFIG')
     if not config_dir:
@@ -31,11 +31,22 @@ def get_hardware_registry():
         if not config_dir:
             config_dir = os.path.abspath(os.path.join(root_dir, '..', 'config'))
 
-    hw_path = os.path.join(config_dir, 'data', 'hardware.json')
-    if os.path.exists(hw_path):
-        with open(hw_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {}
+    hardware_dir = os.path.join(config_dir, 'data', 'hardware')
+    registry = {}
+
+    if os.path.exists(hardware_dir) and os.path.isdir(hardware_dir):
+        for root, dirs, files in os.walk(hardware_dir):
+            for file in files:
+                if file.endswith('.json'):
+                    uid = file[:-5]
+                    file_path = os.path.join(root, file)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            registry[uid] = data
+                    except json.JSONDecodeError:
+                        pass
+    return registry
 
 def get_all_devices():
     """
@@ -46,20 +57,17 @@ def get_all_devices():
     devices = {}
     for uid, dev_data in data.items():
         dtype = dev_data.get('type')
-        if dtype == 'compute_node':
+        if dtype == 'node':
             devices[uid] = ComputeNode(uid, dev_data)
-        elif dtype == 'power_strip':
-            devices[uid] = PowerStrip(uid, dev_data)
-        elif dtype == 'external_ssd':
+        elif dtype == 'power':
+            if 'plugs' in dev_data:
+                devices[uid] = PowerStrip(uid, dev_data)
+            else:
+                devices[uid] = PowerAsset(uid, dev_data)
+        elif dtype == 'ssd':
             devices[uid] = ExternalSSD(uid, dev_data)
-        elif dtype == 'network_uplink':
+        elif dtype == 'network':
             devices[uid] = NetworkUplink(uid, dev_data)
-        elif dtype == 'mobile_power':
-            devices[uid] = MobilePower(uid, dev_data)
-        elif dtype == 'power_asset':
-            devices[uid] = PowerAsset(uid, dev_data)
-        elif dtype == 'nomadic_client':
-            devices[uid] = NomadicClient(uid, dev_data)
         else:
             devices[uid] = Device(uid, dev_data)
     return devices
@@ -89,13 +97,7 @@ class ExternalSSD(Device):
 class NetworkUplink(Device):
     pass
 
-class MobilePower(Device):
-    pass
-
 class PowerAsset(Device):
-    pass
-
-class NomadicClient(Device):
     pass
 
 class ComputeNode(Device):
@@ -267,7 +269,7 @@ class ComputeNode(Device):
             # Graceful Degradation: Check if the drive is physically attached
             uuid_path = f"/dev/disk/by-uuid/{uuid}"
             if not os.path.exists(uuid_path):
-                print(f"DIAGNOSTIC: UUID {uuid} for mountpoint {mp} does not exist in reality. hardware.json may be out-of-date or the drive is unplugged.")
+                print(f"DIAGNOSTIC: UUID {uuid} for mountpoint {mp} does not exist in reality. hardware configuration may be out-of-date or the drive is unplugged.")
                 continue
 
             os.makedirs(mp, exist_ok=True)
