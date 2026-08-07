@@ -48,6 +48,26 @@ def get_hardware_registry():
                         pass
     return registry
 
+def save_device_registry(uid, data):
+    """
+    Saves an updated device dictionary back to its specific JSON file.
+    """
+    config_dir = os.environ.get('METACLAW_CONFIG')
+    if not config_dir:
+        lib_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(lib_dir)
+        config_dir = os.path.abspath(os.path.join(root_dir, '..', 'config'))
+
+    hardware_dir = os.path.join(config_dir, 'data', 'hardware')
+    if os.path.exists(hardware_dir):
+        for root, dirs, files in os.walk(hardware_dir):
+            for file in files:
+                if file == f"{uid}.json":
+                    file_path = os.path.join(root, file)
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2)
+                    return
+
 def get_all_devices():
     """
     Returns a dictionary of instantiated Device objects (ComputeNode, PowerStrip, etc.)
@@ -248,22 +268,70 @@ class ComputeNode(Device):
         except Exception:
             pass
 
+        # 9. Nomadic External SSD Tracking
+        try:
+            from lib import metaclaw
+            all_devices = metaclaw.Inst.devices()
+            attached_uuids = set()
+            res = subprocess.run(['lsblk', '-J', '-o', 'UUID'], capture_output=True, text=True)
+            if res.returncode == 0:
+                lsblk_data = json.loads(res.stdout)
+                def extract_uuids(blocks):
+                    for b in blocks:
+                        if b.get('uuid'):
+                            attached_uuids.add(b['uuid'].upper())
+                            attached_uuids.add(b['uuid'].lower())
+                        if 'children' in b:
+                            extract_uuids(b['children'])
+                extract_uuids(lsblk_data.get('blockdevices', []))
+
+                for uid, dev in all_devices.items():
+                    if dev.device_type == 'ssd':
+                        for m in dev.data.get('mounts', []):
+                            uuid = m.get('uuid')
+                            if uuid and (uuid.upper() in attached_uuids or uuid.lower() in attached_uuids):
+                                if dev.data.get('current_host') != self.uid:
+                                    dev.data['current_host'] = self.uid
+                                    save_device_registry(uid, dev.data)
+                                    print(f"Registered nomadic SSD '{uid}' as physically attached to {self.uid}.")
+        except Exception as e:
+            print(f"DIAGNOSTIC: Failed to track nomadic SSDs: {e}")
+
     def mount_storage(self):
         """
-        Idempotently maps and mounts internal and external SSD volumes.
-        Scans the entire cluster registry for ExternalSSDs, detects if they are physically
-        plugged into this specific node, mounts them, and cleans up orphaned directories.
+        Idempotently mounts local storage, exports it via NFS, and generates
+        AutoFS client maps to establish a distributed cluster storage mesh.
         """
         from lib import metaclaw
         all_devices = metaclaw.Inst.devices()
 
-        my_mounts = []
+        # ======================================================================
+        # PHASE 1: LOCAL PHYSICAL MOUNTS
+        # ======================================================================
+        local_mounts = []
+
+        # Discover actual physical block UUIDs connected to this machine
+        attached_uuids = set()
+        try:
+            res = subprocess.run(['lsblk', '-J', '-o', 'UUID'], capture_output=True, text=True)
+            if res.returncode == 0:
+                lsblk_data = json.loads(res.stdout)
+                def extract_uuids(blocks):
+                    for b in blocks:
+                        if b.get('uuid'):
+                            attached_uuids.add(b['uuid'].upper())
+                            attached_uuids.add(b['uuid'].lower())
+                        if 'children' in b:
+                            extract_uuids(b['children'])
+                extract_uuids(lsblk_data.get('blockdevices', []))
+        except Exception:
+            pass
+
+        # 1a. Load internal mounts natively assigned to this node's profile
+        local_mounts.extend(self.data.get("mounts", []))
+
+        # 1b. Search the global registry for ExternalSSDs physically attached to this node right now
         valid_ext_mountpoints = set()
-
-        # 1. Add internal mounts assigned directly to this node's profile
-        my_mounts.extend(self.data.get("mounts", []))
-
-        # 2. Search global registry for ExternalSSDs physically attached to this node
         for uid, dev in all_devices.items():
             if dev.device_type == 'ssd':
                 for m in dev.data.get('mounts', []):
@@ -275,62 +343,120 @@ class ComputeNode(Device):
                     if mp.startswith('/mnt/cluster/ext/'):
                         valid_ext_mountpoints.add(mp)
 
-                    # Does the UUID physically exist on THIS machine's bus right now?
-                    uuid_path = f"/dev/disk/by-uuid/{uuid}"
-                    if os.path.exists(uuid_path):
-                        my_mounts.append(m)
+                    if uuid.upper() in attached_uuids or uuid.lower() in attached_uuids:
+                        local_mounts.append(m)
 
-        # 3. Cleanup orphaned directories in /mnt/cluster/ext/
-        ext_dir = "/mnt/cluster/ext"
-        if os.path.exists(ext_dir):
-            for item in os.listdir(ext_dir):
-                full_path = os.path.join(ext_dir, item)
-                if os.path.isdir(full_path) and full_path not in valid_ext_mountpoints:
-                    print(f"DIAGNOSTIC: Found orphaned mount directory: {full_path}")
-                    if os.path.ismount(full_path):
-                        print(f"Unmounting orphaned path: {full_path}")
-                        subprocess.run(['sudo', 'umount', full_path], check=False)
-                    try:
-                        os.rmdir(full_path)
-                        print(f"Removed orphaned directory: {full_path}")
-                    except Exception as e:
-                        print(f"Could not remove {full_path}: {e}")
-
-        # 4. Execute Intended Mounts
-        for m in my_mounts:
+        # 1c. Execute Intended Mounts
+        for m in local_mounts:
             mp = m.get("mountpoint")
             uuid = m.get("uuid")
             fstype = m.get("fstype")
 
-            if not mp or not uuid:
+            if not mp or not uuid or mp == '/':
                 continue
 
-            # Idempotency check: Is it already mounted?
-            if os.path.ismount(mp):
-                continue
+            if not os.path.ismount(mp):
+                os.makedirs(mp, exist_ok=True)
+                cmd = ['sudo', 'mount']
+                if fstype:
+                    cmd.extend(['-t', fstype])
+                cmd.extend([f"UUID={uuid}", mp])
+                try:
+                    subprocess.run(cmd, check=True, capture_output=True, text=True)
+                    print(f"Mounted local physical drive: {uuid} to {mp}")
+                except subprocess.CalledProcessError as e:
+                    print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Error: {e.stderr.strip()}")
 
-            # Check if the drive is physically attached (mostly for internal drives failing to mount)
-            uuid_path = f"/dev/disk/by-uuid/{uuid}"
-            if not os.path.exists(uuid_path):
-                # We skip throwing errors for external SSDs, as they might legitimately be unplugged
-                if mp.startswith('/mnt/cluster/ext'):
-                    continue
-                print(f"DIAGNOSTIC: UUID {uuid} for mountpoint {mp} does not exist in reality. hardware configuration may be out-of-date.")
-                continue
+        # 1d. Generate local symlink for consistency (e.g. /mnt/cluster/control -> /home/metaclaw)
+        try:
+            os.makedirs("/mnt/cluster", exist_ok=True)
+            symlink_target = f"/mnt/cluster/{self.uid}"
+            if not os.path.exists(symlink_target) and not os.path.islink(symlink_target):
+                os.symlink("/home/metaclaw", symlink_target)
+        except Exception as e:
+            print(f"DIAGNOSTIC: Failed to create local cluster symlink: {e}")
 
-            os.makedirs(mp, exist_ok=True)
+        # ======================================================================
+        # PHASE 2: NFS EXPORTS (Server Configuration)
+        # ======================================================================
+        print(f"Configuring NFS Exports for local drives on {self.uid}...")
+        exports_lines = []
 
-            # Execute Mount
-            cmd = ['sudo', 'mount']
-            if fstype:
-                cmd.extend(['-t', fstype])
-            cmd.extend([f"UUID={uuid}", mp])
+        # Export the local home directory (unless it's the nomadic macbook client)
+        if self.device_type == 'node' and self.uid != "peridot":
+            exports_lines.append("/home/metaclaw 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)")
 
-            try:
-                subprocess.run(cmd, check=True, capture_output=True, text=True)
-                print(f"Successfully mounted {uuid} to {mp}")
-            except subprocess.CalledProcessError as e:
-                print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Command returned {e.returncode}. Error: {e.stderr.strip()}")
+        # Export physically attached external SSDs
+        for m in local_mounts:
+            mp = m.get("mountpoint")
+            if mp and mp.startswith("/mnt/cluster/ext/"):
+                exports_lines.append(f"{mp} 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)")
+
+        exports_content = "\n".join(exports_lines) + "\n"
+        exports_file = "/tmp/metaclaw.exports"
+        with open(exports_file, 'w') as f:
+            f.write(exports_content)
+
+        try:
+            subprocess.run(['sudo', 'mkdir', '-p', '/etc/exports.d'], check=True)
+            subprocess.run(['sudo', 'mv', exports_file, '/etc/exports.d/metaclaw.exports'], check=True)
+            # Only attempt exportfs if the nfs-kernel-server is actually installed
+            if shutil.which("exportfs"):
+                subprocess.run(['sudo', 'exportfs', '-ra'], check=True)
+                print("NFS exports configured and reloaded.")
+            else:
+                print("DIAGNOSTIC: Skipping exportfs reload. 'nfs-kernel-server' is not installed on this host.")
+        except Exception as e:
+            print(f"DIAGNOSTIC: Failed to configure NFS exports: {e}")
+
+        # ======================================================================
+        # PHASE 3: AUTOFS CLIENT MAPS (Remote Discovery)
+        # ======================================================================
+        print(f"Configuring AutoFS Maps for cluster storage mesh on {self.uid}...")
+        autofs_map_lines = []
+
+        for uid, dev in all_devices.items():
+            # Mount remote node home directories (e.g. compute -> /mnt/cluster/compute -> /home/metaclaw)
+            if dev.device_type == 'node' and uid != self.uid:
+                ip = dev.data.get('tailscale_ip')
+                if ip:
+                    autofs_map_lines.append(f"{uid} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:/home/metaclaw")
+
+            # Mount remote external SSDs
+            elif dev.device_type == 'ssd':
+                current_host = dev.data.get('current_host')
+                if current_host and current_host != self.uid:
+                    host_dev = all_devices.get(current_host)
+                    if host_dev:
+                        ip = host_dev.data.get('tailscale_ip')
+                        for m in dev.data.get('mounts', []):
+                            mp = m.get('mountpoint')
+                            if ip and mp and mp.startswith("/mnt/cluster/ext/"):
+                                map_key = mp.replace("/mnt/cluster/", "") # e.g. "ext/t9_2tb_black"
+                                autofs_map_lines.append(f"{map_key} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {ip}:{mp}")
+
+        autofs_content = "\n".join(autofs_map_lines) + "\n"
+        autofs_file = "/tmp/auto.metaclaw"
+        with open(autofs_file, 'w') as f:
+            f.write(autofs_content)
+
+        master_content = "/mnt/cluster /etc/auto.metaclaw --timeout=0\n"
+        master_file = "/tmp/metaclaw.autofs"
+        with open(master_file, 'w') as f:
+            f.write(master_content)
+
+        try:
+            subprocess.run(['sudo', 'mv', autofs_file, '/etc/auto.metaclaw'], check=True)
+            subprocess.run(['sudo', 'mkdir', '-p', '/etc/auto.master.d'], check=True)
+            subprocess.run(['sudo', 'mv', master_file, '/etc/auto.master.d/metaclaw.autofs'], check=True)
+
+            if shutil.which("systemctl") and subprocess.run(['systemctl', 'is-active', '--quiet', 'autofs']).returncode == 0:
+                subprocess.run(['sudo', 'systemctl', 'reload-or-restart', 'autofs'], check=True)
+                print("AutoFS maps configured and reloaded.")
+            else:
+                print("DIAGNOSTIC: Skipping AutoFS reload. The 'autofs' service is not installed or active on this host.")
+        except Exception as e:
+            print(f"DIAGNOSTIC: Failed to configure AutoFS: {e}")
 
 class PowerStrip(Device):
     """
