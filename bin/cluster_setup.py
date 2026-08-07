@@ -376,18 +376,20 @@ def main():
         ssh_key = get_required_ssh_key()
         print(f"Using enforced SSH identity: {ssh_key}")
 
-        while True:
-            print("\nEnter remote Compute node network coordinates:")
-            compute_host = input("Compute Node Hostname [compute]: ").strip() or "compute"
+        print("\nEnter remote Compute node network coordinates:")
+        compute_hosts_input = input("Compute Node Hostname(s) [compute]: ").strip() or "compute"
+        compute_hosts = [h.strip() for h in compute_hosts_input.split()]
 
+        for compute_host in compute_hosts:
+            print(f"\n--- Configuring Compute Node: {compute_host} ---")
             default_ip = get_tailscale_ip(compute_host)
-            ip_prompt = f"Compute Node IP address [{default_ip}]: " if default_ip else "Compute Node IP address (e.g., 100.x.y.z): "
+            ip_prompt = f"  -> IP address [{default_ip}]: " if default_ip else "  -> IP address (e.g., 100.x.y.z): "
             compute_ip = input(ip_prompt).strip()
             if not compute_ip and default_ip:
                 compute_ip = default_ip
 
             current_user = os.getlogin()
-            ssh_user = input(f"SSH Username for remote connection [{current_user}]: ").strip() or current_user
+            ssh_user = input(f"  -> SSH Username [{current_user}]: ").strip() or current_user
 
             print(f"\n[Phase 2] Executing remote hardware interrogation on {compute_host}...")
             compute_hw = profile_remote_hardware(compute_ip, ssh_user, ssh_key)
@@ -414,10 +416,6 @@ def main():
                 "order_prefs": ["cost", "safety", "resources"],
                 "hardware": compute_hw
             })
-
-            add_another = input("\nAdd another Compute node to the cluster? [y/N]: ").strip().lower()
-            if add_another not in ['y', 'yes']:
-                break
     else:
         profile["nodes"].append({
             "hostname": local_host,
