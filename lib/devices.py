@@ -306,7 +306,7 @@ class ComputeNode(Device):
         all_devices = metaclaw.Inst.devices()
 
         # ======================================================================
-        # PHASE 0: DEPENDENCY INJECTION
+        # PHASE 0: DEPENDENCY INJECTION & KERNEL LOCK RELEASE
         # ======================================================================
         if platform.system() == 'Linux':
             missing_pkgs = []
@@ -325,6 +325,15 @@ class ComputeNode(Device):
                     subprocess.run(['sudo', '-E', 'apt-get', 'install', '-y'] + missing_pkgs, env=env, check=True)
                 except Exception as e:
                     print(f"DIAGNOSTIC: Failed to install dependencies. NFS/AutoFS might fail: {e}")
+
+            # Stop autofs immediately. If an old indirect map is active on /mnt/cluster,
+            # it prevents root from executing mkdir. Stopping it releases the kernel lock.
+            subprocess.run(['sudo', 'systemctl', 'stop', 'autofs'], check=False, stderr=subprocess.DEVNULL)
+
+        # Cleanup legacy symlink from early iterations if it exists
+        legacy_symlink = f"/mnt/cluster/{self.uid}"
+        if os.path.islink(legacy_symlink):
+            subprocess.run(['sudo', 'rm', '-f', legacy_symlink], check=False)
 
         subprocess.run(['sudo', 'mkdir', '-p', '/mnt/cluster/ext'], check=False)
 
@@ -387,16 +396,18 @@ class ComputeNode(Device):
         # ======================================================================
         print(f"Configuring NFS Exports for local drives on {self.uid}...")
         exports_lines = []
+        fsid_counter = 1
 
         # Export the local home directory (/home/metaclaw)
         if self.device_type == 'node' and self.uid != "peridot":
             exports_lines.append("/home/metaclaw 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)")
 
-        # Export physically attached external SSDs
+        # Export physically attached external SSDs (Injecting fsid= to support exFAT/FUSE)
         for m in local_mounts:
             mp = m.get("mountpoint")
             if mp and mp.startswith("/mnt/cluster/ext/"):
-                exports_lines.append(f"{mp} 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000)")
+                exports_lines.append(f"{mp} 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
+                fsid_counter += 1
 
         exports_content = "\n".join(exports_lines) + "\n"
         exports_file = "/tmp/metaclaw.exports"
