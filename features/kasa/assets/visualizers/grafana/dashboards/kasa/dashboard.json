@@ -190,8 +190,8 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "gpu_telemetry_utilization{host=~\"$host\"}",
-          "legendFormat": "{{host}} - {{gpu_id}}",
+          "expr": "label_replace(gpu_telemetry_utilization{host=~\"$host\"}, \"clean_gpu\", \"$1\", \"gpu_id\", \".*_(.*)\")",
+          "legendFormat": "{{host}}:{{clean_gpu}}",
           "refId": "A"
         }
       ],
@@ -224,8 +224,8 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "gpu_telemetry_vram_used_mb{host=~\"$host\"}",
-          "legendFormat": "{{host}} - {{gpu_id}}",
+          "expr": "label_replace(gpu_telemetry_vram_used_mb{host=~\"$host\"}, \"clean_gpu\", \"$1\", \"gpu_id\", \".*_(.*)\")",
+          "legendFormat": "{{host}}:{{clean_gpu}}",
           "refId": "A"
         }
       ],
@@ -249,18 +249,18 @@
           "type": "prometheus",
           "uid": "victoriametrics"
         },
-        "definition": "label_values(host_metadata_active, host)",
+        "definition": "query_result(host_metadata_active)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "host",
         "options": [],
         "query": {
-          "query": "label_values(host_metadata_active, host)",
+          "query": "query_result(host_metadata_active)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
-        "regex": "",
+        "refresh": 2,
+        "regex": "/host=\"([^\"]+)\"/",
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
