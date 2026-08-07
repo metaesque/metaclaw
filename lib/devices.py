@@ -250,11 +250,54 @@ class ComputeNode(Device):
 
     def mount_storage(self):
         """
-        Idempotently maps and mounts SSD volumes defined in the hardware registry.
-        Gracefully handles disconnected drives or missing UUIDs.
+        Idempotently maps and mounts internal and external SSD volumes.
+        Scans the entire cluster registry for ExternalSSDs, detects if they are physically
+        plugged into this specific node, mounts them, and cleans up orphaned directories.
         """
-        mounts = self.data.get("mounts", [])
-        for m in mounts:
+        from lib import metaclaw
+        all_devices = metaclaw.Inst.devices()
+
+        my_mounts = []
+        valid_ext_mountpoints = set()
+
+        # 1. Add internal mounts assigned directly to this node's profile
+        my_mounts.extend(self.data.get("mounts", []))
+
+        # 2. Search global registry for ExternalSSDs physically attached to this node
+        for uid, dev in all_devices.items():
+            if dev.device_type == 'ssd':
+                for m in dev.data.get('mounts', []):
+                    uuid = m.get('uuid')
+                    mp = m.get('mountpoint')
+                    if not uuid or not mp:
+                        continue
+
+                    if mp.startswith('/mnt/cluster/ext/'):
+                        valid_ext_mountpoints.add(mp)
+
+                    # Does the UUID physically exist on THIS machine's bus right now?
+                    uuid_path = f"/dev/disk/by-uuid/{uuid}"
+                    if os.path.exists(uuid_path):
+                        my_mounts.append(m)
+
+        # 3. Cleanup orphaned directories in /mnt/cluster/ext/
+        ext_dir = "/mnt/cluster/ext"
+        if os.path.exists(ext_dir):
+            for item in os.listdir(ext_dir):
+                full_path = os.path.join(ext_dir, item)
+                if os.path.isdir(full_path) and full_path not in valid_ext_mountpoints:
+                    print(f"DIAGNOSTIC: Found orphaned mount directory: {full_path}")
+                    if os.path.ismount(full_path):
+                        print(f"Unmounting orphaned path: {full_path}")
+                        subprocess.run(['sudo', 'umount', full_path], check=False)
+                    try:
+                        os.rmdir(full_path)
+                        print(f"Removed orphaned directory: {full_path}")
+                    except Exception as e:
+                        print(f"Could not remove {full_path}: {e}")
+
+        # 4. Execute Intended Mounts
+        for m in my_mounts:
             mp = m.get("mountpoint")
             uuid = m.get("uuid")
             fstype = m.get("fstype")
@@ -266,10 +309,13 @@ class ComputeNode(Device):
             if os.path.ismount(mp):
                 continue
 
-            # Graceful Degradation: Check if the drive is physically attached
+            # Check if the drive is physically attached (mostly for internal drives failing to mount)
             uuid_path = f"/dev/disk/by-uuid/{uuid}"
             if not os.path.exists(uuid_path):
-                print(f"DIAGNOSTIC: UUID {uuid} for mountpoint {mp} does not exist in reality. hardware configuration may be out-of-date or the drive is unplugged.")
+                # We skip throwing errors for external SSDs, as they might legitimately be unplugged
+                if mp.startswith('/mnt/cluster/ext'):
+                    continue
+                print(f"DIAGNOSTIC: UUID {uuid} for mountpoint {mp} does not exist in reality. hardware configuration may be out-of-date.")
                 continue
 
             os.makedirs(mp, exist_ok=True)
@@ -282,6 +328,7 @@ class ComputeNode(Device):
 
             try:
                 subprocess.run(cmd, check=True, capture_output=True, text=True)
+                print(f"Successfully mounted {uuid} to {mp}")
             except subprocess.CalledProcessError as e:
                 print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Command returned {e.returncode}. Error: {e.stderr.strip()}")
 
