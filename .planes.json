@@ -103,6 +103,7 @@
     "profile": "Massive RAM capacity, extreme disk IOPS (NVMe), heavy storage.",
     "services": [
       "reldb",
+      "vectordb",
       "vcs",
       "logger",
       "tracer",

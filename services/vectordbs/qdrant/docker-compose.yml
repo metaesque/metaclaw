@@ -1,0 +1,19 @@
+services:
+  qdrant-vectordb:
+    image: qdrant/qdrant:${QDRANT_VERSION}
+    container_name: qdrant-vectordb
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_PORT_HTTP}:6333"
+      - "${QDRANT_PORT_GRPC}:6334"
+    volumes:
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/qdrant-data:/qdrant/storage
+    networks:
+      shared-network:
+        aliases:
+          - active-vectordb
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true

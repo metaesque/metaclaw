@@ -76,6 +76,10 @@ class RelDB(Service):
     def execute_query(self, query_string):
         pass
 
+class VectorDB(Service):
+    def semantic_search(self, embedding_vector):
+        pass
+
 class Cache(Service):
     def flush_keyspace(self):
         pass

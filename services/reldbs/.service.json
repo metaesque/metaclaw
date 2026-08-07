@@ -4,6 +4,6 @@
   "name": "Relational Database",
   "names": "Relational Databases",
   "category": "Data & State Management",
-  "purpose": "The permanent, space-efficient archive for the agent. This database must support high-dimensional vector embeddings for semantic search (associative recall) alongside standard relational data (configs, logs).",
+  "purpose": "The permanent, space-efficient archive for the agent. Primarily focused on relational schemas and tabular data, though specific providers (like PostgreSQL) may also offer embedded vector capabilities.",
   "plane": "archive"
 }

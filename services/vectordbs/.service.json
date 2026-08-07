@@ -1,0 +1,9 @@
+{
+  "uid": "vectordb",
+  "uids": "vectordbs",
+  "name": "Vector Database",
+  "names": "Vector Databases",
+  "category": "Data & State Management",
+  "purpose": "A dedicated engine for storing high-dimensional vector embeddings and performing ultra-fast semantic similarity searches.",
+  "plane": "archive"
+}
