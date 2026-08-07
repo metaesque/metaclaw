@@ -447,19 +447,27 @@ class ComputeNode(Device):
                 continue
 
             if not os.path.ismount(mp):
+                # Ensure placeholder directory is created and owned by metaclaw before mounting
                 subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
+                subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)
+                subprocess.run(['sudo', 'chmod', '0777', mp], check=False)
+
                 cmd = ['sudo', 'mount']
                 if fstype:
                     cmd.extend(['-t', fstype])
-                # Direct immediate UID 1000 ownership for non-POSIX drives
-                if fstype in ['exfat', 'vfat']:
-                    cmd.extend(['-o', 'uid=1000,gid=1000,umask=000'])
+
+                # Fix "Permission denied": Explicit full read/write mask for exFAT/FAT/NTFS drives
+                if fstype in ['exfat', 'vfat', 'ntfs']:
+                    cmd.extend(['-o', 'rw,uid=1000,gid=1000,dmask=000,fmask=000'])
+
                 cmd.extend([f"UUID={uuid}", mp])
+
                 try:
                     subprocess.run(cmd, check=True, capture_output=True, text=True)
                     print(f"Mounted local physical drive: {uuid} to {mp}")
+
                     # Enforce UID 1000 permissions for standard POSIX drives post-mount
-                    if fstype not in ['exfat', 'vfat']:
+                    if fstype not in ['exfat', 'vfat', 'ntfs']:
                         subprocess.run(['sudo', 'chown', '-R', '1000:1000', mp], check=False)
                 except subprocess.CalledProcessError as e:
                     print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Error: {e.stderr.strip()}")
@@ -525,25 +533,37 @@ class ComputeNode(Device):
             # Remote Node Home Directories -> /mnt/cluster/<hostname>/home/metaclaw
             if dev.device_type == 'node' and uid != self.uid and uid != "peridot":
                 if target_ip:
-                    autofs_map_lines.append(f"/mnt/cluster/{uid}/home/metaclaw -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {target_ip}:/home/metaclaw")
+                    remote_home_mp = f"/mnt/cluster/{uid}/home/metaclaw"
+
+                    # Fix "Empty Directory" visibility issue by pre-creating the underlying target placeholders
+                    # while AutoFS is stopped, ensuring they appear persistently in `ls` scans.
+                    subprocess.run(['sudo', 'mkdir', '-p', remote_home_mp], check=False)
+                    subprocess.run(['sudo', 'chown', '1000:1000', remote_home_mp], check=False)
+
+                    autofs_map_lines.append(f"{remote_home_mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {target_ip}:/home/metaclaw")
 
             # Remote External SSDs -> /mnt/cluster/ext/<ssd_name>
             elif dev.device_type == 'ssd':
-                current_host = dev.data.get('current_host')
-                if current_host and current_host != self.uid:
-                    host_dev = all_devices.get(current_host)
-                    if host_dev:
-                        host_target_ip = host_dev.data.get('tailscale_ip')
-                        host_dac_ip = host_dev.data.get('dac_ip')
+                for m in dev.data.get('mounts', []):
+                    mp = m.get('mountpoint')
+                    if mp and mp.startswith("/mnt/cluster/ext/"):
+                        # Pre-create the empty placeholder so it's always visible to `ls /mnt/cluster/ext`
+                        subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
+                        subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)
 
-                        # Re-verify DAC specifically for the host the nomadic drive is attached to
-                        if my_dac_ip and host_dac_ip:
-                            host_target_ip = host_dac_ip
+                        current_host = dev.data.get('current_host')
+                        if current_host and current_host != self.uid:
+                            host_dev = all_devices.get(current_host)
+                            if host_dev:
+                                host_target_ip = host_dev.data.get('tailscale_ip')
+                                host_dac_ip = host_dev.data.get('dac_ip')
 
-                        for m in dev.data.get('mounts', []):
-                            mp = m.get('mountpoint')
-                            if host_target_ip and mp and mp.startswith("/mnt/cluster/ext/"):
-                                autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {host_target_ip}:{mp}")
+                                # Re-verify DAC specifically for the host the nomadic drive is attached to
+                                if my_dac_ip and host_dac_ip:
+                                    host_target_ip = host_dac_ip
+
+                                if host_target_ip:
+                                    autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {host_target_ip}:{mp}")
 
         # Local Node Home Directory Symlink (Ensures absolute local consistency)
         try:
