@@ -446,7 +446,7 @@ class ComputeNode(Device):
         try:
             symlink_target = f"/mnt/cluster/{self.uid}"
             if not os.path.exists(symlink_target) and not os.path.islink(symlink_target):
-                os.symlink("/home/metaclaw", symlink_target)
+                subprocess.run(['sudo', 'ln', '-s', '/home/metaclaw', symlink_target], check=True)
         except Exception as e:
             print(f"DIAGNOSTIC: Failed to create local cluster symlink: {e}")
 
