@@ -446,7 +446,20 @@ class ComputeNode(Device):
             if not mp or not uuid or mp == '/':
                 continue
 
-            if not os.path.ismount(mp):
+            is_mounted = os.path.ismount(mp)
+
+            # Fix for exFAT permission dropping: If mounted without uid=1000, unmount it to force a clean mount.
+            # The Linux in-kernel exfat driver ignores uid/gid changes during a standard 'remount'.
+            if is_mounted and fstype in ['exfat', 'vfat', 'ntfs', 'fat32']:
+                check_mount = subprocess.run(['mount'], capture_output=True, text=True)
+                for line in check_mount.stdout.split('\n'):
+                    if f"on {mp} type" in line and 'uid=1000' not in line:
+                        print(f"DIAGNOSTIC: {mp} is mounted without uid=1000 ownership. Unmounting for clean remount...")
+                        subprocess.run(['sudo', 'umount', mp], check=False)
+                        is_mounted = False
+                        break
+
+            if not is_mounted:
                 # Ensure placeholder directory is created and owned by metaclaw before mounting
                 subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
                 subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)

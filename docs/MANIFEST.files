@@ -56,6 +56,9 @@ docs/WORKSPACE.files
 docs/index.md
 docs/personal/Wade.md
 docs/personal/Wade.md.j2
+features/DECISIONS.md
+features/DESIGN.md
+features/clawdisk/docs/DESIGN.md
 features/kasa/assets/collectors/telegraf/kasa.conf
 features/kasa/assets/visualizers/grafana/dashboards/dashboards.yaml
 features/kasa/assets/visualizers/grafana/dashboards/kasa/dashboard.json
