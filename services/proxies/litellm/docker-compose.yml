@@ -14,15 +14,15 @@ services:
       # WHAT THIS DOES: Binds a persistent storage path for detailed JSON telemetry payloads.
       # WHY THIS DEFAULT: By default, the json_logs callback writes to ephemeral container storage, meaning prompt history is wiped on restart.
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/litellm-logs:/app/logs
-    # Injecting memory credentials to satisfy usage-based-routing requirements
+    # Injecting reldb credentials to satisfy usage-based-routing requirements
     env_file:
       - .env
-      # ARCHITECTURAL SHIFT: Inherit the generic ACTIVE_MEMORY_URL_PROXY string dynamically via the symlink.
-      - ../../memory/.env
+      # ARCHITECTURAL SHIFT: Inherit the generic ACTIVE_RELDB_URL_PROXY string dynamically via the symlink.
+      - ../../reldb/.env
     environment:
       # ARCHITECTURAL SHIFT: We consume the generic Interface string exported by the
-      # memory provider rather than composing the URI manually.
-      - DATABASE_URL=${ACTIVE_MEMORY_URL_PROXY:-}
+      # reldb provider rather than composing the URI manually.
+      - DATABASE_URL=${ACTIVE_RELDB_URL_PROXY:-}
     entrypoint: ["/bin/sh", "/app/advanced/entrypoint.sh"]
     # We hardcode 4000 here so the internal process is stable.
     # Host port mapping is handled dynamically by LITELLM_PORT above.

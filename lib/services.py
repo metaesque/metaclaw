@@ -72,7 +72,7 @@ class Ingress(Service):
 # DATA & STATE MANAGEMENT
 # ------------------------------------------------------------------------------
 
-class Memory(Service):
+class RelDB(Service):
     def execute_query(self, query_string):
         pass
 

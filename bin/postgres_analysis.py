@@ -9,8 +9,8 @@ import psycopg2.extras
 from dotenv import load_dotenv
 
 def main():
-  parser = argparse.ArgumentParser(description="Analyze LiteLLM Spend Logs from Memory Provider (PostgreSQL)")
-  parser.add_argument('--spend', action='store_true', help="Fetch spend logs from the memory service")
+  parser = argparse.ArgumentParser(description="Analyze LiteLLM Spend Logs from Relational Database Provider (PostgreSQL)")
+  parser.add_argument('--spend', action='store_true', help="Fetch spend logs from the reldb service")
   parser.add_argument('--hours', type=int, default=1, help="Hours to look back")
   parser.add_argument('-j', '--json', action='store_true', help="Output in JSON format for agentic parsing")
   args = parser.parse_args()
@@ -18,15 +18,15 @@ def main():
   # Load framework environment variables
   load_dotenv('.env')
   load_dotenv('services/proxies/litellm/.env')
-  load_dotenv('services/memories/postgres/.env')
+  load_dotenv('services/reldbs/postgres/.env')
 
   # Resolve Database URL, accounting for network aliasing if run from host
-  db_url = os.environ.get('ACTIVE_MEMORY_URL_PROXY') or os.environ.get('DATABASE_URL')
+  db_url = os.environ.get('ACTIVE_RELDB_URL_PROXY') or os.environ.get('DATABASE_URL')
   if not db_url:
     db_url = "postgresql://litellm_app:change_me_to_AUTO_PASSWORD@localhost:5432/litellm_db"
 
   # Replace docker internal network alias with localhost since this runs on the host metal
-  db_url = db_url.replace('active-memory', 'localhost')
+  db_url = db_url.replace('active-reldb', 'localhost')
 
   # Safely URL-encode the password in case it contains special characters like '@'
   try:

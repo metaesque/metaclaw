@@ -102,7 +102,7 @@
     "aka": "Context & Telemetry",
     "profile": "Massive RAM capacity, extreme disk IOPS (NVMe), heavy storage.",
     "services": [
-      "memory",
+      "reldb",
       "vcs",
       "logger",
       "tracer",

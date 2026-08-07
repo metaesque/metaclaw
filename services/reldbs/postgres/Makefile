@@ -1,5 +1,5 @@
 SERVICE_TITLE = PostgreSQL Database Service
-SERVICE_NAME = postgres-memory
+SERVICE_NAME = postgres-reldb
 DOCKER_SHELL_CMD = psql -U $(POSTGRES_SUPER_USER) -d postgres
 
 FRAMEWORK_ROOT_REL = ../../..

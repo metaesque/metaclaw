@@ -1,9 +1,9 @@
 services:
-  postgres-memory:
+  postgres-reldb:
     # WHAT THIS IS: The relational database managing both standard relational data and high-dimensional vectors.
     # WHY PGVECTOR: OpenClaw requires semantic similarity search to recall memory. Pgvector provides native indexing within the standard Postgres engine.
     image: ${PGVECTOR_IMAGE}
-    container_name: postgres-memory
+    container_name: postgres-reldb
     # WHY UNLESS-STOPPED: Ensures state persistence across host reboots or daemon crashes.
     restart: unless-stopped
     ports:
@@ -28,9 +28,9 @@ services:
         # ==============================================================================
         # ARCHITECTURAL SHIFT: NETWORK ALIASING
         # ==============================================================================
-        # Downstream services access the database blindly via the 'active-memory' host.
+        # Downstream services access the database blindly via the 'active-reldb' host.
         aliases:
-          - active-memory
+          - active-reldb
     # WHAT THIS DOES: Probes the PostgreSQL socket specifically for the target application database, not just the root process.
     # WHY IT MATTERS: A generic pg_isready can return true before the init-roles.sh script finishes creating the openclaw_db.
     # This specificity prevents race conditions causing downstream crashes.

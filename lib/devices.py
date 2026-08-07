@@ -456,9 +456,9 @@ class ComputeNode(Device):
                 if fstype:
                     cmd.extend(['-t', fstype])
 
-                # Fix "Permission denied": Explicit full read/write mask for exFAT/FAT/NTFS drives
-                if fstype in ['exfat', 'vfat', 'ntfs']:
-                    cmd.extend(['-o', 'rw,uid=1000,gid=1000,dmask=000,fmask=000'])
+                # Force exfat/vfat/fat32 to recognize UID 1000 and grant 0777 permissions
+                if fstype in ['exfat', 'vfat', 'ntfs', 'fat32']:
+                    cmd.extend(['-o', 'rw,uid=1000,gid=1000,dmask=0000,fmask=0000'])
 
                 cmd.extend([f"UUID={uuid}", mp])
 
@@ -466,9 +466,11 @@ class ComputeNode(Device):
                     subprocess.run(cmd, check=True, capture_output=True, text=True)
                     print(f"Mounted local physical drive: {uuid} to {mp}")
 
-                    # Enforce UID 1000 permissions for standard POSIX drives post-mount
-                    if fstype not in ['exfat', 'vfat', 'ntfs']:
-                        subprocess.run(['sudo', 'chown', '-R', '1000:1000', mp], check=False)
+                    # For exfat, the chown command must be executed on the mount point POST-mount
+                    # to override any lingering root VFS locks in Ubuntu 24.04
+                    subprocess.run(['sudo', 'chown', '-R', '1000:1000', mp], check=False)
+                    subprocess.run(['sudo', 'chmod', '-R', '0777', mp], check=False)
+
                 except subprocess.CalledProcessError as e:
                     print(f"DIAGNOSTIC: Failed to mount UUID {uuid} to {mp}. Error: {e.stderr.strip()}")
 
@@ -547,9 +549,6 @@ class ComputeNode(Device):
                 for m in dev.data.get('mounts', []):
                     mp = m.get('mountpoint')
                     if mp and mp.startswith("/mnt/cluster/ext/"):
-                        # Pre-create the empty placeholder so it's always visible to `ls /mnt/cluster/ext`
-                        subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
-                        subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)
 
                         current_host = dev.data.get('current_host')
                         if current_host and current_host != self.uid:
@@ -563,6 +562,10 @@ class ComputeNode(Device):
                                     host_target_ip = host_dac_ip
 
                                 if host_target_ip:
+                                    # Ensure the placeholder directory is visible locally even when not mounted
+                                    subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
+                                    subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)
+
                                     autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,intr,timeo=14,retry=2 {host_target_ip}:{mp}")
 
         # Local Node Home Directory Symlink (Ensures absolute local consistency)

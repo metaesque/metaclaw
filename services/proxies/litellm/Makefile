@@ -7,8 +7,8 @@ FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
 include $(FRAMEWORK_ROOT)/.Makefile.inherit
 
 -include $(FRAMEWORK_ROOT)/.env
-# ARCHITECTURAL SHIFT: Consume the generic memory interface instead of hardcoded postgres
--include $(FRAMEWORK_ROOT)/services/memory/.env
+# ARCHITECTURAL SHIFT: Consume the generic reldb interface instead of hardcoded postgres
+-include $(FRAMEWORK_ROOT)/services/reldb/.env
 -include .env
 export
 
