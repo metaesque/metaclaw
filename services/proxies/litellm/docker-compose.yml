@@ -20,9 +20,9 @@ services:
       # ARCHITECTURAL SHIFT: Inherit the generic ACTIVE_RELDB_URL_PROXY string dynamically via the symlink.
       - ../../reldb/.env
     environment:
-      # ARCHITECTURAL SHIFT: We consume the generic Interface string exported by the
-      # reldb provider rather than composing the URI manually.
-      - DATABASE_URL=${ACTIVE_RELDB_URL_PROXY:-}
+      # ARCHITECTURAL SHIFT: We consume the generic Interface string exported by the reldb provider.
+      # STRICT VALIDATION: Using ':?' forces Docker Compose to abort immediately with a clear error if the variable is empty.
+      - DATABASE_URL=${ACTIVE_RELDB_URL_PROXY:?FATAL Error - ACTIVE_RELDB_URL_PROXY is empty. Ensure reldb is assigned to this node.}
     entrypoint: ["/bin/sh", "/app/advanced/entrypoint.sh"]
     # We hardcode 4000 here so the internal process is stable.
     # Host port mapping is handled dynamically by LITELLM_PORT above.
