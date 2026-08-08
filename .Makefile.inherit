@@ -42,13 +42,13 @@ endef
 
 define h2_title
 	echo "============"; \
-	echo "= $(1)"
+	echo "= $(1)"; \
 	echo "=="
 endef
 
 define h3_title
 	echo "------------"; \
-	echo "- $(1)"
+	echo "- $(1)"; \
 	echo "--"
 endef
 
