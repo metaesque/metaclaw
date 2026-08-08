@@ -51,6 +51,7 @@ PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
 # Teardown order (Reverse dependencies)
 DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
+GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
 # Observability stack that should NOT be shutdown during 'make halt'.
 # We include 'network' because Tailscale forms the mesh backbone for metrics and remote ssh access.
@@ -59,8 +60,6 @@ OBSERVABILITY_SUBDIRS = $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(S
 # Subdirs to target during a 'make halt'
 HALT_DOCKER_SUBDIRS = $(filter-out $(OBSERVABILITY_SUBDIRS), $(DOCKER_SUBDIRS))
 HALT_BARE_SUBDIRS = $(BARE_SUBDIRS)
-
-GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
 # Boot order explicitly defined to capture initial logs before upstream
 # services start
@@ -98,14 +97,14 @@ endef
 # WHAT IT DOES: Pulls the latest framework from GitHub and reconciles the containers.
 # WHY IT EXISTS: The standard update loop for non-technical users.
 mc-update:
-	@$(call h1_title,"UPDATING METACLAW FRAMEWORK")
+	@$(call h1_title,UPDATING METACLAW FRAMEWORK)
 	@git pull origin main
 	@$(MAKE) --no-print-directory apply
 
 # WHAT IT DOES: Allows the user to modify their dynamic configuration (routing, paths).
 # WHY IT EXISTS: Bypasses the full `setup` hardware profiler to quickly tweak settings.
 customize: | $(PYTHON_BIN)
-	@$(call h1_title,"MODIFYING METACLAW CONFIGURATION")
+	@$(call h1_title,MODIFYING METACLAW CONFIGURATION)
 	@$(PYTHON_BIN) ./bin/customize.py
 	@$(MAKE) --no-print-directory .env
 	@echo "Run 'make apply' to enact any routing or path changes."
@@ -113,7 +112,7 @@ customize: | $(PYTHON_BIN)
 # WHAT IT DOES: Analyzes the host OS and automatically installs Docker Engine or OrbStack.
 # WHY IT EXISTS: Streamlines bare-metal node provisioning before 'make setup'.
 install-docker:
-	@$(call h1_title,"INSTALLING DOCKER ENGINE")
+	@$(call h1_title,INSTALLING DOCKER ENGINE)
 	@bash ./bin/install_docker.sh
 
 # WHAT IT DOES: Ensures the Python virtual environment exists and dependencies are installed.
@@ -131,7 +130,7 @@ $(PYTHON_BIN):
 # WHY IT EXISTS: It prepares the entire distributed cluster for work in a single invocation
 #                from the Control node, eliminating manual cross-node synchronization.
 setup: | $(PYTHON_BIN)
-	@$(call h1_title,"INITIATING CLUSTER-WIDE METACLAW SETUP")
+	@$(call h1_title,INITIATING CLUSTER-WIDE METACLAW SETUP)
 	@$(PYTHON_BIN) ./bin/cluster_setup.py
 	@$(MAKE) --no-print-directory setup-local
 
@@ -157,7 +156,7 @@ setup-local: bootstrap docs | $(PYTHON_BIN)
 # WHAT IT DOES: Distributes and executes wizard-batch across all nodes via SSH
 # WHY IT EXISTS: Solves the chicken-and-egg deployment problem by ensuring the cluster is built sequentially.
 wizard-cluster: | $(PYTHON_BIN)
-	@$(call h1_title,"INITIATING DISTRIBUTED CLUSTER WIZARD")
+	@$(call h1_title,INITIATING DISTRIBUTED CLUSTER WIZARD)
 	@$(PYTHON_BIN) ./bin/wizard_cluster.py
 
 # ==============================================================================
@@ -179,7 +178,7 @@ sync-cluster: | $(PYTHON_BIN)
 # WHAT IT DOES: Synchronizes the local configuration directory to a remote host.
 # WHY IT EXISTS: Pushes the METACLAW_CONFIG drop-zone to remote nodes without requiring a full git commit cycle.
 pushcfg-%:
-	@$(call h1_title,"PUSHING CONFIGURATION TO $*")
+	@$(call h1_title,PUSHING CONFIGURATION TO $*)
 	@echo "Rsyncing ../config to $*:~/config..."
 	@rsync -avzh --delete ../config/ $*:~/config/
 	@echo "Successfully synchronized config to $*."
@@ -187,13 +186,13 @@ pushcfg-%:
 # WHAT IT DOES: Pulls updates and syncs configurations across the entire cluster overriding local changes.
 # WHY IT EXISTS: Simplifies maintaining codebase parity across 4+ distributed nodes.
 pull: | $(PYTHON_BIN)
-	@$(call h1_title,"PULLING UPDATES ACROSS CLUSTER")
+	@$(call h1_title,PULLING UPDATES ACROSS CLUSTER)
 	@$(PYTHON_BIN) ./bin/pull_sync.py
 
 # WHAT IT DOES: Pulls updated hardware JSON registries from cluster nodes back to the local source-of-truth.
 # WHY IT EXISTS: Marshals distributed telemetry state (like dynamically discovered SSD mounts) back to the laptop.
 pullcfg: | $(PYTHON_BIN)
-	@$(call h1_title,"PULLING HARDWARE STATE FROM CLUSTER")
+	@$(call h1_title,PULLING HARDWARE STATE FROM CLUSTER)
 	@$(PYTHON_BIN) ./bin/fetch_hardware_state.py
 
 # WHAT IT DOES: Initializes symlinks and establishes the internal Docker bridge network.
@@ -229,7 +228,7 @@ __undock:
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
-				$(call h1_title,"Executing teardown in $$REAL_DIR..."); \
+				$(call h1_title,Executing teardown in $$REAL_DIR...); \
 				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR down || true; \
 			fi; \
 		fi; \
@@ -241,7 +240,7 @@ __undock_halt:
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
-				$(call h1_title,"Executing teardown in $$REAL_DIR..."); \
+				$(call h1_title,Executing teardown in $$REAL_DIR...); \
 				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR down || true; \
 			fi; \
 		fi; \
@@ -250,7 +249,7 @@ __undock_halt:
 # WHAT IT DOES: Compares running container configurations against physical `.env` files and restarts/rebuilds them if mismatched.
 # WHY IT EXISTS: The standard deployment command for pushing infrastructure changes gracefully.
 apply: symlinks
-	@$(call h1_title,"RECONCILING GLOBAL INFRASTRUCTURE STATE")
+	@$(call h1_title,RECONCILING GLOBAL INFRASTRUCTURE STATE)
 	@$(PYTHON_BIN) ./bin/node_setup.py
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
@@ -268,7 +267,7 @@ status: | $(PYTHON_BIN)
 
 # WHAT IT DOES: Executes `docker ps` for all managed containers on the local machine.
 status-local:
-	@$(call h1_title,"LOCAL INFRASTRUCTURE STATUS")
+	@$(call h1_title,LOCAL INFRASTRUCTURE STATUS)
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -294,7 +293,7 @@ tui:
 
 # WHAT IT DOES: Prints the URL to access the VictoriaLogs UI (vmui).
 logurl:
-	@$(call h1_title,"VICTORIALOGS DASHBOARD URL")
+	@$(call h1_title,VICTORIALOGS DASHBOARD URL)
 	@echo "Access the centralized logs via your Tailscale IP:"
 	@echo "http://$(ACTIVE_LOGGER_HOST):9428/select/vmui"
 	@echo ""
@@ -302,16 +301,16 @@ logurl:
 
 # WHAT IT DOES: Tails the last N (default 50) lines of critical service logs sequentially for rapid debugging.
 logs:
-	@$(call h1_title,"SYSTEM LOGS SNAPSHOT (Tail: $${N:-50})")
-	@$(call h2_title,"OpenClaw Gateway")
+	@$(call h1_title,SYSTEM LOGS SNAPSHOT)
+	@$(call h2_title,OpenClaw Gateway)
 	@docker logs --tail $${N:-50} openclaw-gateway 2>/dev/null || echo "Container not found on this node."
-	@$(call h2_title,"LiteLLM Proxy")
+	@$(call h2_title,LiteLLM Proxy)
 	@docker logs --tail $${N:-50} litellm-proxy 2>/dev/null || echo "Container not found on this node."
-	@$(call h2_title,"Ollama Runner (Bare-metal)")
+	@$(call h2_title,Ollama Runner (Bare-metal))
 	@tail -n $${N:-50} services/runners/ollama/ollama.log 2>/dev/null || echo "Log file not found on this node."
-	@$(call h2_title,"Fluent Bit Forwarder")
+	@$(call h2_title,Fluent Bit Forwarder)
 	@docker logs --tail $${N:-50} fluentbit-forwarder 2>/dev/null || echo "Container not found on this node."
-	@$(call h2_title,"Telegraf Collector")
+	@$(call h2_title,Telegraf Collector)
 	@docker logs --tail $${N:-50} telegraf-collector 2>/dev/null || echo "Container not found on this node."
 
 # ==============================================================================
@@ -333,12 +332,12 @@ docs: | $(PYTHON_BIN)
 
 # The core execution loop for booting the cluster in a safe, dependency-aware sequence.
 wizard-run: bootstrap docs
-	@$(call h1_title,"INITIATING FRAMEWORK DEPLOYMENT")
+	@$(call h1_title,INITIATING FRAMEWORK DEPLOYMENT)
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
 		$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/index.html"; \
 	fi
 	@mkdir -p .logs
-	@$(call h2_title,"PRE-FLIGHT ENVIRONMENT CONFIGURATION")
+	@$(call h2_title,PRE-FLIGHT ENVIRONMENT CONFIGURATION)
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -363,7 +362,7 @@ wizard-run: bootstrap docs
 			fi; \
 		fi; \
 	done
-	@$(call h2_title,"DEPLOYING CLUSTER INFRASTRUCTURE")
+	@$(call h2_title,DEPLOYING CLUSTER INFRASTRUCTURE)
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		$(call h2_title,"$$dir BOOTUP"); \
 		if [ -L "$$dir" ]; then \
@@ -390,7 +389,7 @@ wizard-run: bootstrap docs
 			fi; \
 		fi; \
 	done
-	@$(call h2_title,"APPLYING GATEWAY CONFIGURATION")
+	@$(call h2_title,APPLYING GATEWAY CONFIGURATION)
 	@if [ -d "$(GATEWAY_SUBDIR)" ] && [ -f "$(GATEWAY_SUBDIR)/Makefile" ]; then \
 		echo "Applying routing patch..."; \
 		$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) patch; \
@@ -399,7 +398,7 @@ wizard-run: bootstrap docs
 	fi
 
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
-		$(call h2_title,"LAUNCHING WEB GUI..."); \
+		$(call h2_title,LAUNCHING WEB GUI...); \
 		if [ -d "$(GATEWAY_SUBDIR)" ] && [ -f "$(GATEWAY_SUBDIR)/Makefile" ]; then \
 			echo "Waiting for OpenClaw Gateway to finish booting..."; \
 			$(MAKE) --no-print-directory -C $(GATEWAY_SUBDIR) wait-healthy; \
@@ -420,7 +419,7 @@ wizard-run: bootstrap docs
 # WHAT IT DOES: Deletes ephemeral files (`verification.log`, cached `.html` pages, `.state_*` flags) globally.
 # WHY IT EXISTS: Cleans up the developer workspace without harming secrets or databases.
 clean-state:
-	@$(call h2_title,"CLEANING LOCAL STATE ACROSS ALL SERVICES")
+	@$(call h2_title,CLEANING LOCAL STATE ACROSS ALL SERVICES)
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -432,7 +431,7 @@ clean-state:
 
 # WHAT IT DOES: Deletes ephemeral files for services that were halted (preserves observability logs if any).
 clean-state-halt:
-	@$(call h2_title,"CLEANING LOCAL STATE ACROSS HALTED SERVICES")
+	@$(call h2_title,CLEANING LOCAL STATE ACROSS HALTED SERVICES)
 	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -448,14 +447,14 @@ factory-reset: factory-reset-soft
 # WHAT IT DOES: Shuts down all non-essential workloads while keeping observability and networking active.
 # WHY IT EXISTS: Allows operators to monitor the system baseline and verify successful teardown via Grafana without going blind.
 halt: __undock_halt
-	@$(call h1_title,INITIATING HALT (PRESERVING OBSERVABILITY STACK))
+	@$(call h1_title,INITIATING HALT PRESERVING OBSERVABILITY STACK)
 	@$(MAKE) --no-print-directory clean-state-halt
-	@$(call h2_title,"Removing .env files for halted services...")
+	@$(call h2_title,Removing .env files for halted services...)
 	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
-	@$(call h2_title,"Purging global runtime state...")
+	@$(call h2_title,Purging global runtime state...)
 	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
 	@rm -rf .logs
 	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
@@ -466,14 +465,14 @@ halt: __undock_halt
 # WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data.
 #   This is the safest way to bounce a broken framework.
 factory-reset-soft: __undock clean-network
-	@$(call h1_title,INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA))
+	@$(call h1_title,INITIATING FACTORY RESET SOFT PRESERVING SECRETS AND DATA)
 	@$(MAKE) --no-print-directory clean-state
-	@$(call h2_title,"Removing .env files...")
+	@$(call h2_title,Removing .env files...)
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
-	@$(call h2_title,"Purging global runtime state...")
+	@$(call h2_title,Purging global runtime state...)
 	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
 	@rm -rf .logs
 	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
@@ -483,7 +482,7 @@ factory-reset-soft: __undock clean-network
 # WHAT IT DOES: The Nuclear Option. Destroys everything, including cached `.env.json` secrets and the hardware `profile.json`.
 # WHY IT EXISTS: Required if the user wishes to redeploy from scratch with entirely new API keys or a different hardware cluster configuration.
 factory-reset-hard: factory-reset-soft
-	@$(call h1_title,INITIATING FACTORY RESET (HARD - DESTROYING SECRETS & DATA))
+	@$(call h1_title,INITIATING FACTORY RESET HARD DESTROYING SECRETS AND DATA)
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
@@ -504,7 +503,7 @@ factory-reset-hard: factory-reset-soft
 # WHAT IT DOES: Creates a deployable ZIP archive of the framework respecting `MANIFEST.files`.
 zip: tmp/metaclaw.zip
 tmp/metaclaw.zip: FORCE | $(PYTHON_BIN)
-	@$(call h1_title,"PACKAGING FRAMEWORK")
+	@$(call h1_title,PACKAGING FRAMEWORK)
 	@if [ ! -f docs/MANIFEST.files ]; then echo "FATAL: docs/MANIFEST.files is missing."; exit 1; fi
 	@rm -rf .tmp_pack tmp/metaclaw.zip
 	@mkdir -p .tmp_pack tmp
@@ -577,7 +576,7 @@ todo: | $(PYTHON_BIN)
 # WHAT IT DOES: Provisions a Git clone of MetaClaw into the agent's workspace.
 # WHY IT EXISTS: Allows the agent to autonomously develop the framework via standard Git PRs.
 meta-push:
-	@$(call h1_title,"[GitOps] Provisioning MetaClaw repository in agent workspace...")
+	@$(call h1_title,[GitOps] Provisioning MetaClaw repository in agent workspace...)
 	@if [ ! -d $(METACLAW_METAPATH) ]; then \
 		git clone https://github.com/metaesque/metaclaw.git $(METACLAW_METAPATH); \
 	else \
@@ -598,7 +597,7 @@ meta-cmp:
 # WHAT IT DOES: Pulls the merged changes from GitHub into the live host.
 # WHY IT EXISTS: Closes the loop on agent-driven development securely.
 meta-pull:
-	@$(call h1_title,"[GitOps] Pulling merged updates from the public repository to the live host...")
+	@$(call h1_title,[GitOps] Pulling merged updates from the public repository to the live host...)
 	@git pull origin main
 	@echo "Run 'make apply' to deploy the new state."
 
