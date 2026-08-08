@@ -13,6 +13,9 @@ export
 
 LOG_READY_SIGNAL = Starting Telegraf
 
+# WHAT THIS DOES: Tells the orchestrator to restart the container if the main config or the Kasa feature drop-ins change.
+RESTART_DEPS = telegraf.conf $(wildcard $(FRAMEWORK_ROOT)/features/kasa/assets/collectors/telegraf/*.conf)
+
 post-check-status:
 	@echo "Running diagnostic suite..."
 	@echo "--- 1. Collector Health ---" > verification.log
@@ -22,4 +25,3 @@ post-check-status:
 
 clobber-data:
 	@echo "[$(SERVICE_TITLE)] No persistent data to clobber."
-
