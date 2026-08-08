@@ -112,7 +112,8 @@
       "fieldConfig": {
         "defaults": {
           "custom": {},
-          "unit": "currencyCAD"
+          "decimals": 2,
+          "unit": "$"
         },
         "overrides": []
       },
@@ -135,7 +136,7 @@
           "refId": "A"
         }
       ],
-      "title": "$ / Day",
+      "title": "$ / Day (CAD)",
       "type": "timeseries"
     },
     {
@@ -743,5 +744,5 @@
   "timezone": "",
   "title": "Hardware Telemetry",
   "uid": "kasa-telemetry",
-  "version": 10
+  "version": 11
 }
