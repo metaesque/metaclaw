@@ -5,6 +5,10 @@ DOCKER_SHELL_CMD = sh
 FRAMEWORK_ROOT_REL = ../../..
 FRAMEWORK_ROOT := $(abspath $(FRAMEWORK_ROOT_REL))
 
+# WHAT THIS DOES: Tells the orchestrator to restart the container if the main config or the Kasa feature drop-ins change.
+# MUST BE DEFINED BEFORE THE INCLUDE SO THE INHERITANCE LAYER REGISTERS THE PREREQUISITES
+RESTART_DEPS = telegraf.conf $(wildcard $(FRAMEWORK_ROOT)/features/kasa/assets/collectors/telegraf/*.conf)
+
 include $(FRAMEWORK_ROOT)/.Makefile.inherit
 
 -include $(FRAMEWORK_ROOT)/.env
@@ -12,9 +16,6 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 export
 
 LOG_READY_SIGNAL = Starting Telegraf
-
-# WHAT THIS DOES: Tells the orchestrator to restart the container if the main config or the Kasa feature drop-ins change.
-RESTART_DEPS = telegraf.conf $(wildcard $(FRAMEWORK_ROOT)/features/kasa/assets/collectors/telegraf/*.conf)
 
 post-check-status:
 	@echo "Running diagnostic suite..."
