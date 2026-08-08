@@ -159,7 +159,7 @@ restart::
 	@if [ ! -f .metal ] && [ ! -f docker-compose.yml ]; then \
 		echo "WARNING: [$(SERVICE_NAME)] Provider unimplemented. Skipping restart."; \
 	else \
-		$(if $(RESTART_DEPS),@echo "[$(SERVICE_NAME)] Configuration changes detected. Restarting process..."; if [ ! -f .metal ]; then docker compose restart $(SERVICE_NAME); fi,) \
+		$(if $(RESTART_DEPS),echo "[$(SERVICE_NAME)] Configuration changes detected. Restarting process..."; if [ ! -f .metal ]; then docker compose restart $(SERVICE_NAME); fi,) \
 	fi
 	@touch .state_restart
 
