@@ -113,7 +113,7 @@
         "defaults": {
           "custom": {},
           "decimals": 2,
-          "unit": "currencyUSD"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -744,5 +744,5 @@
   "timezone": "",
   "title": "Hardware Telemetry",
   "uid": "kasa-telemetry",
-  "version": 12
+  "version": 13
 }
