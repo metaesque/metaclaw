@@ -46,6 +46,8 @@ def setup_clawdisk(my_uid):
         if not shutil.which("automount"):
             missing_pkgs.append("autofs")
             missing_pkgs.append("nfs-common")
+        if not shutil.which("mount.exfat-fuse"):
+            missing_pkgs.append("exfat-fuse")
 
         if missing_pkgs:
             print(f"Installing missing storage dependencies: {' '.join(missing_pkgs)}...")
@@ -57,10 +59,12 @@ def setup_clawdisk(my_uid):
             except Exception as e:
                 print(f"DIAGNOSTIC: Failed to install dependencies. NFS/AutoFS might fail: {e}")
 
-        # Stop autofs immediately to release VFS locks
+        # Stop autofs immediately. If an old indirect map is active on /mnt/cluster,
+        # it prevents root from executing mkdir. Stopping it releases the kernel lock.
         subprocess.run(['sudo', 'systemctl', 'stop', 'autofs'], check=False, stderr=subprocess.DEVNULL)
 
         # Stop nfs-kernel-server to release any active export locks on block devices
+        # This is critical to allow exFAT remounting to function properly in Phase 1
         subprocess.run(['sudo', 'systemctl', 'stop', 'nfs-kernel-server'], check=False, stderr=subprocess.DEVNULL)
 
     # Cleanup legacy symlink from early iterations if it exists
@@ -137,9 +141,10 @@ def setup_clawdisk(my_uid):
     # ======================================================================
     local_mounts = []
     attached_uuids = set()
+    uuid_to_dev = {}
 
     try:
-        res = subprocess.run(['lsblk', '-J', '-o', 'UUID'], capture_output=True, text=True)
+        res = subprocess.run(['lsblk', '-J', '-o', 'NAME,UUID'], capture_output=True, text=True)
         if res.returncode == 0:
             lsblk_data = json.loads(res.stdout)
             def extract_uuids(blocks):
@@ -147,14 +152,17 @@ def setup_clawdisk(my_uid):
                     if b.get('uuid'):
                         attached_uuids.add(b['uuid'].upper())
                         attached_uuids.add(b['uuid'].lower())
+                        uuid_to_dev[b['uuid'].upper()] = f"/dev/{b.get('name')}"
                     if 'children' in b:
                         extract_uuids(b['children'])
             extract_uuids(lsblk_data.get('blockdevices', []))
     except Exception:
         pass
 
+    # Load internal mounts natively assigned to this node's profile
     local_mounts.extend(my_device.data.get("mounts", []))
 
+    # Search the global registry for ExternalSSDs physically attached to this node right now
     for uid, dev in all_devices.items():
         if dev.device_type == 'ssd':
             for m in dev.data.get('mounts', []):
@@ -163,6 +171,7 @@ def setup_clawdisk(my_uid):
                 if uuid and mp and (uuid.upper() in attached_uuids or uuid.lower() in attached_uuids):
                     local_mounts.append(m)
 
+    # Execute Local Physical Mounts
     for m in local_mounts:
         mp = m.get("mountpoint")
         uuid = m.get("uuid")
@@ -173,6 +182,9 @@ def setup_clawdisk(my_uid):
 
         is_mounted = os.path.ismount(mp)
 
+        # Fix for exFAT permission dropping: If mounted without uid=1000, unmount it to force a clean mount.
+        # The Linux in-kernel exfat driver ignores uid/gid changes during a standard 'remount'.
+        # Since nfs-kernel-server is stopped, standard umount (no -l) will cleanly release the device.
         if is_mounted and fstype in ['exfat', 'vfat', 'ntfs', 'fat32']:
             check_mount = subprocess.run(['mount'], capture_output=True, text=True)
             for line in check_mount.stdout.split('\n'):
@@ -183,23 +195,38 @@ def setup_clawdisk(my_uid):
                     break
 
         if not is_mounted:
+            # Ensure placeholder directory is created and owned by metaclaw before mounting
             subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
             subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)
             subprocess.run(['sudo', 'chmod', '0777', mp], check=False)
 
-            cmd = ['sudo', 'mount']
-            if fstype:
-                cmd.extend(['-t', fstype])
+            dev_path = uuid_to_dev.get(uuid.upper())
+            if not dev_path:
+                try:
+                    res_bl = subprocess.run(['blkid', '-U', uuid], capture_output=True, text=True, check=True)
+                    dev_path = res_bl.stdout.strip()
+                except Exception:
+                    dev_path = f"UUID={uuid}"
 
-            if fstype in ['exfat', 'vfat', 'ntfs', 'fat32']:
-                cmd.extend(['-o', 'rw,uid=1000,gid=1000,dmask=0000,fmask=0000'])
+            # Deploy FUSE bypass to ensure NFS export compatibility for exFAT
+            if fstype == 'exfat':
+                cmd = ['sudo', 'mount.exfat-fuse', '-o', 'rw,uid=1000,gid=1000,dmask=0000,fmask=0000', dev_path, mp]
+            else:
+                cmd = ['sudo', 'mount']
+                if fstype:
+                    cmd.extend(['-t', fstype])
 
-            cmd.extend([f"UUID={uuid}", mp])
+                # Force vfat/fat32/ntfs to recognize UID 1000 and grant 0777 permissions
+                if fstype in ['vfat', 'ntfs', 'fat32']:
+                    cmd.extend(['-o', 'rw,uid=1000,gid=1000,dmask=0000,fmask=0000'])
+
+                cmd.extend([f"UUID={uuid}", mp])
 
             try:
                 subprocess.run(cmd, check=True, capture_output=True, text=True)
                 print(f"Mounted local physical drive: {uuid} to {mp}")
 
+                # For some file systems, the chown command must be executed on the mount point POST-mount
                 if fstype not in ['exfat', 'vfat', 'ntfs', 'fat32']:
                     subprocess.run(['sudo', 'chown', '-R', '1000:1000', mp], check=False)
                     subprocess.run(['sudo', 'chmod', '-R', '0777', mp], check=False)
@@ -214,12 +241,15 @@ def setup_clawdisk(my_uid):
     exports_lines = []
     fsid_counter = 1
 
+    # Export the local home directory (/home/metaclaw)
     if my_device.uid != "peridot":
         exports_lines.append(f"/home/metaclaw 100.64.0.0/10(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
         if my_dac_ip:
+            # Assuming standard /24 subnet for Point-to-Point DAC routes
             exports_lines.append(f"/home/metaclaw 10.99.0.0/24(rw,sync,no_subtree_check,all_squash,anonuid=1000,anongid=1000,fsid={fsid_counter})")
         fsid_counter += 1
 
+    # Only export physically attached external SSDs
     for m in local_mounts:
         mp = m.get("mountpoint")
         if mp and mp.startswith("/mnt/cluster/ext/"):
@@ -237,6 +267,7 @@ def setup_clawdisk(my_uid):
         subprocess.run(['sudo', 'mkdir', '-p', '/etc/exports.d'], check=False)
         subprocess.run(['sudo', 'mv', exports_file, '/etc/exports.d/metaclaw.exports'], check=True)
 
+        # Start nfs-kernel-server back up if it was stopped in Phase 0
         if shutil.which("systemctl"):
             subprocess.run(['sudo', 'systemctl', 'start', 'nfs-kernel-server'], check=False, stderr=subprocess.DEVNULL)
 
@@ -306,13 +337,14 @@ def setup_clawdisk(my_uid):
             for m in dev.data.get('mounts', []):
                 mp = m.get('mountpoint')
                 if mp and mp.startswith("/mnt/cluster/ext/"):
+                    # Ensure the placeholder directory is visible locally even when not mounted
                     subprocess.run(['sudo', 'mkdir', '-p', mp], check=False)
                     subprocess.run(['sudo', 'chown', '1000:1000', mp], check=False)
 
                     locations = []
                     for node in all_nodes:
                         if node.uid == my_device.uid:
-                            continue
+                            continue  # Do not loopback mount from ourselves
 
                         # FIX 2: Use profile.json dictionary to extract Tailscale IPs
                         n_ip = profile_ips.get(node.uid.lower())
@@ -328,6 +360,7 @@ def setup_clawdisk(my_uid):
                         loc_str = ",".join(locations) + ":" + mp
                         autofs_map_lines.append(f"{mp} -fstype=nfs4,rw,soft,timeo=14,retry=2 {loc_str}")
 
+    # Local Node Home Directory Symlink (Ensures absolute local consistency)
     try:
         base_dir = f"/mnt/cluster/{my_device.uid}/home"
         subprocess.run(['sudo', 'mkdir', '-p', base_dir], check=False)
@@ -342,6 +375,7 @@ def setup_clawdisk(my_uid):
     with open(autofs_file, 'w') as f:
         f.write(autofs_content)
 
+    # Utilizing the AutoFS Direct Mount Syntax (/-)
     master_content = "/- /etc/auto.metaclaw.direct --timeout=0\n"
     master_file = "/tmp/metaclaw.autofs"
     with open(master_file, 'w') as f:
@@ -358,6 +392,8 @@ def setup_clawdisk(my_uid):
                 print("AutoFS client service restarted successfully.")
             else:
                 print(f"DIAGNOSTIC: Failed to restart AutoFS: {res.stderr.strip()}")
+        else:
+            print("DIAGNOSTIC: Skipping AutoFS restart. 'autofs' service not detected.")
     except Exception as e:
         print(f"DIAGNOSTIC: Failed to configure AutoFS: {e}")
 
