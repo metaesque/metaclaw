@@ -65,6 +65,7 @@ features/kasa/assets/collectors/telegraf/kasa.conf
 features/kasa/assets/visualizers/grafana/dashboards/dashboards.yaml
 features/kasa/assets/visualizers/grafana/dashboards/kasa/dashboard.json
 features/kasa/assets/visualizers/grafana/datasources/datasources.yaml
+features/kasa/bin/disk_telemetry.py
 features/kasa/bin/gpu_telemetry.py
 features/kasa/bin/kasa_alert.sh
 features/kasa/bin/power_kasa.py

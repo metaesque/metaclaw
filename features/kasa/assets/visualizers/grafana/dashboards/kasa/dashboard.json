@@ -231,6 +231,74 @@
       ],
       "title": "VRAM Used",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 7,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "expr": "disk_telemetry_used_percent{host=~\"$host\"}",
+          "legendFormat": "{{host}}:{{device}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SSD (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 8,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "expr": "disk_telemetry_used_bytes{host=~\"$host\"}",
+          "legendFormat": "{{host}}:{{device}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SSD (TiB)",
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",
