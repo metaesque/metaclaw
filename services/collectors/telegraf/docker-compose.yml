@@ -17,7 +17,8 @@ services:
     # WHAT THIS DOES: Bypasses the default Telegraf entrypoint.sh script which
     # forcibly drops root privileges down to the 'telegraf' user (UID 999).
     # We MUST run as true root to execute the chroot syscall for GPU metrics.
-    entrypoint: ["telegraf"]
+    # We explicitly declare the config directory so feature drop-ins are processed.
+    entrypoint: ["telegraf", "--config", "/etc/telegraf/telegraf.conf", "--config-directory", "/etc/telegraf/telegraf.d"]
     network_mode: "host"
     # WHAT THIS DOES: Bypasses strict Linux CGroup device restrictions.
     # WHY IT MATTERS: Allows the container's chroot environment to successfully open
