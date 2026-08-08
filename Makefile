@@ -45,6 +45,9 @@ else
 endif
 export OPEN_CMD
 
+# Centralized, isolated Python environment
+PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
+
 # Teardown order (Reverse dependencies)
 DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
@@ -86,14 +89,6 @@ define h3_title
 	echo "------------"; \
 	echo "- $(1)"
 	echo "--"
-endef
-
-define purge_global_state
-	@$(call h2_title,"Purging global runtime state...")
-	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
-	@rm -rf .logs
-	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
-	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
 endef
 
 # ==============================================================================
@@ -453,34 +448,42 @@ factory-reset: factory-reset-soft
 # WHAT IT DOES: Shuts down all non-essential workloads while keeping observability and networking active.
 # WHY IT EXISTS: Allows operators to monitor the system baseline and verify successful teardown via Grafana without going blind.
 halt: __undock_halt
-	@$(call h1_title,"INITIATING HALT (PRESERVING OBSERVABILITY STACK)")
+	@$(call h1_title,INITIATING HALT (PRESERVING OBSERVABILITY STACK))
 	@$(MAKE) --no-print-directory clean-state-halt
 	@$(call h2_title,"Removing .env files for halted services...")
 	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
-	$(purge_global_state)
+	@$(call h2_title,"Purging global runtime state...")
+	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
+	@rm -rf .logs
+	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
+	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
 	@echo "Halt complete. Observability stack and network remain active."
 
 # WHAT IT DOES: Tears down all containers, destroys the network, and wipes `.env` text files.
 # WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data.
 #   This is the safest way to bounce a broken framework.
 factory-reset-soft: __undock clean-network
-	@$(call h1_title,"INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)")
+	@$(call h1_title,INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA))
 	@$(MAKE) --no-print-directory clean-state
 	@$(call h2_title,"Removing .env files...")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
-	$(purge_global_state)
+	@$(call h2_title,"Purging global runtime state...")
+	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
+	@rm -rf .logs
+	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
+	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
 	@echo "Soft reset complete. External data, .env.json files, profile.json, and python .venv preserved."
 
 # WHAT IT DOES: The Nuclear Option. Destroys everything, including cached `.env.json` secrets and the hardware `profile.json`.
 # WHY IT EXISTS: Required if the user wishes to redeploy from scratch with entirely new API keys or a different hardware cluster configuration.
 factory-reset-hard: factory-reset-soft
-	@$(call h1_title,"INITIATING FACTORY RESET (HARD - DESTROYING SECRETS & DATA)")
+	@$(call h1_title,INITIATING FACTORY RESET (HARD - DESTROYING SECRETS & DATA))
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
