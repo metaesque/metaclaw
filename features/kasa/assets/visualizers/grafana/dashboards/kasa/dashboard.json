@@ -25,6 +25,18 @@
   "liveNow": false,
   "panels": [
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 101,
+      "title": "⚡ Power & Memory",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "victoriametrics"
@@ -40,7 +52,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 1,
       "options": {},
@@ -74,7 +86,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 1
       },
       "id": 4,
       "options": {},
@@ -93,462 +105,518 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 8,
-        "w": 6,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 8
+        "y": 9
       },
-      "id": 2,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
+      "id": 102,
+      "panels": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "temp_temp{host=~\"$host\"} or sensors_temp_input{host=~\"$host\"}",
-          "legendFormat": "{{host}} - {{sensor}}{{feature}}",
-          "refId": "A"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "celsius"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 10
+          },
+          "id": 2,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "temp_temp{host=~\"$host\"} or sensors_temp_input{host=~\"$host\"}",
+              "legendFormat": "{{host}} - {{sensor}}{{feature}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Host CPU Temperature - $host",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 18
+          },
+          "id": 3,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "cpu_usage_user{host=~\"$host\"}",
+              "legendFormat": "{{cpu}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Host CPU Load - $host",
+          "type": "timeseries"
         }
       ],
-      "title": "Host CPU Temperature - $host",
-      "type": "timeseries"
+      "title": "💻 CPU Metrics",
+      "type": "row"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "percent"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 8,
-        "w": 6,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 16
+        "y": 10
       },
-      "id": 3,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
+      "id": 103,
+      "panels": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "cpu_usage_user{host=~\"$host\"}",
-          "legendFormat": "{{cpu}}",
-          "refId": "A"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "id": 5,
+          "options": {},
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "label_replace(gpu_telemetry_utilization{host=~\"$host\"}, \"clean_gpu\", \"$1\", \"gpu_id\", \".*_(.*)\")",
+              "legendFormat": "{{host}}:{{clean_gpu}}",
+              "refId": "A"
+            }
+          ],
+          "title": "GPU Utilization",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "mbytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "id": 6,
+          "options": {},
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "label_replace(gpu_telemetry_vram_used_mb{host=~\"$host\"}, \"clean_gpu\", \"$1\", \"gpu_id\", \".*_(.*)\")",
+              "legendFormat": "{{host}}:{{clean_gpu}}",
+              "refId": "A"
+            }
+          ],
+          "title": "VRAM Used",
+          "type": "timeseries"
         }
       ],
-      "title": "Host CPU Load - $host",
-      "type": "timeseries"
+      "title": "🎮 GPU & VRAM",
+      "type": "row"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "percent"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 24
+        "y": 11
       },
-      "id": 5,
-      "options": {},
-      "targets": [
+      "id": 104,
+      "panels": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "label_replace(gpu_telemetry_utilization{host=~\"$host\"}, \"clean_gpu\", \"$1\", \"gpu_id\", \".*_(.*)\")",
-          "legendFormat": "{{host}}:{{clean_gpu}}",
-          "refId": "A"
-        }
-      ],
-      "title": "GPU Utilization",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "mbytes"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "id": 7,
+          "options": {},
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "disk_telemetry_used_percent{host=~\"$host\"}",
+              "legendFormat": "{{host}}:{{device}}",
+              "refId": "A"
+            }
+          ],
+          "title": "SSD (%)",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "id": 6,
-      "options": {},
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "label_replace(gpu_telemetry_vram_used_mb{host=~\"$host\"}, \"clean_gpu\", \"$1\", \"gpu_id\", \".*_(.*)\")",
-          "legendFormat": "{{host}}:{{clean_gpu}}",
-          "refId": "A"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 12
+          },
+          "id": 8,
+          "options": {},
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "disk_telemetry_used_bytes{host=~\"$host\"}",
+              "legendFormat": "{{host}}:{{device}}",
+              "refId": "A"
+            }
+          ],
+          "title": "SSD (TiB)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 12,
+          "options": {},
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "smart_attribute_raw_value{name=\"Percentage_Used\", host=~\"$host\"}",
+              "legendFormat": "{{host}}:{{device}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Drive Wear (Percentage Used)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "short",
+              "min": 0,
+              "max": 1
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 20
+          },
+          "id": 13,
+          "options": {},
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "smart_device_health_ok{host=~\"$host\"}",
+              "legendFormat": "{{host}}:{{device}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Drive Health OK (1=Pass, 0=Fail)",
+          "type": "timeseries"
         }
       ],
-      "title": "VRAM Used",
-      "type": "timeseries"
+      "title": "🛞 SSD Capacity & Health",
+      "type": "row"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "percent"
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 32
+        "y": 12
       },
-      "id": 7,
-      "options": {},
-      "targets": [
+      "id": 105,
+      "panels": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "disk_telemetry_used_percent{host=~\"$host\"}",
-          "legendFormat": "{{host}}:{{device}}",
-          "refId": "A"
-        }
-      ],
-      "title": "SSD (%)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "bytes"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 13
+          },
+          "id": 9,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "rate(diskio_read_bytes{host=~\"$host\"}[$__rate_interval])",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk Throughput (Read) - $host",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 32
-      },
-      "id": 8,
-      "options": {},
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "disk_telemetry_used_bytes{host=~\"$host\"}",
-          "legendFormat": "{{host}}:{{device}}",
-          "refId": "A"
-        }
-      ],
-      "title": "SSD (TiB)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "Bps"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 21
+          },
+          "id": 14,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "rate(diskio_write_bytes{host=~\"$host\"}[$__rate_interval])",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk Throughput (Write) - $host",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 40
-      },
-      "id": 9,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "rate(diskio_read_bytes{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Disk Throughput (Read) - $host",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "Bps"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "iops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 29
+          },
+          "id": 10,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "rate(diskio_reads{host=~\"$host\"}[$__rate_interval])",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk IOPS (Read) - $host",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 48
-      },
-      "id": 14,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "rate(diskio_write_bytes{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Disk Throughput (Write) - $host",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "iops"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "iops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 37
+          },
+          "id": 15,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "rate(diskio_writes{host=~\"$host\"}[$__rate_interval])",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk IOPS (Write) - $host",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 56
-      },
-      "id": 10,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "rate(diskio_reads{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Disk IOPS (Read) - $host",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "iops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 64
-      },
-      "id": 15,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "victoriametrics"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {},
+              "unit": "percent"
+            },
+            "overrides": []
           },
-          "expr": "rate(diskio_writes{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Disk IOPS (Write) - $host",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 72
-      },
-      "id": 11,
-      "options": {},
-      "repeat": "host",
-      "repeatDirection": "h",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "victoriametrics"
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 45
           },
-          "expr": "rate(diskio_io_time{host=~\"$host\"}[$__rate_interval]) / 10",
-          "legendFormat": "{{name}}",
-          "refId": "A"
+          "id": 11,
+          "options": {},
+          "repeat": "host",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "victoriametrics"
+              },
+              "expr": "rate(diskio_io_time{host=~\"$host\"}[$__rate_interval]) / 10",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Disk I/O Utilization - $host",
+          "type": "timeseries"
         }
       ],
-      "title": "Disk I/O Utilization - $host",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 80
-      },
-      "id": 12,
-      "options": {},
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "victoriametrics"
-          },
-          "expr": "smart_attribute_raw_value{name=\"Percentage_Used\", host=~\"$host\"}",
-          "legendFormat": "{{host}}:{{device}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Drive Wear (Percentage Used)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "victoriametrics"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "unit": "short",
-          "min": 0,
-          "max": 1
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 80
-      },
-      "id": 13,
-      "options": {},
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "victoriametrics"
-          },
-          "expr": "smart_device_health_ok{host=~\"$host\"}",
-          "legendFormat": "{{host}}:{{device}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Drive Health OK (1=Pass, 0=Fail)",
-      "type": "timeseries"
+      "title": "📈 Disk I/O & Throughput",
+      "type": "row"
     }
   ],
   "refresh": "10s",
@@ -593,5 +661,5 @@
   "timezone": "",
   "title": "Hardware Telemetry",
   "uid": "kasa-telemetry",
-  "version": 5
+  "version": 6
 }
