@@ -419,6 +419,76 @@
       ],
       "title": "Disk I/O Utilization",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "id": 12,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "expr": "smart_device_percentage_used{host=~\"$host\"}",
+          "legendFormat": "{{host}}:{{device}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Drive Wear (Percentage Used)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "id": 13,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "expr": "smart_device_health_ok{host=~\"$host\"}",
+          "legendFormat": "{{host}}:{{device}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Drive Health OK (1=Pass, 0=Fail)",
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",

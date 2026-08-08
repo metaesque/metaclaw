@@ -5,8 +5,10 @@ FROM telegraf:${TELEGRAF_VERSION}
 USER root
 
 # Cache dependencies to speed up future builds
+# ARCHITECTURAL SHIFT: Added smartmontools and nvme-cli to allow the
+# native [[inputs.smart]] plugin to interrogate physical block devices via ioctls.
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-venv gcc python3-dev lm-sensors && \
+    apt-get install -y python3 python3-pip python3-venv gcc python3-dev lm-sensors smartmontools nvme-cli && \
     rm -rf /var/lib/apt/lists/*
 
 # Create and populate the virtual environment

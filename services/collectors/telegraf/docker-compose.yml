@@ -1,8 +1,7 @@
 services:
   telegraf-collector:
     # ARCHITECTURAL SHIFT: We now build a custom image locally to cache the Python
-    # virtual environment and `lm-sensors` installation, resolving the 45+ second
-    # cold-boot delay during container recreation.
+    # virtual environment, `lm-sensors`, and `smartmontools` installations.
     build:
       context: .
       args:
@@ -46,7 +45,8 @@ services:
       - /sys:/hostfs/sys:ro
       # Resolves device mapper aliases and UUIDs for the [[inputs.diskio]] plugin
       - /run/udev:/run/udev:ro
+      # Resolves physical block devices for [[inputs.smart]] ioctls
+      - /dev:/dev:ro
       - ${METACLAW_ROOT:-/home/node/repo}:/metaclaw:ro
       - ${METACLAW_CONFIG:-/home/node/config}:/config:ro
       - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
-
