@@ -68,6 +68,7 @@ features/kasa/assets/visualizers/grafana/datasources/datasources.yaml
 features/kasa/bin/disk_telemetry.py
 features/kasa/bin/gpu_telemetry.py
 features/kasa/bin/kasa_alert.sh
+features/kasa/bin/manage_electricity_price.py
 features/kasa/bin/power_kasa.py
 features/kasa/bin/test_gpu_telemetry.py
 features/kasa/bin/test_power_kasa.py

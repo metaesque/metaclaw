@@ -71,12 +71,80 @@
       "type": "timeseries"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 16,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "expr": "sum(integrate(kasa_power_watts[1h])) / 3600000",
+          "legendFormat": "Total kWh (1h rolling)",
+          "refId": "A"
+        }
+      ],
+      "title": "kWh",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "currencyCAD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 17,
+      "options": {},
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "victoriametrics"
+          },
+          "expr": "(sum(integrate(kasa_power_watts[1d])) / 3600000) * last_over_time(electricity_price_cad_per_kwh[365d])",
+          "legendFormat": "Estimated Daily Spend",
+          "refId": "A"
+        }
+      ],
+      "title": "$ / Day",
+      "type": "timeseries"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 17
       },
       "id": 106,
       "panels": [
@@ -96,7 +164,7 @@
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 10
+            "y": 18
           },
           "id": 4,
           "options": {},
@@ -124,7 +192,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 18
       },
       "id": 102,
       "panels": [
@@ -144,7 +212,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 11
+            "y": 19
           },
           "id": 2,
           "options": {},
@@ -180,7 +248,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 19
+            "y": 27
           },
           "id": 3,
           "options": {},
@@ -210,7 +278,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 19
       },
       "id": 103,
       "panels": [
@@ -230,7 +298,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 12
+            "y": 20
           },
           "id": 5,
           "options": {},
@@ -264,7 +332,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 12
+            "y": 20
           },
           "id": 6,
           "options": {},
@@ -292,7 +360,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 20
       },
       "id": 104,
       "panels": [
@@ -312,7 +380,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 13
+            "y": 21
           },
           "id": 7,
           "options": {},
@@ -346,7 +414,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 13
+            "y": 21
           },
           "id": 8,
           "options": {},
@@ -380,7 +448,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 21
+            "y": 29
           },
           "id": 12,
           "options": {},
@@ -416,7 +484,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 21
+            "y": 29
           },
           "id": 13,
           "options": {},
@@ -444,7 +512,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 21
       },
       "id": 105,
       "panels": [
@@ -464,7 +532,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 14
+            "y": 22
           },
           "id": 9,
           "options": {},
@@ -500,7 +568,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 22
+            "y": 30
           },
           "id": 14,
           "options": {},
@@ -536,7 +604,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 30
+            "y": 38
           },
           "id": 10,
           "options": {},
@@ -572,7 +640,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 38
+            "y": 46
           },
           "id": 15,
           "options": {},
@@ -608,7 +676,7 @@
             "h": 8,
             "w": 6,
             "x": 0,
-            "y": 46
+            "y": 54
           },
           "id": 11,
           "options": {},
@@ -675,5 +743,5 @@
   "timezone": "",
   "title": "Hardware Telemetry",
   "uid": "kasa-telemetry",
-  "version": 8
+  "version": 9
 }
