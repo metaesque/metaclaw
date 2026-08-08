@@ -45,12 +45,18 @@ else
 endif
 export OPEN_CMD
 
-# Centralized, isolated Python environment
-PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
-
 # Teardown order (Reverse dependencies)
 DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/network
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
+
+# Observability stack that should NOT be shutdown during 'make halt'.
+# We include 'network' because Tailscale forms the mesh backbone for metrics and remote ssh access.
+OBSERVABILITY_SUBDIRS = $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/tracer $(SERVICES_DIR)/network
+
+# Subdirs to target during a 'make halt'
+HALT_DOCKER_SUBDIRS = $(filter-out $(OBSERVABILITY_SUBDIRS), $(DOCKER_SUBDIRS))
+HALT_BARE_SUBDIRS = $(BARE_SUBDIRS)
+
 GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
 # Boot order explicitly defined to capture initial logs before upstream
@@ -61,7 +67,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt
 
 define h1_title
 	echo ""; \
@@ -80,6 +86,14 @@ define h3_title
 	echo "------------"; \
 	echo "- $(1)"
 	echo "--"
+endef
+
+define purge_global_state
+	@$(call h2_title,"Purging global runtime state...")
+	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
+	@rm -rf .logs
+	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
+	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
 endef
 
 # ==============================================================================
@@ -115,7 +129,7 @@ $(PYTHON_BIN):
 # WHAT IT DOES: Instantiates `.env` files across the framework from `.env.template` files.
 # WHY IT EXISTS: Required for injecting host-specific configurations (ports, keys) safely into containers.
 .env: .env.template $(wildcard .env.json) | $(PYTHON_BIN)
-	$(PYTHON_BIN) ./bin/env_instantiate.py $(if $(filter factory-reset% clean% __undock,$(MAKECMDGOALS)),--teardown)
+	$(PYTHON_BIN) ./bin/env_instantiate.py $(if $(filter factory-reset% clean% halt __undock%,$(MAKECMDGOALS)),--teardown)
 
 # WHAT IT DOES: The master cluster preparation target. Analyzes hardware, assigns providers,
 #               pushes topology configs via SSH, and executes heavy lifting (model pulls, env generation).
@@ -217,6 +231,18 @@ clean-network:
 # WHY IT EXISTS: Prevents orphan containers or locked resources during a system halt.
 __undock:
 	@for dir in $(DOCKER_SUBDIRS); do \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				$(call h1_title,"Executing teardown in $$REAL_DIR..."); \
+				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR down || true; \
+			fi; \
+		fi; \
+	done
+
+# WHAT IT DOES: Gracefully shuts down containers EXCEPT the observability stack.
+__undock_halt:
+	@for dir in $(HALT_DOCKER_SUBDIRS); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
@@ -409,25 +435,46 @@ clean-state:
 		fi; \
 	done
 
+# WHAT IT DOES: Deletes ephemeral files for services that were halted (preserves observability logs if any).
+clean-state-halt:
+	@$(call h2_title,"CLEANING LOCAL STATE ACROSS HALTED SERVICES")
+	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
+		if [ -L "$$dir" ]; then \
+			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
+			if [ -f "$$REAL_DIR/Makefile" ]; then \
+				OPENCLAW_SKIP_ENV=1 $(MAKE) --no-print-directory -C $$REAL_DIR clean-state || echo "Warning: $$REAL_DIR clean-state failed."; \
+			fi; \
+		fi; \
+	done
+
 # WHAT IT DOES: Triggers `factory-reset-soft` as the default reset behavior.
 factory-reset: factory-reset-soft
+
+# WHAT IT DOES: Shuts down all non-essential workloads while keeping observability and networking active.
+# WHY IT EXISTS: Allows operators to monitor the system baseline and verify successful teardown via Grafana without going blind.
+halt: __undock_halt
+	@$(call h1_title,"INITIATING HALT (PRESERVING OBSERVABILITY STACK)")
+	@$(MAKE) --no-print-directory clean-state-halt
+	@$(call h2_title,"Removing .env files for halted services...")
+	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
+		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+		rm -f "$$REAL_DIR/.env"; \
+	done
+	$(purge_global_state)
+	@echo "Halt complete. Observability stack and network remain active."
 
 # WHAT IT DOES: Tears down all containers, destroys the network, and wipes `.env` text files.
 # WHY THIS DEFAULT: **CRITICAL** - It explicitly PRESERVES `.env.json` (your cached secrets), `profile.json`, and all persistent external data.
 #   This is the safest way to bounce a broken framework.
 factory-reset-soft: __undock clean-network
-	@$(call h1_title,INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA))
+	@$(call h1_title,"INITIATING FACTORY RESET (SOFT - PRESERVING SECRETS & DATA)")
 	@$(MAKE) --no-print-directory clean-state
 	@$(call h2_title,"Removing .env files...")
 	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
 		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
-	@$(call h2_title,"Purging global runtime state...")
-	@rm -f .env tmp/metaclaw.txt docs/index.html .env.cluster
-	@rm -rf .logs
-	@$(PYTHON_BIN) ./bin/browser.py --close >/dev/null 2>&1 || true
-	@find . -name "*.env.tmp" -type f -delete 2>/dev/null || true
+	$(purge_global_state)
 	@echo "Soft reset complete. External data, .env.json files, profile.json, and python .venv preserved."
 
 # WHAT IT DOES: The Nuclear Option. Destroys everything, including cached `.env.json` secrets and the hardware `profile.json`.

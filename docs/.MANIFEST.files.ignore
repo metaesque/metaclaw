@@ -20,6 +20,7 @@ docs/legacy/INFO.md
 docs/legacy/INSTALL.md
 docs/legacy/TODO.org
 docs/index.html
+docs/personal/Wade.md
 external/
 lib/__pycache__/
 openclaw_framework.zip
@@ -47,6 +48,7 @@ tmp/mc
 tmp/metaclaw.txt
 tmp/metaclaw2.txt
 tmp/metaclaw3.txt
+tmp/metaclaw4.txt
 tmp/workspace.txt
 tmp/workspace2.txt
 tmp/config.txt

@@ -23,7 +23,7 @@ docs/MANIFEST-core.files
 docs/MANIFEST.files
 docs/WORKSPACE.files
 docs/CONFIG.files
-docs/personal/Wade.md
+docs/personal/Wade.md.j2
 lib/devices.py
 lib/metaclaw.py
 lib/services.py
