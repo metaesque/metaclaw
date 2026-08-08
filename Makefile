@@ -230,6 +230,7 @@ __undock:
 # WHY IT EXISTS: The standard deployment command for pushing infrastructure changes gracefully.
 apply: symlinks
 	@$(call h1_title,"RECONCILING GLOBAL INFRASTRUCTURE STATE")
+	@$(PYTHON_BIN) ./bin/node_setup.py
 	@for dir in $(WIZARD_BOOT_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
