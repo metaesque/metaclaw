@@ -37,8 +37,12 @@ services:
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Expose host hardware telemetry to the container
+      # Expose host hardware telemetry to the container.
+      # Bind-mounting '/' does not cross boundaries into pseudo-filesystems in Linux,
+      # so /proc and /sys must be explicitly mounted to prevent them from appearing empty.
       - /:/hostfs:ro
+      - /proc:/hostfs/proc:ro
+      - /sys:/hostfs/sys:ro
       - ${METACLAW_ROOT:-/home/node/repo}:/metaclaw:ro
       - ${METACLAW_CONFIG:-/home/node/config}:/config:ro
       - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
