@@ -314,7 +314,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 6,
         "x": 0,
         "y": 40
       },
@@ -329,20 +329,47 @@
             "uid": "victoriametrics"
           },
           "expr": "rate(diskio_read_bytes{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}} Read",
+          "legendFormat": "{{name}}",
           "refId": "A"
+        }
+      ],
+      "title": "Disk Throughput (Read) - $host",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "Bps"
         },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 48
+      },
+      "id": 14,
+      "options": {},
+      "repeat": "host",
+      "repeatDirection": "h",
+      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
           "expr": "rate(diskio_write_bytes{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}} Write",
-          "refId": "B"
+          "legendFormat": "{{name}}",
+          "refId": "A"
         }
       ],
-      "title": "Disk Throughput - $host",
+      "title": "Disk Throughput (Write) - $host",
       "type": "timeseries"
     },
     {
@@ -359,9 +386,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 48
+        "y": 56
       },
       "id": 10,
       "options": {},
@@ -374,20 +401,47 @@
             "uid": "victoriametrics"
           },
           "expr": "rate(diskio_reads{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}} Read",
+          "legendFormat": "{{name}}",
           "refId": "A"
+        }
+      ],
+      "title": "Disk IOPS (Read) - $host",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "victoriametrics"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "iops"
         },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 64
+      },
+      "id": 15,
+      "options": {},
+      "repeat": "host",
+      "repeatDirection": "h",
+      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "victoriametrics"
           },
           "expr": "rate(diskio_writes{host=~\"$host\"}[$__rate_interval])",
-          "legendFormat": "{{name}} Write",
-          "refId": "B"
+          "legendFormat": "{{name}}",
+          "refId": "A"
         }
       ],
-      "title": "Disk IOPS - $host",
+      "title": "Disk IOPS (Write) - $host",
       "type": "timeseries"
     },
     {
@@ -404,9 +458,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 56
+        "y": 72
       },
       "id": 11,
       "options": {},
@@ -419,7 +473,7 @@
             "uid": "victoriametrics"
           },
           "expr": "rate(diskio_io_time{host=~\"$host\"}[$__rate_interval]) / 10",
-          "legendFormat": "{{name}} Util %",
+          "legendFormat": "{{name}}",
           "refId": "A"
         }
       ],
@@ -442,7 +496,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 80
       },
       "id": 12,
       "options": {},
@@ -478,7 +532,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 80
       },
       "id": 13,
       "options": {},
