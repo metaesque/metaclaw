@@ -44,6 +44,9 @@ services:
       - /:/hostfs:ro
       - /proc:/hostfs/proc:ro
       - /sys:/hostfs/sys:ro
+      # Resolves device mapper aliases and UUIDs for the [[inputs.diskio]] plugin
+      - /run/udev:/run/udev:ro
       - ${METACLAW_ROOT:-/home/node/repo}:/metaclaw:ro
       - ${METACLAW_CONFIG:-/home/node/config}:/config:ro
       - ${METACLAW_ROOT:-/home/node/repo}/features/kasa/assets/collectors/telegraf:/etc/telegraf/telegraf.d:ro
+
