@@ -6,18 +6,6 @@ during deployment testing.
 
 ## Top Priority
 
-*   **[TODO] Storage Visibility:**
-    On every node in the user's cluster, ensure that all disks from all other
-    nodes on the LAN are mounted read-write so all nodes can see all nodes disks
-
-    *   **[TODO] Automate Cross-Cluster Disk Mounting (NFS/Autofs):**
-        To ensure true data fluidity across the compute farm, we must dynamically
-        map the `mounts` array within `hardware.json` to automatically generate
-        server-side NFS `/etc/exports` and client-side `/etc/auto.nfs` maps. This
-        abstracts the physical location of the SSDs, allowing seamless access to
-        models, workspaces, and quantified-self archives across all nodes via the
-        Tailscale subnet without saturating bandwidth during idle times.
-
 *   **[TODO] Expand Compute Plane:**
     Get the new DGX Sparks configured to run both individuals and chained
     together (pick a model that fits quantizied on one, and unquantized on both)
@@ -25,6 +13,14 @@ during deployment testing.
 *   **[TODO] Transition To OpenClaw:**
     Get OpenClaw prompt-to-agent and prompt-to-model working properly so we can
     start coding in OpenClaw instead of gemini.google.com
+
+*   **[TODO] Abstract Feature Setup Hooks:**
+    Currently, `bin/node_setup.py` explicitly hardcodes the invocation of
+    specific feature initialization scripts (like `clawdisk_setup.py`). We must
+    implement a generic feature-discovery mechanism. `node_setup.py` should
+    iterate through the `features/` directory and execute any standard
+    `bin/<feature>_setup.py` hooks automatically, keeping the core orchestrator
+    oblivious to specific feature implementations.
 
 ## Switching From Gemini to OpenClaw
 
@@ -138,7 +134,9 @@ during deployment testing.
     hardware registry tracking. Refactor edge scripts (like
     `features/kasa/bin/power_kasa.py`) to query this unified library instead of
     manually opening and parsing the raw `hardware.json` mapping files on every
-    execution loop.
+    execution loop. Ensure that dynamic features (like ClawDisk's AutoFS meshes)
+    leverage these abstraction layers cleanly without reverting to God-Object
+    patterns.
 
 ## Future Aspirations
 
@@ -184,3 +182,8 @@ during deployment testing.
     example, selecting `victoriametrics` for the `tsdb` service should
     automatically bias default provider choices for `collector` (`telegraf`) and
     `visualizer` (`grafana`) to ensure maximum compatibility out-of-the-box.
+
+---
+*Completed Tasks:*
+*   [x] Storage Visibility (ClawDisk implementation)
+*   [x] Automate Cross-Cluster Disk Mounting (AutoFS/NFS)

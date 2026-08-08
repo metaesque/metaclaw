@@ -224,11 +224,30 @@ workload reassignment (such as observability agents). **You must run `make
 install-docker` and log out/log back in to refresh your user session permissions
 before executing `make wizard-batch` or `make apply`.**
 
-## Distributed Storage & Cluster Mounts
+## Distributed Storage (The ClawDisk Mesh)
 
 A functional AI compute farm requires data fluidity across physically isolated
 nodes. External SSDs and internal NVMe arrays must be shared securely over the
 LAN to prevent storage silos and duplicate data copying.
+
+To accomplish this, MetaClaw implements the **ClawDisk** feature subsystem.
+ClawDisk utilizes AutoFS and NFS to generate a seamless, highly resilient
+virtual filesystem across all nodes.
+
+### ClawDisk Namespace Topology
+
+ClawDisk enforces strict, deterministic namespace parity. This guarantees that
+an autonomous agent or human operator can access data using the exact same path
+regardless of which physical host they are currently executing on.
+
+1. **Remote Home Directories:**
+   Accessing `/mnt/cluster/<host>/home/metaclaw` grants read-write access to
+   the targeted host's home directory.
+2. **Nomadic External SSDs:**
+   Accessing `/mnt/cluster/ext/<ssd_name>` grants read-write access to an
+   external SSD. Using AutoFS Replicated Server failover, the system dynamically
+   mounts the drive from whichever physical node in the cluster currently has
+   it plugged into a USB port.
 
 ### Storage Data Taxonomy
 
@@ -252,23 +271,20 @@ be categorized and placed according to its access profile:
    and mechanical drives across the farm to spin down or enter sleep states,
    saving power and CPU interrupts.
 
-### The Autofs & NFS Strategy
+### The exFAT FUSE Invariant
 
-To share these drives dynamically across the cluster without relying on brittle
-auto-discovery tools (like mDNS) that fail in headless environments, MetaClaw
-utilizes an immutable Hardware Registry.
+By default, external SSDs are formatted as exFAT to maintain cross-platform
+compatibility with macOS (the nomadic client). However, the modern native
+Linux `exfat` kernel driver completely lacks the `export_operations` structure
+required by the NFS daemon. Attempting to export a native exFAT drive will
+result in a kernel rejection.
 
-The `config/data/hardware.json` explicitly defines a `mounts` array for each
-node. This establishes the true UUID, filesystem type, block size, and target
-mountpoint for every drive. During the cluster orchestration sequence, the
-framework generates:
-
-*   **Server-Side Exports:** An `/etc/exports` file on the physical host
-    exposing the drive directly to the Tailscale subnet (`100.64.0.0/10`) via NFS.
-*   **Client-Side Autofs:** An `/etc/auto.master` map on all other nodes. This
-    ensures drives are mounted strictly on-demand when an agent queries the
-    path, and automatically unmounted during inactivity. This preserves network
-    throughput and prevents stalled system locks if a node drops offline.
+To solve this, ClawDisk enforces a strict **FUSE Bypass**. The system
+intercepts any drive configured as `exfat` in the hardware registry, forces
+a lazy unmount if required, and automatically remounts the block device into
+userspace using the `exfat-fuse` driver. This enables seamless NFS cluster
+sharing without requiring the user to reformat their cross-platform SSDs
+to `ext4`.
 
 ## Docker Container Naming Convention
 

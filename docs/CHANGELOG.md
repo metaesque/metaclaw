@@ -1,5 +1,23 @@
 # MetaClaw Changelog
 
+## [2026-08-07] - ClawDisk Decentralized Storage Mesh Stabilization
+
+### Added
+
+*   **Modular Feature Subsystem:** Extracted ClawDisk logic from `lib/devices.py` into a standalone modular feature script (`features/clawdisk/bin/clawdisk_setup.py`) to prevent God-Object bloat in the core library API.
+*   **GitOps Pull Config Target:** Implemented `bin/fetch_hardware_state.py` and the `make pullcfg` target in the global `Makefile`. This provides a secure, targeted `rsync` mechanism to marshal dynamically generated hardware states (like discovered SSD mount points) from edge nodes back to the `../config/data/hardware/node/` drop-zone on the operator's laptop without tromping on other hosts' data.
+
+### Changed
+
+*   **Stateless AutoFS Failover:** Replaced brittle `current_host` symlinking logic with native AutoFS replicated server failover. The daemon now receives a comma-separated list of all dynamic cluster IPs (parsed directly from `profile.json` instead of static hardware files) and natively attempts to mount the SSD from whichever physical node responds.
+*   **Automated Node Setup Trigger:** Modified `make apply` in the root `Makefile` to automatically execute `bin/node_setup.py` during reconciliation, ensuring new storage meshes and host modifications are applied alongside Docker container updates.
+
+### Fixed
+
+*   **exFAT NFS Kernel Bypass:** Discovered that the modern Linux in-kernel `exfat` driver fundamentally rejects NFS `export_operations`. Implemented a dynamic FUSE bypass that forces `exfat` drives to mount via the older userspace `exfat-fuse` driver, allowing them to successfully export over the LAN.
+*   **AutoFS Local Hijack Deadlock:** Fixed a bug where AutoFS would mistakenly generate network mount triggers for drives physically attached to the local machine, causing self-referential `No such file or directory` deadlocks during `cd`.
+*   **AutoFS Syntax Compliance:** Fixed malformed space-separated replicated server syntax (`ip1:/path ip2:/path`), converting it to the strictly required comma-separated format (`ip1,ip2:/path`) and removing deprecated `intr` flags.
+
 ## [2026-08-06] - Storage, Jinja2 Templating, and Container Escapes
 
 ### Added

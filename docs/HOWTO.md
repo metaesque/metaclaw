@@ -45,28 +45,26 @@ When upgrading from Tier 0 to Tier 1, or adding a Tier 2 GPU node, you must
 synchronize the cluster state so the existing nodes know where the new services
 live. **You must profile the NEW machine locally.**
 
-**The "Pull -> Profile -> Push" Workflow:**
+**The "Pullcfg -> Profile -> Pushcfg -> Pull" Workflow:**
 
-1.  **Pull:** Use `rsync` from your **New Node** to pull the `profile.json`
-    from your existing Master Node into the root directory of the Meta<Claw>
-    repository.
-
-2.  **Profile:** SSH into the **New Node** and run: `python bin/sysprofile.py`
+1.  **Pullcfg (Laptop):** Run `make pullcfg` from your local laptop (`peridot`).
+    * *This securely rsyncs the dynamically discovered hardware states (like
+      newly mapped SSDs) from the remote nodes back into your local
+      `../config/data/hardware/node/` drop-zone, merging the JSON updates.*
+2.  **Profile (New Node):** SSH into the **New Node** and run: `python bin/sysprofile.py`
     * *The script reads the existing JSON, profiles the new local hardware,
       assigns the tier, and appends the new node's state into the cluster
       array.*
-
-3.  **Push:** From the **New Node**, run: `make sync-cluster`
-    * *This utilizes `rsync` over SSH to blast the updated `profile.json` back
-      to the Master Node and any other peers.*
-
-4.  **Enact (New Node):** Run `make apply` on the **New Node**. The orchestrator
-    will automatically spin up the required components assigned to it.
-
-5.  **Enact (Master Node):** SSH back into the **Master Node** and run
-    `make apply`. The orchestrator will gracefully tear down any services that
-    were migrated away and redirect internal traffic via the newly generated
-    `.env.cluster` file.
+3.  **Pushcfg (Laptop):** If you made manual adjustments to the config files
+    locally, run `make pushcfg-control` to rsync the state to the `control` node.
+4.  **Pull (Control Node):** SSH into the **Master Node** and run `make pull`.
+    * *This forces all edge nodes in the cluster to pull the latest Git commits
+      and `rsync`s the `~/config` directory out to them, ensuring absolute
+      parity.*
+5.  **Enact (All Nodes):** Run `make apply` on the cluster nodes. The orchestrator
+    will automatically spin up the required components assigned to them, tear down
+    services that migrated away, and automatically trigger `bin/node_setup.py`
+    to rebuild the ClawDisk storage meshes.
 
 ## Testing Semantic Routing (Vector Space)
 
