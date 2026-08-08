@@ -80,13 +80,13 @@ endef
 
 define h2_title
 	echo "============"; \
-	echo "= $(1)"
+	echo "= $(1)"; \
 	echo "=="
 endef
 
 define h3_title
 	echo "------------"; \
-	echo "- $(1)"
+	echo "- $(1)"; \
 	echo "--"
 endef
 
@@ -364,7 +364,7 @@ wizard-run: bootstrap docs
 	done
 	@$(call h2_title,DEPLOYING CLUSTER INFRASTRUCTURE)
 	@for dir in $(WIZARD_BOOT_ORDER); do \
-		$(call h2_title,"$$dir BOOTUP"); \
+		$(call h2_title,$$dir BOOTUP); \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
