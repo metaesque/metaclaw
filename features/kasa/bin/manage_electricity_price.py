@@ -31,8 +31,9 @@ def main():
     else:
         timestamp_ns = int(datetime.now(timezone.utc).timestamp() * 1e9)
 
-    # Influx Line Protocol format: metric_name rate=val timestamp_ns
-    payload = f"electricity_price_cad_per_kwh rate={args.price} {timestamp_ns}\n".encode('utf-8')
+    # Influx Line Protocol: Sending 'electricity_price_cad_per_kwh=val' with no measurement
+    # ensures VictoriaMetrics registers the metric name exactly as electricity_price_cad_per_kwh.
+    payload = f"electricity_price_cad_per_kwh={args.price} {timestamp_ns}\n".encode('utf-8')
 
     req = urllib.request.Request(VM_WRITE_URL, data=payload, headers={"Content-Type": "text/plain"})
     try:

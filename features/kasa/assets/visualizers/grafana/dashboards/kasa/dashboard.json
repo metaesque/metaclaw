@@ -130,7 +130,7 @@
             "type": "prometheus",
             "uid": "victoriametrics"
           },
-          "expr": "(sum(integrate(kasa_power_watts[1d])) / 3600000) * last_over_time(electricity_price_cad_per_kwh[365d])",
+          "expr": "(sum(integrate(kasa_power_watts[1d])) / 3600000) * on() last_over_time(electricity_price_cad_per_kwh[365d])",
           "legendFormat": "Estimated Daily Spend",
           "refId": "A"
         }
@@ -743,5 +743,5 @@
   "timezone": "",
   "title": "Hardware Telemetry",
   "uid": "kasa-telemetry",
-  "version": 9
+  "version": 10
 }
