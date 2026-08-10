@@ -158,6 +158,18 @@ during deployment testing.
     files (VictoriaLogs) and general disk usage footprint incurred by MetaClaw
     on the host machines, to ensure SSDs do not reach capacity unnoticed.
 
+*   **[TODO] Improve `stress.py`**: Expand `features/kasa/bin/stress.py` to
+    be a one-stop-shop for multi-component stress testing (CPU, RAM thrashing
+    via `stress-ng --vm`, NVMe storage I/O via `--hdd`, GPU/VRAM acceleration
+    via `gpu-burn` and PyTorch matrix multiplication, and network interconnect
+    stress via `iperf3`).
+
+*   **[TODO] Automate ConnectX-7 Power Management**: Implement a script to
+    automate enabling/disabling the ConnectX-7 QSFP interfaces to save ~18W per
+    host when running single-node workloads. This script must integrate with
+    `./features/clawdisk`, which applies special NVMe/SSD mount rules when
+    ConnectX-7 interconnects are active.
+
 ## Maybe
 
 *   **[TODO] Reclaim UMA Frame Buffer RAM:**

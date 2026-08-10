@@ -7,12 +7,28 @@ database state. It now functions as a stateless, single-execution python
 script designed to be consumed by the Telegraf daemon via the `inputs.exec`
 plugin.
 
+## Kasa Power Strip Plug-to-Device Mapping
+
+The mapping between physical Kasa HS300 power strip sockets and target compute
+node aliases (`control`, `compute`, `spark1`, `spark2`) is stored directly
+inside the **TP-Link Kasa HS300 hardware firmware itself** via plug socket
+aliases.
+
+When `features/kasa/bin/power_kasa.py` executes, it polls the live Kasa power
+strip over the local network via `python-kasa`. It reads each plug's
+`child.alias` directly from the hardware and emits it as the `device` tag in
+Influx Line Protocol (e.g., `kasa_power,device=spark1 watts=42.1`).
+
+To view or update socket aliases:
+1. Use the official TP-Link Kasa mobile application.
+2. Or update aliases directly via the CLI: `kasa --host <HS300_IP> --plug "Plug 1" alias "control"`
+
 ## Script Execution (`power_kasa.py`)
 
 The `power_kasa.py` script no longer utilizes a complex `argparse` CLI. Upon
 execution, it performs the following linear steps:
 
-1.  Reads the static device mappings from `data/hardware.json`.
+1.  Reads the static device mappings from socket aliases
 2.  Utilizes the `psutil` library to extract current Host CPU %, Memory %,
     and CPU core temperatures.
 3.  Utilizes the `python-kasa` library to broadcast a UDP discovery packet
