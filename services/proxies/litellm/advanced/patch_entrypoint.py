@@ -1,8 +1,11 @@
 import sys
+import json
+import uuid
 import litellm
 from litellm.integrations.custom_logger import CustomLogger
 from litellm.router_strategy.auto_router.litellm_encoder import LiteLLMRouterEncoder
 from litellm.proxy.proxy_cli import run_server
+from litellm.types.utils import ModelResponse, ChatCompletionMessageToolCall, Function
 
 def chunked_encode_queries(self, docs, **kwargs):
   batch_size = 90
@@ -36,15 +39,48 @@ class ToolCallInterceptor(CustomLogger):
   Designed to intercept raw LLM completion responses and transform stringified
   JSON tool outputs into standard OpenAI tool_calls objects before returning to OpenClaw.
   """
-  async def async_post_call_success_hook(self, data, user_api_key_dict, response):
+  async def async_post_call_success_hook(self, data: dict, user_api_key_dict, response):
     try:
       print(f"[INTERCEPTOR] async_post_call_success_hook fired for model: {data.get('model', 'unknown')}", flush=True)
       try:
           if hasattr(response, 'choices') and len(response.choices) > 0:
-              content = response.choices[0].message.content
-              print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{content}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+              choice = response.choices[0]
+              message = choice.message
+              content = message.content
+              if content:
+                  # Clean markdown formatting if present
+                  clean_content = content.strip()
+                  if clean_content.startswith('```json'):
+                      clean_content = clean_content[7:]
+                  elif clean_content.startswith('```'):
+                      clean_content = clean_content[3:]
+                  if clean_content.endswith('```'):
+                      clean_content = clean_content[:-3]
+                  clean_content = clean_content.strip()
+
+                  # Heuristic check for tool call structure
+                  if clean_content.startswith('{') and '"name"' in clean_content and '"parameters"' in clean_content:
+                      try:
+                          tool_data = json.loads(clean_content)
+                          print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{content}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+
+                          tool_call = ChatCompletionMessageToolCall(
+                              id=f"call_{uuid.uuid4().hex[:16]}",
+                              type="function",
+                              function=Function(
+                                  name=tool_data.get("name"),
+                                  arguments=json.dumps(tool_data.get("parameters", {}))
+                              )
+                          )
+
+                          message.content = None
+                          message.tool_calls = [tool_call]
+                          choice.finish_reason = "tool_calls"
+                          print(f"[INTERCEPTOR] Successfully transformed content into tool_call: {tool_data.get('name')}", flush=True)
+                      except json.JSONDecodeError as inner_e:
+                          print(f"[INTERCEPTOR] Content matched tool heuristics but failed JSON decoding: {inner_e}", flush=True)
       except Exception as inner_e:
-          print(f"[INTERCEPTOR] Could not extract raw payload for logging: {inner_e}", flush=True)
+          print(f"[INTERCEPTOR] Could not extract or mutate payload: {inner_e}", flush=True)
       return response
     except Exception as e:
       print(f"[INTERCEPTOR] Error during execution: {e}", flush=True)

@@ -263,6 +263,8 @@ for yf in yaml_files:
       entry['params'] = {}
       # Explicitly disable thinking modality to prevent LLMs flushing internal tags and breaking JSON interception
       entry['params']['thinking'] = False
+      # Explicitly disable streaming so LiteLLM interceptor hook fires successfully
+      entry['params']['stream'] = False
       if yaml_constraints:
           if 'max_tokens' in yaml_constraints:
               entry['params']['maxTokens'] = yaml_constraints['max_tokens']
@@ -393,5 +395,7 @@ print("SUCCESS: Hijacked the default OpenAI provider to transparently route via 
 print("SUCCESS: Configured tools.agentToAgent.enabled to 'true' to permit cross-agent messaging.")
 print("SUCCESS: Configured 'profile: coding' globally and disabled 'sessions_spawn' to prevent LLM tool hallucination.")
 print("SUCCESS: Forced 'thinking: false' across all agents to prevent reasoning leakage.")
+print("SUCCESS: Forced 'stream: false' across all agents to ensure LiteLLM hooks fire.")
 print("SUCCESS: Enabled loopDetection to protect API budgets against generative timeouts.")
 print(f"SUCCESS: Auto-discovered {len(yaml_ids)} custom YAML agents and mapped properties to JSON.")
+

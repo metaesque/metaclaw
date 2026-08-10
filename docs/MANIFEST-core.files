@@ -10,7 +10,7 @@ bin/cluster_status.py
 bin/env_instantiate.py
 bin/orchestrate.py
 bin/sysprofile.py
-bin/setup_plane.py
+bin/setup_plane.sh
 bin/render_templates.py
 docs/ARCHITECTURE.md
 docs/ROADMAP.md
