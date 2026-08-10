@@ -540,10 +540,14 @@ tmp/metacore.txt: FORCE | $(PYTHON_BIN)
 cw: tmp/metacw.txt
 tmp/metacw.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	ls -1 ../workspace/*.md > tmp.files
-	find ../workspace/agents/software -type f >> tmp.files
-	ls -1 ../workspace/src/projects/*.md >> tmp.files
-	if false ; then find ../config -type f >> tmp.files; fi
+	if false ; then \
+	  ls -1 ../workspace/*.md > tmp.files; \
+	  find ../workspace/agents/software -type f >> tmp.files; \
+	  ls -1 ../workspace/src/projects/*.md >> tmp.files; \
+        fi
+	if true ; then \
+          find ../config -type f >> tmp.files; \
+        fi
 	$(PYTHON_BIN) ./bin/newcode.py -s tmp.files -o tmp/metacw.txt -l 6000
 	@echo "Manifest generated at: tmp/metacw.txt"
 	rm tmp.files
