@@ -42,13 +42,28 @@ class ToolCallInterceptor(CustomLogger):
   async def async_post_call_success_hook(self, data: dict, user_api_key_dict, response):
     try:
       print(f"[INTERCEPTOR] async_post_call_success_hook fired for model: {data.get('model', 'unknown')}", flush=True)
-      try:
-          if hasattr(response, 'choices') and len(response.choices) > 0:
-              choice = response.choices[0]
+
+      # Defensively extract raw response data regardless of its type (dict vs ModelResponse)
+      resp_data = None
+      if hasattr(response, 'model_dump'):
+          resp_data = response.model_dump()
+      elif hasattr(response, 'dict'):
+          resp_data = response.dict()
+      elif isinstance(response, dict):
+          resp_data = response
+      else:
+          resp_data = {"raw_str": str(response)}
+
+      print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{json.dumps(resp_data, indent=2)}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+
+      # Try to mutate if it is a ModelResponse object natively supporting choices
+      if hasattr(response, 'choices') and len(response.choices) > 0:
+          choice = response.choices[0]
+          if hasattr(choice, 'message'):
               message = choice.message
-              content = message.content
-              if content:
-                  # Clean markdown formatting if present
+              content = getattr(message, 'content', None)
+
+              if content and isinstance(content, str):
                   clean_content = content.strip()
                   if clean_content.startswith('```json'):
                       clean_content = clean_content[7:]
@@ -58,12 +73,15 @@ class ToolCallInterceptor(CustomLogger):
                       clean_content = clean_content[:-3]
                   clean_content = clean_content.strip()
 
-                  # Heuristic check for tool call structure
-                  if clean_content.startswith('{') and '"name"' in clean_content and '"parameters"' in clean_content:
+                  # Loosened heuristic: Look for tool call signatures anywhere in the cleaned content
+                  if '{' in clean_content and '"name"' in clean_content and '"parameters"' in clean_content:
+                      # Extract everything from the first '{' to the last '}'
                       try:
-                          tool_data = json.loads(clean_content)
-                          print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{content}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+                          start_idx = clean_content.find('{')
+                          end_idx = clean_content.rfind('}') + 1
+                          json_str = clean_content[start_idx:end_idx]
 
+                          tool_data = json.loads(json_str)
                           tool_call = ChatCompletionMessageToolCall(
                               id=f"call_{uuid.uuid4().hex[:16]}",
                               type="function",
@@ -72,15 +90,13 @@ class ToolCallInterceptor(CustomLogger):
                                   arguments=json.dumps(tool_data.get("parameters", {}))
                               )
                           )
-
                           message.content = None
                           message.tool_calls = [tool_call]
                           choice.finish_reason = "tool_calls"
                           print(f"[INTERCEPTOR] Successfully transformed content into tool_call: {tool_data.get('name')}", flush=True)
-                      except json.JSONDecodeError as inner_e:
-                          print(f"[INTERCEPTOR] Content matched tool heuristics but failed JSON decoding: {inner_e}", flush=True)
-      except Exception as inner_e:
-          print(f"[INTERCEPTOR] Could not extract or mutate payload: {inner_e}", flush=True)
+                      except Exception as inner_e:
+                          print(f"[INTERCEPTOR] Failed JSON decoding during heuristic mutation: {inner_e}", flush=True)
+
       return response
     except Exception as e:
       print(f"[INTERCEPTOR] Error during execution: {e}", flush=True)
