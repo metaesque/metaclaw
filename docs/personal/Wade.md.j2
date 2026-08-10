@@ -144,6 +144,24 @@ the headless Ubuntu nodes (K8 Plus or EVO-X2) residing in the AI Farm.
     is executed in the remote TRAMP subshells to pull down the latest GitHub
     commits before applying them to the live edge infrastructure.
 
+## Storage Topology & Evolution Plan
+
+This section outlines the current state and future architectural goals for the cluster's internal and external SSD storage, ensuring data is mapped to the appropriate block sizes and I/O profiles.
+
+### Current State
+*   **`control` (1TB Internal NVMe):** Heavy usage. Hosts dense Git repositories, Docker image layers, and PostgreSQL/pgvector databases. Currently holds ~462GB of raw Google Takeout archives.
+*   **`compute` (2TB Internal NVMe):** Highly underutilized (~1.7TB free). Currently designated as the high-speed staging ground for ingesting incoming flash drives.
+*   **`spark1` & `spark2` (1TB Internal NVMes):** Barely used (~85GB each).
+*   **`t9_1tb_black` (1TB External, 16Gbps):** Contains ancient family photos and scattered Google Takeout data.
+*   **`t9_2tb_black` (2TB External, 16Gbps):** Currently empty. Ear-marked for massive sequential-read payloads, specifically local LLM model weights.
+*   **`t7_1tb_gray` (1TB External, 8.4Gbps):** Formatted as exFAT with 128KB clusters, resulting in severe "slack space" waste for small files. Contains a hodgepodge of photos, adult content, and the beginnings of a "media archive".
+
+### Evolution & Organization Strategy
+1.  **Quantified Self (QS) Centralization:** Consolidate all Google Takeout data (currently split across `control` and `t9_1tb_black`) onto the `control` node. This data will form the basis of the QS project, maintaining multiple formats (raw, analyzed, and TSDB time-series).
+2.  **Canonical Media Archive:** Formalize a media repository to eliminate redundant copies. Files (e.g., duplicated images from Google Chat archives) will be stored once as a canonical copy, with references leveraging filesystem symlinks to eliminate disk waste.
+3.  **Flash Drive Ingestion:** The 14 incoming flash drives (QS & Media Archives) will be temporarily staged on the `compute` node's spacious 2TB internal NVMe.
+4.  **T7 Re-formatting:** Once data is safely staged elsewhere, the `t7_1tb_gray` drive will be wiped, reformatted with an optimal block size tailored for large media files (1MB+), and repurposed as the permanent cold-storage media archive.
+
 ## Dynamic Hardware & Asset Ledger
 
 This section tracks every computing and electrical asset in the ecosystem.
@@ -152,7 +170,7 @@ physical constraints.
 
 ### Host & Compute Assets
 {% for uid, device in hardware.items() -%}
-{%- if device.type == 'nomadic_client' or device.type == 'compute_node' %}
+{%- if device.type == 'nomadic_client' or device.type == 'compute_node' or device.type == 'node' %}
 
 #### {{ device.name }}
 
@@ -166,7 +184,7 @@ physical constraints.
 
 ### Network & Uplink Assets
 {% for uid, device in hardware.items() -%}
-{%- if device.type == 'network_uplink' or device.type == 'power_asset' or device.type == 'power_strip' %}
+{%- if device.type == 'network_uplink' or device.type == 'network' or device.type == 'power_asset' or device.type == 'power_strip' or device.type == 'power' %}
 
 #### {{ device.name }}
 
@@ -180,7 +198,7 @@ physical constraints.
 
 ### External Storage Assets
 {% for uid, device in hardware.items() -%}
-{%- if device.type == 'external_ssd' %}
+{%- if device.type == 'external_ssd' or device.type == 'ssd' %}
 
 #### {{ device.name }}
 
