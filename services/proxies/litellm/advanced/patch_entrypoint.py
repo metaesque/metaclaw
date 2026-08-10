@@ -41,22 +41,22 @@ class ToolCallInterceptor(CustomLogger):
   """
   async def async_post_call_success_hook(self, data: dict, user_api_key_dict, response):
     try:
-      print(f"[INTERCEPTOR] async_post_call_success_hook fired for model: {data.get('model', 'unknown')}", flush=True)
+      print(f"[INTERCEPTOR] Hook fired for model: {data.get('model', 'unknown')}", flush=True)
 
-      # Defensively extract raw response data regardless of its type (dict vs ModelResponse)
-      resp_data = None
-      if hasattr(response, 'model_dump'):
-          resp_data = response.model_dump()
-      elif hasattr(response, 'dict'):
-          resp_data = response.dict()
-      elif isinstance(response, dict):
-          resp_data = response
-      else:
-          resp_data = {"raw_str": str(response)}
+      # Defensively print the response type to VictoriaLogs to catch streaming generator objects
+      print(f"[INTERCEPTOR] Response object type: {type(response)}", flush=True)
 
-      print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{json.dumps(resp_data, indent=2)}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+      try:
+          if hasattr(response, 'model_dump'):
+              print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{json.dumps(response.model_dump(), indent=2)}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+          elif hasattr(response, 'dict'):
+              print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{json.dumps(response.dict(), indent=2)}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+          else:
+              print(f"\n[INTERCEPTOR] RAW PAYLOAD START:\n{str(response)}\n[INTERCEPTOR] RAW PAYLOAD END\n", flush=True)
+      except Exception as print_err:
+          print(f"[INTERCEPTOR] Failed to serialize raw payload for logging: {print_err}", flush=True)
 
-      # Try to mutate if it is a ModelResponse object natively supporting choices
+      # Attempt to mutate the response if it has the standard choices array
       if hasattr(response, 'choices') and len(response.choices) > 0:
           choice = response.choices[0]
           if hasattr(choice, 'message'):
@@ -73,9 +73,8 @@ class ToolCallInterceptor(CustomLogger):
                       clean_content = clean_content[:-3]
                   clean_content = clean_content.strip()
 
-                  # Loosened heuristic: Look for tool call signatures anywhere in the cleaned content
+                  # Heuristic check for stringified JSON tool outputs
                   if '{' in clean_content and '"name"' in clean_content and '"parameters"' in clean_content:
-                      # Extract everything from the first '{' to the last '}'
                       try:
                           start_idx = clean_content.find('{')
                           end_idx = clean_content.rfind('}') + 1
@@ -93,13 +92,12 @@ class ToolCallInterceptor(CustomLogger):
                           message.content = None
                           message.tool_calls = [tool_call]
                           choice.finish_reason = "tool_calls"
-                          print(f"[INTERCEPTOR] Successfully transformed content into tool_call: {tool_data.get('name')}", flush=True)
+                          print(f"[INTERCEPTOR] Successfully transformed stringified content into tool_call: {tool_data.get('name')}", flush=True)
                       except Exception as inner_e:
-                          print(f"[INTERCEPTOR] Failed JSON decoding during heuristic mutation: {inner_e}", flush=True)
-
+                          print(f"[INTERCEPTOR] Failed to mutate parsed JSON into tool_calls: {inner_e}", flush=True)
       return response
     except Exception as e:
-      print(f"[INTERCEPTOR] Error during execution: {e}", flush=True)
+      print(f"[INTERCEPTOR] CRITICAL ERROR during execution: {e}", flush=True)
       return response
 
 print("[PATCH] ToolCallInterceptor loaded into environment. Registering callback...")
