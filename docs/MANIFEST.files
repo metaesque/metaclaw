@@ -44,7 +44,7 @@ docs/CONFIG.files
 docs/DEMOS.md
 docs/HOWTO.md
 docs/LLM.md
-docs/MANIFEST-core.files
+docs/CORE.files
 docs/MANIFEST.files
 docs/Makefile
 docs/OC.md
@@ -71,6 +71,7 @@ features/kasa/bin/kasa_alert.sh
 features/kasa/bin/manage_electricity_price.py
 features/kasa/bin/power_kasa.py
 features/kasa/bin/ssd_info.sh
+features/kasa/bin/stress.py
 features/kasa/bin/test_gpu_telemetry.py
 features/kasa/bin/test_power_kasa.py
 features/kasa/data/alerts.yaml

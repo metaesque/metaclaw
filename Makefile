@@ -540,12 +540,12 @@ tmp/metacore.txt: FORCE | $(PYTHON_BIN)
 cw: tmp/metacw.txt
 tmp/metacw.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	if false ; then \
+	if true ; then \
 	  ls -1 ../workspace/*.md > tmp.files; \
 	  find ../workspace/agents/software -type f >> tmp.files; \
 	  ls -1 ../workspace/src/projects/*.md >> tmp.files; \
         fi
-	if true ; then \
+	if false ; then \
           find ../config -type f >> tmp.files; \
         fi
 	$(PYTHON_BIN) ./bin/newcode.py -s tmp.files -o tmp/metacw.txt -l 6000
