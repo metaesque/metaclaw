@@ -1,0 +1,275 @@
+control:
+  df:
+    Filesystem                                  Size  Used Avail Use% Mounted on
+    tmpfs                                       2.9G  3.0M  2.9G   1% /run
+    efivarfs                                    128K   42K   82K  34% /sys/firmware/efi/efivars
+    /dev/mapper/ubuntu--vg-ubuntu--lv           914G  813G   63G  93% /
+    tmpfs                                        15G     0   15G   0% /dev/shm
+    tmpfs                                       5.0M     0  5.0M   0% /run/lock
+    /dev/nvme0n1p2                              2.0G  201M  1.6G  11% /boot
+    /dev/nvme0n1p1                              1.1G  6.2M  1.1G   1% /boot/efi
+    tmpfs                                       2.9G   12K  2.9G   1% /run/user/1000
+    100.113.252.0:/mnt/cluster/ext/t7_1tb_gray  932G  629G  304G  68% /mnt/cluster/ext/t7_1tb_gray
+    100.116.216.4:/home/metaclaw                1.9T  1.7T  128G  93% /mnt/cluster/compute/home/metaclaw
+    100.101.218.106:/home/metaclaw              916G   84G  786G  10% /mnt/cluster/spark1/home/metaclaw
+    100.113.252.0:/home/metaclaw                916G  306G  563G  36% /mnt/cluster/spark2/home/metaclaw
+    tmpfs                                       2.9G   12K  2.9G   1% /run/user/1001
+
+  directories:
+    779.0G  home/
+    318.0G    metaclaw/
+      9.7G      external/
+      4.0K        browseruse-data/
+     28.0K        crawl4ai-data/
+      1.2M        grafana-data/
+      4.0K        litellm-logs/
+     83.0M        metaclaw-archive/
+    517.0M        neo4j-data/
+      4.0K        neo4j-import/
+    928.0K        neo4j-logs/
+      2.8M        neo4j-plugins/
+      9.0G        ollama-models/
+     75.0M        openclaw-postgres-data/
+     20.0K        qdrant-data/
+      8.0K        searxng-data/
+     12.0K        tailscale-state/
+     19.0M        victorialogs-data/
+     72.0M        victoriametrics-tsdb-data/
+      3.0G      repo/
+    304.0G      storage/
+    188.0K        family/
+    188.0K          family/Memories1
+    105.0G        myrna/
+    105.0G          backup/
+      2.6M            Dell Desktop/
+     12.0G            Images/
+      2.6G            Inspiron 15 5000 Series/
+      2.6G            Myrna/
+     88.0G            Video/
+     44.0K            Windows 7 Inspiron/
+    199.0G        wade/
+    181.0G          GoPro360/
+     19.0G          pixel4a/
+    462.0G    wmh/
+      3.5G      takeout/admin@capitalceramicsupply.com/
+     26.0M      takeout/anasevtaserniay@gmail.com/
+    263.0M      takeout/ethicallyslutty@gmail.com/
+     39.0G      takeout/iltlwp@gmail.com/
+     74.0G      takeout/metawade@gmail.com/
+    347.0G      takeout/wade@holst.ca/
+      8.1G  swap.img
+      3.3G  usr/
+     34.0G  var/
+
+compute:
+  df:
+    Filesystem                                  Size  Used Avail Use% Mounted on
+    tmpfs                                       3.1G  2.1M  3.1G   1% /run
+    efivarfs                                    128K   47K   77K  38% /sys/firmware/efi/efivars
+    /dev/mapper/ubuntu--vg-ubuntu--lv           1.9T  1.7T  128G  93% /
+    tmpfs                                        16G  4.0K   16G   1% /dev/shm
+    tmpfs                                       5.0M     0  5.0M   0% /run/lock
+    /dev/nvme0n1p2                              2.0G  209M  1.6G  12% /boot
+    /dev/nvme0n1p1                              1.1G  6.2M  1.1G   1% /boot/efi
+    tmpfs                                       3.1G   12K  3.1G   1% /run/user/1000
+    100.113.252.0:/home/metaclaw                916G  306G  563G  36% /mnt/cluster/spark2/home/metaclaw
+    100.123.133.121:/home/metaclaw              914G  813G   63G  93% /mnt/cluster/control/home/metaclaw
+    100.101.218.106:/home/metaclaw              916G   84G  786G  10% /mnt/cluster/spark1/home/metaclaw
+    100.113.252.0:/mnt/cluster/ext/t7_1tb_gray  932G  629G  304G  68% /mnt/cluster/ext/t7_1tb_gray
+
+  directories:
+      1.6T  home/
+      1.6T    metaclaw/
+     89.0G      external/
+     89.0G        metaclaw/ollama-models/
+    421.0G      flash/
+     34.0G        BACKUP/
+     25.0M        INDEX/
+      3.4M        MEDIA2/
+     71.0G        MEDIA5/
+    173.0G        OF/
+    123.0G        W1/
+     22.0G        X2/
+      2.9G      repo/
+      1.1T      storage/
+      1.1T        media/
+    233.0G          MOVIES/
+    230.0G          TV1/
+    233.0G          TV2/
+    185.0G          TV3/
+    230.0G          TV4/
+      8.1G  swap.img
+      3.8G  usr/
+      5.0G  var/
+
+spark1:
+  df:
+    Filesystem                              Size  Used Avail Use% Mounted on
+    tmpfs                                    13G  8.7M   13G   1% /run
+    efivarfs                                256K   36K  221K  14% /sys/firmware/efi/efivars
+    /dev/nvme0n1p2                          916G   84G  786G  10% /
+    tmpfs                                    61G     0   61G   0% /dev/shm
+    tmpfs                                   5.0M  8.0K  5.0M   1% /run/lock
+    /dev/nvme0n1p1                          511M  6.4M  505M   2% /boot/efi
+    tmpfs                                    13G   96K   13G   1% /run/user/1000
+    10.99.0.2:/mnt/cluster/ext/t7_1tb_gray  932G  629G  304G  68% /mnt/cluster/ext/t7_1tb_gray
+    10.99.0.2:/home/metaclaw                916G  306G  563G  36% /mnt/cluster/spark2/home/metaclaw
+    100.123.133.121:/home/metaclaw          914G  813G   63G  93% /mnt/cluster/control/home/metaclaw
+    100.116.216.4:/home/metaclaw            1.9T  1.7T  128G  93% /mnt/cluster/compute/home/metaclaw
+
+  directories:
+      4.1G  home/
+      4.1G    metaclaw/
+      2.9G      repo/
+      1.2G      .cache/
+     17.0G  swap.img
+     13.0G  usr/
+      7.0G  var/
+
+spark2:
+  df:
+     Filesystem                      Size  Used Avail Use% Mounted on
+     tmpfs                            13G  8.7M   13G   1% /run
+     efivarfs                        256K   36K  221K  14% /sys/firmware/efi/efivars
+     /dev/nvme0n1p2                  916G  306G  563G  36% /
+     tmpfs                            61G     0   61G   0% /dev/shm
+     tmpfs                           5.0M  8.0K  5.0M   1% /run/lock
+     /dev/nvme0n1p1                  511M  6.4M  505M   2% /boot/efi
+     tmpfs                            13G   96K   13G   1% /run/user/1000
+     /dev/sdc1                       1.9T  2.2M  1.9T   1% /mnt/cluster/ext/t9_2tb_black
+     /dev/sdb1                       932G   99G  834G  11% /mnt/cluster/ext/t9_1tb_black
+     /dev/sda1                       932G  629G  304G  68% /mnt/cluster/ext/t7_1tb_gray
+     100.123.133.121:/home/metaclaw  914G  813G   63G  93% /mnt/cluster/control/home/metaclaw
+     100.116.216.4:/home/metaclaw    1.9T  1.7T  128G  93% /mnt/cluster/compute/home/metaclaw
+     10.99.0.1:/home/metaclaw        916G   84G  786G  10% /mnt/cluster/spark1/home/metaclaw
+
+  directories:
+    229.0G  home/
+    219.0G    flash/
+      5.2G      ARCHIVE/
+    203.0G      X1/
+     12.0G        wmh/Downloads/
+      4.0G          fixme/
+      7.3G          mar/
+    192.0G        wmh/src/
+    160.0G          wmx/etc/
+     33.0G          wmx/SORT/
+     11.0G      X2/
+      7.8G        wmh/src/wmx/etc/erotica/
+     18.0M          literotica2/
+      4.0G          literotica.tgz/
+      3.8G          lit.partial.extract/
+      2.9G    repo/
+     17.0G  swap.img
+     13.0G  usr/
+     11.0G  var/
+
+t7_1tb_gray:
+  df:
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/sda1       932G  629G  304G  68% /mnt/cluster/ext/t7_1tb_gray
+
+    6.4G  archive
+            <xxx>/
+              <md5>.<suffix>
+
+  directories:
+     12.0G  bigtest.zip
+     79.0G  etc/
+     48.0G    media2/
+     48.0G      fromx1/
+    848.0M        image/
+     47.0G        video/
+     30.0G    media3/
+     30.0G      fromx1/
+     14.0G        bbc/
+      2.7G        bbcpro/
+    872.0M        bwc/
+    233.0M        cuckcomp/
+    672.0M        main/
+    374.0M        mfm/
+    200.0M        misc/
+      7.7G        named/
+    160.0M        pro/
+      1.2G        toname/
+      1.9G        twm/
+    256.0K      fromx2/
+    401.0M    p4p/
+     95.0M      people/illinois/chicago/
+                  <uid>/
+                    <imgid>.<suffix>
+                    data.json
+                    ?media.html
+    306.0M      people/nevada/reno/
+                  <uid>/
+                    <imgid>.<suffix>
+                    data.json
+                    ?media.html
+      1.4G    trawler/
+      1.4G      host/
+                  <host_abbrev>/
+                    <host>/
+                      db/
+                        <md5_prefix2>/
+                          <md5>/
+                            meta.json
+     13.0M      index/
+    450.0G  metap/
+    293.0M    input/
+    449.0G    site/
+     29.0G      asstr/
+     81.0M      b2w/
+    190.0M      eh/
+     32.0M      fetlife/
+     55.0M      fm/
+    548.0M      instagram/
+    115.0G      literotica/
+    251.0G      of/
+     50.0G      tumblr/
+      5.0G      ukluv/
+    556.0M  nofacefreak_18
+     39.0G  Photos
+              {PXL,VID}_<YYYY><mm><dd>_<HH><MM><SS>[<fff>].<suffix>
+     44.0G  sort/
+      7.4G    mar/
+     37.0G    nsfw/
+     49.0M    sfw/
+
+t9_1tb_black:
+  df:
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/sdb1       932G   99G  834G  11% /mnt/cluster/ext/t9_1tb_black
+
+  directories:
+     73.0G  FastFoto/
+    880.0M    del/
+    554.0M    Glenda/
+      1.4G    Glenda_Frick/
+     17.0G    Gupload/
+     39.0G    MM/
+    640.0K    MMHolst/
+      1.4G    Old Holst Pics/
+    816.0M    Old Larson Pics/
+      8.7G    Scan1029/
+      3.1G    Scan1102/
+    863.0M    Scan1117
+      2.8G  google/
+    647.0M    iltlwp/
+                Takeout/
+                takeout-*.tgz
+      2.2G    wade/
+                takeout-*.tgz
+     23.0G  Takeout
+     23.0G    wade@holst.ca/
+     23.0G      takeout-20260305T234110Z-3-001.tgz
+    128.0K      takeout-20260320T100728Z-3-001.tgz
+    119.0M      takeout-20260320T105057Z-3-001.zip
+     26.0M      takeout-20260323T201047Z-3-001.tgz
+    125.0M      takeout-20260323T233537Z-3-001.zip
+
+t9_2tb_black:
+  df:
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/sdc1       1.9T  2.2M  1.9T   1% /mnt/cluster/ext/t9_2tb_black
+
+  directories:
