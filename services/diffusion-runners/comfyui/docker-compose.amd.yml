@@ -1,8 +1,7 @@
 services:
   comfyui-diffusion-runner:
+    # Bypasses host-specific GID permission mapping for /dev/dri
+    privileged: true
     devices:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
-    group_add:
-      - video
-      - render
