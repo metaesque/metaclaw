@@ -1,0 +1,10 @@
+{
+  "uid": "musicgen",
+  "name": "MusicGen",
+  "tier": "2",
+  "overview": "Meta's powerful autoregressive transformer model strictly optimized for text-to-music.",
+  "details": [
+    "MusicGen operates over an EnCodec tokenizer, allowing users to generate high-fidelity music tracks conditioned on text prompts and melodic references.",
+    "It is incredibly powerful for soundtrack generation but lacks the broader foley and sound-effect capabilities required by versatile media agents."
+  ]
+}

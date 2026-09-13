@@ -1,0 +1,32 @@
+services:
+  stableaudio-acoustic-runner:
+    image: r8.im/stackadoc/stable-audio-open-1.0:${STABLEAUDIO_VERSION:-latest}
+    container_name: stableaudio-acoustic-runner
+    restart: unless-stopped
+    ports:
+      - "${STABLEAUDIO_PORT}:5000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      # Mount external volume to cache model weights on the host, preventing re-download
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/stableaudio-models:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      shared-network:
+        aliases:
+          - active-acoustic-runner
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true

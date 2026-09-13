@@ -1,0 +1,9 @@
+{
+  "uid": "diffusion-runner",
+  "uids": "diffusion-runners",
+  "name": "Diffusion Runner",
+  "names": "Diffusion Runners",
+  "category": "Intelligence Execution",
+  "purpose": "Executes diffusion-based image and video generation pipelines natively on the GPU, handling complex node-based visual synthesis workflows.",
+  "plane": "compute"
+}

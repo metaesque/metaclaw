@@ -1,0 +1,22 @@
+services:
+  kokoro-speech-runner:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:${KOKORO_VERSION:-latest}
+    container_name: kokoro-speech-runner
+    restart: unless-stopped
+    ports:
+      - "${KOKORO_PORT}:8880"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8880/docs || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      shared-network:
+        aliases:
+          - active-speech-runner
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true

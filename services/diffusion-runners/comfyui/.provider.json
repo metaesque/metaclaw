@@ -1,0 +1,11 @@
+{
+  "uid": "comfyui",
+  "name": "ComfyUI",
+  "tier": "2",
+  "overview": "The industry standard node-based GUI and API for Stable Diffusion, FLUX, and video diffusion models.",
+  "details": [
+    "ComfyUI is a highly modular, graph-based execution engine that allows for extreme customization of diffusion pipelines. It handles everything from simple text-to-image prompts to complex video generation using models like LTX-Video and Mochi 1.",
+    "For OpenClaw, ComfyUI acts as the ultimate pixel-rendering engine. While the text-based LLM agents operate within Ollama, they execute custom Javascript tools to dispatch JSON payloads directly to the ComfyUI API on port 8188. This completely decouples text reasoning from VRAM-heavy visual rendering."
+  ],
+  "diagnostics": "1. **API Responsiveness:** You should see HTTP 200 OK from the 8188 endpoint."
+}

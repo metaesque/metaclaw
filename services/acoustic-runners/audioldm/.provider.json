@@ -1,0 +1,10 @@
+{
+  "uid": "audioldm",
+  "name": "AudioLDM",
+  "tier": "2",
+  "overview": "A mature text-to-audio latent diffusion model capable of generating both music and foley.",
+  "details": [
+    "AudioLDM generates sound effects and ambient noise by mapping text embeddings to the latent space of a robust audio diffusion pipeline.",
+    "While it established the early baseline for text-to-sound, newer models like Stable Audio Open have largely superseded it in raw audio fidelity and structural coherence."
+  ]
+}

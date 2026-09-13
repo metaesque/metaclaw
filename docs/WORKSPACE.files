@@ -127,6 +127,11 @@
 ../workspace/agents/media/audiox/IDENTITY.md
 ../workspace/agents/media/audiox/MEMORY.md
 ../workspace/agents/media/audiox/SOUL.md
+../workspace/agents/media/editor.yaml
+../workspace/agents/media/editor/AGENTS.md
+../workspace/agents/media/editor/IDENTITY.md
+../workspace/agents/media/editor/MEMORY.md
+../workspace/agents/media/editor/SOUL.md
 ../workspace/agents/media/image.yaml
 ../workspace/agents/media/image/AGENTS.md
 ../workspace/agents/media/image/IDENTITY.md

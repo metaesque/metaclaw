@@ -1,0 +1,9 @@
+{
+  "uid": "speech-runner",
+  "uids": "speech-runners",
+  "name": "Speech Runner",
+  "names": "Speech Runners",
+  "category": "Intelligence Execution",
+  "purpose": "Executes optimized Text-to-Speech (TTS) and voice cloning inference engines to generate human-like audio.",
+  "plane": "compute"
+}

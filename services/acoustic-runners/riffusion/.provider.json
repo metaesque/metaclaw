@@ -1,0 +1,10 @@
+{
+  "uid": "riffusion",
+  "name": "Riffusion",
+  "tier": "2",
+  "overview": "A novel approach that generates real-time music and acoustic loops by rendering spectrograms via Stable Diffusion.",
+  "details": [
+    "Riffusion bypasses traditional waveform generation by treating audio as a visual spectrogram, using image diffusion models to generate sound.",
+    "While highly creative and effective for infinite looping beats, it struggles with the high-fidelity acoustic precision required for professional foley synthesis."
+  ]
+}

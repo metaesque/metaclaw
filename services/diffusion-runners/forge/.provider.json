@@ -1,0 +1,10 @@
+{
+  "uid": "forge",
+  "name": "SD WebUI Forge",
+  "tier": "2",
+  "overview": "A highly optimized fork of Automatic1111 that drastically reduces VRAM overhead and increases generation speeds.",
+  "details": [
+    "Forge uses a custom backend architecture to optimize VRAM management, allowing users to run complex SDXL and FLUX workloads on GPUs with as little as 8GB of VRAM.",
+    "For OpenClaw, it provides an alternative API endpoint for users who prefer the traditional WebUI payload structure over ComfyUI's complex node-graph JSON arrays."
+  ]
+}

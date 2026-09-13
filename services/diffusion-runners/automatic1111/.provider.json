@@ -1,0 +1,10 @@
+{
+  "uid": "automatic1111",
+  "name": "Automatic1111",
+  "tier": "2",
+  "overview": "The classic, widely-used web interface for Stable Diffusion models.",
+  "details": [
+    "Automatic1111 (A1111) was the original pioneer of the Stable Diffusion GUI ecosystem. It possesses a massive library of extensions and community tutorials.",
+    "While it has largely been superseded by ComfyUI and Forge for high-end performance, its API is still heavily utilized by legacy scripts and older AI generation pipelines."
+  ]
+}

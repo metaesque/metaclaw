@@ -1,0 +1,10 @@
+{
+  "uid": "fish",
+  "name": "Fish Speech",
+  "tier": "2",
+  "overview": "A state-of-the-art multilingual TTS system supporting over 80 languages with zero-shot cloning.",
+  "details": [
+    "Fish Speech utilizes a transformer-based architecture to deliver extremely high-quality, expressive speech across multiple languages.",
+    "It requires dedicated VRAM (typically 12GB+) and is heavily optimized for Nvidia GPUs and AMD ROCm, making it ideal for the Tier 2 Compute Plane."
+  ]
+}

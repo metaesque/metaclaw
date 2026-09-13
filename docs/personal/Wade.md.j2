@@ -323,15 +323,16 @@ architectural trade-offs:
     the token cost of passing the entire project context through `sessions_send`
     12 times, makes this unviable for real-time human interaction.
 
-*   **6 Agents (The Current Synthesis):** A 6-agent topology strikes the
-    optimal balance. It provides clear delineation between "Thinkers" (Lead,
-    Orchestrator), "Doers" (Dev, QA), and "Monitors" (Auditor, PM), while
+*   **6 Agents (The Software Synthesis):** A 6-agent topology strikes the
+    optimal balance for software development. It provides clear delineation between
+    "Thinkers" (Lead, Orchestrator), "Doers" (Dev, QA), and "Monitors" (Auditor, PM), while
     mapping perfectly to hardware model tiers (e.g., complex reasoning models
-    for thinkers, cheap/fast models for monitors).
+    for thinkers, cheap/fast models for monitors). Other domains (like Media or Self)
+    may use very different numbers of agents depending on their specific complexity.
 
-#### Current Agent Mapping & Justification
+#### Current Software Agent Mapping & Justification
 
-Our current setup utilizes 6 specialized agents, mapping the 12 required roles
+Our current software setup utilizes 6 specialized agents, mapping the 12 required roles
 into synergistic clusters:
 
 - **Lead:** `software_lead` [complex-model]
@@ -477,7 +478,7 @@ assessment, tax strategy, and portfolio allocation.*
 - **Worker:** `social_facebook` [medium-model] - Group administration and community posts.
 - **Worker:** `social_twitter` [simple-model] - High-frequency hooks, threads, and short-form text.
 - **Worker:** `social_instagram` [medium-model] - Visual descriptions, hashtag SEO, and carousel planning.
-- **Worker:** `social_tiktok` [medium-model] - Short-form video hooks, trend analysis, and descriptions.
+- **Worker:** `social_tiktok` [medium-model] - Short-form video hooks, trend analysis, descriptions.
 - **Worker:** `social_snapchat` [simple-model] - Ephemeral messaging and youth demographic framing.
 - **Worker:** `social_pinterest` [medium-model] - Visual search SEO and board curation.
 - **Worker:** `social_discord` [medium-model] - Real-time chat moderation, webhooks, and server rules.

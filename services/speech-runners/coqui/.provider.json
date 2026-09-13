@@ -1,0 +1,10 @@
+{
+  "uid": "coqui",
+  "name": "Coqui TTS",
+  "tier": "2",
+  "overview": "A mature open-source TTS library supporting XTTSv2 for high-quality voice cloning.",
+  "details": [
+    "Coqui TTS provides a robust server for XTTSv2, allowing zero-shot voice cloning from just a 3-second audio sample.",
+    "While the company has shut down, the open-source repository remains heavily utilized. However, it requires significantly more VRAM than newer models like Kokoro."
+  ]
+}

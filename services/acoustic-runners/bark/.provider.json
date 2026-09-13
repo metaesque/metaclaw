@@ -1,0 +1,10 @@
+{
+  "uid": "bark",
+  "name": "Bark",
+  "tier": "2",
+  "overview": "Suno's transformer-based audio model. While it generates speech, it is uniquely capable of generating non-verbal acoustic cues.",
+  "details": [
+    "Bark diverges from traditional TTS by acting as a highly generative audio language model. It can hallucinate non-verbal sounds, such as laughs, sighs, music, and background ambient noise directly from text prompts.",
+    "This makes it a unique hybrid acoustic engine, although its lack of fine-grained control over foley generation makes dedicated models preferable for precise sound design."
+  ]
+}

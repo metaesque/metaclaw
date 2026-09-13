@@ -1,0 +1,38 @@
+services:
+  comfyui-diffusion-runner:
+    # WHAT THIS IS: A powerful and modular stable diffusion GUI and API.
+    image: ghcr.io/ai-dock/comfyui:${COMFYUI_VERSION}
+    container_name: comfyui-diffusion-runner
+    restart: unless-stopped
+    ports:
+      - "${COMFYUI_PORT}:8188"
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0
+    volumes:
+      # WHAT THIS DOES: Mounts the heavy model weights and outputs to the external drive.
+      # WHY THIS DEFAULT: Diffusion models (like FLUX or SDXL) are massive (10GB-30GB each).
+      # Storing them on an external SSD prevents OS drive exhaustion on the Compute node.
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-models:/opt/ComfyUI/models
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-output:/opt/ComfyUI/output
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-custom_nodes:/opt/ComfyUI/custom_nodes
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8188/system_stats"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      shared-network:
+        aliases:
+          - active-diffusion-runner
+
+networks:
+  shared-network:
+    name: ${NETWORK_NAME:-openclaw-network}
+    external: true

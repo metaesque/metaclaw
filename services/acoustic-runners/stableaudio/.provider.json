@@ -1,0 +1,11 @@
+{
+  "uid": "stableaudio",
+  "name": "Stable Audio Open",
+  "tier": "2",
+  "overview": "The state-of-the-art open-weight acoustic engine by Stability AI, optimized for up to 47 seconds of 44.1kHz stereo sound effects and music.",
+  "details": [
+    "Stable Audio Open represents the current pareto frontier for open-weight sound design. Unlike older models that output mono, low-sample-rate audio, it natively generates pristine 44.1kHz stereo audio.",
+    "For OpenClaw, it is the premier acoustic runner. Because it is explicitly trained on Foley, ambient noise, and production music elements, it serves as the perfect engine for the `media_audiox` and `media_audio` agents to synthesize high-fidelity acoustic assets. The deployed container natively exposes a prediction HTTP API, allowing agents to dispatch rendering payloads directly."
+  ],
+  "diagnostics": "1. **API Responsiveness:** You should see HTTP 200 OK from the 5000 endpoint."
+}

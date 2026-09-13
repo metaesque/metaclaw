@@ -1,0 +1,9 @@
+{
+  "uid": "acoustic-runner",
+  "uids": "acoustic-runners",
+  "name": "Acoustic Runner",
+  "names": "Acoustic Runners",
+  "category": "Intelligence Execution",
+  "purpose": "Executes diffusion or transformer-based acoustic generation pipelines to generate sound effects, foley, and instrumental music tracks natively.",
+  "plane": "compute"
+}

@@ -1,0 +1,11 @@
+{
+  "uid": "kokoro",
+  "name": "Kokoro TTS",
+  "tier": "0",
+  "overview": "An ultra-fast, 82-million-parameter open-weight TTS model boasting an OpenAI-compatible REST API.",
+  "details": [
+    "Kokoro punches massively above its weight class. Despite its tiny 82M parameter size, it delivers voice quality comparable to massive proprietary models. It supports Voice Mixing (blending multiple voice profiles using weighted ratios) and outputs in various formats (MP3, WAV, OPUS).",
+    "For OpenClaw, Kokoro is the ultimate speech runner. Because its FastAPI wrapper natively implements the OpenAI `/v1/audio/speech` endpoint, OpenClaw agents can interact with it seamlessly without custom plugin logic. Furthermore, its CPU-optimized Docker image is so efficient that it can generate real-time audio on Tier 0 laptops or Gateway nodes without requiring a dedicated GPU."
+  ],
+  "diagnostics": "1. **API Responsiveness:** You should see HTTP 200 OK from the 8880 endpoint."
+}
