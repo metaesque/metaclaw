@@ -58,7 +58,10 @@
     "aka": "The Intelligence Engine",
     "profile": "Extreme GPU VRAM, maximum memory bandwidth, high power draw.",
     "services": [
-      "runner"
+      "runner",
+      "diffusion-runner",
+      "speech-runner",
+      "acoustic-runner"
     ],
     "justification": "LLM inference requires dedicated PCIe acceleration. It must be isolated to prevent VRAM starvation from impacting other critical services.",
     "hardware_recommendations": [

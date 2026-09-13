@@ -209,7 +209,8 @@ class MetaClaw:
     hardware,
     require_wan,
     is_headless,
-    order_prefs
+    order_prefs,
+    service_routing=None
   ):
     """
     Analyzes the entire cluster and redistributes service providers based
@@ -226,10 +227,15 @@ class MetaClaw:
       require_wan (bool): Whether the node requires remote WAN access.
       is_headless (bool): Whether the node is a bare-metal headless server.
       order_prefs (list of str): Priority order for provider selection.
+      service_routing (dict): Optional dictionary mapping specific services to hostnames.
 
     Returns:
       dict: The updated cluster profile.
     """
+    if service_routing is not None:
+        profile["service_routing"] = service_routing
+    s_routing = profile.get("service_routing", {})
+
     node = next((n for n in profile["nodes"] if n["hostname"] == current_hostname), None)
     if not node:
         node = {"hostname": current_hostname, "hardware": hardware}
@@ -245,10 +251,11 @@ class MetaClaw:
     # ============================================================================
     # PLANE EVICTION LOGIC (CLUSTER RECONCILIATION)
     # ============================================================================
-    # Ensure there is only one authoritative node per plane in the cluster.
+    # Ensure there is only one authoritative node per plane in the cluster,
+    # EXCEPT for the 'compute' plane, which is designed to be distributed.
     for other_node in profile["nodes"]:
         if other_node["hostname"] != current_hostname:
-            other_node["planes"] = [p for p in other_node.get("planes", []) if p not in planes]
+            other_node["planes"] = [p for p in other_node.get("planes", []) if p not in planes or p == "compute"]
 
     # ============================================================================
     # PROVIDER RESOLUTION VIA MATRIX
@@ -266,7 +273,13 @@ class MetaClaw:
         assigned_services = set()
         for p in n_planes:
             if p in all_planes:
-                assigned_services.update(all_planes[p].get("services", []))
+                for svc_key in all_planes[p].get("services", []):
+                    # If this service is explicitly routed to a specific node, enforce it
+                    if svc_key in s_routing:
+                        if s_routing[svc_key] == n["hostname"]:
+                            assigned_services.add(svc_key)
+                    else:
+                        assigned_services.add(svc_key)
 
         if n_wan:
             assigned_services.add("network")
@@ -309,6 +322,9 @@ class MetaClaw:
                     "vectordb": "qdrant",
                     "graphdb": "neo4j",
                     "runner": "ollama",
+                    "diffusion-runner": "comfyui",
+                    "speech-runner": "kokoro",
+                    "acoustic-runner": "stableaudio",
                     "sandbox": "docker-dood" if n_os == "Darwin" else "gvisor",
                     "browser": "browseruse",
                     "fetcher": "crawl4ai",

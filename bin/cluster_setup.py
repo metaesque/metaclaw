@@ -416,6 +416,25 @@ def main():
                 "order_prefs": ["cost", "safety", "resources"],
                 "hardware": compute_hw
             })
+
+        if len(compute_hosts) > 1:
+            print("\n[Compute Plane Delegation]")
+            print("You have defined multiple compute nodes. Let's assign specific workloads to them.")
+
+            compute_services = metaclaw.Inst.structure().get('planes', {}).get('compute', {}).get('services', [])
+            service_routing = profile.get("service_routing", {})
+
+            for svc in compute_services:
+                print(f"\n  Available compute nodes: {', '.join(compute_hosts)}")
+                while True:
+                    target = input(f"  -> Which node should run the '{svc}' service? [{compute_hosts[0]}]: ").strip() or compute_hosts[0]
+                    if target in compute_hosts:
+                        service_routing[svc] = target
+                        break
+                    print(f"     Invalid node. Please choose from: {', '.join(compute_hosts)}")
+
+            profile["service_routing"] = service_routing
+
     else:
         profile["nodes"].append({
             "hostname": local_host,
