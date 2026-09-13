@@ -427,11 +427,15 @@ def main():
             for svc in compute_services:
                 print(f"\n  Available compute nodes: {', '.join(compute_hosts)}")
                 while True:
-                    target = input(f"  -> Which node should run the '{svc}' service? [{compute_hosts[0]}]: ").strip() or compute_hosts[0]
-                    if target in compute_hosts:
-                        service_routing[svc] = target
+                    targets = input(f"  -> Which node should run the '{svc}' service? [{compute_hosts[0]}]: ").strip()
+                    if not targets:
+                        targets = compute_hosts[0]
+                    target_list = targets.split()
+
+                    if all(t in compute_hosts for t in target_list):
+                        service_routing[svc] = target_list
                         break
-                    print(f"     Invalid node. Please choose from: {', '.join(compute_hosts)}")
+                    print(f"     Invalid node(s). Please choose from: {', '.join(compute_hosts)}")
 
             profile["service_routing"] = service_routing
 
@@ -449,7 +453,8 @@ def main():
     profile = metaclaw.Inst.updateCluster(
         profile, local_host, int(tier_choice),
         profile["nodes"][0]["planes"], local_hw,
-        True if tier_choice == "2" else False, local_hw['headless'], ["cost", "safety", "resources"]
+        True if tier_choice == "2" else False, local_hw['headless'], ["cost", "safety", "resources"],
+        profile.get("service_routing")
     )
 
     with open("profile.json", "w") as f:

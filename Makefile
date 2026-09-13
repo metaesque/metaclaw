@@ -72,7 +72,7 @@ WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DI
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt cluster-halt cluster-down verify-shutdown verify-halt cluster-verify-shutdown cluster-verify-halt
 
 define h1_title
 	echo ""; \
@@ -331,13 +331,23 @@ wizard-batch: wizard-run
 # WHAT IT DOES: Auto-generates local HTML documentation from Markdown files.
 docs: | $(PYTHON_BIN)
 	@echo "Compiling root documentation..."
-	@$(PYTHON_BIN) ./bin/compile_md.py -i docs/index.md --html
+	@if [ -f docs/index.md ]; then \
+		$(PYTHON_BIN) ./bin/compile_md.py -i docs/index.md --html; \
+	elif [ -f docs/legacy/index.md ]; then \
+		$(PYTHON_BIN) ./bin/compile_md.py -i docs/legacy/index.md --html; \
+	else \
+		echo "Skipping documentation compilation (no index.md found)."; \
+	fi
 
 # The core execution loop for booting the cluster in a safe, dependency-aware sequence.
 wizard-run: bootstrap docs
 	@$(call h1_title,INITIATING FRAMEWORK DEPLOYMENT)
 	@if [ "$(INTERACTIVE)" = "1" ]; then \
-		$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/index.html"; \
+		if [ -f docs/index.html ]; then \
+			$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/index.html"; \
+		elif [ -f docs/legacy/index.html ]; then \
+			$(PYTHON_BIN) ./bin/browser.py "file://$(CURDIR)/docs/legacy/index.html"; \
+		fi; \
 	fi
 	@mkdir -p .logs
 	@$(call h2_title,PRE-FLIGHT ENVIRONMENT CONFIGURATION)
@@ -498,6 +508,32 @@ factory-reset-hard: factory-reset-soft
 	@rm -f .env.json profile.json
 	@rm -rf bin/.venv
 	@echo "Hard reset complete. All secrets, data, and environments destroyed."
+
+# ==============================================================================
+# CLUSTER-WIDE SHUTDOWN & VERIFICATION TARGETS
+# ==============================================================================
+
+cluster-halt:
+	@$(call h1_title,INITIATING CLUSTER-WIDE HALT)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py halt
+
+cluster-down:
+	@$(call h1_title,INITIATING CLUSTER-WIDE SOFT RESET)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py factory-reset-soft
+
+verify-shutdown:
+	@$(PYTHON_BIN) ./bin/verify_shutdown.py down
+
+verify-halt:
+	@$(PYTHON_BIN) ./bin/verify_shutdown.py halt
+
+cluster-verify-shutdown:
+	@$(call h1_title,VERIFYING CLUSTER SHUTDOWN)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py verify-shutdown
+
+cluster-verify-halt:
+	@$(call h1_title,VERIFYING CLUSTER HALT)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py verify-halt
 
 # ==============================================================================
 # PACKAGING & ANALYSIS TOOLS

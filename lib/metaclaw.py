@@ -274,10 +274,15 @@ class MetaClaw:
         for p in n_planes:
             if p in all_planes:
                 for svc_key in all_planes[p].get("services", []):
-                    # If this service is explicitly routed to a specific node, enforce it
+                    # If this service is explicitly routed to specific nodes, enforce it
                     if svc_key in s_routing:
-                        if s_routing[svc_key] == n["hostname"]:
-                            assigned_services.add(svc_key)
+                        route_val = s_routing[svc_key]
+                        if isinstance(route_val, list):
+                            if n["hostname"] in route_val:
+                                assigned_services.add(svc_key)
+                        else:
+                            if route_val == n["hostname"]:
+                                assigned_services.add(svc_key)
                     else:
                         assigned_services.add(svc_key)
 
