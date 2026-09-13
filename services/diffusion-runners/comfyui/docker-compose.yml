@@ -15,13 +15,6 @@ services:
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-models:/opt/ComfyUI/models
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-output:/opt/ComfyUI/output
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-custom_nodes:/opt/ComfyUI/custom_nodes
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8188/system_stats"]
       interval: 10s

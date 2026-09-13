@@ -5,13 +5,6 @@ services:
     restart: unless-stopped
     ports:
       - "${STABLEAUDIO_PORT}:5000"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     volumes:
       # Mount external volume to cache model weights on the host, preventing re-download
       - ${EXTERNAL_DRIVE_PATH:-/tmp}/stableaudio-models:/root/.cache/huggingface
