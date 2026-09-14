@@ -243,17 +243,23 @@ def main():
     elif provider == "comfyui":
       gpu_detected = my_node.get("hardware", {}).get("gpu_detected", "")
       is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
+
       if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
-          env_data["COMFYUI_VERSION"] = "latest-rocm"
+          env_data["COMFYUI_IMAGE_URI"] = "yanwk/comfyui-boot:rocm7"
           env_data["COMFYUI_COMPOSE_FILE"] = "docker-compose.yml:docker-compose.amd.yml"
+          env_data["COMFYUI_WORKDIR"] = "/root/ComfyUI"
       elif is_linux and ("NVIDIA" in gpu_detected or "GB10" in gpu_detected):
-          env_data["COMFYUI_VERSION"] = "latest-cuda"
+          env_data["COMFYUI_IMAGE_URI"] = "ghcr.io/ai-dock/comfyui:latest-cuda"
           env_data["COMFYUI_COMPOSE_FILE"] = "docker-compose.yml:docker-compose.nvidia.yml"
+          env_data["COMFYUI_WORKDIR"] = "/opt/ComfyUI"
       else:
-          env_data["COMFYUI_VERSION"] = "latest-cpu"
+          env_data["COMFYUI_IMAGE_URI"] = "ghcr.io/ai-dock/comfyui:latest-cpu"
           env_data["COMFYUI_COMPOSE_FILE"] = "docker-compose.yml"
-      if "COMPOSE_FILE" in env_data:
-          del env_data["COMPOSE_FILE"]
+          env_data["COMFYUI_WORKDIR"] = "/opt/ComfyUI"
+
+      for obsolete_key in ["COMFYUI_VERSION", "COMPOSE_FILE"]:
+          if obsolete_key in env_data:
+              del env_data[obsolete_key]
       seeded = True
 
     elif provider == "stableaudio":

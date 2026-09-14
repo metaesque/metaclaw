@@ -1,25 +1,24 @@
 services:
   comfyui-diffusion-runner:
     # WHAT THIS IS: A powerful and modular stable diffusion GUI and API.
-    image: ghcr.io/ai-dock/comfyui:${COMFYUI_VERSION}
+    image: ${COMFYUI_IMAGE_URI}
     container_name: comfyui-diffusion-runner
     restart: unless-stopped
     ports:
       - "${COMFYUI_PORT}:8188"
     environment:
       - CLI_ARGS=--listen 0.0.0.0
-      # WHAT THIS DOES: Disables the AI-Dock built-in HTTP basic authentication proxy.
-      # WHY IT MATTERS: Prevents the container from redirecting remote Tailscale users to a broken 'localhost:1111/login' URL.
+      # Disables the AI-Dock built-in HTTP basic authentication proxy (Harmless for other images)
       - WEB_ENABLE_AUTH=false
     volumes:
       # WHAT THIS DOES: Mounts the heavy model weights and outputs to the external drive.
       # WHY THIS DEFAULT: Diffusion models (like FLUX or SDXL) are massive (10GB-30GB each).
       # Storing them on an external SSD prevents OS drive exhaustion on the Compute node.
-      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-models:/opt/ComfyUI/models
-      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-output:/opt/ComfyUI/output
-      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-custom_nodes:/opt/ComfyUI/custom_nodes
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-models:${COMFYUI_WORKDIR}/models
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-output:${COMFYUI_WORKDIR}/output
+      - ${EXTERNAL_DRIVE_PATH:-/tmp}/comfyui-custom_nodes:${COMFYUI_WORKDIR}/custom_nodes
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8188/system_stats"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8188/system_stats', timeout=2)\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

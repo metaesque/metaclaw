@@ -2,17 +2,6 @@ services:
   comfyui-diffusion-runner:
     # Bypasses host-specific GID permission mapping for /dev/dri
     privileged: true
-    environment:
-      # WHAT THIS DOES: Forces PyTorch/ROCm to treat the AMD APU as a supported RDNA3 discrete GPU.
-      # WHY IT MATTERS: Prevents 'RuntimeError: No HIP GPUs are available' crashes on Strix Halo chips.
-      - HSA_OVERRIDE_GFX_VERSION=11.0.0
-      # WHAT THIS DOES: Explicitly strips LD_PRELOAD variables injected by the AI-Dock base image.
-      # WHY IT MATTERS: AI-Dock forces Google's tcmalloc memory allocator globally via LD_PRELOAD.
-      # This allocator fatally conflicts with the AMD ROCm HIP runtime on shared-memory APUs, causing exit status 139 (Segfaults).
-      - LD_PRELOAD=
-      # WHAT THIS DOES: Disables System Direct Memory Access (SDMA) for ROCm.
-      # WHY IT MATTERS: APUs share system RAM and lack dedicated PCIe VRAM transfer lanes. Enabling SDMA on APUs causes instant segfaults in PyTorch.
-      - HSA_ENABLE_SDMA=0
     devices:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
