@@ -11,6 +11,9 @@ include $(FRAMEWORK_ROOT)/.Makefile.inherit
 -include .env
 export
 
+COMPOSE_FILE := $(COMFYUI_COMPOSE_FILE)
+export COMPOSE_FILE
+
 LOG_READY_SIGNAL = Starting server
 
 post-check-status:

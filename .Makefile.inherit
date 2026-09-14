@@ -2,6 +2,8 @@
 # SHARED INFRASTRUCTURE INHERITANCE LAYER
 # ==============================================================================
 
+unexport COMPOSE_FILE
+
 # OS-Agnostic Open Command
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)

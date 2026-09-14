@@ -245,24 +245,28 @@ def main():
       is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
       if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
           env_data["COMFYUI_VERSION"] = "latest-rocm"
-          env_data["COMPOSE_FILE"] = "docker-compose.yml:docker-compose.amd.yml"
+          env_data["COMFYUI_COMPOSE_FILE"] = "docker-compose.yml:docker-compose.amd.yml"
       elif is_linux and ("NVIDIA" in gpu_detected or "GB10" in gpu_detected):
           env_data["COMFYUI_VERSION"] = "latest-cuda"
-          env_data["COMPOSE_FILE"] = "docker-compose.yml:docker-compose.nvidia.yml"
+          env_data["COMFYUI_COMPOSE_FILE"] = "docker-compose.yml:docker-compose.nvidia.yml"
       else:
           env_data["COMFYUI_VERSION"] = "latest-cpu"
-          env_data["COMPOSE_FILE"] = "docker-compose.yml"
+          env_data["COMFYUI_COMPOSE_FILE"] = "docker-compose.yml"
+      if "COMPOSE_FILE" in env_data:
+          del env_data["COMPOSE_FILE"]
       seeded = True
 
     elif provider == "stableaudio":
       gpu_detected = my_node.get("hardware", {}).get("gpu_detected", "")
       is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
       if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
-          env_data["COMPOSE_FILE"] = "docker-compose.yml:docker-compose.amd.yml"
+          env_data["STABLEAUDIO_COMPOSE_FILE"] = "docker-compose.yml:docker-compose.amd.yml"
       elif is_linux and ("NVIDIA" in gpu_detected or "GB10" in gpu_detected):
-          env_data["COMPOSE_FILE"] = "docker-compose.yml:docker-compose.nvidia.yml"
+          env_data["STABLEAUDIO_COMPOSE_FILE"] = "docker-compose.yml:docker-compose.nvidia.yml"
       else:
-          env_data["COMPOSE_FILE"] = "docker-compose.yml"
+          env_data["STABLEAUDIO_COMPOSE_FILE"] = "docker-compose.yml"
+      if "COMPOSE_FILE" in env_data:
+          del env_data["COMPOSE_FILE"]
       seeded = True
 
     if seeded:
