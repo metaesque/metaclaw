@@ -6,12 +6,12 @@ services:
       # WHAT THIS DOES: Forces PyTorch/ROCm to treat the AMD APU as a supported RDNA3 discrete GPU.
       # WHY IT MATTERS: Prevents 'RuntimeError: No HIP GPUs are available' crashes on Strix Halo chips.
       - HSA_OVERRIDE_GFX_VERSION=11.0.0
-      # WHAT THIS DOES: Disables AI-Dock's default Thread-Caching Malloc (tcmalloc) optimization.
-      # WHY IT MATTERS: tcmalloc severely clashes with the AMD ROCm memory allocator on shared-memory APUs, causing exit status 139 (Segfaults).
-      - USE_TCMALLOC=false
       # WHAT THIS DOES: Disables System Direct Memory Access (SDMA) for ROCm.
       # WHY IT MATTERS: APUs share system RAM and lack dedicated PCIe VRAM transfer lanes. Enabling SDMA on APUs causes instant segfaults in PyTorch.
       - HSA_ENABLE_SDMA=0
     devices:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
+    volumes:
+      # Injects the preflight script to disable tcmalloc memory allocation, which conflicts with ROCm
+      - ./disable_tcmalloc.sh:/opt/ai-dock/bin/preflight.d/00-disable-tcmalloc.sh:ro
