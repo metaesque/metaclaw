@@ -8,6 +8,9 @@ services:
       - "${COMFYUI_PORT}:8188"
     environment:
       - CLI_ARGS=--listen 0.0.0.0
+      # WHAT THIS DOES: Disables the AI-Dock built-in HTTP basic authentication proxy.
+      # WHY IT MATTERS: Prevents the container from redirecting remote Tailscale users to a broken 'localhost:1111/login' URL.
+      - WEB_ENABLE_AUTH=false
     volumes:
       # WHAT THIS DOES: Mounts the heavy model weights and outputs to the external drive.
       # WHY THIS DEFAULT: Diffusion models (like FLUX or SDXL) are massive (10GB-30GB each).
