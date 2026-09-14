@@ -1,6 +1,5 @@
 .Makefile.inherit
 .env.template
-.executable.txt
 .gitignore
 .planes.json
 .tiers.json
@@ -149,7 +148,6 @@ services/diffusion-runners/automatic1111/.provider.json
 services/diffusion-runners/comfyui/.env.template
 services/diffusion-runners/comfyui/.provider.json
 services/diffusion-runners/comfyui/Makefile
-services/diffusion-runners/comfyui/disable_tcmalloc.sh
 services/diffusion-runners/comfyui/docker-compose.amd.yml
 services/diffusion-runners/comfyui/docker-compose.nvidia.yml
 services/diffusion-runners/comfyui/docker-compose.yml
