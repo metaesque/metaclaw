@@ -1,5 +1,14 @@
 # MetaClaw Changelog
 
+## [2026-09-18] - ComfyUI APU Fixes & Kasa Unicast Polling
+
+### Added
+*   **ComfyUI AMD Environment Variables:** Permanently injected `PYTORCH_TUNABLEOP_ENABLED=0`, `MIOPEN_FIND_MODE=2`, and `HSA_ENABLE_SDMA=0` into `docker-compose.amd.yml` to prevent ROCm memory allocation deadlocks and attention compilation loops on Strix Halo APUs.
+
+### Changed
+*   **Kasa Telemetry Polling:** Transitioned `features/kasa/bin/power_kasa.py` from UDP broadcast (`Discover.discover()`) to targeted Unicast (`Discover.discover_single()`) polling. This bypasses ISP router (Shaw) firmware updates that silently isolate UDP broadcast traffic across Wi-Fi bridges.
+*   **Cluster Setup Formatting:** Improved `bin/cluster_setup.py` by styling the target hostname output and grouping the headless configuration prompt with the SSH credential prompts for better UX.
+
 ## [2026-08-07] - ClawDisk Decentralized Storage Mesh Stabilization
 
 ### Added

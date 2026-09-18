@@ -208,6 +208,11 @@ print(telegraf.status()) # Output: running
 print(telegraf.log(tail=5))
 ```
 
+### 3. Kasa Power Polling Failures (Empty Dashboards)
+If your Grafana power dashboards stop updating but the Telegraf container is running, your ISP router (e.g., Shaw Gateway) may have updated its firmware to isolate UDP broadcast traffic across the Wi-Fi bridge.
+*   **The Fix:** Find the IP address of your Kasa strip in the router's admin panel (or via ARP cache `arp -an`), add it to your `hardware.json` registry, and ensure `power_kasa.py` is using `Discover.discover_single(ip)` (Unicast) instead of network-wide UDP broadcasts.
+*   **Prevention:** Set a static DHCP reservation for the Kasa strip in your router to prevent the Unicast IP from shifting.
+
 ## Troubleshooting Local GPU Inference (Ollama)
 
 Running large models on edge hardware (like AMD APUs) often encounters

@@ -6,6 +6,9 @@ during deployment testing.
 
 ## Top Priority
 
+*   **[TODO] Kasa Power Strip DHCP Reservation:**
+    Log into the Shaw router admin panel and set a static DHCP reservation for the Kasa HS300 power strip (`48:22:54:30:02:D1` to `10.0.0.171`) to ensure the unicast polling script (`power_kasa.py`) does not break if the lease expires.
+
 *   **[TODO] Expand Compute Plane:**
     Get the new DGX Sparks configured to run both individuals and chained
     together (pick a model that fits quantizied on one, and unquantized on both)
