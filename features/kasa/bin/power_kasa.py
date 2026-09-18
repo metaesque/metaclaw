@@ -90,16 +90,21 @@ async def run_telegraf_export():
     # Establish the valid Grafana dashboard variables
     emit_hardware_metadata(devices)
 
-    try:
-        found_devices = await Discover.discover(timeout=5)
-    except Exception as e:
-        print(f"Error during Kasa discovery: {e}", file=sys.stderr)
-        return
+    found_devices = {}
 
-    strip_ips = [
-        ip for ip, dev in found_devices.items()
-        if dev.device_type == DeviceType.Strip
-    ]
+    # Unicast discovery based on hardware registry IPs to bypass UDP broadcast isolation
+    for dev_uid, dev_info in devices.items():
+        if isinstance(dev_info, dict) and dev_info.get("type") in ["power", "power_strip"] and "plugs" in dev_info:
+            ip = dev_info.get("ip_address")
+            if ip:
+                try:
+                    dev = await Discover.discover_single(ip)
+                    if dev.device_type == DeviceType.Strip:
+                        found_devices[ip] = dev
+                except Exception as e:
+                    print(f"Error discovering Kasa device at {ip}: {e}", file=sys.stderr)
+
+    strip_ips = list(found_devices.keys())
 
     for ip in strip_ips:
         kasa_dev = found_devices[ip]
