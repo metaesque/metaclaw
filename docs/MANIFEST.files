@@ -29,11 +29,11 @@ bin/orchestrate.py
 bin/parse_prompts_gem.py
 bin/parse_prompts_oc.py
 bin/postgres_analysis.py
+bin/profile_ssd_clusters.py
 bin/pull_sync.py
 bin/render_templates.py
 bin/requirements.txt
 bin/setup_plane.sh
-bin/summarize_cluster.py
 bin/sync_cluster.py
 bin/sysprofile.py
 bin/todo.py
