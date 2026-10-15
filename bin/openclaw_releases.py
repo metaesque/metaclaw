@@ -49,10 +49,13 @@ def is_relevant_change(item):
     return False
   return bool(RELEVANT_KEYWORDS.search(item))
 
-def extract_sections_from_markdown(body_md, seen_bullets, all_changes=False):
+def extract_sections_from_markdown(body_md, seen_bullets, breaking_only=False):
   """
   Parses raw GitHub release Markdown body to extract Breaking and Changes bullets,
   deduplicating items that were already reported in newer point releases.
+  When breaking_only is False (default), all unique bullets are preserved.
+  When breaking_only is True, keeps all Breaking bullets and filters Changes
+  for MetaClaw-relevant architectural keywords.
   """
   breaking = []
   changes = []
@@ -84,7 +87,7 @@ def extract_sections_from_markdown(body_md, seen_bullets, all_changes=False):
       if current_section == 'Breaking':
         seen_bullets.add(item)
         breaking.append(item)
-      elif all_changes or is_relevant_change(item):
+      elif not breaking_only or is_relevant_change(item):
         seen_bullets.add(item)
         if current_section == 'Changes':
           changes.append(item)
@@ -111,7 +114,7 @@ def is_official_stable_release(rel):
 
 def main():
   parser = argparse.ArgumentParser(
-    description="Parse OpenClaw GitHub releases for breaking and MetaClaw-relevant changes via the GitHub REST API."
+    description="Parse OpenClaw GitHub releases via the GitHub REST API."
   )
   parser.add_argument(
     '-t', '--term', type=str, default='v2026.6.8',
@@ -126,8 +129,8 @@ def main():
     help="Include beta and pre-release versions (excluded by default to save context tokens)."
   )
   parser.add_argument(
-    '--all-changes', action='store_true',
-    help="Include all platform/channel bullets instead of filtering for MetaClaw-relevant changes."
+    '-b', '--breaking', action='store_true',
+    help="Filter output to Breaking changes and MetaClaw-relevant architectural changes only."
   )
   args = parser.parse_args()
 
@@ -193,7 +196,7 @@ def main():
 
       body_md = rel.get('body') or ''
       breaking, changes = extract_sections_from_markdown(
-        body_md, seen_bullets, all_changes=args.all_changes
+        body_md, seen_bullets, breaking_only=args.breaking
       )
 
       if not breaking and not changes:

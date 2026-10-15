@@ -21,17 +21,22 @@ LOG_FILE = ollama.log
 .PHONY: up down status models clean-state clobber-data check-status check-logs wait-healthy pull-models apply docs
 
 up:: ./bin/ollama
-	@if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
+	@set -a; \
+	[ -f "$(FRAMEWORK_ROOT)/.env" ] && . "$(FRAMEWORK_ROOT)/.env"; \
+	[ -f ".env" ] && . "./.env"; \
+	set +a; \
+	PORT_VAL="$${OLLAMA_PORT:-11434}"; \
+	if [ "$$(uname -s)" = "Linux" ] && command -v sudo >/dev/null 2>&1 && command -v iptables >/dev/null 2>&1; then \
+		sudo iptables -C INPUT -p tcp -s 172.16.0.0/12 --dport "$$PORT_VAL" -j ACCEPT 2>/dev/null || \
+		sudo iptables -I INPUT 1 -p tcp -s 172.16.0.0/12 --dport "$$PORT_VAL" -j ACCEPT 2>/dev/null || true; \
+	fi; \
+	if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
 		echo "Ollama is already running (PID: $$(cat $(PID_FILE)))" ; \
 	else \
 		echo "Cleaning up any orphaned processes before boot..." ; \
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
-		set -a; \
-		[ -f "$(FRAMEWORK_ROOT)/.env" ] && . "$(FRAMEWORK_ROOT)/.env"; \
-		[ -f ".env" ] && . "./.env"; \
-		set +a; \
-		HOST_BIND="$${OLLAMA_HOST:-0.0.0.0}:$${OLLAMA_PORT:-11434}"; \
+		HOST_BIND="$${OLLAMA_HOST:-0.0.0.0}:$$PORT_VAL"; \
 		MODELS_DIR="$${EXTERNAL_DRIVE_PATH:-$(FRAMEWORK_ROOT)/external/metaclaw}/ollama-models"; \
 		mkdir -p "$$MODELS_DIR"; \
 		OLLAMA_HOST="$$HOST_BIND" OLLAMA_KEEP_ALIVE="$${OLLAMA_KEEP_ALIVE:-60m}" OLLAMA_VULKAN="$$OLLAMA_VULKAN" OLLAMA_IGPU_ENABLE="$$OLLAMA_IGPU_ENABLE" ROCR_VISIBLE_DEVICES="$$ROCR_VISIBLE_DEVICES" OLLAMA_MODELS="$$MODELS_DIR" nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
@@ -131,20 +136,46 @@ wait-healthy:: status
 	exit 1
 
 # Instructs the running Ollama process to pull any models assigned to it by the global orchestrator configuration.
-# Uses Python to parse .env files and invoke ./bin/ollama pull, eliminating POSIX /bin/sh quote-splitting issues.
+# Streams live progress from the local Ollama HTTP API with percentage, GB transferred, MB/s speed, ETA, and total elapsed time.
 pull-models: wait-healthy
 	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
-	@$(PYTHON_BIN) -c 'import os, re, subprocess, urllib.request, json; \
+	@$(PYTHON_BIN) -c 'import os, re, sys, time, urllib.request, json; \
 	from dotenv import dotenv_values; \
 	cfg = {}; \
 	[cfg.update(dotenv_values(p)) for p in ["$(FRAMEWORK_ROOT)/.env", ".env", "$(FRAMEWORK_ROOT)/services/gateway/.env"] if os.path.exists(p)]; \
 	port = cfg.get("OLLAMA_PORT") or "11434"; \
 	keep_alive = cfg.get("OLLAMA_KEEP_ALIVE") or "60m"; \
-	ext = cfg.get("EXTERNAL_DRIVE_PATH") or "$(FRAMEWORK_ROOT)/external/metaclaw"; \
-	models_dir = os.path.join(ext, "ollama-models"); \
 	raw_str = (cfg.get("OLLAMA_TARGET_MODELS") or "") + " " + (cfg.get("OPENCLAW_JUDGE_MODEL") or ""); \
 	tokens = [re.sub(r"^ollama(_chat)?/", "", t.strip("\"\x27 ")) for t in raw_str.split()]; \
 	models = list(dict.fromkeys([m for m in tokens if m and m != "judge-model" and not m.startswith("gemini/")])); \
-	env = dict(os.environ, OLLAMA_HOST=f"127.0.0.1:{port}", OLLAMA_KEEP_ALIVE=keep_alive, OLLAMA_MODELS=models_dir); \
-	[(print(f"  -> Pulling {m} (This may take several minutes)...", flush=True), subprocess.run(["./bin/ollama", "pull", m], env=env, check=False)) for m in models]; \
-	(print("  -> Pre-warming gemma4:e4b into VRAM...", flush=True), urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{port}/api/generate", data=json.dumps({"model": "gemma4:e4b", "prompt": "", "keep_alive": keep_alive}).encode(), headers={"Content-Type": "application/json"}), timeout=60)) if "gemma4:e4b" in models else None'
+	def pull_one(m): \
+	    t0 = time.time(); \
+	    print(f"  -> Pulling {m}...", flush=True); \
+	    req = urllib.request.Request(f"http://127.0.0.1:{port}/api/pull", data=json.dumps({"name": m, "stream": True}).encode(), headers={"Content-Type": "application/json"}); \
+	    try: \
+	        resp = urllib.request.urlopen(req, timeout=3600); \
+	        last_print = 0.0; \
+	        for raw_line in resp: \
+	            evt = json.loads(raw_line.decode("utf-8", errors="ignore")); \
+	            status = evt.get("status", ""); \
+	            total = evt.get("total", 0); \
+	            comp = evt.get("completed", 0); \
+	            now = time.time(); \
+	            if total > 0 and (now - last_print >= 0.25 or comp == total): \
+	                last_print = now; \
+	                pct = (comp / total) * 100.0; \
+	                el = max(0.001, now - t0); \
+	                spd = (comp / (1024*1024)) / el; \
+	                rem = ((total - comp) / (comp / el)) if comp > 0 else 0; \
+	                bar_w = 24; \
+	                filled = int(bar_w * comp // total); \
+	                bar = "#" * filled + "-" * (bar_w - filled); \
+	                sys.stdout.write(f"\r     [{bar}] {pct:5.1f}% ({comp/(1024**3):.2f}/{total/(1024**3):.2f} GB) | {spd:5.1f} MB/s | ETA: {int(rem)}s   "); \
+	                sys.stdout.flush(); \
+	        el_total = time.time() - t0; \
+	        sys.stdout.write(f"\n     Done: {m} verified/pulled in {el_total:.1f}s.\n"); \
+	        sys.stdout.flush(); \
+	    except Exception as e: \
+	        print(f"\nWARNING: Failed to pull {m}: {e}", flush=True); \
+	[pull_one(m) for m in models]; \
+	(print("  -> Pre-warming gemma4:e4b into memory...", flush=True), urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{port}/api/generate", data=json.dumps({"model": "gemma4:e4b", "prompt": "", "keep_alive": keep_alive}).encode(), headers={"Content-Type": "application/json"}), timeout=60)) if "gemma4:e4b" in models else None'

@@ -4,10 +4,81 @@ This document outlines the strategic evolution of the MetaClaw framework,
 tracking technical debt, planned features, and architectural pivots identified
 during deployment testing.
 
+## Active Sprint: Cluster Stabilization & Argon Architectural Backlog
+
+*   **[DONE] Makefile Teardown & Cluster Execution Hygiene:**
+    Derived `TEARDOWN_ORDER` deterministically via GNU Make list reversal from
+    `WIZARD_BOOT_ORDER`, fixed the `vcses` -> `vcs` symlink typo, added missing
+    `visualizer/.env` inclusion, and added `cluster-apply`, `cluster-models`,
+    and `cluster-sudo-nopasswd` targets.
+
+*   **[DONE] Kasa Power Telemetry Self-Healing & `.env` Bracket Parsing:**
+    Fixed `lib/metaclaw.py` `envInstantiate` regex (`\[(?P<default>[^\]
+]*)\]`)
+    so relative path defaults like `[../config]` resolve without literal square
+    brackets. Upgraded `features/kasa/bin/power_kasa.py` to check the host ARP
+    cache by MAC address first, followed by broadcast and `/24` unicast subnet
+    sweeps to self-heal across router DHCP lease changes (`10.0.0.171` ->
+    `10.0.0.173`).
+
+*   **[DONE] Control Plane Local Ollama Runner & Docker Bridge Firewall Rule:**
+    Enforced the Control Plane invariant in `lib/metaclaw.py` and
+    `bin/orchestrate.py` so `runner` (`ollama`) is never evicted from `control`
+    during Tier 2 compute delegation. Added an explicit `iptables` `INPUT`
+    accept rule for Docker bridge subnets (`172.16.0.0/12` -> port `11434`) and
+    live streaming `/api/pull` progress bars with throughput and elapsed timing
+    in `services/runners/ollama/Makefile`.
+
+*   **[TODO] Multi-Node Compute Plane Load-Balancing & 200G DAC Fabric:**
+    Upgrade `bin/orchestrate.py` and `services/proxies/litellm/config.yaml` so
+    LiteLLM registers and load-balances across all active Compute Plane nodes
+    (`compute`, `spark1`, `spark2`) instead of binding exclusively to the first
+    compute node. Add support for pooling `spark1` and `spark2` unified memory
+    over the `10.99.0.1/24` 200G QSFP56 DAC interconnect.
+
+*   **[TODO] Agent Delegation (`sessions_send`), Streaming & `ToolCallInterceptor` Hardening:**
+    Harden `ToolCallInterceptor` in
+    `services/proxies/litellm/advanced/patch_entrypoint.py` so it only coerces
+    JSON blocks into `tool_calls` when the function name matches an active tool
+    schema in the request (preventing conversational prose destruction). Restore
+    streaming where appropriate and fix `orchestrator_lead` -> worker delegation
+    timeouts/announces on `llama4-scout-q4:109b` and `qwen3:32b`.
+
+*   **[TODO] VictoriaLogs & Fluent Bit Completeness Audit:**
+    Verify that `services/forwarders/fluentbit/fluent-bit.conf` captures logs
+    from all Docker containers and bare-metal services across all cluster hosts
+    and enriches records with human-readable container/service names in
+    VictoriaLogs (`http://100.123.133.121:9428/select/vmui`).
+
+*   **[TODO] Upgrade OpenClaw (`v2026.6.8` -> `v2026.10.3`) & Disable Update Banner:**
+    Analyze the output of `python bin/openclaw_releases.py --term "v2026.6.8" --breaking`,
+    update `OPENCLAW_VERSION` and `patch_routing.py` for compatibility with
+    `2026.10.3`, and suppress the in-app "Update available" UI banner so users
+    do not break containerized deployments via in-app self-updates.
+
+*   **[TODO] Semantic-Predictive Vector Routing & Declarative Agent Markdown Compilation:**
+    Remove the fallback override in `patch_routing.py` that forces
+    `semantic_predictive` to `lexical_predictive`. Implement local embedding
+    similarity with negative-keyword repulsion in `semantic_predictive.js`, and
+    auto-generate `SOUL.md` / `AGENTS.md` delegation matrices directly from
+    `workspace/agents/**/*.yaml` files to eliminate Maintenance Ledger drift.
+
+*   **[TODO] Core Library Consolidation & Unit Test Suite Repair:**
+    Fold `patched_toHtml` and `patched_metaclawSetup` from `bin/compile_md.py`
+    into `lib/metaclaw.py`, fix `lib/devices.py` `ComputeNode.update_data()` on
+    `[N/A]` VRAM for `GB10` nodes, repair broken unit tests in
+    `tests/test_devices.py` and `features/kasa/bin/test_power_kasa.py`, and
+    clean up `docs/legacy/` vs. `docs/` path references.
+
+*   **[TODO] Tier 2+ Interactive HTML Setup Wizard Support:**
+    Enable `make wizard` / `make wizard-cluster` to display synchronized HTML
+    service documentation and diagnostic popups on the operator's nomadic
+    laptop (`peridot`) when provisioning remote headless Tier 2+ clusters.
+
 ## Top Priority
 
 *   **[TODO] Kasa Power Strip DHCP Reservation:**
-    Log into the Shaw router admin panel and set a static DHCP reservation for the Kasa HS300 power strip (`48:22:54:30:02:D1` to `10.0.0.171`) to ensure the unicast polling script (`power_kasa.py`) does not break if the lease expires.
+    Log into the Shaw router admin panel and set a static DHCP reservation for the Kasa HS300 power strip (`48:22:54:30:02:D1` to `10.0.0.173`) to ensure the unicast polling script (`power_kasa.py`) does not need to fall back to ARP/subnet discovery if the lease expires.
 
 *   **[TODO] Expand Compute Plane:**
     Get the new DGX Sparks configured to run both individuals and chained
