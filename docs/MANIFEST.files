@@ -288,6 +288,7 @@ services/runners/ollama/.gitignore
 services/runners/ollama/.provider.json
 services/runners/ollama/Makefile
 services/runners/ollama/install.sh
+services/runners/ollama/pull_models.py
 services/runners/textgenwebui/.provider.json
 services/runners/vllm/.provider.json
 services/sandboxes/.service.json
