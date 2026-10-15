@@ -4,10 +4,21 @@ import re
 import os
 import sys
 
-def extract_sections_from_markdown(body_md):
+def clean_bullet_text(text):
+  """
+  Strips verbose GitHub PR attribution links and commit hashes to minimize
+  token footprint while preserving all technical substance.
+  """
+  # Strip 'by @username in https://github.com/...' or '(@username) (#12345)'
+  text = re.sub(r'\s+by\s+@[A-Za-z0-9_-]+\s+in\s+https?://\S+', '', text)
+  text = re.sub(r'\s+in\s+https?://github\.com/\S+/pull/\d+', '', text)
+  text = re.sub(r'\s*\(https?://github\.com/\S+\)', '', text)
+  return text.strip()
+
+def extract_sections_from_markdown(body_md, seen_bullets):
   """
   Parses raw GitHub release Markdown body to extract Breaking and Changes bullets,
-  or falls back to capturing all top-level bullet points if custom headings are used.
+  deduplicating items that were already reported in newer point releases.
   """
   breaking = []
   changes = []
@@ -32,7 +43,11 @@ def extract_sections_from_markdown(body_md):
 
     bullet_match = re.match(r'^[-*+]\s+(.*)$', line)
     if bullet_match:
-      item = bullet_match.group(1).strip()
+      item = clean_bullet_text(bullet_match.group(1))
+      if not item or item in seen_bullets:
+        continue
+      seen_bullets.add(item)
+
       if current_section == 'Breaking':
         breaking.append(item)
       elif current_section == 'Changes':
@@ -45,17 +60,35 @@ def extract_sections_from_markdown(body_md):
 
   return breaking, changes
 
+def is_official_stable_release(rel):
+  """
+  Returns True only if the release is an official stable release matching
+  vYYYY.M.D (excluding -beta, -rc, and non-version announcements).
+  """
+  if rel.get('prerelease') or rel.get('draft'):
+    return False
+  tag_name = (rel.get('tag_name') or '').strip()
+  rel_name = (rel.get('name') or '').strip()
+  if 'beta' in tag_name.lower() or 'beta' in rel_name.lower():
+    return False
+  # Match standard vYYYY.M.D or YYYY.M.D (allowing optional patch suffix like -1)
+  return bool(re.match(r'^v?\d{4}\.\d+\.\d+(?:-\d+)?$', tag_name))
+
 def main():
   parser = argparse.ArgumentParser(
     description="Parse OpenClaw GitHub releases for breaking changes via the GitHub REST API."
   )
   parser.add_argument(
-    '-t', '--term', type=str, default='2026.6.8',
-    help="Stopping version term (e.g., '2026.6.8'). Script stops once it reaches this version."
+    '-t', '--term', type=str, default='v2026.6.8',
+    help="Stopping version term (e.g., 'v2026.6.8'). Script stops once it reaches this version."
   )
   parser.add_argument(
     '-u', '--until', type=str, default='',
-    help="Optional upper-bound version term (e.g., '2026.10.3'). Skips releases newer than this version."
+    help="Optional upper-bound version term (e.g., 'v2026.10.3'). Skips releases newer than this version."
+  )
+  parser.add_argument(
+    '--include-betas', action='store_true',
+    help="Include beta and pre-release versions (excluded by default to save context tokens)."
   )
   args = parser.parse_args()
 
@@ -69,6 +102,7 @@ def main():
   output_file = 'openclaw_releases.md'
 
   content_blocks = []
+  seen_bullets = set()
   page = 1
   term_found = False
   started_collecting = False if until_clean else True
@@ -101,29 +135,35 @@ def main():
       rel_name = (rel.get('name') or tag_name).strip()
       version_label = rel_name if rel_name else tag_name
 
-      if until_clean and not started_collecting:
-        if until_clean in tag_name or until_clean in rel_name:
-          started_collecting = True
-        else:
-          continue
-
-      if term_clean and (term_clean in tag_name or term_clean in rel_name):
+      # Check termination BEFORE filtering betas so we always stop at the requested boundary
+      if term_clean and (term_clean == tag_name.lstrip('v') or term_clean in version_label):
         print(
           f"Termination term '{args.term}' found in '{version_label}'. Stopping."
         )
         term_found = True
         break
 
+      if until_clean and not started_collecting:
+        if until_clean == tag_name.lstrip('v') or until_clean in version_label:
+          started_collecting = True
+        else:
+          continue
+
+      if not args.include_betas and not is_official_stable_release(rel):
+        continue
+
       body_md = rel.get('body') or ''
-      breaking, changes = extract_sections_from_markdown(body_md)
+      breaking, changes = extract_sections_from_markdown(body_md, seen_bullets)
+
+      if not breaking and not changes:
+        continue
 
       content_blocks.append({
         "version": version_label,
         "tag": tag_name,
         "published_at": rel.get('published_at', ''),
         "Breaking": breaking,
-        "Changes": changes,
-        "raw_body": body_md.strip()
+        "Changes": changes
       })
 
     if len(releases) < 100:
@@ -148,13 +188,9 @@ def main():
           f.write(f"- {item}\n")
         f.write("\n")
 
-      if not b['Breaking'] and not b['Changes'] and b['raw_body']:
-        f.write("## Notes\n\n")
-        f.write(f"{b['raw_body']}\n\n")
-
   print(
     f"Successfully generated {output_file} with {len(content_blocks)} "
-    f"release blocks."
+    f"official release blocks."
   )
 
 if __name__ == "__main__":

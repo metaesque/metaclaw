@@ -116,7 +116,6 @@ def main():
   cluster_nodes = profile.get("nodes", [])
   cluster_tier_value = max([get_tier_weight(n.get("tier", 0)) for n in cluster_nodes] + [0])
   compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
-  control_node = next((n for n in cluster_nodes if "control" in n.get("planes", [])), my_node)
 
   target_simple = "ollama/gemma4:e4b"
   if cluster_tier_value >= 2 and compute_node:
@@ -175,8 +174,8 @@ def main():
     seeded = False
     if provider == "ollama":
       if len(cluster_nodes) > 1 or "control" in my_node.get("planes", []):
-        # Bind to 0.0.0.0 so Docker containers on Linux and remote Tailscale nodes
-        # can reach the local Ollama daemon on port 11434.
+        # Bind to 0.0.0.0 so Docker containers on Linux (via host.docker.internal / 172.17.0.1)
+        # and remote Tailscale nodes can reach the local Ollama daemon on port 11434.
         env_data["OLLAMA_HOST"] = "0.0.0.0"
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
@@ -207,9 +206,7 @@ def main():
 
       # HISTORICAL CONTEXT: We wrap the string in explicit double quotes to prevent Bash `Error 127`
       # when scripts like `install.sh` use `source .env`. Without the quotes, Bash interprets the space
-      # between models as a new command. The Make `for` loop in upstream scripts is correctly designed
-      # to handle quoted string evaluation. We previously tried using `grep` to bypass `source`, but it
-      # left the `.env` file toxic for other system scripts. This explicit quoting is the safest design.
+      # between models as a new command.
       env_data["OLLAMA_TARGET_MODELS"] = '"' + " ".join(list(dict.fromkeys(models_to_pull))) + '"'
       seeded = True
 
@@ -220,14 +217,13 @@ def main():
 
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
-        control_ip = control_node.get("hardware", {}).get("ip_address", "host.docker.internal")
-        # On Linux, containers in custom bridge networks (openclaw-network) are often blocked
-        # from reaching host.docker.internal (172.17.0.1). Using the control node's Tailscale/LAN
-        # IP (where Ollama binds 0.0.0.0:11434) guarantees reliable local Judge/simple-model routing.
-        local_ollama_base = f"http://{control_ip}:11434" if control_ip != "127.0.0.1" else "http://host.docker.internal:11434"
 
+        # Note: Do NOT use the Control Node's Tailscale IP (100.x.y.z) for local container-to-host
+        # communication! Tailscale's iptables 'ts-input' chain drops packets destined to 100.x.y.z
+        # arriving from non-tailscale0 interfaces (like Docker bridges), causing 300s SYN timeouts.
+        # Because Ollama on control binds 0.0.0.0:11434, host.docker.internal:11434 works natively.
         env_data["SIMPLE_MODEL_ID"] = target_simple.replace("ollama/", "ollama_chat/")
-        env_data["SIMPLE_MODEL_API_BASE"] = local_ollama_base
+        env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
         env_data["MEDIUM_MODEL_ID"] = target_medium.replace("ollama/", "ollama_chat/")
@@ -299,6 +295,14 @@ def main():
       os.makedirs(real_provider_path, exist_ok=True)
       with open(env_json_path, "w") as f:
         json.dump(env_data, f, indent=2)
+      # Immediately instantiate/sync .env in the provider directory whenever .env.json
+      # is seeded by the orchestrator so downstream Docker/Make targets never read stale .env files!
+      cwd = os.getcwd()
+      try:
+        os.chdir(real_provider_path)
+        metaclaw.Inst.envInstantiate(teardown=False, verbose=False)
+      finally:
+        os.chdir(cwd)
 
   # --------------------------------------------------------------------------
   # 4. DISTRIBUTED DNS GENERATION

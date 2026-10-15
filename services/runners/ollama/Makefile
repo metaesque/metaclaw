@@ -18,9 +18,6 @@ export
 PID_FILE = .ollama.pid
 LOG_FILE = ollama.log
 
-# Strip literal double-quotes from OLLAMA_TARGET_MODELS so Make/Bash word-splitting iterates over each model
-CLEAN_TARGET_MODELS := $(patsubst "%",%,$(OLLAMA_TARGET_MODELS))
-
 .PHONY: up down status models clean-state clobber-data check-status check-logs wait-healthy pull-models apply docs
 
 up:: ./bin/ollama
@@ -30,8 +27,14 @@ up:: ./bin/ollama
 		echo "Cleaning up any orphaned processes before boot..." ; \
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
-		mkdir -p $(EXTERNAL_DRIVE_PATH)/ollama-models ; \
-		OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_VULKAN=$(OLLAMA_VULKAN) OLLAMA_IGPU_ENABLE=$(OLLAMA_IGPU_ENABLE) ROCR_VISIBLE_DEVICES=$(ROCR_VISIBLE_DEVICES) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
+		set -a; \
+		[ -f "$(FRAMEWORK_ROOT)/.env" ] && . "$(FRAMEWORK_ROOT)/.env"; \
+		[ -f ".env" ] && . "./.env"; \
+		set +a; \
+		HOST_BIND="$${OLLAMA_HOST:-0.0.0.0}:$${OLLAMA_PORT:-11434}"; \
+		MODELS_DIR="$${EXTERNAL_DRIVE_PATH:-$(FRAMEWORK_ROOT)/external/metaclaw}/ollama-models"; \
+		mkdir -p "$$MODELS_DIR"; \
+		OLLAMA_HOST="$$HOST_BIND" OLLAMA_KEEP_ALIVE="$${OLLAMA_KEEP_ALIVE:-60m}" OLLAMA_VULKAN="$$OLLAMA_VULKAN" OLLAMA_IGPU_ENABLE="$$OLLAMA_IGPU_ENABLE" ROCR_VISIBLE_DEVICES="$$ROCR_VISIBLE_DEVICES" OLLAMA_MODELS="$$MODELS_DIR" nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
 		echo $$! > $(PID_FILE) ; \
 	fi
 	@$(MAKE) --no-print-directory pull-models
@@ -42,9 +45,10 @@ down::
 		kill $$(cat $(PID_FILE)) 2>/dev/null || true ; \
 		rm -f $(PID_FILE) ; \
 	fi
-	@ORPHAN=$$(lsof -t -i TCP:$(OLLAMA_PORT) 2>/dev/null) ; \
+	@PORT_VAL="$${OLLAMA_PORT:-11434}"; \
+	ORPHAN=$$(lsof -t -i TCP:$$PORT_VAL 2>/dev/null) ; \
 	if [ -n "$$ORPHAN" ]; then \
-		echo "Force killing orphaned process on port $(OLLAMA_PORT) (PID: $$ORPHAN)..." ; \
+		echo "Force killing orphaned process on port $$PORT_VAL (PID: $$ORPHAN)..." ; \
 		kill -9 $$ORPHAN 2>/dev/null || true ; \
 	fi
 
@@ -57,11 +61,12 @@ status::
 
 models:
 	@if [ -x "./bin/ollama" ]; then \
+		PORT_VAL="$${OLLAMA_PORT:-11434}"; \
 		echo "=== Installed Ollama Models on $$(hostname) ==="; \
-		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) ./bin/ollama list 2>/dev/null || echo "Ollama daemon is not responding on port $(OLLAMA_PORT)."; \
+		OLLAMA_HOST=127.0.0.1:$$PORT_VAL ./bin/ollama list 2>/dev/null || echo "Ollama daemon is not responding on port $$PORT_VAL."; \
 		echo ""; \
 		echo "=== Active Models in VRAM (ollama ps) on $$(hostname) ==="; \
-		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) ./bin/ollama ps 2>/dev/null || true; \
+		OLLAMA_HOST=127.0.0.1:$$PORT_VAL ./bin/ollama ps 2>/dev/null || true; \
 	else \
 		echo "Ollama binary not installed on $$(hostname)."; \
 	fi
@@ -76,7 +81,8 @@ check-status:: status
 	@echo "================================================================================"
 	@echo "Running diagnostic suite..."
 	@echo "--- 1. API Responsiveness ---" > verification.log
-	@curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" 2>/dev/null >> verification.log || echo "API unreachable." >> verification.log
+	@PORT_VAL="$${OLLAMA_PORT:-11434}"; \
+	curl -s http://127.0.0.1:$$PORT_VAL/api/tags | $(PYTHON_BIN) -c "import sys, json; data=json.load(sys.stdin); print(f'Models Loaded: {len(data.get(\"models\", []))}')" 2>/dev/null >> verification.log || echo "API unreachable." >> verification.log
 	@if grep -q "API unreachable" verification.log; then echo "FATAL: Ollama API unreachable."; exit 1; fi
 	@$(PYTHON_BIN) $(FRAMEWORK_ROOT)/bin/highlight.py verification.log "Models Loaded:"
 
@@ -109,9 +115,10 @@ apply:: .env
 
 wait-healthy:: status
 	@echo "[$(SERVICE_TITLE)] Awaiting healthy state..."
-	@attempt=1; \
+	@PORT_VAL="$${OLLAMA_PORT:-11434}"; \
+	attempt=1; \
 	while [ $$attempt -le 30 ]; do \
-		if curl -s http://127.0.0.1:$(OLLAMA_PORT)/api/tags > /dev/null; then \
+		if curl -s http://127.0.0.1:$$PORT_VAL/api/tags > /dev/null; then \
 			echo "[$(SERVICE_TITLE)] Status: HEALTHY."; \
 			exit 0; \
 		fi; \
@@ -126,16 +133,24 @@ wait-healthy:: status
 # Instructs the running Ollama process to pull any models assigned to it by the global orchestrator configuration
 pull-models: wait-healthy
 	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
-	@SEEN_MODELS=""; \
-	for raw_model in $(CLEAN_TARGET_MODELS) $(OPENCLAW_JUDGE_MODEL); do \
-		clean_model=$$(echo "$$raw_model" | tr -d '"' | sed -E 's/^ollama(_chat)?\///'); \
+	@set -a; \
+	[ -f "$(FRAMEWORK_ROOT)/.env" ] && . "$(FRAMEWORK_ROOT)/.env"; \
+	[ -f ".env" ] && . "./.env"; \
+	[ -f "$(FRAMEWORK_ROOT)/services/gateway/.env" ] && . "$(FRAMEWORK_ROOT)/services/gateway/.env"; \
+	set +a; \
+	PORT_VAL="$${OLLAMA_PORT:-11434}"; \
+	MODELS_DIR="$${EXTERNAL_DRIVE_PATH:-$(FRAMEWORK_ROOT)/external/metaclaw}/ollama-models"; \
+	RAW_LIST=$$(printf "%s %s" "$$OLLAMA_TARGET_MODELS" "$$OPENCLAW_JUDGE_MODEL" | tr -d '"'\''); \
+	SEEN_MODELS=""; \
+	for raw_model in $$RAW_LIST; do \
+		clean_model=$$(echo "$$raw_model" | sed -E 's/^ollama(_chat)?\///'); \
 		if [ -n "$$clean_model" ] && [ "$$clean_model" != "judge-model" ] && ! echo "$$clean_model" | grep -q "^gemini/"; then \
 			case " $$SEEN_MODELS " in \
 				*" $$clean_model "*) ;; \
 				*) \
 					SEEN_MODELS="$$SEEN_MODELS $$clean_model"; \
 					echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-					OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull "$$clean_model" || echo "\nWARNING: Failed to pull $$clean_model."; \
+					OLLAMA_HOST=127.0.0.1:$$PORT_VAL OLLAMA_KEEP_ALIVE="$${OLLAMA_KEEP_ALIVE:-60m}" OLLAMA_MODELS="$$MODELS_DIR" ./bin/ollama pull "$$clean_model" || echo "\nWARNING: Failed to pull $$clean_model."; \
 					;; \
 			esac; \
 		fi; \

@@ -123,18 +123,16 @@ model_list:
       # WHY LOCAL: We run the complexity judge and the Archivist locally to ensure
       # zero PII leakage during routine triaging or personal journal querying.
       model: ollama_chat/gemma4:e4b
-      # Uses SIMPLE_MODEL_API_BASE (resolved dynamically by orchestrate.py to the
-      # Control Node's reachable IP) to avoid Linux Docker bridge firewall drops.
-      api_base: "os.environ/SIMPLE_MODEL_API_BASE"
-      api_key: "os.environ/SIMPLE_MODEL_API_KEY"
+      # HOST.DOCKER.INTERNAL allows the Docker container to bridge back out
+      # to the host OS where Ollama is running natively on the Control Node.
+      api_base: "http://host.docker.internal:11434"
       num_ctx: 8192
       request_timeout: 600
 
   - model_name: ollama/gemma4:e4b
     litellm_params:
       model: ollama_chat/gemma4:e4b
-      api_base: "os.environ/SIMPLE_MODEL_API_BASE"
-      api_key: "os.environ/SIMPLE_MODEL_API_KEY"
+      api_base: "http://host.docker.internal:11434"
       num_ctx: 8192
       request_timeout: 600
 

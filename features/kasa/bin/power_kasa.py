@@ -136,34 +136,33 @@ async def run_telegraf_export():
     found_devices = {}
     unresolved_strips = []
 
-    # Tier 1: Unicast discovery based on hardware registry IPs (or ARP table lookup)
+    # Tier 1: Check ARP cache by MAC first (instant, immune to DHCP lease drift),
+    # then fall back to configured ip_address from hardware registry.
     for dev_uid, dev_info in devices.items():
         if isinstance(dev_info, dict) and dev_info.get("type") in ["power", "power_strip"] and "plugs" in dev_info:
             ip = dev_info.get("ip_address")
             mac = dev_info.get("mac_address", "").upper().replace("-", ":")
 
-            if ip:
-                try:
-                    dev = await Discover.discover_single(ip, timeout=2)
-                    if dev and dev.device_type == DeviceType.Strip:
-                        found_devices[ip] = dev
-                        continue
-                except Exception as e:
-                    print(f"Error discovering Kasa device at {ip}: {e}", file=sys.stderr)
-
-            # Check ARP cache if configured IP timed out or was omitted
+            candidate_ips = []
             arp_ip = find_ip_in_arp_table(mac)
-            if arp_ip and arp_ip != ip:
+            if arp_ip:
+                candidate_ips.append(arp_ip)
+            if ip and ip not in candidate_ips:
+                candidate_ips.append(ip)
+
+            resolved = False
+            for cand_ip in candidate_ips:
                 try:
-                    dev = await Discover.discover_single(arp_ip, timeout=2)
+                    dev = await Discover.discover_single(cand_ip, timeout=2)
                     if dev and dev.device_type == DeviceType.Strip:
-                        print(f"[Kasa Self-Heal] Discovered {dev_uid} ({mac}) via ARP at new IP {arp_ip}", file=sys.stderr)
-                        found_devices[arp_ip] = dev
-                        continue
+                        found_devices[cand_ip] = dev
+                        resolved = True
+                        break
                 except Exception:
                     pass
 
-            unresolved_strips.append((dev_uid, dev_info))
+            if not resolved:
+                unresolved_strips.append((dev_uid, dev_info))
 
     # Tier 2 & 3: Broadcast fallback + fast concurrent /24 subnet unicast sweep if any strip is unresolved
     if unresolved_strips:
@@ -182,7 +181,6 @@ async def run_telegraf_export():
             swept_devs = await sweep_subnet_for_kasa(prefix)
             for s_ip, s_dev in swept_devs.items():
                 found_devices[s_ip] = s_dev
-                print(f"[Kasa Self-Heal] Located Kasa strip ({s_dev.mac}) via subnet sweep at {s_ip}", file=sys.stderr)
 
     strip_ips = list(found_devices.keys())
 

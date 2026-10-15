@@ -51,6 +51,8 @@ def main():
     parser = argparse.ArgumentParser(description="LiteLLM Proxy Routing Tester")
     parser.add_argument("-t", "--type", choices=['simple', 'medium', 'complex', 'frontier'],
                         default='simple', help="The type of prompt to simulate.")
+    parser.add_argument("-w", "--timeout", type=int, default=0,
+                        help="Override HTTP read timeout in seconds (defaults: simple/frontier=30s, medium=60s, complex=180s).")
     args = parser.parse_args()
 
     # Configuration extraction
@@ -83,18 +85,26 @@ def main():
         "frontier": "frontier-model"
     }
 
+    default_timeouts = {
+        "simple": 30,
+        "medium": 60,
+        "complex": 180,
+        "frontier": 30
+    }
+    req_timeout = args.timeout if args.timeout > 0 else default_timeouts[args.type]
+
     payload = {
         "model": model_map[args.type],
         "messages": [{"role": "user", "content": prompts[args.type]}],
         "temperature": 0.1
     }
 
-    print(f"--- Sending {args.type.upper()} request to LiteLLM Proxy ---")
+    print(f"--- Sending {args.type.upper()} request to LiteLLM Proxy (timeout={req_timeout}s) ---")
     print(f"Endpoint: {url}")
     print(f"Prompt:   '{prompts[args.type]}'\n")
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=300)
+        response = requests.post(url, headers=headers, json=payload, timeout=req_timeout)
         if response.status_code == 200:
             result = response.json()
             content = result['choices'][0]['message']['content']
