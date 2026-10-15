@@ -18,7 +18,10 @@ export
 PID_FILE = .ollama.pid
 LOG_FILE = ollama.log
 
-.PHONY: up down status clean-state clobber-data check-status check-logs wait-healthy pull-models apply docs
+# Strip literal double-quotes from OLLAMA_TARGET_MODELS so Make/Bash word-splitting iterates over each model
+CLEAN_TARGET_MODELS := $(patsubst "%",%,$(OLLAMA_TARGET_MODELS))
+
+.PHONY: up down status models clean-state clobber-data check-status check-logs wait-healthy pull-models apply docs
 
 up:: ./bin/ollama
 	@if [ -f $(PID_FILE) ] && ps -p $$(cat $(PID_FILE)) > /dev/null; then \
@@ -50,6 +53,17 @@ status::
 		echo "Ollama is RUNNING." ; \
 	else \
 		echo "Ollama is STOPPED." ; \
+	fi
+
+models:
+	@if [ -x "./bin/ollama" ]; then \
+		echo "=== Installed Ollama Models on $$(hostname) ==="; \
+		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) ./bin/ollama list 2>/dev/null || echo "Ollama daemon is not responding on port $(OLLAMA_PORT)."; \
+		echo ""; \
+		echo "=== Active Models in VRAM (ollama ps) on $$(hostname) ==="; \
+		OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) ./bin/ollama ps 2>/dev/null || true; \
+	else \
+		echo "Ollama binary not installed on $$(hostname)."; \
 	fi
 
 check-logs::
@@ -112,10 +126,17 @@ wait-healthy:: status
 # Instructs the running Ollama process to pull any models assigned to it by the global orchestrator configuration
 pull-models: wait-healthy
 	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
-	@for raw_model in $(OLLAMA_TARGET_MODELS) $(OPENCLAW_JUDGE_MODEL); do \
-		clean_model=$$(echo "$$raw_model" | sed -E 's/^ollama(_chat)?\///'); \
+	@SEEN_MODELS=""; \
+	for raw_model in $(CLEAN_TARGET_MODELS) $(OPENCLAW_JUDGE_MODEL); do \
+		clean_model=$$(echo "$$raw_model" | tr -d '"' | sed -E 's/^ollama(_chat)?\///'); \
 		if [ -n "$$clean_model" ] && [ "$$clean_model" != "judge-model" ] && ! echo "$$clean_model" | grep -q "^gemini/"; then \
-			echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-			OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
+			case " $$SEEN_MODELS " in \
+				*" $$clean_model "*) ;; \
+				*) \
+					SEEN_MODELS="$$SEEN_MODELS $$clean_model"; \
+					echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
+					OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull "$$clean_model" || echo "\nWARNING: Failed to pull $$clean_model."; \
+					;; \
+			esac; \
 		fi; \
 	done

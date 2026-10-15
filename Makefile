@@ -78,7 +78,7 @@ HALT_BARE_SUBDIRS = $(BARE_SUBDIRS)
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply cluster-apply status status-local symlinks gui tui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt cluster-halt cluster-down verify-shutdown verify-halt cluster-verify-shutdown cluster-verify-halt
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply cluster-apply models cluster-models sudo-nopasswd cluster-sudo-nopasswd status status-local symlinks gui tui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt cluster-halt cluster-down verify-shutdown verify-halt cluster-verify-shutdown cluster-verify-halt
 
 define h1_title
 	echo ""; \
@@ -287,6 +287,27 @@ status-local:
 			fi; \
 		fi; \
 	done
+
+# WHAT IT DOES: Lists all local Ollama models installed and currently loaded in VRAM on this machine.
+models:
+	@if [ -d "services/runners/ollama" ] && [ -f "services/runners/ollama/Makefile" ]; then \
+		$(MAKE) --no-print-directory -C services/runners/ollama models; \
+	else \
+		echo "Ollama runner directory not present on $$(hostname)."; \
+	fi
+
+# WHAT IT DOES: Configures passwordless sudo for the current user on the local machine.
+sudo-nopasswd:
+	@echo "Configuring passwordless sudo for user '$$USER' on $$(hostname)..."
+	@SUDO_FILE="/etc/sudoers.d/$$USER"; \
+	if sudo -n true 2>/dev/null && [ -f "$$SUDO_FILE" ]; then \
+		echo "Passwordless sudo is already active on $$(hostname)."; \
+	else \
+		echo "$$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee "$$SUDO_FILE" > /dev/null && \
+		sudo chmod 0440 "$$SUDO_FILE" && \
+		sudo visudo -cf "$$SUDO_FILE" > /dev/null && \
+		echo "SUCCESS: Passwordless sudo enabled on $$(hostname)."; \
+	fi
 
 # WHAT IT DOES: Injects the secure access token and opens the OpenClaw Dashboard in the native host OS browser.
 gui:
@@ -523,6 +544,14 @@ cluster-apply: | $(PYTHON_BIN)
 	@$(call h1_title,INITIATING CLUSTER-WIDE STATE RECONCILIATION)
 	@$(PYTHON_BIN) ./bin/cluster_exec.py apply
 
+cluster-models: | $(PYTHON_BIN)
+	@$(call h1_title,QUERYING OLLAMA MODELS ACROSS CLUSTER)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py models
+
+cluster-sudo-nopasswd: | $(PYTHON_BIN)
+	@$(call h1_title,CONFIGURING PASSWORDLESS SUDO ACROSS CLUSTER)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py sudo-nopasswd
+
 cluster-halt: | $(PYTHON_BIN)
 	@$(call h1_title,INITIATING CLUSTER-WIDE HALT)
 	@$(PYTHON_BIN) ./bin/cluster_exec.py halt
@@ -578,8 +607,8 @@ tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 core: tmp/metacore.txt
 tmp/metacore.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	find ../config -type f -not -name "*~" > tmp.files
-	find ../workspace/agents/software -type f -not -name "*~" >> tmp.files
+	find ../config -type f > tmp.files
+	find ../workspace/agents/software -type f >> tmp.files
 	ls -1 ../workspace/src/projects/*.md >> tmp.files
 	$(PYTHON_BIN) ./bin/newcode.py -s tmp.files -o tmp/metacore.txt -l 6000
 	@echo "Manifest generated at: tmp/metacore.txt"
@@ -642,7 +671,7 @@ todo: | $(PYTHON_BIN)
 meta-push:
 	@$(call h1_title,[GitOps] Provisioning MetaClaw repository in agent workspace...)
 	@if [ ! -d $(METACLAW_METAPATH) ]; then \
-		git clone [https://github.com/metaesque/metaclaw.git](https://github.com/metaesque/metaclaw.git) $(METACLAW_METAPATH); \
+		git clone https://github.com/metaesque/metaclaw.git $(METACLAW_METAPATH); \
 	else \
 		cd $(METACLAW_METAPATH) && git pull; \
 	fi
@@ -655,7 +684,7 @@ meta-cmp:
 	@echo "# [GitOps] Local diffing is deprecated."
 	@echo "# The agent should now commit and push its changes to a feature branch."
 	@echo "# Please review the Pull Request directly on GitHub:"
-	@echo "# [https://github.com/metaesque/metaclaw/pulls](https://github.com/metaesque/metaclaw/pulls)"
+	@echo "# https://github.com/metaesque/metaclaw/pulls"
 	@echo "################################################################################"
 
 # WHAT IT DOES: Pulls the merged changes from GitHub into the live host.

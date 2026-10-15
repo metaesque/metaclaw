@@ -48,7 +48,7 @@ def main():
   providers = my_node.get("providers", {})
   # INVARIANT ENFORCEMENT: The Control Plane node must ALWAYS run the local
   # bare-metal Ollama runner so the low-latency Judge Model and simple-model
-  # are available locally on host.docker.internal:11434.
+  # are available locally on port 11434.
   if "control" in my_node.get("planes", []) and "runner" not in providers:
     providers["runner"] = {"uid": "ollama", "metal": True}
     my_node["providers"] = providers
@@ -116,6 +116,7 @@ def main():
   cluster_nodes = profile.get("nodes", [])
   cluster_tier_value = max([get_tier_weight(n.get("tier", 0)) for n in cluster_nodes] + [0])
   compute_node = next((n for n in cluster_nodes if "compute" in n.get("planes", [])), None)
+  control_node = next((n for n in cluster_nodes if "control" in n.get("planes", [])), my_node)
 
   target_simple = "ollama/gemma4:e4b"
   if cluster_tier_value >= 2 and compute_node:
@@ -174,8 +175,8 @@ def main():
     seeded = False
     if provider == "ollama":
       if len(cluster_nodes) > 1 or "control" in my_node.get("planes", []):
-        # Bind to 0.0.0.0 so Docker containers on Linux (via host.docker.internal / 172.17.0.1)
-        # and remote Tailscale nodes can reach the local Ollama daemon on port 11434.
+        # Bind to 0.0.0.0 so Docker containers on Linux and remote Tailscale nodes
+        # can reach the local Ollama daemon on port 11434.
         env_data["OLLAMA_HOST"] = "0.0.0.0"
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
@@ -219,9 +220,14 @@ def main():
 
       if cluster_tier_value >= 2 and compute_node:
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
+        control_ip = control_node.get("hardware", {}).get("ip_address", "host.docker.internal")
+        # On Linux, containers in custom bridge networks (openclaw-network) are often blocked
+        # from reaching host.docker.internal (172.17.0.1). Using the control node's Tailscale/LAN
+        # IP (where Ollama binds 0.0.0.0:11434) guarantees reliable local Judge/simple-model routing.
+        local_ollama_base = f"http://{control_ip}:11434" if control_ip != "127.0.0.1" else "http://host.docker.internal:11434"
 
         env_data["SIMPLE_MODEL_ID"] = target_simple.replace("ollama/", "ollama_chat/")
-        env_data["SIMPLE_MODEL_API_BASE"] = "[http://host.docker.internal:11434](http://host.docker.internal:11434)"
+        env_data["SIMPLE_MODEL_API_BASE"] = local_ollama_base
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
         env_data["MEDIUM_MODEL_ID"] = target_medium.replace("ollama/", "ollama_chat/")

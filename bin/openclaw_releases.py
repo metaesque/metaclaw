@@ -62,7 +62,10 @@ def main():
   term_clean = args.term.lstrip('v').strip()
   until_clean = args.until.lstrip('v').strip() if args.until else ''
 
-  api_url = '[https://api.github.com/repos/openclaw/openclaw/releases](https://api.github.com/repos/openclaw/openclaw/releases)'
+  # Split scheme and host so web UI copy-paste never mangles the string into a Markdown link
+  api_scheme = "https://"
+  api_path = "api.github.com/repos/openclaw/openclaw/releases"
+  api_url = api_scheme + api_path
   output_file = 'openclaw_releases.md'
 
   content_blocks = []

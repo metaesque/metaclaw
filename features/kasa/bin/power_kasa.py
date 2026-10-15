@@ -15,7 +15,7 @@ lib_dir = os.path.abspath(os.path.join(script_dir, "..", "..", "..", "lib"))
 if lib_dir not in sys.path:
     sys.path.insert(0, lib_dir)
 
-from devices import get_hardware_registry
+from devices import get_hardware_registry, save_device_registry
 from kasa import Discover, DeviceType, Module
 
 def emit_hardware_metadata(devices):
@@ -79,6 +79,49 @@ def is_control_plane():
 
     return False
 
+def find_ip_in_arp_table(target_mac):
+    """
+    Checks the Linux kernel ARP cache (/hostfs/proc/net/arp or /proc/net/arp)
+    for a matching MAC address to instantly resolve DHCP IP changes.
+    """
+    if not target_mac or target_mac == "UNKNOWN":
+        return None
+    target_norm = target_mac.upper().replace("-", ":")
+    for arp_path in ["/hostfs/proc/net/arp", "/proc/net/arp"]:
+        if os.path.exists(arp_path):
+            try:
+                with open(arp_path, "r") as f:
+                    for line in f.readlines()[1:]:
+                        parts = line.split()
+                        if len(parts) >= 4:
+                            ip_addr, _, _, hw_addr = parts[0], parts[1], parts[2], parts[3]
+                            if hw_addr.upper().replace("-", ":") == target_norm:
+                                return ip_addr
+            except Exception:
+                pass
+    return None
+
+async def sweep_subnet_for_kasa(subnet_prefix="10.0.0."):
+    """
+    Executes a fast, bounded concurrent unicast discovery sweep across a /24 LAN
+    subnet when a router's DHCP lease moves a Kasa strip to a new IP and blocks
+    255.255.255.255 broadcast discovery.
+    """
+    sem = asyncio.Semaphore(64)
+    discovered = {}
+
+    async def probe(host_ip):
+        async with sem:
+            try:
+                dev = await Discover.discover_single(host_ip, timeout=1)
+                if dev and dev.device_type == DeviceType.Strip:
+                    discovered[host_ip] = dev
+            except Exception:
+                pass
+
+    await asyncio.gather(*(probe(f"{subnet_prefix}{i}") for i in range(1, 255)))
+    return discovered
+
 async def run_telegraf_export():
     # Fast-fail constraint: Kasa discovery only needs to run on one node to prevent
     # duplicate network polling. We restrict this entirely to the Control Plane.
@@ -91,18 +134,55 @@ async def run_telegraf_export():
     emit_hardware_metadata(devices)
 
     found_devices = {}
+    unresolved_strips = []
 
-    # Unicast discovery based on hardware registry IPs to bypass UDP broadcast isolation
+    # Tier 1: Unicast discovery based on hardware registry IPs (or ARP table lookup)
     for dev_uid, dev_info in devices.items():
         if isinstance(dev_info, dict) and dev_info.get("type") in ["power", "power_strip"] and "plugs" in dev_info:
             ip = dev_info.get("ip_address")
+            mac = dev_info.get("mac_address", "").upper().replace("-", ":")
+
             if ip:
                 try:
-                    dev = await Discover.discover_single(ip)
-                    if dev.device_type == DeviceType.Strip:
+                    dev = await Discover.discover_single(ip, timeout=2)
+                    if dev and dev.device_type == DeviceType.Strip:
                         found_devices[ip] = dev
+                        continue
                 except Exception as e:
                     print(f"Error discovering Kasa device at {ip}: {e}", file=sys.stderr)
+
+            # Check ARP cache if configured IP timed out or was omitted
+            arp_ip = find_ip_in_arp_table(mac)
+            if arp_ip and arp_ip != ip:
+                try:
+                    dev = await Discover.discover_single(arp_ip, timeout=2)
+                    if dev and dev.device_type == DeviceType.Strip:
+                        print(f"[Kasa Self-Heal] Discovered {dev_uid} ({mac}) via ARP at new IP {arp_ip}", file=sys.stderr)
+                        found_devices[arp_ip] = dev
+                        continue
+                except Exception:
+                    pass
+
+            unresolved_strips.append((dev_uid, dev_info))
+
+    # Tier 2 & 3: Broadcast fallback + fast concurrent /24 subnet unicast sweep if any strip is unresolved
+    if unresolved_strips:
+        try:
+            bcast_devs = await Discover.discover(timeout=2)
+            for b_ip, b_dev in bcast_devs.items():
+                if b_dev.device_type == DeviceType.Strip:
+                    found_devices[b_ip] = b_dev
+        except Exception:
+            pass
+
+        if len(found_devices) < len(unresolved_strips):
+            # Determine subnet prefix from configured IP (defaulting to 10.0.0.)
+            sample_ip = unresolved_strips[0][1].get("ip_address", "10.0.0.1")
+            prefix = ".".join(sample_ip.split(".")[:3]) + "." if "." in sample_ip else "10.0.0."
+            swept_devs = await sweep_subnet_for_kasa(prefix)
+            for s_ip, s_dev in swept_devs.items():
+                found_devices[s_ip] = s_dev
+                print(f"[Kasa Self-Heal] Located Kasa strip ({s_dev.mac}) via subnet sweep at {s_ip}", file=sys.stderr)
 
     strip_ips = list(found_devices.keys())
 
