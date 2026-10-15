@@ -18,6 +18,29 @@ def get_tier_weight(t):
     if t == '4': return 4
     return int(t) if t.isdigit() else 0
 
+def is_amd_apu_linux(hw_dict):
+    """
+    Determines if a Linux node runs an AMD APU (such as the Ryzen AI Max+ 395
+    on 'compute' OR the Ryzen 7 8845HS w/ Radeon 780M on 'control') requiring
+    Ollama's Vulkan iGPU compute backend.
+    """
+    if hw_dict.get("os", "") != "Linux":
+        return False
+    gpu_str = hw_dict.get("gpu_detected", "")
+    if "NVIDIA" in gpu_str or "GB10" in gpu_str:
+        return False
+    if "AMD" in gpu_str and "APU" in gpu_str:
+        return True
+    try:
+        if os.path.exists("/proc/cpuinfo"):
+            with open("/proc/cpuinfo", "r") as f:
+                cpu_info = f.read().lower()
+            if "authenticamd" in cpu_info and "ryzen" in cpu_info:
+                return True
+    except Exception:
+        pass
+    return False
+
 def main():
   """
   The MetaClaw State Enforcer.
@@ -185,10 +208,7 @@ def main():
       if "HIP_VISIBLE_DEVICES" in env_data:
           del env_data["HIP_VISIBLE_DEVICES"]
 
-      gpu_detected = my_node.get("hardware", {}).get("gpu_detected", "")
-      is_linux = my_node.get("hardware", {}).get("os", "") == "Linux"
-
-      if is_linux and "AMD" in gpu_detected and "APU" in gpu_detected:
+      if is_amd_apu_linux(my_node.get("hardware", {})):
           env_data["OLLAMA_VULKAN"] = "1"
           env_data["OLLAMA_IGPU_ENABLE"] = "1"
           env_data["ROCR_VISIBLE_DEVICES"] = "none"
@@ -220,7 +240,7 @@ def main():
 
         # Note: Do NOT use the Control Node's Tailscale IP (100.x.y.z) for local container-to-host
         # communication! Tailscale's iptables 'ts-input' chain drops packets destined to 100.x.y.z
-        # arriving from non-tailscale0 interfaces (like Docker bridges), causing 300s SYN timeouts.
+        # arriving from non-tailscale0 interfaces (like Docker bridges), causing SYN timeouts.
         # Because Ollama on control binds 0.0.0.0:11434, host.docker.internal:11434 works natively.
         env_data["SIMPLE_MODEL_ID"] = target_simple.replace("ollama/", "ollama_chat/")
         env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"

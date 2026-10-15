@@ -26,7 +26,9 @@ model_list:
       model: "os.environ/SIMPLE_MODEL_ID"
       api_base: "os.environ/SIMPLE_MODEL_API_BASE"
       api_key: "os.environ/SIMPLE_MODEL_API_KEY"
-      num_ctx: 16384
+      # Right-sized context window for fast-path simple/judge queries on the
+      # 32GB Control Node, preventing massive KV-cache allocation delays.
+      num_ctx: 4096
       request_timeout: 600
 
   - model_name: medium-model
@@ -126,14 +128,14 @@ model_list:
       # HOST.DOCKER.INTERNAL allows the Docker container to bridge back out
       # to the host OS where Ollama is running natively on the Control Node.
       api_base: "http://host.docker.internal:11434"
-      num_ctx: 8192
+      num_ctx: 4096
       request_timeout: 600
 
   - model_name: ollama/gemma4:e4b
     litellm_params:
       model: ollama_chat/gemma4:e4b
       api_base: "http://host.docker.internal:11434"
-      num_ctx: 8192
+      num_ctx: 4096
       request_timeout: 600
 
 litellm_settings:

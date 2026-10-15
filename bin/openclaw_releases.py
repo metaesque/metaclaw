@@ -4,18 +4,52 @@ import re
 import os
 import sys
 
+# Keywords that indicate a change is relevant to MetaClaw's gateway, routing,
+# agent orchestration, Docker sandboxing, or LLM provider integrations.
+RELEVANT_KEYWORDS = re.compile(
+  r'\b('
+  r'gateway|config|openclaw\.json|plugin|extension|hook|before_model_resolve|'
+  r'before_agent_resolve|routing|router|model|provider|litellm|ollama|openai|'
+  r'gemini|session|sessions_send|sessions_spawn|sessions_list|sessions_yield|'
+  r'subagent|sub-agent|agenttoagent|swarm|tool|loopdetection|sandbox|docker|'
+  r'searxng|web_search|web_fetch|browser|memory|context|workspace|soul\.md|'
+  r'agents\.md|identity\.md|heartbeat|auth|token|controlui|allowedorigins|'
+  r'chatcompletions|http|webhook|update|banner|version|env|timeout|stream|'
+  r'thinking|embedding|vector|tui|dashboard|devices'
+  r')\b',
+  re.IGNORECASE
+)
+
+# Prefixes for third-party chat channels and native mobile/desktop apps
+# that are not used by the headless MetaClaw cluster infrastructure.
+IRRELEVANT_PREFIXES = re.compile(
+  r'^(?:fix|feat|chore|refactor|docs)?\s*(?:\([^)]+\))?:\s*'
+  r'(?:ios|macos|android|watchos|whatsapp|telegram|discord|slack|signal|'
+  r'imessage|bluebubbles|matrix|msteams|mattermost|line|nostr|twitch|zalo|feishu)\b',
+  re.IGNORECASE
+)
+
 def clean_bullet_text(text):
   """
   Strips verbose GitHub PR attribution links and commit hashes to minimize
   token footprint while preserving all technical substance.
   """
-  # Strip 'by @username in https://github.com/...' or '(@username) (#12345)'
   text = re.sub(r'\s+by\s+@[A-Za-z0-9_-]+\s+in\s+https?://\S+', '', text)
   text = re.sub(r'\s+in\s+https?://github\.com/\S+/pull/\d+', '', text)
   text = re.sub(r'\s*\(https?://github\.com/\S+\)', '', text)
+  text = re.sub(r'\s*\(#\d+\)', '', text)
+  text = re.sub(r'\s+Thanks\s+@[A-Za-z0-9_-]+\.?', '', text, flags=re.IGNORECASE)
   return text.strip()
 
-def extract_sections_from_markdown(body_md, seen_bullets):
+def is_relevant_change(item):
+  """
+  Determines if a standard changelog bullet affects MetaClaw's core architecture.
+  """
+  if IRRELEVANT_PREFIXES.search(item):
+    return False
+  return bool(RELEVANT_KEYWORDS.search(item))
+
+def extract_sections_from_markdown(body_md, seen_bullets, all_changes=False):
   """
   Parses raw GitHub release Markdown body to extract Breaking and Changes bullets,
   deduplicating items that were already reported in newer point releases.
@@ -46,14 +80,16 @@ def extract_sections_from_markdown(body_md, seen_bullets):
       item = clean_bullet_text(bullet_match.group(1))
       if not item or item in seen_bullets:
         continue
-      seen_bullets.add(item)
 
       if current_section == 'Breaking':
+        seen_bullets.add(item)
         breaking.append(item)
-      elif current_section == 'Changes':
-        changes.append(item)
-      else:
-        other_bullets.append(item)
+      elif all_changes or is_relevant_change(item):
+        seen_bullets.add(item)
+        if current_section == 'Changes':
+          changes.append(item)
+        else:
+          other_bullets.append(item)
 
   if not breaking and not changes and other_bullets:
     changes = other_bullets
@@ -71,12 +107,11 @@ def is_official_stable_release(rel):
   rel_name = (rel.get('name') or '').strip()
   if 'beta' in tag_name.lower() or 'beta' in rel_name.lower():
     return False
-  # Match standard vYYYY.M.D or YYYY.M.D (allowing optional patch suffix like -1)
   return bool(re.match(r'^v?\d{4}\.\d+\.\d+(?:-\d+)?$', tag_name))
 
 def main():
   parser = argparse.ArgumentParser(
-    description="Parse OpenClaw GitHub releases for breaking changes via the GitHub REST API."
+    description="Parse OpenClaw GitHub releases for breaking and MetaClaw-relevant changes via the GitHub REST API."
   )
   parser.add_argument(
     '-t', '--term', type=str, default='v2026.6.8',
@@ -89,6 +124,10 @@ def main():
   parser.add_argument(
     '--include-betas', action='store_true',
     help="Include beta and pre-release versions (excluded by default to save context tokens)."
+  )
+  parser.add_argument(
+    '--all-changes', action='store_true',
+    help="Include all platform/channel bullets instead of filtering for MetaClaw-relevant changes."
   )
   args = parser.parse_args()
 
@@ -153,7 +192,9 @@ def main():
         continue
 
       body_md = rel.get('body') or ''
-      breaking, changes = extract_sections_from_markdown(body_md, seen_bullets)
+      breaking, changes = extract_sections_from_markdown(
+        body_md, seen_bullets, all_changes=args.all_changes
+      )
 
       if not breaking and not changes:
         continue

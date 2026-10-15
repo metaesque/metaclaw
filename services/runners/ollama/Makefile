@@ -130,28 +130,21 @@ wait-healthy:: status
 	cat $(LOG_FILE) 2>/dev/null || true; \
 	exit 1
 
-# Instructs the running Ollama process to pull any models assigned to it by the global orchestrator configuration
+# Instructs the running Ollama process to pull any models assigned to it by the global orchestrator configuration.
+# Uses Python to parse .env files and invoke ./bin/ollama pull, eliminating POSIX /bin/sh quote-splitting issues.
 pull-models: wait-healthy
 	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
-	@set -a; \
-	[ -f "$(FRAMEWORK_ROOT)/.env" ] && . "$(FRAMEWORK_ROOT)/.env"; \
-	[ -f ".env" ] && . "./.env"; \
-	[ -f "$(FRAMEWORK_ROOT)/services/gateway/.env" ] && . "$(FRAMEWORK_ROOT)/services/gateway/.env"; \
-	set +a; \
-	PORT_VAL="$${OLLAMA_PORT:-11434}"; \
-	MODELS_DIR="$${EXTERNAL_DRIVE_PATH:-$(FRAMEWORK_ROOT)/external/metaclaw}/ollama-models"; \
-	RAW_LIST=$$(printf "%s %s" "$$OLLAMA_TARGET_MODELS" "$$OPENCLAW_JUDGE_MODEL" | tr -d '"'\''); \
-	SEEN_MODELS=""; \
-	for raw_model in $$RAW_LIST; do \
-		clean_model=$$(echo "$$raw_model" | sed -E 's/^ollama(_chat)?\///'); \
-		if [ -n "$$clean_model" ] && [ "$$clean_model" != "judge-model" ] && ! echo "$$clean_model" | grep -q "^gemini/"; then \
-			case " $$SEEN_MODELS " in \
-				*" $$clean_model "*) ;; \
-				*) \
-					SEEN_MODELS="$$SEEN_MODELS $$clean_model"; \
-					echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-					OLLAMA_HOST=127.0.0.1:$$PORT_VAL OLLAMA_KEEP_ALIVE="$${OLLAMA_KEEP_ALIVE:-60m}" OLLAMA_MODELS="$$MODELS_DIR" ./bin/ollama pull "$$clean_model" || echo "\nWARNING: Failed to pull $$clean_model."; \
-					;; \
-			esac; \
-		fi; \
-	done
+	@$(PYTHON_BIN) -c 'import os, re, subprocess, urllib.request, json; \
+	from dotenv import dotenv_values; \
+	cfg = {}; \
+	[cfg.update(dotenv_values(p)) for p in ["$(FRAMEWORK_ROOT)/.env", ".env", "$(FRAMEWORK_ROOT)/services/gateway/.env"] if os.path.exists(p)]; \
+	port = cfg.get("OLLAMA_PORT") or "11434"; \
+	keep_alive = cfg.get("OLLAMA_KEEP_ALIVE") or "60m"; \
+	ext = cfg.get("EXTERNAL_DRIVE_PATH") or "$(FRAMEWORK_ROOT)/external/metaclaw"; \
+	models_dir = os.path.join(ext, "ollama-models"); \
+	raw_str = (cfg.get("OLLAMA_TARGET_MODELS") or "") + " " + (cfg.get("OPENCLAW_JUDGE_MODEL") or ""); \
+	tokens = [re.sub(r"^ollama(_chat)?/", "", t.strip("\"\x27 ")) for t in raw_str.split()]; \
+	models = list(dict.fromkeys([m for m in tokens if m and m != "judge-model" and not m.startswith("gemini/")])); \
+	env = dict(os.environ, OLLAMA_HOST=f"127.0.0.1:{port}", OLLAMA_KEEP_ALIVE=keep_alive, OLLAMA_MODELS=models_dir); \
+	[(print(f"  -> Pulling {m} (This may take several minutes)...", flush=True), subprocess.run(["./bin/ollama", "pull", m], env=env, check=False)) for m in models]; \
+	(print("  -> Pre-warming gemma4:e4b into VRAM...", flush=True), urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{port}/api/generate", data=json.dumps({"model": "gemma4:e4b", "prompt": "", "keep_alive": keep_alive}).encode(), headers={"Content-Type": "application/json"}), timeout=60)) if "gemma4:e4b" in models else None'
