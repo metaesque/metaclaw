@@ -5,6 +5,8 @@ import json
 import re
 import subprocess
 import sys
+import secrets
+import string
 import textwrap
 import markdown as md_lib
 
@@ -274,8 +276,10 @@ class MetaClaw:
         for p in n_planes:
             if p in all_planes:
                 for svc_key in all_planes[p].get("services", []):
-                    # If this service is explicitly routed to specific nodes, enforce it
-                    if svc_key in s_routing:
+                    # INVARIANT: Compute plane service_routing applies ONLY to the 'compute' plane.
+                    # If a node hosts the 'control' plane, it MUST always retain its local 'runner'
+                    # service so the low-latency Judge Model and simple-model execute locally.
+                    if p == "compute" and svc_key in s_routing:
                         route_val = s_routing[svc_key]
                         if isinstance(route_val, list):
                             if n["hostname"] in route_val:
@@ -396,15 +400,18 @@ class MetaClaw:
     original_env_vars = env_vars.copy()
 
     # Regex matches: KEY=change_me_to_IDENTIFIER[OPTIONAL_DEFAULT] SUFFIX
-    # Identifier is optional to handle empty defaults like 'change_me_to_'
+    # Properly strips the square brackets around OPTIONAL_DEFAULT so paths like
+    # change_me_to_AUTO_PWD[../config] resolve cleanly without literal '[' and ']'.
     pattern = re.compile(
       r'^(?P<var_name>[^=]+)='
       r'change_me_to_(?P<identifier>[A-Za-z0-9_]*)'
-      r'(?:(?P<default>.*))?'
+      r'(?:\[(?P<default>[^\]]*)\])?'
       r'(?P<suffix>.*)$')
 
-    # Ensure framework libraries (like newpwd) are in the path
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    alphabet = string.ascii_letters + string.digits
+
+    def gen_safe_password(length=24):
+      return ''.join(secrets.choice(alphabet) for _ in range(length))
 
     with open(env_template_path, 'r') as f_in, open(env_tmp_path, 'w') as f_out:
       for line in f_in:
@@ -421,26 +428,24 @@ class MetaClaw:
           if identifier == "AUTO_PWD":
             computed_val = os.getcwd()
             if explicit_default:
-              # We abuse the default syntax to provide a subpath
+              # Resolve relative subpath cleanly against current working directory
               computed_val = os.path.abspath(
                 os.path.join(computed_val, explicit_default))
           elif identifier == "AUTO_PASSWORD":
-            try:
-              from newpwd import generate_password
-              computed_val = generate_password()
-            except ImportError:
-              computed_val = "FAILED_TO_GENERATE"
+            computed_val = gen_safe_password()
           elif identifier == "AUTO_PASSWORD_SK":
-            try:
-              from newpwd import generate_password
-              computed_val = "sk-" + generate_password()
-            except ImportError:
-              computed_val = "sk-FAILED_TO_GENERATE"
+            computed_val = "sk-" + gen_safe_password()
           elif explicit_default is not None:
             computed_val = explicit_default
 
+          # Self-heal legacy cached values that were corrupted with '[../...]' brackets
+          cached_val = env_vars.get(var_name, "")
+          if isinstance(cached_val, str) and "[../" in cached_val and identifier == "AUTO_PWD":
+            cached_val = computed_val
+            env_vars[var_name] = computed_val
+
           # Prioritize the cached value from .env.json
-          if var_name in env_vars and not env_vars[var_name].startswith('change_me_to_'):
+          if var_name in env_vars and not str(env_vars[var_name]).startswith('change_me_to_'):
             val = env_vars[var_name]
           else:
             if skip_env_prompt:

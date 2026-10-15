@@ -182,17 +182,28 @@ def setup_clawdisk(my_uid):
 
         is_mounted = os.path.ismount(mp)
 
-        # Fix for exFAT permission dropping: If mounted without uid=1000, unmount it to force a clean mount.
-        # The Linux in-kernel exfat driver ignores uid/gid changes during a standard 'remount'.
-        # Since nfs-kernel-server is stopped, standard umount (no -l) will cleanly release the device.
+        # Verify actual filesystem UID ownership and FUSE driver type directly.
+        # Note: mount.exfat-fuse registers as 'fuseblk' in /proc/mounts with user_id=0
+        # while delegating UID 1000 ownership in userspace (os.stat(mp).st_uid == 1000).
         if is_mounted and fstype in ['exfat', 'vfat', 'ntfs', 'fat32']:
-            check_mount = subprocess.run(['mount'], capture_output=True, text=True)
-            for line in check_mount.stdout.split('\n'):
-                if f"on {mp} type" in line and 'uid=1000' not in line:
-                    print(f"DIAGNOSTIC: {mp} is mounted without uid=1000 ownership. Unmounting for clean remount...")
-                    subprocess.run(['sudo', 'umount', mp], check=False)
-                    is_mounted = False
-                    break
+            needs_remount = False
+            try:
+                if os.stat(mp).st_uid != 1000:
+                    needs_remount = True
+            except Exception:
+                needs_remount = True
+
+            if fstype == 'exfat' and not needs_remount:
+                check_mount = subprocess.run(['mount'], capture_output=True, text=True)
+                for line in check_mount.stdout.split('\n'):
+                    if f"on {mp} type" in line and 'fuseblk' not in line:
+                        needs_remount = True
+                        break
+
+            if needs_remount:
+                print(f"DIAGNOSTIC: {mp} is mounted without FUSE/uid=1000 ownership. Unmounting for clean remount...")
+                subprocess.run(['sudo', 'umount', mp], check=False)
+                is_mounted = False
 
         if not is_mounted:
             # Ensure placeholder directory is created and owned by metaclaw before mounting

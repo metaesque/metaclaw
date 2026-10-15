@@ -578,8 +578,8 @@ tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 core: tmp/metacore.txt
 tmp/metacore.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	find ../config -type f > tmp.files
-	find ../workspace/agents/software -type f >> tmp.files
+	find ../config -type f -not -name "*~" > tmp.files
+	find ../workspace/agents/software -type f -not -name "*~" >> tmp.files
 	ls -1 ../workspace/src/projects/*.md >> tmp.files
 	$(PYTHON_BIN) ./bin/newcode.py -s tmp.files -o tmp/metacore.txt -l 6000
 	@echo "Manifest generated at: tmp/metacore.txt"

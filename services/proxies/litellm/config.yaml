@@ -129,6 +129,13 @@ model_list:
       num_ctx: 8192
       request_timeout: 600
 
+  - model_name: ollama/gemma4:e4b
+    litellm_params:
+      model: ollama_chat/gemma4:e4b
+      api_base: "http://host.docker.internal:11434"
+      num_ctx: 8192
+      request_timeout: 600
+
 litellm_settings:
   drop_params: true
   num_retries: 2

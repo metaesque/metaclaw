@@ -28,7 +28,7 @@ up:: ./bin/ollama
 		$(MAKE) --no-print-directory down ; \
 		echo "Starting Ollama natively..." ; \
 		mkdir -p $(EXTERNAL_DRIVE_PATH)/ollama-models ; \
-		OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_VULKAN=1 OLLAMA_IGPU_ENABLE=1 OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
+		OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_VULKAN=$(OLLAMA_VULKAN) OLLAMA_IGPU_ENABLE=$(OLLAMA_IGPU_ENABLE) ROCR_VISIBLE_DEVICES=$(ROCR_VISIBLE_DEVICES) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models nohup ./bin/ollama serve > $(LOG_FILE) 2>&1 < /dev/null & \
 		echo $$! > $(PID_FILE) ; \
 	fi
 	@$(MAKE) --no-print-directory pull-models
@@ -113,9 +113,9 @@ wait-healthy:: status
 pull-models: wait-healthy
 	@echo "[$(SERVICE_TITLE)] Validating and pulling assigned local models..."
 	@for raw_model in $(OLLAMA_TARGET_MODELS) $(OPENCLAW_JUDGE_MODEL); do \
-		if echo "$$raw_model" | grep -q "^ollama/"; then \
-			clean_model=$$(echo "$$raw_model" | sed 's/ollama\///'); \
+		clean_model=$$(echo "$$raw_model" | sed -E 's/^ollama(_chat)?\///'); \
+		if [ -n "$$clean_model" ] && [ "$$clean_model" != "judge-model" ] && ! echo "$$clean_model" | grep -q "^gemini/"; then \
 			echo "  -> Pulling $$clean_model (This may take several minutes)..."; \
-			OLLAMA_HOST=$(OLLAMA_HOST):$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_VULKAN=1 OLLAMA_IGPU_ENABLE=1 OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
+			OLLAMA_HOST=127.0.0.1:$(OLLAMA_PORT) OLLAMA_KEEP_ALIVE=$(OLLAMA_KEEP_ALIVE) OLLAMA_MODELS=$(EXTERNAL_DRIVE_PATH)/ollama-models ./bin/ollama pull $$clean_model || echo "\nWARNING: Failed to pull $$clean_model."; \
 		fi; \
 	done

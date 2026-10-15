@@ -64,7 +64,9 @@ export default function register(api) {
             }
 
             logToStdout(`[HOOK-DEBUG] 4. No lexical match. Proceeding to Predictive Judge...`);
-            const judgeModel = process.env.OPENCLAW_JUDGE_MODEL;
+            const rawJudgeModel = process.env.OPENCLAW_JUDGE_MODEL || "judge-model";
+            // Normalize raw ollama/... strings to the LiteLLM registered 'judge-model' endpoint
+            const judgeModel = rawJudgeModel.startsWith("ollama/") ? "judge-model" : rawJudgeModel;
             const proxyUrl = process.env.OPENAI_BASE_URL || "http://active-proxy:4000/v1";
             const masterKey = process.env.ACTIVE_PROXY_KEY || "";
 

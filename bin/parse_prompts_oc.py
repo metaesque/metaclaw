@@ -65,7 +65,7 @@ def main():
     if not jsonl_files:
         print(f"No .jsonl files found in {target_dir}")
 
-    for filepath in jsonl_files:
+    for filepath in sorted(jsonl_files):
         print(f"\n--- Parsing {os.path.basename(filepath)} ---")
         with open(filepath, 'r', encoding='utf-8') as f:
             for line in f:
@@ -126,36 +126,67 @@ def main():
                     print(json.dumps(cleaned_data, separators=(',', ':')))
                     continue
 
+                # Non-raw human-readable mode with complete diagnostic metadata
+                timestamp = data.get("timestamp", "Unknown Time")
+                time_str = f"{COLOR_TIME}[{timestamp}]{COLOR_RESET}"
+                separator = "=" * 80
+
+                if event_type == "model_change":
+                    prov = data.get("provider", "unknown")
+                    mod = data.get("modelId", "unknown")
+                    print(f"{time_str} {COLOR_TIME}[EVENT: model_change -> {prov}/{mod}]{COLOR_RESET}")
+                    continue
+                elif event_type == "thinking_level_change":
+                    lvl = data.get("thinkingLevel", "unknown")
+                    print(f"{time_str} {COLOR_TIME}[EVENT: thinking_level_change -> {lvl}]{COLOR_RESET}")
+                    continue
+
                 if event_type != "message":
                     continue
 
                 msg = data.get("message", {})
                 role = msg.get("role")
-                timestamp = data.get("timestamp", "Unknown Time")
 
-                time_str = f"{COLOR_TIME}[{timestamp}]{COLOR_RESET}"
-                separator = "=" * 80
+                meta_parts = []
+                if msg.get("provider") or msg.get("model"):
+                    meta_parts.append(f"model={msg.get('provider', '')}/{msg.get('model', '')}".strip('/'))
+                if msg.get("stopReason"):
+                    meta_parts.append(f"stop={msg.get('stopReason')}")
+                meta_str = f" {COLOR_TIME}({' | '.join(meta_parts)}){COLOR_RESET}" if meta_parts else ""
 
                 if role == "user":
                     content = msg.get("content", "")
                     if isinstance(content, str):
                         wrapped_content = wrap_markdown(content)
                         print(f"{separator}\n{time_str} {COLOR_HUMAN}[HUMAN]{COLOR_RESET}\n{wrapped_content}")
+                    elif isinstance(content, list):
+                        for item in content:
+                            if item.get("type") == "text":
+                                wrapped_content = wrap_markdown(item.get("text", ""))
+                                print(f"{separator}\n{time_str} {COLOR_HUMAN}[HUMAN / INTER-SESSION]{COLOR_RESET}\n{wrapped_content}")
 
                 elif role == "assistant":
                     content = msg.get("content", [])
                     if isinstance(content, list):
-                         for item in content:
+                        for item in content:
                             item_type = item.get("type")
                             if item_type == "text":
                                 text = item.get("text", "")
                                 wrapped_text = wrap_markdown(text)
-                                print(f"{separator}\n{time_str} {COLOR_ASSISTANT}[{agent_name.upper()}]{COLOR_RESET}\n{wrapped_text}")
+                                print(f"{separator}\n{time_str} {COLOR_ASSISTANT}[{agent_name.upper()}]{COLOR_RESET}{meta_str}\n{wrapped_text}")
                             elif item_type == "toolCall":
                                 tool_name = item.get("name", "unknown")
                                 tool_args = item.get("arguments", {})
                                 args_str = json.dumps(tool_args, indent=2)
-                                print(f"{separator}\n{time_str} {COLOR_TOOL}[TOOL]{COLOR_RESET}\nExecuted tool: {tool_name}\nArguments:\n{args_str}")
+                                print(f"{separator}\n{time_str} {COLOR_TOOL}[TOOL CALL]{COLOR_RESET}{meta_str}\nExecuted tool: {tool_name}\nArguments:\n{args_str}")
+
+                elif role == "toolResult":
+                    content = msg.get("content", [])
+                    if isinstance(content, list):
+                        for item in content:
+                            if item.get("type") == "text":
+                                res_text = item.get("text", "")
+                                print(f"{separator}\n{time_str} {COLOR_TOOL}[TOOL RESULT]{COLOR_RESET}\n{res_text}")
 
 if __name__ == "__main__":
     main()

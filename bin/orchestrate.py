@@ -46,6 +46,15 @@ def main():
     return
 
   providers = my_node.get("providers", {})
+  # INVARIANT ENFORCEMENT: The Control Plane node must ALWAYS run the local
+  # bare-metal Ollama runner so the low-latency Judge Model and simple-model
+  # are available locally on host.docker.internal:11434.
+  if "control" in my_node.get("planes", []) and "runner" not in providers:
+    providers["runner"] = {"uid": "ollama", "metal": True}
+    my_node["providers"] = providers
+    with open(profile_path, "w") as f:
+      json.dump(profile, f, indent=2)
+
   services_dir = "services"
 
   if not os.path.exists(services_dir):
@@ -73,6 +82,9 @@ def main():
       else:
         provider = prov_data
         metal = False
+
+      if sym == "network":
+        metal = my_node.get("hardware", {}).get("headless", False) or my_node.get("hardware", {}).get("tailscale_active", False)
 
       uids = metaclaw.Inst.structure()['services'][sym]['uids']
       target_path = os.path.join(uids, provider)
@@ -161,7 +173,9 @@ def main():
 
     seeded = False
     if provider == "ollama":
-      if len(cluster_nodes) > 1:
+      if len(cluster_nodes) > 1 or "control" in my_node.get("planes", []):
+        # Bind to 0.0.0.0 so Docker containers on Linux (via host.docker.internal / 172.17.0.1)
+        # and remote Tailscale nodes can reach the local Ollama daemon on port 11434.
         env_data["OLLAMA_HOST"] = "0.0.0.0"
       else:
         env_data["OLLAMA_HOST"] = "127.0.0.1"
@@ -207,7 +221,7 @@ def main():
         compute_ip = compute_node.get("hardware", {}).get("ip_address", "127.0.0.1")
 
         env_data["SIMPLE_MODEL_ID"] = target_simple.replace("ollama/", "ollama_chat/")
-        env_data["SIMPLE_MODEL_API_BASE"] = "http://host.docker.internal:11434"
+        env_data["SIMPLE_MODEL_API_BASE"] = "[http://host.docker.internal:11434](http://host.docker.internal:11434)"
         env_data["SIMPLE_MODEL_API_KEY"] = "sk-local-ollama-key"
 
         env_data["MEDIUM_MODEL_ID"] = target_medium.replace("ollama/", "ollama_chat/")
@@ -289,11 +303,33 @@ def main():
     "# =====================================================================\n"
   ]
 
+  # Resolve service hosts deterministically without multi-node overwrite collisions.
+  # For edge services running locally on this node (e.g., collector, forwarder, network),
+  # bind ACTIVE_<SVC>_HOST to this node's own identity/IP so telemetry tags never collide.
+  # For centralized services (e.g., logger, tsdb, reldb, proxy, gateway), resolve from the
+  # authoritative node hosting that service.
+  local_edge_services = {"collector", "forwarder", "network"}
+  resolved_hosts = {}
+
   for node in profile.get("nodes", []):
     node_host = node.get("hardware", {}).get("ip_address", "127.0.0.1")
     for svc, _ in node.get("providers", {}).items():
       var_name = f"ACTIVE_{svc.upper()}_HOST"
-      env_lines.append(f"{var_name}={node_host}\n")
+      # Preserve the first authoritative node for shared/compute services rather than
+      # letting the last node in the array clobber earlier nodes.
+      if var_name not in resolved_hosts:
+        resolved_hosts[var_name] = node_host
+
+  my_ip = my_node.get("hardware", {}).get("ip_address", "127.0.0.1")
+  my_hostname = my_node.get("hostname", my_ip)
+  for svc in providers.keys():
+    if svc in local_edge_services:
+      # Use the canonical node hostname (e.g., 'control', 'compute', 'spark1', 'spark2')
+      # for collector/forwarder host identification so Grafana $host variables match hardware.json UIDs.
+      resolved_hosts[f"ACTIVE_{svc.upper()}_HOST"] = my_hostname if svc in {"collector", "forwarder"} else my_ip
+
+  for var_name, host_val in sorted(resolved_hosts.items()):
+    env_lines.append(f"{var_name}={host_val}\n")
 
   with open(".env.cluster", "w") as f:
     f.writelines(env_lines)

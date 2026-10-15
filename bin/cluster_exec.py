@@ -34,7 +34,7 @@ def main():
         if hostname == local_host:
             subprocess.run(["make", target])
         else:
-            cmd = ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "LogLevel=ERROR"]
+            cmd = ["ssh", "-t", "-o", "StrictHostKeyChecking=no", "-o", "LogLevel=ERROR"]
             if os.path.exists(ssh_key):
                 cmd.extend(["-i", ssh_key])
             cmd.extend([f"{user}@{ip}", f"cd ~/repo && make {target}"])
