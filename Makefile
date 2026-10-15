@@ -7,6 +7,7 @@ SERVICES_DIR ?= services
 -include $(SERVICES_DIR)/tsdb/.env
 -include $(SERVICES_DIR)/logger/.env
 -include $(SERVICES_DIR)/collector/.env
+-include $(SERVICES_DIR)/visualizer/.env
 -include $(SERVICES_DIR)/forwarder/.env
 -include $(SERVICES_DIR)/proxy/.env
 -include $(SERVICES_DIR)/gateway/.env
@@ -24,7 +25,7 @@ SERVICES_DIR ?= services
 -include $(SERVICES_DIR)/searcher/.env
 -include $(SERVICES_DIR)/ci/.env
 -include $(SERVICES_DIR)/event/.env
--include $(SERVICES_DIR)/vcses/.env
+-include $(SERVICES_DIR)/vcs/.env
 -include $(SERVICES_DIR)/secret/.env
 -include $(SERVICES_DIR)/tracer/.env
 -include $(SERVICES_DIR)/iam/.env
@@ -51,9 +52,17 @@ export OPEN_CMD
 # Centralized, isolated Python environment
 PYTHON_BIN ?= $(CURDIR)/bin/.venv/bin/python
 
-# Teardown order (Reverse dependencies)
-DOCKER_SUBDIRS = $(SERVICES_DIR)/gateway $(SERVICES_DIR)/ingress $(SERVICES_DIR)/browser $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/searcher $(SERVICES_DIR)/ci $(SERVICES_DIR)/event $(SERVICES_DIR)/vcses $(SERVICES_DIR)/tracer $(SERVICES_DIR)/secret $(SERVICES_DIR)/queue $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/iam $(SERVICES_DIR)/proxy $(SERVICES_DIR)/cache $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/diffusion-runner $(SERVICES_DIR)/speech-runner $(SERVICES_DIR)/acoustic-runner $(SERVICES_DIR)/network
+# Recursive list reversal function to deterministically compute teardown order from boot order
+reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)))
+
+# Boot order explicitly defined to capture initial logs before upstream
+# services start
+WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/collector $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/diffusion-runner $(SERVICES_DIR)/speech-runner $(SERVICES_DIR)/acoustic-runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcs $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/ingress $(SERVICES_DIR)/gateway
+
+# Teardown order (Reverse dependencies, automatically derived from WIZARD_BOOT_ORDER)
+TEARDOWN_ORDER := $(call reverse,$(WIZARD_BOOT_ORDER))
 BARE_SUBDIRS = $(SERVICES_DIR)/runner
+DOCKER_SUBDIRS = $(filter-out $(BARE_SUBDIRS),$(TEARDOWN_ORDER))
 GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 
 # Observability stack that should NOT be shutdown during 'make halt'.
@@ -61,18 +70,15 @@ GATEWAY_SUBDIR = $(SERVICES_DIR)/gateway
 OBSERVABILITY_SUBDIRS = $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/collector $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/logger $(SERVICES_DIR)/tracer $(SERVICES_DIR)/network
 
 # Subdirs to target during a 'make halt'
-HALT_DOCKER_SUBDIRS = $(filter-out $(OBSERVABILITY_SUBDIRS), $(DOCKER_SUBDIRS))
+HALT_TEARDOWN_ORDER = $(filter-out $(OBSERVABILITY_SUBDIRS),$(TEARDOWN_ORDER))
+HALT_DOCKER_SUBDIRS = $(filter-out $(OBSERVABILITY_SUBDIRS),$(DOCKER_SUBDIRS))
 HALT_BARE_SUBDIRS = $(BARE_SUBDIRS)
-
-# Boot order explicitly defined to capture initial logs before upstream
-# services start
-WIZARD_BOOT_ORDER = $(SERVICES_DIR)/network $(SERVICES_DIR)/logger $(SERVICES_DIR)/tsdb $(SERVICES_DIR)/collector $(SERVICES_DIR)/visualizer $(SERVICES_DIR)/forwarder $(SERVICES_DIR)/reldb $(SERVICES_DIR)/vectordb $(SERVICES_DIR)/graphdb $(SERVICES_DIR)/cache $(SERVICES_DIR)/secret $(SERVICES_DIR)/iam $(SERVICES_DIR)/sandbox $(SERVICES_DIR)/runner $(SERVICES_DIR)/diffusion-runner $(SERVICES_DIR)/speech-runner $(SERVICES_DIR)/acoustic-runner $(SERVICES_DIR)/queue $(SERVICES_DIR)/proxy $(SERVICES_DIR)/tracer $(SERVICES_DIR)/vcses $(SERVICES_DIR)/event $(SERVICES_DIR)/ci $(SERVICES_DIR)/searcher $(SERVICES_DIR)/fetcher $(SERVICES_DIR)/browser $(SERVICES_DIR)/ingress $(SERVICES_DIR)/gateway
 
 # Meta-level reasoning. Must be a directory relative to the directory this
 # Makefile resides in!
 METACLAW_METAPATH=workspace/src/metaclaw
 
-.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply status status-local symlinks gui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt cluster-halt cluster-down verify-shutdown verify-halt cluster-verify-shutdown cluster-verify-halt
+.PHONY: setup setup-local bootstrap clean-network network manifest newcode __undock factory-reset factory-reset-soft factory-reset-hard wizard wizard-batch wizard-cluster wizard-run apply cluster-apply status status-local symlinks gui tui zip tmp/metaclaw.zip docs sync-cluster pull pullcfg todo clean-state meta-push meta-cmp meta-pull meta-down install-docker mc-update customize wksp logurl logs cfg halt __undock_halt clean-state-halt cluster-halt cluster-down verify-shutdown verify-halt cluster-verify-shutdown cluster-verify-halt
 
 define h1_title
 	echo ""; \
@@ -224,10 +230,10 @@ clean-network:
 # LIFECYCLE MANAGEMENT (START / STOP / STATUS)
 # ==============================================================================
 
-# WHAT IT DOES: Gracefully shuts down all Docker containers defined in the framework in reverse-dependency order.
-# WHY IT EXISTS: Prevents orphan containers or locked resources during a system halt.
+# WHAT IT DOES: Gracefully shuts down all Docker and bare-metal services defined in the framework in reverse-dependency order.
+# WHY IT EXISTS: Prevents orphan containers, lingering bare-metal runners, or locked resources during a system halt.
 __undock:
-	@for dir in $(DOCKER_SUBDIRS); do \
+	@for dir in $(TEARDOWN_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
@@ -237,9 +243,9 @@ __undock:
 		fi; \
 	done
 
-# WHAT IT DOES: Gracefully shuts down containers EXCEPT the observability stack.
+# WHAT IT DOES: Gracefully shuts down services EXCEPT the observability stack.
 __undock_halt:
-	@for dir in $(HALT_DOCKER_SUBDIRS); do \
+	@for dir in $(HALT_TEARDOWN_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
@@ -250,7 +256,7 @@ __undock_halt:
 	done
 
 # WHAT IT DOES: Compares running container configurations against physical `.env` files and restarts/rebuilds them if mismatched.
-# WHY IT EXISTS: The standard deployment command for pushing infrastructure changes gracefully.
+# WHY IT EXISTS: The standard deployment command for pushing infrastructure changes gracefully on the local node.
 apply: symlinks
 	@$(call h1_title,RECONCILING GLOBAL INFRASTRUCTURE STATE)
 	@$(PYTHON_BIN) ./bin/node_setup.py
@@ -433,7 +439,7 @@ wizard-run: bootstrap docs
 # WHY IT EXISTS: Cleans up the developer workspace without harming secrets or databases.
 clean-state:
 	@$(call h2_title,CLEANING LOCAL STATE ACROSS ALL SERVICES)
-	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
+	@for dir in $(TEARDOWN_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
@@ -445,7 +451,7 @@ clean-state:
 # WHAT IT DOES: Deletes ephemeral files for services that were halted (preserves observability logs if any).
 clean-state-halt:
 	@$(call h2_title,CLEANING LOCAL STATE ACROSS HALTED SERVICES)
-	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
+	@for dir in $(HALT_TEARDOWN_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
@@ -463,8 +469,8 @@ halt: __undock_halt
 	@$(call h1_title,INITIATING HALT PRESERVING OBSERVABILITY STACK)
 	@$(MAKE) --no-print-directory clean-state-halt
 	@$(call h2_title,Removing .env files for halted services...)
-	@for dir in $(HALT_DOCKER_SUBDIRS) $(HALT_BARE_SUBDIRS); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+	@for dir in $(HALT_TEARDOWN_ORDER); do \
+		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
 	@$(call h2_title,Purging global runtime state...)
@@ -481,8 +487,8 @@ factory-reset-soft: __undock clean-network
 	@$(call h1_title,INITIATING FACTORY RESET SOFT PRESERVING SECRETS AND DATA)
 	@$(MAKE) --no-print-directory clean-state
 	@$(call h2_title,Removing .env files...)
-	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
-		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="$$dir"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
+	@for dir in $(TEARDOWN_ORDER); do \
+		if [ -L "$$dir" ]; then TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; elif [ -d "$$dir" ]; then REAL_DIR="$$dir"; else continue; fi; \
 		rm -f "$$REAL_DIR/.env"; \
 	done
 	@$(call h2_title,Purging global runtime state...)
@@ -496,7 +502,7 @@ factory-reset-soft: __undock clean-network
 # WHY IT EXISTS: Required if the user wishes to redeploy from scratch with entirely new API keys or a different hardware cluster configuration.
 factory-reset-hard: factory-reset-soft
 	@$(call h1_title,INITIATING FACTORY RESET HARD DESTROYING SECRETS AND DATA)
-	@for dir in $(DOCKER_SUBDIRS) $(BARE_SUBDIRS); do \
+	@for dir in $(TEARDOWN_ORDER); do \
 		if [ -L "$$dir" ]; then \
 			TARGET=$$(readlink "$$dir"); REAL_DIR="services/$$TARGET"; \
 			if [ -f "$$REAL_DIR/Makefile" ]; then \
@@ -510,28 +516,32 @@ factory-reset-hard: factory-reset-soft
 	@echo "Hard reset complete. All secrets, data, and environments destroyed."
 
 # ==============================================================================
-# CLUSTER-WIDE SHUTDOWN & VERIFICATION TARGETS
+# CLUSTER-WIDE SHUTDOWN, RECONCILIATION & VERIFICATION TARGETS
 # ==============================================================================
 
-cluster-halt:
+cluster-apply: | $(PYTHON_BIN)
+	@$(call h1_title,INITIATING CLUSTER-WIDE STATE RECONCILIATION)
+	@$(PYTHON_BIN) ./bin/cluster_exec.py apply
+
+cluster-halt: | $(PYTHON_BIN)
 	@$(call h1_title,INITIATING CLUSTER-WIDE HALT)
 	@$(PYTHON_BIN) ./bin/cluster_exec.py halt
 
-cluster-down:
+cluster-down: | $(PYTHON_BIN)
 	@$(call h1_title,INITIATING CLUSTER-WIDE SOFT RESET)
 	@$(PYTHON_BIN) ./bin/cluster_exec.py factory-reset-soft
 
-verify-shutdown:
+verify-shutdown: | $(PYTHON_BIN)
 	@$(PYTHON_BIN) ./bin/verify_shutdown.py down
 
-verify-halt:
+verify-halt: | $(PYTHON_BIN)
 	@$(PYTHON_BIN) ./bin/verify_shutdown.py halt
 
-cluster-verify-shutdown:
+cluster-verify-shutdown: | $(PYTHON_BIN)
 	@$(call h1_title,VERIFYING CLUSTER SHUTDOWN)
 	@$(PYTHON_BIN) ./bin/cluster_exec.py verify-shutdown
 
-cluster-verify-halt:
+cluster-verify-halt: | $(PYTHON_BIN)
 	@$(call h1_title,VERIFYING CLUSTER HALT)
 	@$(PYTHON_BIN) ./bin/cluster_exec.py verify-halt
 
@@ -568,8 +578,7 @@ tmp/metaclaw.txt: FORCE | $(PYTHON_BIN)
 core: tmp/metacore.txt
 tmp/metacore.txt: FORCE | $(PYTHON_BIN)
 	@mkdir -p tmp
-	cat docs/MANIFEST-core.files > tmp.files
-	find ../config -type f >> tmp.files
+	find ../config -type f > tmp.files
 	find ../workspace/agents/software -type f >> tmp.files
 	ls -1 ../workspace/src/projects/*.md >> tmp.files
 	$(PYTHON_BIN) ./bin/newcode.py -s tmp.files -o tmp/metacore.txt -l 6000
@@ -633,7 +642,7 @@ todo: | $(PYTHON_BIN)
 meta-push:
 	@$(call h1_title,[GitOps] Provisioning MetaClaw repository in agent workspace...)
 	@if [ ! -d $(METACLAW_METAPATH) ]; then \
-		git clone https://github.com/metaesque/metaclaw.git $(METACLAW_METAPATH); \
+		git clone [https://github.com/metaesque/metaclaw.git](https://github.com/metaesque/metaclaw.git) $(METACLAW_METAPATH); \
 	else \
 		cd $(METACLAW_METAPATH) && git pull; \
 	fi
@@ -646,7 +655,7 @@ meta-cmp:
 	@echo "# [GitOps] Local diffing is deprecated."
 	@echo "# The agent should now commit and push its changes to a feature branch."
 	@echo "# Please review the Pull Request directly on GitHub:"
-	@echo "# https://github.com/metaesque/metaclaw/pulls"
+	@echo "# [https://github.com/metaesque/metaclaw/pulls](https://github.com/metaesque/metaclaw/pulls)"
 	@echo "################################################################################"
 
 # WHAT IT DOES: Pulls the merged changes from GitHub into the live host.

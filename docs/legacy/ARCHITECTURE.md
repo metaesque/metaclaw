@@ -286,6 +286,126 @@ userspace using the `exfat-fuse` driver. This enables seamless NFS cluster
 sharing without requiring the user to reformat their cross-platform SSDs
 to `ext4`.
 
+### MetaClaw Cluster Storage Architecture & SSD Migration Strategy
+
+#### 1. Data Taxonomy ("Kinds" of Data)
+
+Data across the cluster is categorized by provenance, replaceability, and I/O
+requirements rather than strictly by file format.
+
+*   **Quantified Self (QS) & Personal Archives:** Irreplaceable, first-party
+    data (e.g., family photos, FastFoto, document scans, Google Takeout,
+    digitized VHS tapes). This data cannot be downloaded again if lost. It
+    requires a strict 3-2-1 backup strategy (including offline, detached
+    copies).
+*   **Media (SFW / NSFW):** Third-party, regeneratable entertainment data (e.g.,
+    TV series, site rips, massive ZIP archives). While valuable, it is bulk
+    consumption data. It benefits from RAID for uptime (so a drive failure
+    doesn't necessitate re-downloading), but does not require rigorous detached
+    backups.
+*   **Local LLM Models:** Large sequential payload data. Requires fast,
+    continuous read speeds to load 40GB+ model weights directly into system RAM
+    without bottlenecks.
+*   **Vector DBs, Agent Workspaces, and Code (Git):** High-entropy, fragmented
+    data generating massive amounts of tiny read/write operations. Requires Tier
+    1 storage (lowest latency, highest IOPS).
+
+#### 2. Storage Tiering Strategy
+
+To optimize hardware spend and performance, data must be routed to the
+appropriate physical hardware tier based on its "temperature."
+
+*   **Tier 1: Hot Storage (PCIe NVMe / 80Gbps Thunderbolt 5)**
+    *   *Hardware:* Internal NVMes (Gen 4/5) and direct-attached TB5 enclosures.
+    *   *Workloads:* Vector databases, agent workspaces,
+        OS memory paging (swap), and LLM inference.
+    *   *Current Assignments:* `control` internal (1TB), `compute` internal
+        (2TB - currently a stopgap for SFW media), `spark2` internal (1TB),
+        `T9 2TB` external.
+*   **Tier 2: Warm Storage (All-Flash NAS via 10GbE)**
+    *   *Hardware:* Flash-based NAS enclosures loaded with Gen 3/Gen 4 M.2 SSDs.
+    *   *Workloads:* Centralized cluster access to SFW/NSFW Media, daily video
+        generation archives, and shared QS data. Delivers ~1,200 MB/s across
+        the network, freeing up local PCIe lanes.
+*   **Tier 3: Cold Storage (Detached Backups)**
+    *   *Hardware:* Slower external USB SSDs (like the Samsung T7) or
+        mechanical HDDs.
+    *   *Workloads:* Offline, fireproof-safe backups of QS archives.
+
+#### 3. Current SSD Node Assignments (Transitional State)
+
+| Node/Drive             | Capacity | Assigned Data Kind                | Alias         | Role / Status                                           |
+| :---                   | :---     | :---                              | :---          | :---                                                    |
+| **Control** (Internal) | 1 TB     | Vector DBs, Agent Workspaces, Git | `sfw`         | Tier 1 Hot Storage                                      |
+| **Compute** (Internal) | 2 TB     | SFW Media                         | `sfw`         | Tier 1 (Currently acting as Warm Media storage)         |
+| **Spark1** (Internal)  | 1 TB     | SFW / NSFW Media Overflow         | `sfw`, `nsfw` | Staging Buffer / Towers of Hanoi routing yard           |
+| **Spark2** (Internal)  | 1 TB     | NSFW Media                        | `nsfw`        | Tier 1 Hot Storage                                      |
+| **T9 2TB** (External)  | 2 TB     | Local LLM Models (Sequential)     | `llm`         | Staging drive; moving to `spark1` for local I/O balance |
+| **T9 1TB** (External)  | 1 TB     | Quantified Self (QS) & Archives   | `qs`          | Tier 2 Warm Storage                                     |
+| **T7 1TB** (External)  | 1 TB     | QS Backup / Media Overflow        | `qs`, `sfw`   | Tier 3 Cold Storage / Offline Backup                    |
+
+#### 4. Hardware Acquisition & Scaling Plans
+
+##### Mac Studio M5 Ultra Purchasing Strategy
+*   **Internal Storage:** Purchase base configurations (1TB or 2TB). Do not pay
+    the extreme Apple premium ($500/TB) for 8TB-16TB internal drives. The
+    internal speeds (15,000+ MB/s) are only necessary for OS swap memory when
+    running models that exceed unified RAM.
+*   **Distributed External Attachments:** Do not attach a single massive drive
+    to one node and share it over the network (which bottlenecks an 80Gbps drive
+    down to 10Gbps). Attach 2TB-4TB Thunderbolt 5 enclosures locally to each Mac
+    Ultra to provide dedicated 6,000 MB/s model loading and workspace
+    performance.
+
+##### Recommended Thunderbolt 5 / USB4 SSD Enclosures
+
+Instead of buying pre-built drives (like the Samsung T7/T9), construct external
+drives using high-speed enclosures paired with premium PCIe NVMe sticks.
+
+1.  **OWC Envoy Ultra:** Pre-built, bus-powered, rugged, 6,000 MB/s capable.
+2.  **Acasis 80Gbps M.2 NVMe Enclosure (TB501 Pro/Max):** Tool-free, active
+    cooling, dual-chip (Intel JHL9480/RTL9210) for 80Gbps TB5/USB4 support.
+3.  **HyperDrive Next USB4 M.2 PCIe Enclosure:** Supports 80Gbps USB4 v2,
+    provides 25W power delivery for high-draw drives, aluminum thermal
+    dissipation.
+
+##### Flash-Based NAS (Warm Storage Consolidation)
+
+To handle the projected ~21 TB of data over the next 3 years (including massive
+media growth and 2hr/day video generation), cluster media will be moved off
+direct-attached USBs and onto a centralized 10GbE All-Flash NAS.
+
+1.  **Asustor Flashstor 6 (FS6706T):** (~$450). 6x M.2 slots, 2.5GbE. Power
+    efficient, entry-level.
+2.  **TerraMaster F8 SSD Plus:** (~$600). 8x M.2 slots, 10GbE. Ideal for compute
+    farm integration (~1,200 MB/s network delivery).
+3.  **QNAP TBS-h574TX:** (~$1,200). 5x M.2/E1.S slots, 10GbE + direct
+    Thunderbolt 4 editing capability.
+
+**NAS NVMe Drive Recommendations:**
+
+*   *Premium Endurance:* **WD Red SN700 (Gen 3)** - Engineered for 24/7 NAS
+    read/write environments.
+*   *Bulk Storage / Budget:* **Crucial P3 Plus (Gen 4)** - QLC NAND. Ideal for
+    "Write Once, Read Many" (WORM) media files.
+*   *Power/Thermal Efficiency:* **Lexar NM790 (Gen 4)** - DRAM-less, low heat
+    output for densely packed NAS chassis.
+
+#### 5. Algorithmic Routing & Deduplication Architecture
+
+*   **Migration Routing:** Because LLMs are prone to arithmetic hallucination
+    over long sequences, data consolidation is managed deterministically via
+    Python (`parse_annotations.py`). The script parses `INDEX` files (`find .
+    -ls`), looks for human-injected annotations (`# <path>: <kind>`), tallies
+    exact byte counts, and calculates "Bin Packing" moves.
+*   **The "Towers of Hanoi" Staging:** The script utilizes `spark1`'s internal
+    NVMe as a staging buffer to leapfrog data when primary destination drives
+    (like `compute`) reach 100% capacity.
+*   **Deduplication:** Will not rely on text-based `INDEX` parsing.
+    Cryptographic hashing tools (`jdupes` or `rmlint`) will be deployed across
+    the ClawDisk AutoFS mesh to guarantee safe file collapse and generate
+    hardlink/symlink resolution scripts.
+
 ## Docker Container Naming Convention
 
 To ensure deterministic deployment, conflict-free upgrades, and ease of
